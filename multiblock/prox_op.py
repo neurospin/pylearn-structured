@@ -92,8 +92,6 @@ class L1_binsearch(ProxOp):
     def prox(self, x, index, normaliser = None):
 
         s   = self.parameter[index]
-#        if s < TOLERANCE:
-#            s = TOLERANCE*2
 
         if normaliser != None:
             normalise = normaliser[index]
@@ -110,7 +108,7 @@ class L1_binsearch(ProxOp):
 #            minv = norm1(aaa.prox(x, 0, allow_empty = True))
 #            aaa = L1(maxl)
 #            maxv = norm1(aaa.prox(x, 0, allow_empty = True))
-            midv = (maxl + minl) / 2.0
+            midv = norm1(x)
 
             op = L1(1)
             it = 0
@@ -144,14 +142,14 @@ class L0_binsearch(ProxOp):
     where |.| is the L0-norm.
     """
 
-    def __init__(self, *num, **kwargs):
-        ProxOp.__init__(self, *num, **kwargs)
+    def __init__(self, *n, **kwargs):
+        ProxOp.__init__(self, *n, **kwargs)
 
     def prox(self, x, index, normaliser = None):
 
         n = min(self.parameter[index], x.shape[0])
-#        print "n:", n
-        tol = TOLERANCE
+        if n < 1:
+            n = 1
         if normaliser != None:
             normalise = normaliser[index]
         else:
@@ -173,7 +171,7 @@ class L0_binsearch(ProxOp):
             midv = norm0(op.prox(x, 0, allow_empty = True))
 
             it = 0
-            while abs(n - midv) > tol and it <= MAX_ITER:
+            while abs(n - midv) > TOLERANCE and it <= MAX_ITER:
                 midl = (maxl + minl) / 2.0
                 op.parameter[0] = midl
                 midv = norm0(op.prox(x, 0, allow_empty = True))
@@ -201,7 +199,9 @@ class L0_by_count(ProxOp):
     def prox(self, x, index, normaliser = None):
 
         target_num = min(self.parameter[index], x.shape[0])
-#        print "index: ", index, "target:", target_num
+        if target_num < 1:
+            target_num = 1
+
         minf = float("-Inf")
 
         if normaliser != None:
@@ -212,22 +212,12 @@ class L0_by_count(ProxOp):
         cp  = np.absolute(x)
         ind = np.zeros(target_num, int)
         for i in xrange(target_num):
-#            print "i:", i
             idx     = np.argmax(cp)
-#            print "idx:", idx
             ind[i]  = idx
-#            print "ind:", ind
             cp[idx] = minf
-#            print "cp:", cp
 
-#        print "ind:", ind
-#        print "x:", x
         l = abs(x[ind[-1]])
-#        print "l:", l
 
-#        print x
-#        print ind
         x[np.absolute(x) < l] = 0
-#        print x
 
         return x

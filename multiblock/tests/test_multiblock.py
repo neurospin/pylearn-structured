@@ -719,19 +719,13 @@ def test_L1_regularisation():
 
         assert all(x <= y for x, y in zip(np.abs(spls1.W)[:,0], (np.abs(spls1.W)[:,0])[1:]))
         assert all(x >= y for x, y in zip(nonzero, nonzero[1:]))
+    assert abs(R2Yhat1 - 1) < TOLERANCE
 
-    # Test Sparse PLSR
-    pls = PLSR(num_comp = num_comp, center = center, scale = scale,
-               tolerance = tol, max_iter = miter)
-    pls.fit(X, Y)
-    Yhat = pls.predict(X)
-    SSYdiff = np.sum((Y-Yhat)**2)
-    R2Yhat = (1 - (SSYdiff / SSY))
+
     print
     print "PLS :          R2Yhat = %.6f" % R2Yhat
-
     nonzero = []
-    for s in [float('Inf'), 3.0, 2.5, 2.0, 1.5, 1.0, 0.5, 0.25, 0.125, 0.0625, 0.03125, TOLERANCE]:
+    for s in [float('Inf'), 3.0, 2.5, 2.0, 1.5, 1.0, 0.5, 0.25, 0.125, 0.0625, 0.03125, 0]:
         spls2 = PLSR(num_comp = num_comp, center = center, scale = scale,
                      tolerance = tol, max_iter = miter,
                      prox_op = prox_op.L1_binsearch(s, float('Inf'), normaliser = [norm, normI]))
@@ -744,7 +738,45 @@ def test_L1_regularisation():
 
         assert all(x <= y for x, y in zip(np.abs(spls2.W)[:,0], (np.abs(spls2.W)[:,0])[1:]))
         assert all(x >= y for x, y in zip(nonzero, nonzero[1:]))
+    assert abs(R2Yhat2 - 1) < TOLERANCE
 
+
+    print
+    print "PLS :          R2Yhat = %.6f" % R2Yhat
+    nonzero = []
+    for n in [100, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]:
+        spls3 = PLSR(num_comp = num_comp, center = center, scale = scale,
+                     tolerance = tol, max_iter = miter,
+                     prox_op = prox_op.L0_binsearch(n, 100, normaliser = [norm, normI]))
+        spls3.fit(X, Y)
+        Yhat3 = spls3.predict(X)
+        SSYdiff3 = np.sum((Y-Yhat3)**2)
+        R2Yhat3 = 1 - (SSYdiff3 / SSY)
+        nonzero.append(np.count_nonzero(spls3.W))
+        print "sPLS: n = %3d, R2Yhat = %.6f, nonzero: %d" % (n, R2Yhat3, nonzero[-1])
+
+        assert all(x <= y for x, y in zip(np.abs(spls3.W)[:,0], (np.abs(spls3.W)[:,0])[1:]))
+        assert all(x >= y for x, y in zip(nonzero, nonzero[1:]))
+    assert abs(R2Yhat3 - 1) < TOLERANCE
+
+
+    print
+    print "PLS :          R2Yhat = %.6f" % R2Yhat
+    nonzero = []
+    for n in [100]+range(11, -1, -1):
+        spls4 = PLSR(num_comp = num_comp, center = center, scale = scale,
+                     tolerance = tol, max_iter = miter,
+                     prox_op = prox_op.L0_by_count(n, 100, normaliser = [norm, normI]))
+        spls4.fit(X, Y)
+        Yhat4 = spls4.predict(X)
+        SSYdiff4 = np.sum((Y-Yhat4)**2)
+        R2Yhat4 = 1 - (SSYdiff4 / SSY)
+        nonzero.append(np.count_nonzero(spls4.W))
+        print "sPLS: n = %3d, R2Yhat = %.6f, nonzero: %d" % (n, R2Yhat4, nonzero[-1])
+
+        assert all(x <= y for x, y in zip(np.abs(spls4.W)[:,0], (np.abs(spls4.W)[:,0])[1:]))
+        assert all(x >= y for x, y in zip(nonzero, nonzero[1:]))
+    assert abs(R2Yhat4 - 1) < TOLERANCE
 
     return
 
