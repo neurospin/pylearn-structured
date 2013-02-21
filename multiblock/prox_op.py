@@ -67,7 +67,7 @@ class L1(ProxOp):
             else:
                 warn = True
                 # TODO: Improved this!
-                l *= 0.9 # Reduce by 10 % until at least one variable is significant
+                l *= 0.95 # Reduce by 5 % until at least one significant variable
 
         if warn:
             warnings.warn('Soft threshold was too large (all variables purged).'\
@@ -92,7 +92,9 @@ class L1_binsearch(ProxOp):
     def prox(self, x, index, normaliser = None):
 
         s   = self.parameter[index]
-        tol = TOLERANCE
+#        if s < TOLERANCE:
+#            s = TOLERANCE*2
+
         if normaliser != None:
             normalise = normaliser[index]
         else:
@@ -108,18 +110,16 @@ class L1_binsearch(ProxOp):
 #            minv = norm1(aaa.prox(x, 0, allow_empty = True))
 #            aaa = L1(maxl)
 #            maxv = norm1(aaa.prox(x, 0, allow_empty = True))
-            midv = 0
+            midv = (maxl + minl) / 2.0
 
             op = L1(1)
             it = 0
 #            while maxl - minl > tol and it <= MAX_ITER:
-            while abs(s - midv) > tol and it <= MAX_ITER:
+            while abs(s - midv) >= TOLERANCE and it <= MAX_ITER:
                 midl = (maxl + minl) / 2.0
                 op.parameter[0] = midl
                 midv = norm1(op.prox(x, 0, allow_empty = True))
-
 #                print minl, "-", midl, "-", maxl, "    ", minv, "-", midv, "-", maxv
-
                 if midv < s:
                     maxl = midl
                 elif midv > s:

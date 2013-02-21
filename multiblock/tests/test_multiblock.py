@@ -608,8 +608,8 @@ def test_L1_regularisation():
     d = load_linnerud()
     X = d.data
     Y = d.target
-    print X.shape
-    print Y.shape
+#    print X.shape
+#    print Y.shape
     tol = 5e-12
     miter = 1000
     num_comp = 2
@@ -701,9 +701,9 @@ def test_L1_regularisation():
     pls.fit(X, Y)
     Yhat = pls.predict(X)
     SSYdiff = np.sum((Y-Yhat)**2)
+    R2Yhat = (1 - (SSYdiff / SSY))
     print
-    print "PLS : R2Yhat = %.6f" % (1 - (SSYdiff / SSY))
-
+    print "PLS :           R2Yhat = %.6f" % R2Yhat
 
     nonzero = []
     for l in np.linspace(0, 0.6, 13).tolist():
@@ -713,11 +713,38 @@ def test_L1_regularisation():
         spls1.fit(X, Y)
         Yhat1 = spls1.predict(X)
         SSYdiff1 = np.sum((Y-Yhat1)**2)
-        R2Yhat = 1 - (SSYdiff1 / SSY)
+        R2Yhat1 = 1 - (SSYdiff1 / SSY)
         nonzero.append(np.count_nonzero(spls1.W))
-        print "sPLS: l = %.2f, R2Yhat = %.6f, nonzero: %d" % (l, R2Yhat, nonzero[-1])
+        print "sPLS: l = %.2f, R2Yhat = %.6f, nonzero: %d" % (l, R2Yhat1, nonzero[-1])
 
+        assert all(x <= y for x, y in zip(np.abs(spls1.W)[:,0], (np.abs(spls1.W)[:,0])[1:]))
         assert all(x >= y for x, y in zip(nonzero, nonzero[1:]))
+
+    # Test Sparse PLSR
+    pls = PLSR(num_comp = num_comp, center = center, scale = scale,
+               tolerance = tol, max_iter = miter)
+    pls.fit(X, Y)
+    Yhat = pls.predict(X)
+    SSYdiff = np.sum((Y-Yhat)**2)
+    R2Yhat = (1 - (SSYdiff / SSY))
+    print
+    print "PLS :          R2Yhat = %.6f" % R2Yhat
+
+    nonzero = []
+    for s in [float('Inf'), 3.0, 2.5, 2.0, 1.5, 1.0, 0.5, 0.25, 0.125, 0.0625, 0.03125, TOLERANCE]:
+        spls2 = PLSR(num_comp = num_comp, center = center, scale = scale,
+                     tolerance = tol, max_iter = miter,
+                     prox_op = prox_op.L1_binsearch(s, float('Inf'), normaliser = [norm, normI]))
+        spls2.fit(X, Y)
+        Yhat2 = spls2.predict(X)
+        SSYdiff2 = np.sum((Y-Yhat2)**2)
+        R2Yhat2 = 1 - (SSYdiff2 / SSY)
+        nonzero.append(np.count_nonzero(spls2.W))
+        print "sPLS: s = %.1f, R2Yhat = %.6f, nonzero: %d" % (s, R2Yhat2, nonzero[-1])
+
+        assert all(x <= y for x, y in zip(np.abs(spls2.W)[:,0], (np.abs(spls2.W)[:,0])[1:]))
+        assert all(x >= y for x, y in zip(nonzero, nonzero[1:]))
+
 
     return
 
