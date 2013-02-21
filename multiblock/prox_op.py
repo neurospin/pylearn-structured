@@ -23,8 +23,13 @@ class ProxOp(object):
     """
 #    __metaclass__ = abc.ABCMeta
 
-    def __init__(self, *parameter):
-        self.parameter = list(parameter)
+    def __init__(self, *parameter, **kwargs):
+        self.parameter  = list(parameter)
+
+        n = len(self.parameter)
+        self.normaliser = kwargs.pop("normaliser", [norm]*n)
+        if not isinstance(self.normaliser, (tuple, list)):
+            self.normaliser = make_list(self.normaliser, n, default = norm)
 
 #    @abc.abstractmethod
     def prox(self, x, *args, **kwargs):
@@ -34,15 +39,18 @@ class ProxOp(object):
 
 class L1(ProxOp):
 
-    def __init__(self, *l):
-        ProxOp.__init__(self, *l)
+    def __init__(self, *l, **kwargs):
+        ProxOp.__init__(self, *l, **kwargs)
 
-    def prox(self, x, index, allow_empty = False,
-             normalise = norm):
+    def prox(self, x, index, allow_empty = False, normaliser = None):
 
         xorig = x.copy()
         lorig = self.parameter[index]
         l     = lorig
+        if normaliser != None:
+            normalise = normaliser[index]
+        else:
+            normalise = self.normaliser[index]
 
         warn = False
         while True:
@@ -78,17 +86,21 @@ class L1_binsearch(ProxOp):
     where |.| is the L1-norm.
     """
 
-    def __init__(self, *s):
-        ProxOp.__init__(self, *s)
+    def __init__(self, *s, **kwargs):
+        ProxOp.__init__(self, *s, **kwargs)
 
-    def prox(self, x, index, normalise = norm):
+    def prox(self, x, index, normaliser = None):
 
-        s = self.parameter[index]
-
-        tol = 2**-10
+        s   = self.parameter[index]
+        tol = TOLERANCE
+        if normaliser != None:
+            normalise = normaliser[index]
+        else:
+            normalise = self.normaliser[index]
 
         if norm1(x) > s:
             x = x / normalise(x)
+
             minl = 0
             maxl = np.absolute(x).max()
 #            print maxl
@@ -132,13 +144,18 @@ class L0_binsearch(ProxOp):
     where |.| is the L0-norm.
     """
 
-    def __init__(self, *n):
-        ProxOp.__init__(self, *n)
+    def __init__(self, *num, **kwargs):
+        ProxOp.__init__(self, *num, **kwargs)
 
-    def prox(self, x, index, normalise = norm):
+    def prox(self, x, index, normaliser = None):
 
-        n = self.parameter[index]
-        tol = 2**-10
+        n = min(self.parameter[index], x.shape[0])
+#        print "n:", n
+        tol = TOLERANCE
+        if normaliser != None:
+            normalise = normaliser[index]
+        else:
+            normalise = self.normaliser[index]
 
         if norm0(x) > n:
             x = x / normalise(x)
@@ -178,25 +195,39 @@ class L0_binsearch(ProxOp):
 
 class L0_by_count(ProxOp):
 
-    def __init__(self, *num):
-        ProxOp.__init__(self, *num)
+    def __init__(self, *num, **kwargs):
+        ProxOp.__init__(self, *num, **kwargs)
 
-    def prox(self, x, index, normalise = norm):
+    def prox(self, x, index, normaliser = None):
 
-        target_num = self.parameter[index]
+        target_num = min(self.parameter[index], x.shape[0])
+#        print "index: ", index, "target:", target_num
         minf = float("-Inf")
 
-        x = x / normalise(x)
+        if normaliser != None:
+            x = x / normaliser[index](x)
+        else:
+            x = x / self.normaliser[index](x)
 
         cp  = np.absolute(x)
         ind = np.zeros(target_num, int)
         for i in xrange(target_num):
+#            print "i:", i
             idx     = np.argmax(cp)
+#            print "idx:", idx
             ind[i]  = idx
+#            print "ind:", ind
             cp[idx] = minf
+#            print "cp:", cp
 
-        l = x[ind[-1]]
+#        print "ind:", ind
+#        print "x:", x
+        l = abs(x[ind[-1]])
+#        print "l:", l
 
+#        print x
+#        print ind
         x[np.absolute(x) < l] = 0
+#        print x
 
         return x

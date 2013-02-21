@@ -15,10 +15,12 @@ Created on Thu Feb 8 09:22:00 2013
 import numpy as _np
 from numpy import dot
 from numpy.linalg import norm
+from numpy.random import rand
 from copy import copy
 
-__all__ = ['dot', 'norm', 'norm1', 'norm0', 'make_list', 'sign',
-           'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy']
+__all__ = ['dot', 'norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
+           'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy', 'sstot', 'ssvar',
+           'rand', 'zeros']
 
 # Settings
 TOLERANCE = 5e-8
@@ -30,6 +32,14 @@ def norm1(x):
 def norm0(x):
     return _np.count_nonzero(_np.absolute(x))
 
+def normI(x):
+    """Identity norm. Used in e.g. prox_op when the norm of a vector should not
+    be changed after division by its norm.
+
+    Always return 1, as the norm of all vectors.
+    """
+    return 1
+
 def make_list(a, n, default = None):
     # If a list, but empty
     if isinstance(a, (tuple, list)) and len(a) == 0:
@@ -37,9 +47,11 @@ def make_list(a, n, default = None):
     # If only one value supplied, create a list with that value
     if a != None:
         if not isinstance(a, (tuple, list)):
-            a = [a for i in xrange(n)]
+#            a = [a for i in xrange(n)]
+            a = [a]*n
     else: # None or empty list supplied, create a list with the default value
-        a = [default for i in xrange(n)]
+#        a = [default for i in xrange(n)]
+        a = [default]*n
     return a
 
 def sign(v):
@@ -76,3 +88,26 @@ def cov(a,b):
     ip = dot(a_.T, b_)
 
     return ip[0,0] / (a_.shape[0] - 1)
+
+def sstot(a):
+    a = _np.asarray(a)
+    return _np.sum(a**2)
+
+def ssvar(a):
+    a = _np.asarray(a)
+    return _np.sum(a**2, axis=0)
+
+def zeros(*shape, **kwargs):
+    """ Wrapper for numpy.zeros that accepts a variable number of arguments as
+    the shape. I.e. zeros(2,3) and zeros((2,3)) give the same output.
+
+    The other parameters are the same, i.e. pass dtype and/or order if you need
+    to. No other arguments are processed but simply passed on to numpy.zeros.
+
+    Caution, though, the the second and third keyword arguments must be named if
+    the shape is not passed as a tuple or list, i.e. zeros(2, int) will raise a
+    ValueError. Instead you will have to call zeros(2, dtype=int).
+    """
+    if isinstance(shape[0], (tuple, list)):
+        shape = tuple(shape[0])
+    return _np.zeros(shape, **kwargs)

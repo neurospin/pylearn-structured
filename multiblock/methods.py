@@ -542,6 +542,7 @@ class EIGSym(SVD):
 class PLSR(BasePLS, RegressorMixin):
 
     def __init__(self, **kwargs):
+#        proxop = kwargs.pop("prox_op", prox_op.ProxOp(normaliser = [norm, normI]))
         BasePLS.__init__(self, mode = NEWA, scheme = HORST, not_normed = [1],
                          **kwargs)
 

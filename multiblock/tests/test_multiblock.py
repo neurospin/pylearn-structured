@@ -6,7 +6,6 @@ from multiblock import *
 import multiblock.prox_op as prox_op
 from sklearn.datasets import load_linnerud
 
-import sklearn.pls as pls
 from math import log
 from sklearn.pls import PLSRegression
 from sklearn.pls import PLSCanonical
@@ -25,7 +24,8 @@ def test_multiblock():
 #    test_SVD_PCA()
 #    test_eigsym()
 #    test_o2pls()
-    test_predictions()
+#    test_predictions()
+    test_L1_regularisation()
 
 
 
@@ -600,6 +600,150 @@ def test_predictions():
 #    print "O2PLS Y-X    : R2Yhat = %.4f" % (1 - (SSYdiff6 / SSY))
 
     assert abs(SSYdiff6 - SSYdiff5) < TOLERANCE
+
+
+
+def test_L1_regularisation():
+
+    d = load_linnerud()
+    X = d.data
+    Y = d.target
+    print X.shape
+    print Y.shape
+    tol = 5e-12
+    miter = 1000
+    num_comp = 2
+    Xorig = X.copy()
+    Yorig = Y.copy()
+    center = True
+    scale  = True
+    inf = 2**30
+    SSY = np.sum(Yorig**2)
+
+
+    # Test Sparse PLSR
+    pls = PLSR(num_comp = num_comp, center = center, scale = scale,
+               tolerance = tol, max_iter = miter)
+    pls.fit(X, Y)
+    Yhat = pls.predict(X)
+    SSYdiff = np.sum((Yorig-Yhat)**2)
+    R2Yhat = (1 - (SSYdiff / SSY))
+    print "PLS : R2Yhat = %.6f" % R2Yhat
+
+
+    spls1 = PLSR(num_comp = num_comp, center = center, scale = scale,
+                 tolerance = tol, max_iter = miter,
+                 prox_op = prox_op.L1(0., 0., normaliser = [norm, normI]))
+    spls1.fit(X, Y)
+    Yhat1 = spls1.predict(X)
+    SSYdiff1 = np.sum((Yorig-Yhat1)**2)
+    print "sPLS: R2Yhat = %.6f" % (1 - (SSYdiff1 / SSY))
+    assert abs(R2Yhat - (1 - (SSYdiff1 / SSY))) < TOLERANCE
+    assert_array_almost_equal(Yhat, Yhat1, decimal = 5,
+            err_msg = "Sparse PLS with no thresholding does not give correct result")
+
+
+    spls2 = PLSR(num_comp = num_comp, center = center, scale = scale,
+                 tolerance = tol, max_iter = miter,
+                 prox_op = prox_op.L1_binsearch(float('Inf'), float('Inf'), normaliser=[norm, normI]))
+    spls2.fit(X, Y)
+    Yhat2 = spls2.predict(X)
+    SSYdiff2 = np.sum((Yorig-Yhat2)**2)
+    print "sPLS: R2Yhat = %.6f" % (1 - (SSYdiff2 / SSY))
+    assert abs(R2Yhat - (1 - (SSYdiff1 / SSY))) < TOLERANCE
+    assert_array_almost_equal(Yhat, Yhat2, decimal = 5,
+            err_msg = "Sparse PLS with no thresholding does not give correct result")
+
+
+    spls3 = PLSR(num_comp = num_comp, center = center, scale = scale,
+                 tolerance = tol, max_iter = miter,
+                 prox_op = prox_op.L0_binsearch(inf, inf, normaliser=[norm, normI]))
+    spls3.fit(X, Y)
+    Yhat3 = spls3.predict(X)
+    SSYdiff3 = np.sum((Yorig-Yhat3)**2)
+    print "sPLS: R2Yhat = %.6f" % (1 - (SSYdiff3 / SSY))
+    assert_array_almost_equal(Yhat, Yhat3, decimal = 5,
+            err_msg = "Sparse PLS with no thresholding does not give correct result")
+
+
+    spls4 = PLSR(num_comp = num_comp, center = center, scale = scale,
+                 tolerance = tol, max_iter = miter,
+                 prox_op = prox_op.L0_by_count(inf, inf, normaliser=[norm, normI]))
+    spls4.fit(X, Y)
+    Yhat4 = spls4.predict(X)
+    SSYdiff4 = np.sum((Yorig-Yhat4)**2)
+    print "sPLS: R2Yhat = %.6f" % (1 - (SSYdiff4 / SSY))
+    assert_array_almost_equal(Yhat, Yhat4, decimal = 5,
+            err_msg = "Sparse PLS with no thresholding does not give correct result")
+
+    num_comp = 1
+
+    n = 11
+    Y = rand(10,1)
+    X = zeros(10,n)
+    for j in xrange(n-1):
+        x = rand(10,1)
+        while abs(abs(corr(x, Y)) - j/(n-1.0)) > 0.01:
+            x = rand(10,1)
+        if corr(x, Y) < 0:
+            x *= -1
+        X[:,j] = x.ravel()
+    X[:,n-1] = Y.ravel()
+    SSX = np.sum(X**2)
+    SSY = np.sum(Y**2)
+
+#    for j in xrange(11):
+#        print corr(X[:,[j]], y)
+
+    # Test Sparse PLSR
+    pls = PLSR(num_comp = num_comp, center = center, scale = scale,
+               tolerance = tol, max_iter = miter)
+    pls.fit(X, Y)
+    Yhat = pls.predict(X)
+    SSYdiff = np.sum((Y-Yhat)**2)
+    print
+    print "PLS : R2Yhat = %.6f" % (1 - (SSYdiff / SSY))
+
+
+    nonzero = []
+    for l in np.linspace(0, 0.6, 13).tolist():
+        spls1 = PLSR(num_comp = num_comp, center = center, scale = scale,
+                     tolerance = tol, max_iter = miter,
+                     prox_op = prox_op.L1(l, 0, normaliser = [norm, normI]))
+        spls1.fit(X, Y)
+        Yhat1 = spls1.predict(X)
+        SSYdiff1 = np.sum((Y-Yhat1)**2)
+        R2Yhat = 1 - (SSYdiff1 / SSY)
+        nonzero.append(np.count_nonzero(spls1.W))
+        print "sPLS: l = %.2f, R2Yhat = %.6f, nonzero: %d" % (l, R2Yhat, nonzero[-1])
+
+        assert all(x >= y for x, y in zip(nonzero, nonzero[1:]))
+
+    return
+
+    spls = spls3
+#    print
+#    print pls.T
+    print
+    print pls.W
+    print
+    print spls.W
+    print
+    print pls.C
+    print
+    print spls.C
+    print
+    print sstot(pls.T)
+    print sstot(spls.T)
+    print sstot(pls.U)
+    print sstot(spls.U)
+    print sstot(pls.C)
+    print sstot(spls.C)
+#    print np.sum(pls.C**2, axis = 0)
+#    print np.sum(spls.C**2, axis = 0)
+#    print pls.T - spls.T
+
+
 
 
 
