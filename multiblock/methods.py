@@ -309,10 +309,10 @@ class BasePLS(BaseEstimator, TransformerMixin):
         for i in xrange(len(comps)):
             if comps[i] < 0:
                 raise ValueError('Invalid number of components')
-            if comps[i] > minN:
-                warnings.warn('Too many components! No more than %d can be '
-                              'computed' % (minN,))
-                comps[i] = minN
+#            if comps[i] > minN:
+#                warnings.warn('Too many components! No more than %d will be '
+#                              'non-zero for all blocks' % (minN,))
+#                comps[i] = minN
         if not isinstance(self.num_comp, (tuple, list)):
             self.num_comp = comps[0]
 
