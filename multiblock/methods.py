@@ -185,22 +185,23 @@ class BasePLS(BaseEstimator, TransformerMixin):
                  center = True, scale = True, mode = None, scheme = None,
                  not_normed = None, copy = True, normalise_directions = False,
                  max_iter = MAX_ITER, tolerance = TOLERANCE,
-                 prox_op = prox_op.ProxOp()):
+                 prox_op = prox_op.ProxOp(), start_vector = algorithms.LARGEST):
 
         # Supplied by the user
-        self.adj_matrix = adj_matrix
-        self.num_comp   = num_comp
-        self.tau        = tau
-        self.center     = center
-        self.scale      = scale
-        self.mode       = mode
-        self.scheme     = scheme
-        self.not_normed = not_normed
-        self.copy       = copy
-        self.max_iter   = max_iter
-        self.tolerance  = tolerance
-        self.normal_dir = normalise_directions
-        self.prox_op    = prox_op
+        self.adj_matrix   = adj_matrix
+        self.num_comp     = num_comp
+        self.tau          = tau
+        self.center       = center
+        self.scale        = scale
+        self.mode         = mode
+        self.scheme       = scheme
+        self.not_normed   = not_normed
+        self.copy         = copy
+        self.max_iter     = max_iter
+        self.tolerance    = tolerance
+        self.normal_dir   = normalise_directions
+        self.prox_op      = prox_op
+        self.start_vector = start_vector
 
 
     @abc.abstractmethod
@@ -381,7 +382,8 @@ class BasePLS(BaseEstimator, TransformerMixin):
                                 max_iter = self.max_iter,
                                 tolerance = self.tolerance,
                                 not_normed = self.not_normed,
-                                adj_matrix = self.adj_matrix)
+                                adj_matrix = self.adj_matrix,
+                                start_vector = self.start_vector)
 
 #            self.adj_matrix = adj_matrix
 #            self.num_comp   = num_comp

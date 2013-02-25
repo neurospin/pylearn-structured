@@ -36,26 +36,34 @@ __all__= ['NIPALS', 'RGCCA',
 
 
 # NIPALS mode
-NEWA       = "NewA"
-A          = "A"
-B          = "B"
+NEWA      = "NewA"
+A         = "A"
+B         = "B"
 
 
 # Inner weighting schemes
-HORST      = "Horst"
-CENTROID   = "Centroid"
-FACTORIAL  = "Factorial"
+HORST     = "Horst"
+CENTROID  = "Centroid"
+FACTORIAL = "Factorial"
+
+# Start vectors
+LARGEST   = "Largest"
+RANDOM    = "Random"
+ONES      = "Ones"
 
 
 
-def _start_vector(X, random = True, ones = False, largest = False):
-    if largest: # Using row with largest sum of squares
+def _start_vector(X, start = LARGEST):#random = True, ones = False, largest = False):
+
+    if start == LARGEST:  # Using row with largest sum of squares
         idx = np.argmax(np.sum(X**2, axis=1))
         w = X[[idx],:].T
-    elif ones:
+    elif start == ONES:   # Using a vector of ones
         w = np.ones((X.shape[1],1))
-    else: # random start vector
+    elif start == RANDOM: # random start vector
         w = np.random.rand(X.shape[1],1)
+    else:
+        raise ValueError("Unknown start vector type")
 
     w /= norm(w)
     return w
@@ -172,7 +180,8 @@ def _start_vector(X, random = True, ones = False, largest = False):
 #        self.not_normed = not_normed
 #
 #
-def NIPALS(X, adj_matrix, mode, scheme, not_normed = [], prox_op = prox_op.ProxOp(),
+def NIPALS(X, adj_matrix, mode, scheme, not_normed = [],
+           prox_op = prox_op.ProxOp(), start_vector = LARGEST,
            max_iter = MAX_ITER, tolerance = TOLERANCE, **kwargs):
     """Inner loop of the NIPALS algorithm.
 
@@ -235,7 +244,7 @@ def NIPALS(X, adj_matrix, mode, scheme, not_normed = [], prox_op = prox_op.ProxO
 
     W = []
     for Xi in X:
-        w = _start_vector(Xi, largest = True)
+        w = _start_vector(Xi, start = start_vector)
         W.append(w)
 
     # Main NIPALS loop
@@ -318,7 +327,7 @@ def NIPALS(X, adj_matrix, mode, scheme, not_normed = [], prox_op = prox_op.ProxO
 #        self.not_normed = not_normed
 #
 #
-def RGCCA(X, adj_matrix, tau, scheme, not_normed = [],
+def RGCCA(X, adj_matrix, tau, scheme, not_normed = [], start_vector = LARGEST,
           max_iter = MAX_ITER, tolerance = TOLERANCE, **kwargs):
     """Inner loop of the RGCCA algorithm.
 
@@ -379,7 +388,7 @@ def RGCCA(X, adj_matrix, tau, scheme, not_normed = [],
         XX = dot(Xi.T, Xi)
         I  = np.eye(XX.shape[0])
 
-        w  = _start_vector(Xi, largest = True)
+        w  = _start_vector(Xi, start = start_vector)
 
         invIXX.append(np.linalg.pinv(tau[i]*I + ((1-tau[i])/w.shape[0])*XX))
         invIXXw  = dot(invIXX[i], w)

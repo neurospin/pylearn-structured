@@ -809,8 +809,8 @@ def test_L1_regularisation():
         Yhat1    = so2pls1.predict(X)
         SSYdiff1 = np.sum((Y-Yhat1)**2)
         R2Yhat1  = 1 - (SSYdiff1 / SSY)
-        nonzeroW.append(np.count_nonzero(so2pls1.W))
-        nonzeroWo.append(np.count_nonzero(so2pls1.Wo))
+        nonzeroW.append(np.count_nonzero(so2pls1.W[:,0]))
+        nonzeroWo.append(np.count_nonzero(so2pls1.Wo[:,0]))
         print "sO2PLS: l = %.2f, R2Yhat = %.6f, num_comp = %d, nonzeroW: %2d, nonzeroWo: %2d" \
                 % (l, R2Yhat1, num_comp, nonzeroW[-1], nonzeroWo[-1])
 
@@ -831,8 +831,8 @@ def test_L1_regularisation():
         Yhat2    = so2pls2.predict(X)
         SSYdiff2 = np.sum((Y-Yhat2)**2)
         R2Yhat2  = 1 - (SSYdiff2 / SSY)
-        nonzeroW.append(np.count_nonzero(so2pls2.W))
-        nonzeroWo.append(np.count_nonzero(so2pls2.Wo))
+        nonzeroW.append(np.count_nonzero(so2pls2.W[:,0]))
+        nonzeroWo.append(np.count_nonzero(so2pls2.Wo[:,0]))
         print "sO2PLS: s = %.2f, R2Yhat = %.6f, num_comp = %d, nonzeroW: %2d, nonzeroWo: %2d" \
                 % (s, R2Yhat2, num_comp, nonzeroW[-1], nonzeroWo[-1])
 
@@ -853,8 +853,8 @@ def test_L1_regularisation():
         Yhat3    = so2pls3.predict(X)
         SSYdiff3 = np.sum((Y-Yhat3)**2)
         R2Yhat3  = 1 - (SSYdiff3 / SSY)
-        nonzeroW.append(np.count_nonzero(so2pls3.W))
-        nonzeroWo.append(np.count_nonzero(so2pls3.Wo))
+        nonzeroW.append(np.count_nonzero(so2pls3.W[:,0]))
+        nonzeroWo.append(np.count_nonzero(so2pls3.Wo[:,0]))
         print "sO2PLS: n = %3d, R2Yhat = %.6f, num_comp = %d, nonzeroW: %2d, nonzeroWo: %2d" \
                 % (n, R2Yhat3, num_comp, nonzeroW[-1], nonzeroWo[-1])
 
@@ -876,8 +876,8 @@ def test_L1_regularisation():
         Yhat4    = so2pls4.predict(X)
         SSYdiff4 = np.sum((Y-Yhat4)**2)
         R2Yhat4  = 1 - (SSYdiff4 / SSY)
-        nonzeroW.append(np.count_nonzero(so2pls4.W))
-        nonzeroWo.append(np.count_nonzero(so2pls4.Wo))
+        nonzeroW.append(np.count_nonzero(so2pls4.W[:,0]))
+        nonzeroWo.append(np.count_nonzero(so2pls4.Wo[:,0]))
         print "sO2PLS: n = %3d, R2Yhat = %.6f, num_comp = %d, nonzeroW: %2d, nonzeroWo: %2d" \
                 % (n, R2Yhat4, num_comp, nonzeroW[-1], nonzeroWo[-1])
 
@@ -888,6 +888,126 @@ def test_L1_regularisation():
 
 
 
+    # Testing agreement of different runs by using Fleiss kappa
+    X = rand(10,100)
+    Y = rand(10,100)
+    num_comp = 1
+    nonzero = []
+    for l in [0, 0.1, 0.2, 0.225]:
+        num = 50
+        A = zeros(X.shape[1],num)
+        B = zeros(X.shape[1],num)
+        for run in xrange(num):
+            spls1 = PLSR(num_comp = num_comp, center = center, scale = scale,
+                         tolerance = tol, max_iter = miter,
+                         prox_op = prox_op.L1(l, l, normaliser = [norm, normI]),
+                         start_vector = algorithms.RANDOM)
+            spls1.fit(X, Y)
+            Yhat1 = spls1.predict(X)
+            SSYdiff1 = np.sum((Y-Yhat1)**2)
+            R2Yhat1 = 1 - (SSYdiff1 / SSY)
+            nonzero.append(np.count_nonzero(spls1.W))
+            print "sPLS: l = %.2f, R2Yhat = %.6f, num_comp = %d, nonzero: %d" % (l, R2Yhat1, num_comp, nonzero[-1])
+
+            A[:,run] = spls1.W[:,0]
+            B[:,run] = spls1.C[:,0]
+
+        A[A > 0] = 1
+        B[B > 0] = 1
+        kappaA = fleiss_kappa(A, 2)
+        kappaB = fleiss_kappa(B, 2)
+        print "Kappa X:", kappaA
+        print "Kappa Y:", kappaB
+        assert kappaA > 0.2
+        assert kappaB > 0.2
+
+    num_comp = 1
+    nonzeroW = []
+    nonzeroWo = []
+    for l in [0, 0.1, 0.2, 0.225]:
+        num = 10
+        A = zeros(X.shape[1],num)
+        B = zeros(X.shape[1],num)
+        Ao = zeros(X.shape[1],num)
+        Bo = zeros(X.shape[1],num)
+        for run in xrange(num):
+            so2pls1 = O2PLS(num_comp = [num_comp, 2, 2], center = center, scale = scale,
+                            tolerance = tol, max_iter = miter,
+                            prox_op = prox_op.L1([l,0.25-l], [l,0.25-l]),
+                            start_vector = algorithms.RANDOM)
+            so2pls1.fit(X, Y)
+            Yhat1 = so2pls1.predict(X)
+            SSYdiff1 = np.sum((Y-Yhat1)**2)
+            R2Yhat1 = 1 - (SSYdiff1 / SSY)
+            nonzeroW.append(np.count_nonzero(so2pls1.W[:,0]))
+            nonzeroWo.append(np.count_nonzero(so2pls1.Wo[:,[0]]))
+            print "O2PLS: l = %.2f, R2Yhat = %.6f, num_comp = %d, nonzeroW: %d, nonzeroWo: %d" % (l, R2Yhat1, num_comp, nonzeroW[-1], nonzeroWo[-1])
+
+            A[:,run] = so2pls1.W[:,0]
+            B[:,run] = so2pls1.C[:,0]
+            Ao[:,run] = so2pls1.Wo[:,0]
+            Bo[:,run] = so2pls1.Co[:,0]
+
+        A[A > 0] = 1
+        B[B > 0] = 1
+        Ao[Ao > 0] = 1
+        Bo[Bo > 0] = 1
+        kappaA = fleiss_kappa(A, 2)
+        kappaB = fleiss_kappa(B, 2)
+        kappaAo = fleiss_kappa(Ao, 2)
+        kappaBo = fleiss_kappa(Bo, 2)
+        print "Kappa X:", kappaA
+        print "Kappa Y:", kappaB
+        print "Kappa Xo:", kappaAo
+        print "Kappa Yo:", kappaBo
+        assert kappaA > 0.1
+        assert kappaB > 0.1
+        assert kappaAo > 0.1
+        assert kappaBo > 0.1
+
+
+#        assert all(x <= y for x, y in zip(np.abs(spls1.W)[:,0], (np.abs(spls1.W)[:,0])[1:]))
+#        assert all(x >= y for x, y in zip(nonzero, nonzero[1:]))
+#    assert abs(R2Yhat1 - 1) < TOLERANCE
+
+
+
+def fleiss_kappa(W, k):
+    """Computes Fleiss' kappa for a set of variables classified into k
+    categories by a number of different raters.
+
+    W is a matrix with shape (variables, raters) with k categories between
+    0,...,k.
+    """
+    N, n = W.shape
+    if n <= 1:
+        raise ValueError("At least two ratings are needed")
+    A = zeros(N,k)
+    Nn = N*n
+    p = [0]*k
+    for j in xrange(k):
+        A[:,j] = np.sum(W==j, axis=1)
+
+        p[j] = np.sum(A[:,j]) / float(Nn)
+
+    P = [0]*N
+    for i in xrange(N):
+        for j in xrange(k):
+            P[i] += A[i,j]**2
+        P[i] -= n
+        P[i] /= float(n*(n-1))
+
+    P_ = sum(P) / float(N)
+    Pe = sum([pj**2 for pj in p])
+
+    if abs(Pe - 1) < TOLERANCE:
+        kappa = 1
+    else:
+        kappa = (P_- Pe) / (1.0 - Pe)
+    if kappa > 1:
+        kappa = 1
+
+    return kappa
 
 
 #    # Check PLS properties (with n_components=X.shape[1])
