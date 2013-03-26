@@ -73,7 +73,7 @@ def corr(a,b):
     normb = norm(b_)
 
     if norma < TOLERANCE or normb < TOLERANCE:
-        return 0
+        return _np.zeros((1,1))
 
     ip = dot(a_.T, b_)
     return ip / (norma * normb)

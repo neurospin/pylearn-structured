@@ -280,8 +280,10 @@ def NIPALS(X, adj_matrix, mode, scheme, not_normed = [],
                 wi = dot(np.pinv(Xi), ui) # TODO: Precompute to speed up!
 
             # Apply proximal operator
-#            if soft_threshold[i] > 0:
+            # Note that normalisation is performed here as well!
+            wold = wi.copy()
             wi  = prox_op.prox(wi, i)
+#            if soft_threshold[i] > 0:
 #                wi = _soft_threshold(wi, soft_threshold[i], copy = False)
 
             # Normalise weight vectors according to their weighting scheme

@@ -72,6 +72,7 @@ class L1(ProxOp):
         if warn:
             warnings.warn('Soft threshold was too large (all variables purged).'\
                     ' Threshold reset to %f (was %f)' % (l, lorig))
+
         return x
 
 

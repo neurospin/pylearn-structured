@@ -646,8 +646,8 @@ class PLSC(PLSR):
 #        self.Bx = self.B
         self.Bx = dot(self.Ws, dot(self.Dx, self.Q.T)) # Yhat = XW*DxQ' = XBx
         self.By = dot(self.Cs, dot(self.Dy, self.P.T)) # Xhat = YC*DyP' = YBy
-#        self.Bx = dot(self.Ws, self.Q.T) # Yhat = XW*Q' = XBx
-#        self.By = dot(self.Cs, self.P.T) # Xhat = XC*P' = YBy
+#        self.Bx = dot(self.Ws, self.Q.T)              # Yhat = XW*Q' = XBx
+#        self.By = dot(self.Cs, self.P.T)              # Xhat = XC*P' = YBy
         del self.B
 
         return self
@@ -797,16 +797,40 @@ class O2PLS(PLSC):
     def transform(self, X, Y = None, **kwargs):
         Y = kwargs.get('y', Y)
         if Y != None:
-            To = dot(X, self.Wo)
-            X = X - dot(To, self.Po.T)
-            Uo = dot(Y, self.Co)
-            Y = Y - dot(Uo, self.Qo.T)
+            # TODO: Very expensive! Only center/scale once!
+            X -= self.means[0]
+            X /= self.stds[0]
+            for a in xrange(self.Ax):
+                to = dot(X, self.Wo[:,[a]])
+                X = X - dot(to, self.Po[:,[a]].T)
+#            To = dot(X, self.Wo)
+#            X = X - dot(To, self.Po.T)
+            X *= self.stds[0]
+            X += self.means[0]
+
+            Y -= self.means[1]
+            Y /= self.stds[1]
+            for a in xrange(self.Ay):
+                uo = dot(Y, self.Co[:,[a]])
+                Y = Y - dot(uo, self.Qo[:,[a]].T)
+#            Uo = dot(Y, self.Co)
+#            Y = Y - dot(Uo, self.Qo.T)
+            Y *= self.stds[1]
+            Y += self.means[1]
+
             T = PLSC.transform(self, X, Y, **kwargs)
         else:
-            To = dot(X, self.Wo)
-            X = X - dot(To, self.Po.T)
+            X -= self.means[0]
+            X /= self.stds[0]
+            for a in xrange(self.Ax):
+                to = dot(X, self.Wo[:,[a]])
+                X = X - dot(to, self.Po[:,[a]].T)
+#            To = dot(X, self.Wo)
+#            X = X - dot(To, self.Po.T)
+            X *= self.stds[0]
+            X += self.means[0]
+
             T = PLSC.transform(self, X, **kwargs)
-            T = T[0]
         return T
 
     def predict(self, X = None, Y = None, copy = True, **kwargs):
@@ -822,11 +846,18 @@ class O2PLS(PLSC):
             else:
                 X -= self.means[0]
                 X /= self.stds[0]
-            To = dot(X, self.Wo)
-            if copy:
-                X = X - dot(To, self.Po.T)
-            else:
-                X -= dot(To, self.Po.T)
+
+            for a in xrange(self.Ax):
+                to = dot(X, self.Wo[:,[a]])
+                if copy:
+                    X = X - dot(to, self.Po[:,[a]].T)
+                else:
+                    X -= dot(to, self.Po[:,[a]].T)
+#            To = dot(X, self.Wo)
+#            if copy:
+#                X = X - dot(To, self.Po.T)
+#            else:
+#                X -= dot(To, self.Po.T)
 
 #            self.Bx = dot(self.Ws, dot(self.Dx, self.Q.T))
             Ypred = (dot(X, self.Bx)*self.stds[1]) + self.means[1]
@@ -838,11 +869,18 @@ class O2PLS(PLSC):
             else:
                 Y -= self.means[1]
                 Y /= self.stds[1]
-            Uo = dot(Y, self.Co)
-            if copy:
-                Y = Y - dot(Uo, self.Qo.T)
-            else:
-                Y -= dot(Uo, self.Qo.T)
+
+            for a in xrange(self.Ay):
+                uo = dot(Y, self.Co[:,[a]])
+                if copy:
+                    Y = Y - dot(uo, self.Qo[:,[a]].T)
+                else:
+                    Y -= dot(uo, self.Qo[:,[a]].T)
+#            Uo = dot(Y, self.Co)
+#            if copy:
+#                Y = Y - dot(Uo, self.Qo.T)
+#            else:
+#                Y -= dot(Uo, self.Qo.T)
 
             Xpred = (dot(Y, self.By)*self.stds[0]) + self.means[0]
 
