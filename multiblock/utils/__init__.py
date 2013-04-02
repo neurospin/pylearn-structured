@@ -14,6 +14,7 @@ from .utils import MAX_ITER
 from .utils import copy
 from .utils import sstot
 from .utils import ssvar
+from .utils import sqrt
 from .utils import rand
 from .utils import zeros
 
@@ -21,5 +22,5 @@ import testing
 
 __all__ = ['dot', 'norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
            'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy',
-           'sstot', 'ssvar', 'rand', 'zeros',
+           'sstot', 'ssvar', 'sqrt', 'rand', 'zeros',
            'testing']

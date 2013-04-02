@@ -17,10 +17,11 @@ from .methods import scale
 from .methods import direct
 
 import algorithms
+import preprocess
 import prox_op
 import tests
 import utils
 
 __all__ = ['PCA', 'SVD', 'EIGSym', 'PLSR', 'PLSC', 'O2PLS',
-           'center', 'scale', 'direct', 'prox_op', 'algorithms',
+           'center', 'scale', 'direct', 'prox_op', 'algorithms', 'preprocess',
            'tests', 'utils']

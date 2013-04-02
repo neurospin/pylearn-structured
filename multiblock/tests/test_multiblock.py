@@ -25,19 +25,42 @@ def test_multiblock():
 
 #    test_SVD_PCA()
 #    test_eigsym()
-#    test_o2pls()
-#    test_predictions()
-    test_L1_regularisation()
+    test_o2pls()
+    test_predictions()
+#    test_L1_regularisation()
 
-#    X, Y = orth_matrix(5)
+#    n = 10
+#    X, Y = orth_matrix(n)
 #    SSX = np.sum(X**2)
 #    SSY = np.sum(Y**2)
-#    num_comp = 1
 #    tol = 5e-12
 #    miter = 1000
 #    center = True
 #    scale  = False
+#    num_comp = 1
+#    l = 0.5
 #
+#    nonzeroW = []
+#    nonzeroWo = []
+#    so2pls4 = O2PLS(num_comp = [num_comp, 1, 0], center = center, scale = scale,
+#                    tolerance = tol, max_iter = miter,
+#                    prox_op = prox_op.L0_by_count([1,1], [100,100], normaliser = [norm, norm]))
+#    so2pls4.fit(X, Y)
+#    Yhat4    = so2pls4.predict(X)
+#    SSYdiff4 = np.sum((Y-Yhat4)**2)
+#    R2Yhat4  = 1 - (SSYdiff4 / SSY)
+#    nonzeroW.append(np.count_nonzero(so2pls4.W[:,0]))
+#    if so2pls4.Wo.shape[1] > 0:
+#        nonzeroWo.append(np.count_nonzero(so2pls4.Wo[:,0]))
+#    else:
+#        nonzeroWo.append(0)
+#    print "sO2PLS: n = %3d, R2Yhat = %.6f, num_comp = %d, nonzeroW: %2d, nonzeroWo: %2d" \
+#            % (n, R2Yhat4, num_comp, nonzeroW[-1], nonzeroWo[-1])
+#
+#    print so2pls4.W
+#    print so2pls4.Wo
+#    print so2pls4.To
+
 #    for l in [0.00, 0.10, 0.20, 0.30, 0.40]:
 #        so2pls = O2PLS(num_comp = [num_comp, 2, 0], center = center, scale = scale,
 #                       tolerance = tol, max_iter = miter,
@@ -354,6 +377,8 @@ def test_o2pls():
 
 
 
+
+
 def test_eigsym():
 
     d = load_linnerud()
@@ -570,6 +595,7 @@ def test_predictions():
 #    print "PLSR         : R2Yhat = %.4f" % (1 - (SSYdiff3 / SSY))
 
     assert abs(SSYdiff1 - SSYdiff3) < 0.00005
+
 
 
     pls2 = PLSCanonical(n_components = num_comp, scale = scale,
@@ -965,18 +991,21 @@ def test_L1_regularisation():
 #        assert all(x <= y for x, y in zip(nonzeroWo, nonzeroWo[1:]))
     assert abs(R2Yhat4 - 1) < TOLERANCE
 
-    return
 
 
     # Testing agreement of different runs by using Fleiss kappa
-    X = rand(10,100)
-    Y = rand(10,100)
+    print
+    np.random.seed(15)
+    n = 10
+    X, Y = orth_matrix(n)
+    X = np.hstack((X, rand(n,n)))
+    Y = np.hstack((Y, rand(n,n)))
     num_comp = 1
     nonzero = []
-    for l in [0, 0.1, 0.2, 0.225]:
-        num = 50
+    for l in [0, 0.1, 0.2, 0.3]:
+        num = 10
         A = zeros(X.shape[1],num)
-        B = zeros(X.shape[1],num)
+        B = zeros(Y.shape[1],num)
         for run in xrange(num):
             spls1 = PLSR(num_comp = num_comp, center = center, scale = scale,
                          tolerance = tol, max_iter = miter,
@@ -989,31 +1018,33 @@ def test_L1_regularisation():
             nonzero.append(np.count_nonzero(spls1.W))
             print "sPLS: l = %.2f, R2Yhat = %.6f, num_comp = %d, nonzero: %d" % (l, R2Yhat1, num_comp, nonzero[-1])
 
-            A[:,run] = spls1.W[:,0]
-            B[:,run] = spls1.C[:,0]
+            A[:,run] = np.abs(spls1.W[:,0])
+            B[:,run] = np.abs(spls1.C[:,0])
 
-        A[A > 0] = 1
-        B[B > 0] = 1
+        A[A > 0.01] = 1
+        B[B > 0.01] = 1
         kappaA = fleiss_kappa(A, 2)
         kappaB = fleiss_kappa(B, 2)
         print "Kappa X:", kappaA
         print "Kappa Y:", kappaB
-        assert kappaA > 0.2
-        assert kappaB > 0.2
+        assert kappaA > 0.1
+        assert kappaB > 0.1
 
+
+    print
     num_comp = 1
     nonzeroW = []
     nonzeroWo = []
-    for l in [0, 0.1, 0.2, 0.225]:
+    for l in [0, 0.1, 0.2, 0.3]:
         num = 10
         A = zeros(X.shape[1],num)
-        B = zeros(X.shape[1],num)
+        B = zeros(Y.shape[1],num)
         Ao = zeros(X.shape[1],num)
-        Bo = zeros(X.shape[1],num)
+        Bo = zeros(Y.shape[1],num)
         for run in xrange(num):
             so2pls1 = O2PLS(num_comp = [num_comp, 2, 2], center = center, scale = scale,
                             tolerance = tol, max_iter = miter,
-                            prox_op = prox_op.L1([l,0.25-l], [l,0.25-l]),
+                            prox_op = prox_op.L1([l,l], [l,l]),
                             start_vector = algorithms.RANDOM)
             so2pls1.fit(X, Y)
             Yhat1 = so2pls1.predict(X)
@@ -1023,10 +1054,10 @@ def test_L1_regularisation():
             nonzeroWo.append(np.count_nonzero(so2pls1.Wo[:,[0]]))
             print "O2PLS: l = %.2f, R2Yhat = %.6f, num_comp = %d, nonzeroW: %d, nonzeroWo: %d" % (l, R2Yhat1, num_comp, nonzeroW[-1], nonzeroWo[-1])
 
-            A[:,run] = so2pls1.W[:,0]
-            B[:,run] = so2pls1.C[:,0]
-            Ao[:,run] = so2pls1.Wo[:,0]
-            Bo[:,run] = so2pls1.Co[:,0]
+            A[:,run] = np.abs(so2pls1.W[:,0])
+            B[:,run] = np.abs(so2pls1.C[:,0])
+            Ao[:,run] = np.abs(so2pls1.Wo[:,0])
+            Bo[:,run] = np.abs(so2pls1.Co[:,0])
 
         A[A > 0] = 1
         B[B > 0] = 1
@@ -1046,9 +1077,6 @@ def test_L1_regularisation():
         assert kappaBo > 0.1
 
 
-#        assert all(x <= y for x, y in zip(np.abs(spls1.W)[:,0], (np.abs(spls1.W)[:,0])[1:]))
-#        assert all(x >= y for x, y in zip(nonzero, nonzero[1:]))
-#    assert abs(R2Yhat1 - 1) < TOLERANCE
 
 
 

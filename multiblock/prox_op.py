@@ -42,11 +42,11 @@ class L1(ProxOp):
     def __init__(self, *l, **kwargs):
         ProxOp.__init__(self, *l, **kwargs)
 
-    def prox(self, x, index, allow_empty = False, normaliser = None):
+    def prox(self, x, index, allow_empty=False, normaliser=None):
 
         xorig = x.copy()
         lorig = self.parameter[index]
-        l     = lorig
+        l = lorig
         if normaliser != None:
             normalise = normaliser[index]
         else:
@@ -60,18 +60,19 @@ class L1(ProxOp):
             np.absolute(x, x)
             x -= l
             x[x < 0] = 0
-            x = np.multiply(sign,x)
+            x = np.multiply(sign, x)
 
             if norm(x) > TOLERANCE or allow_empty:
                 break
             else:
                 warn = True
                 # TODO: Improved this!
-                l *= 0.95 # Reduce by 5 % until at least one significant variable
+                l *= 0.95  # Reduce by 5 % until at least one significant
 
         if warn:
-            warnings.warn('Soft threshold was too large (all variables purged).'\
-                    ' Threshold reset to %f (was %f)' % (l, lorig))
+            warnings.warn('Soft threshold was too large (all variables ' \
+                          'purged). Threshold reset to %f (was %f)'
+                          % (l, lorig))
 
         return x
 
