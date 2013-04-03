@@ -37,181 +37,124 @@ class PreprocessQueue(object):
                              ' a list of Preprocess instances or an instance '\
                              'of Preprocess')
 
-    def process(self, *X):
+    def process(self, X):
         for p in self.queue:
-            X = p.process(*X)
+            X = p.process(X)
         return X
 
-    def revert(self, *X):
+    def revert(self, X):
         for p in self.queue.reverse():
-            X = p.revert(*X)
+            X = p.revert(X)
         return X
 
 
 class Preprocess(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, which=None, *kwargs):
-        if which != None:
-            if not isinstance(which, (tuple, list)):
-                raise ValueError('Argument "which" must be a list or tuple ' \
-                                 'of bools')
-            for i in xrange(len(which)):
-                if not isinstance(which[i], bool):
-                    raise ValueError('Argument "which" must be a list or ' \
-                                     'tuple of bools')
-        self.which = which
+    def __init__(self, **kwargs):
         self.params = kwargs
 
-    def _create_which(self, *X):
-        return [True] * len(X)
-
     @abc.abstractmethod
-    def process(self, *X):
+    def process(self, X):
         raise NotImplementedError('Abstract method "process" must be '\
                                   'specialised!')
 
     @abc.abstractmethod
-    def revert(self, *X):
+    def revert(self, X):
         raise NotImplementedError('Abstract method "revert" must be '\
                                   'specialised!')
 
 
 class Center(Preprocess):
 
-    def __init__(self, which=None):
-        Preprocess.__init__(self, which)
+    def __init__(self, **kwargs):
+        Preprocess.__init__(self, **kwargs)
         self.means = None
 
-    def process(self, *X):
-        """ Centers the numpy array(s) in X
+    def process(self, X):
+        """ Centers the numpy array in X
 
         Arguments
         ---------
-        X : The matrices to center
+        X : The matrix to center
 
         Returns
         -------
         Centered X
         """
-        X = list(X)
 
-        if self.which == None:
-            self.which = self._create_which(self, *X)
-
-        if self.means != None:
-            for i in xrange(len(X)):
-                if self.which[i]:
-                    X[i] = X[i] - self.means[i]
-        else:
-            self.means = []
-            for i in xrange(len(X)):
-                if self.which[i]:
-                    mean = X[i].mean(axis=0)
-                    X[i] = X[i] - mean
-                    self.means.append(mean)
-                else:
-                    self.means.append([0] * X[i].shape[1])
+        if self.means == None:
+            self.means = X.mean(axis=0)
+        X = X - self.means
 
         return X
 
-    def revert(self, *X):
-        """ Un-centers the previously centered numpy array(s) in X
+    def revert(self, X):
+        """ Un-centers the previously centered numpy array in X
 
         Arguments
         ---------
-        X : The matrices to center
+        X : The matrix to center
 
         Returns
         -------
         Un-centered X
         """
-        X = list(X)
-
-        if self.which == None:
-            self.which = self._create_which(self, *X)
 
         if self.means == None:
             raise ValueError('The method "process" must be applied before ' \
                              '"revert" can be applied.')
 
-        for i in xrange(len(X)):
-            if self.which[i]:
-                X[i] = X[i] + self.means[i]
+        X = X + self.means
 
         return X
 
 
 class Scale(Preprocess):
 
-    def __init__(self, which=None, **kwargs):
-        Preprocess.__init__(self, which)
+    def __init__(self, **kwargs):
+        Preprocess.__init__(self, **kwargs)
         self.centered = kwargs.pop('centered', True)
         self.stds = None
 
-    def process(self, *X):
-        """ Scales the numpy arrays in arrays to standard deviation 1
+    def process(self, X):
+        """ Scales the numpy array in X to standard deviation 1
 
         Arguments
         ---------
-        X : The matrices to scale
+        X : The matrix to scale
 
         Returns
         -------
         Scaled X
         """
-        X = list(X)
 
-        if self.which == None:
-            self.which = self._create_which(self, *X)
+        if self.stds == None:
+            ddof = 1 if self.centered else 0
+            self.stds = X.std(axis=0, ddof=ddof)
+            self.stds[self.stds < TOLERANCE] = 1.0
 
-        if not isinstance(self.centered, (tuple, list)):
-            self.centered = [self.centered] * len(self.which)
-
-        if self.stds != None:
-            for i in xrange(len(X)):
-                if self.which[i]:
-                    X[i] = X[i] / self.stds[i]
-        else:
-            self.stds = []
-            for i in xrange(len(X)):
-                if self.which[i]:
-                    ddof = 1 if self.centered[i] else 0
-                    std = X[i].std(axis=0, ddof=ddof)
-                    std[std < TOLERANCE] = 1.0
-                    X[i] = X[i] / std
-                    self.stds.append(std)
-                else:
-                    self.stds.append([1] * X[i].shape[1])
+        X = X / self.stds
 
         return X
 
-    def revert(self, *X):
-        """ Un-scales the previously scaled numpy arrays in arrays to standard
+    def revert(self, X):
+        """ Un-scales the previously scaled numpy array in X to standard
         deviation 1
 
         Arguments
         ---------
-        X : The matrices to un-scale
+        X : The matrix to un-scale
 
         Returns
         -------
         Un-scaled X
         """
-        X = list(X)
-
-        if self.which == None:
-            self.which = self._create_which(self, *X)
-
-        if not isinstance(self.centered, (tuple, list)):
-            self.centered = [self.centered] * len(self.which)
 
         if self.stds == None:
             raise ValueError('The method "process" must be applied before ' \
                              '"revert" can be applied.')
 
-        for i in xrange(len(X)):
-            if self.which[i]:
-                X[i] = X[i] * self.stds[i]
+        X = X * self.stds
 
         return X

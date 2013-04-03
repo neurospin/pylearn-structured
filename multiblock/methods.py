@@ -16,7 +16,7 @@ import abc
 import warnings
 import numpy as np
 from numpy.linalg import inv
-from multiblock.utils import dot, direct
+from multiblock.utils import dot, direct, make_list
 import preprocess as pp
 import algorithms
 
@@ -24,12 +24,12 @@ import algorithms
 class BaseMethod(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, algorithm, num_comp=2, preprocess=[], norm_dir=True):
+    def __init__(self, algorithm, num_comp=2, preprocess=None, norm_dir=True):
 
         # Supplied by the user
         self.algorithm = algorithm
         self.num_comp = num_comp
-        self.preproc = pp.PreprocessQueue(preprocess)
+        self.preproc = preprocess
         self.norm_dir = norm_dir
 
         self._check_inputs()
@@ -42,10 +42,6 @@ class BaseMethod(object):
         if not isinstance(self.algorithm, algorithms.BaseAlgorithm):
             raise ValueError('Argument "algorithm" must be a BaseAlgorithm ' \
                              'instance')
-
-        if not isinstance(self.preproc, pp.PreprocessQueue):
-            raise ValueError('Argument "preprocess" must be a ' \
-                             'PreprocessQueue instance')
 
         if isinstance(self.num_comp, (tuple, list)):
             comps = self.num_comp
@@ -71,6 +67,9 @@ class BaseMethod(object):
         if self.n < 1:
             raise ValueError('At least one matrix must be given')
 
+        if not isinstance(self.preproc, (tuple, list)):
+            self.preproc = make_list(self.preproc, self.n, None)
+
         # Copy since this will contain the residual (deflated) matrices
         X = check_arrays(*X, dtype=np.float, copy=True, sparse_format='dense')
 
@@ -89,16 +88,26 @@ class BaseMethod(object):
         return X
 
     def preprocess(self, *X):
-#        for p in self.preproc:
-#            X = p.process(*X)
-#        return X
-        return self.preproc.process(*X)
+        X = list(X)
+
+        if self.preproc == None:
+            return X
+
+        for i in xrange(len(X)):
+            if self.preproc[i] != None:
+                X[i] = self.preproc[i].process(X[i])
+        return X
 
     def postprocess(self, *X):
-#        for p in self.preproc.reverse():
-#            X = p.revert(*X)
-#        return X
-        return self.preproc.revert(*X)
+        X = list(X)
+
+        if self.preproc == None:
+            return X
+
+        for i in xrange(len(X)):
+            if self.preproc[i] != None:
+                X[i] = self.preproc[i].revert(X[i])
+        return X
 
     @abc.abstractmethod
     def _get_transform(self, index=0):
@@ -233,14 +242,11 @@ class PLSBaseMethod(BaseMethod):
 
 class PCA(PLSBaseMethod):
 
-    def __init__(self,
-            algorithm=algorithms.NIPALSAlgorithm(adj_matrix=np.ones((1, 1))),
-            **kwargs):
+    def __init__(self, **kwargs):
 
-        prepro = kwargs.pop("preprocess", [pp.Center(),
-                                           pp.Scale()])
-        PLSBaseMethod.__init__(self, preprocess=prepro,
-                               algorithm=algorithm, **kwargs)
+        prepro = kwargs.pop("preprocess", pp.PreprocessQueue([pp.Center(),
+                                                              pp.Scale()]))
+        PLSBaseMethod.__init__(self, preprocess=prepro, **kwargs)
 
     def _get_transform(self, index=0):
         return self.P
@@ -267,11 +273,11 @@ class SVD(PCA):
 
     The decomposition generates matrices such that
 
-        dot(U, dot(S, V)) == X
+        dot(U, dot(S, V.T)) == X
     """
 
     def __init__(self, **kwargs):
-        PCA.__init__(self, preprocess=[], **kwargs)
+        PCA.__init__(self, preprocess=None, **kwargs)
 
     def _get_transform(self, index=0):
         return self.V
@@ -290,73 +296,70 @@ class SVD(PCA):
         return self
 
 
-#class PLSR(BasePLS, RegressorMixin):
-#
-#    def __init__(self, **kwargs):
-#        BasePLS.__init__(self, mode = NEWA, scheme = HORST, not_normed = [1],
-#                         **kwargs)
-#
-#    def _get_transform(self, index = 0):
-#        if index < 0 or index > 1:
-#            raise ValueError("Index must be 0 or 1")
-#        if index == 0:
-#            return self.Ws
-#        else:
-#            return self.C
-#
-#    def _deflate(self, X, w, t, p, index = None):
-#        if index == 0:
-#            return X - dot(t, p.T) # Deflate X using its loadings
-#        else:
-#            return X # Do not deflate Y
-#
-#    def fit(self, X, Y = None, **kwargs):
-#        Y = kwargs.pop('y', Y)
-#        if Y == None:
-#            raise ValueError('Y is not supplied')
-#        BasePLS.fit(self, X, Y, **kwargs)
-#        self.C  = self.W[1]
-#        self.U  = self.T[1]
-#        self.Q  = self.P[1]
-#        self.W  = self.W[0]
-#        self.T  = self.T[0]
-#        self.P  = self.P[0]
-#        self.Ws = self.Ws[0]
-#
-#        self.B = dot(self.Ws, self.C.T)
-#
-#        return self
-#
-#    def predict(self, X, copy = True):
-#        X = np.asarray(X)
-#        if copy:
-#            X = (X - self.means[0]) / self.stds[0]
-#        else:
-#            X -= self.means[0]
-#            X /= self.stds[0]
-#
-#        if hasattr(self, 'B'):
-#            Ypred = dot(X, self.B)
-#        else:
-#            Ypred = dot(X, self.Bx)
-#
-#        return (Ypred*self.stds[1]) + self.means[1]
-#
-#    def transform(self, X, Y = None, **kwargs):
-#        Y = kwargs.pop('y', Y)
-#        if Y != None:
-#            T = BasePLS.transform(self, X, Y, **kwargs)
-#        else:
-#            T = BasePLS.transform(self, X, **kwargs)
-#            T = T[0]
-#        return T
-#
-#    def fit_transform(self, X, Y = None, **kwargs):
-#        Y = kwargs.pop('y', Y)
-#        return self.fit(X, Y, **kwargs).transform(X, Y)
-#
-#
-#
+class PLSR(PLSBaseMethod):
+    """Performs PLS regression between two matrices X and Y.
+    """
+
+    def __init__(self, **kwargs):
+        prepro = kwargs.pop("preprocess", pp.PreprocessQueue([pp.Center(),
+                                                              pp.Scale()]))
+        PLSBaseMethod.__init__(self, preprocess=prepro, not_normed=[1],
+                               **kwargs)
+
+    def _get_transform(self, index=0):
+        if index == 0:
+            return self.Ws
+        else:
+            return self.C
+
+    def _deflate(self, X, w, t, p, index=None):
+        if index == 0:
+            return X - dot(t, p.T)  # Deflate X using its loadings
+        else:
+            return X  # Do not deflate Y
+
+    def fit(self, X, Y=None, **kwargs):
+        Y = kwargs.pop('y', Y)
+        if Y == None:
+            raise ValueError('Y is not supplied')
+        PLSBaseMethod.fit(self, X, Y, **kwargs)
+        self.C = self.W[1]
+        self.U = self.T[1]
+        self.Q = self.P[1]
+        self.W = self.W[0]
+        self.T = self.T[0]
+        self.P = self.P[0]
+        self.Ws = self.Ws[0]
+
+        self.B = dot(self.Ws, self.C.T)
+
+        return self
+
+    def predict(self, X, copy=True):
+        X = np.asarray(X)
+        X = self.preprocess(X)[0]
+
+        Ypred = dot(X, self.B)
+
+        Ypred = self.postprocess(Ypred)[0]
+
+        return Ypred
+
+    def transform(self, X, Y=None, **kwargs):
+        Y = kwargs.pop('y', Y)
+        if Y != None:
+            T = PLSBaseMethod.transform(self, X, Y, **kwargs)
+        else:
+            T = PLSBaseMethod.transform(self, X, **kwargs)
+            T = T[0]
+        return T
+
+    def fit_transform(self, X, Y=None, **kwargs):
+        Y = kwargs.pop('y', Y)
+        return self.fit(X, Y, **kwargs).transform(X, Y)
+
+
+
 #class PLSC(PLSR):
 #    """ PLS with canonical deflation (symmetric).
 #

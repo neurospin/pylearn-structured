@@ -416,7 +416,6 @@ def test_SVD_PCA():
     preproc = preprocess.PreprocessQueue([preprocess.Center(),
                                           preprocess.Scale()])
     Xtr = preproc.process(Xtr)
-    Xtr = Xtr[0]
 
     for st in [0.1, 0.01, 0.001, 0.0001, 0]:
         alg = algorithms.NIPALSAlgorithm(prox_op=prox_op.L1(st),
@@ -451,13 +450,12 @@ def test_SVD_PCA():
     preproc = preprocess.PreprocessQueue([preprocess.Center(),
                                           preprocess.Scale()])
     Xtr = preproc.process(Xtr)
-    Xtr = Xtr[0]
 
     for st in [0.1, 0.01, 0.001, 0.0001, 0]:
         alg = algorithms.NIPALSAlgorithm(prox_op=prox_op.L1(st),
                                          adj_matrix=np.ones((1, 1)),
                                          tolerance=tol, max_iter=1000)
-        pca = PCA(num_comp=num_comp, algorithm=alg, preprocess=[])
+        pca = PCA(num_comp=num_comp, algorithm=alg, preprocess=None)
         pca.fit(Xtr)
         Tte = pca.transform(Xtr)
         U, S, V = np.linalg.svd(Xtr)
@@ -482,16 +480,14 @@ def test_SVD_PCA():
     preproc = preprocess.PreprocessQueue([preprocess.Center(),
                                           preprocess.Scale()])
     Xtr = preproc.process(Xtr)
-    Xtr = Xtr[0]
 #    Xtr, m = center(Xtr, return_means=True)
 #    Xtr, s = scale(Xtr, return_stds=True)
     Xte = preproc.process(Xte)
-    Xte = Xte[0]
 #    Xte = (Xte - m) / s
 
     alg = algorithms.NIPALSAlgorithm(adj_matrix=np.ones((1, 1)),
                                      tolerance=tol, max_iter=1000)
-    pca = PCA(num_comp=num_comp, algorithm=alg, preprocess=[])
+    pca = PCA(num_comp=num_comp, algorithm=alg, preprocess=None)
     pca.fit(Xtr)
     pca.P, pca.T = direct(pca.P, pca.T)
     Tte = pca.transform(Xte)
@@ -520,11 +516,10 @@ def test_SVD_PCA():
     preproc = preprocess.PreprocessQueue([preprocess.Center(),
                                           preprocess.Scale()])
     X = preproc.process(X)
-    X = X[0]
 
     alg = algorithms.NIPALSAlgorithm(adj_matrix=np.ones((1, 1)),
                                      tolerance=tol, max_iter=1000)
-    pca = PCA(num_comp=num_comp, algorithm=alg, preprocess=[])
+    pca = PCA(num_comp=num_comp, algorithm=alg, preprocess=None)
     pca.fit(X)
     Xhat_1 = dot(pca.T, pca.P.T)
 
@@ -545,11 +540,10 @@ def test_SVD_PCA():
     preproc = preprocess.PreprocessQueue([preprocess.Center(),
                                           preprocess.Scale()])
     X = preproc.process(X)
-    X = X[0]
 
     alg = algorithms.NIPALSAlgorithm(adj_matrix=np.ones((1, 1)),
                                      tolerance=tol, max_iter=1500)
-    pca = PCA(num_comp=num_comp, algorithm=alg, preprocess=[])
+    pca = PCA(num_comp=num_comp, algorithm=alg, preprocess=None)
     pca.fit(X)
     Xhat_1 = dot(pca.T, pca.P.T)
 
