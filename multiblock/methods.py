@@ -15,9 +15,9 @@ from sklearn.utils import check_arrays
 import abc
 import warnings
 import numpy as np
-from np.linalg import inv
+from numpy.linalg import inv
 from multiblock.utils import dot, direct
-import preprocess
+import preprocess as pp
 import algorithms
 
 
@@ -29,7 +29,7 @@ class BaseMethod(object):
         # Supplied by the user
         self.algorithm = algorithm
         self.num_comp = num_comp
-        self.preprocess = preprocess
+        self.preproc = pp.PreprocessQueue(preprocess)
         self.norm_dir = norm_dir
 
         self._check_inputs()
@@ -39,17 +39,13 @@ class BaseMethod(object):
         if self.num_comp < 1:
             raise ValueError('At least one component must be computed')
 
-        if not isinstance(self.algorithm, algorithms.Algorithm):
-            raise ValueError('Argument "algorithm" must be a Preprocess ' \
+        if not isinstance(self.algorithm, algorithms.BaseAlgorithm):
+            raise ValueError('Argument "algorithm" must be a BaseAlgorithm ' \
                              'instance')
 
-        if not isinstance(preprocess, (tuple, list)):
-            raise ValueError('Argument "preprocess" must be a list of ' \
-                             'Preprocess instances')
-        for p in preprocess:
-            if not isinstance(p, preprocess.Preprocess):
-                raise ValueError('Argument "preprocess" must be a list of ' \
-                                 'Preprocess instances')
+        if not isinstance(self.preproc, pp.PreprocessQueue):
+            raise ValueError('Argument "preprocess" must be a ' \
+                             'PreprocessQueue instance')
 
         if isinstance(self.num_comp, (tuple, list)):
             comps = self.num_comp
@@ -76,8 +72,7 @@ class BaseMethod(object):
             raise ValueError('At least one matrix must be given')
 
         # Copy since this will contain the residual (deflated) matrices
-        X = check_arrays(*X, dtype=np.float, copy=self.copy,
-                         sparse_format='dense')
+        X = check_arrays(*X, dtype=np.float, copy=True, sparse_format='dense')
 
         # Check number of rows
         M = X[0].shape[0]
@@ -93,15 +88,17 @@ class BaseMethod(object):
                                  % (0, M, i, X[i].shape[0]))
         return X
 
-    def preprocess(*X):
-        for p in preprocess:
-            X = p.process(X)
-        return X
+    def preprocess(self, *X):
+#        for p in self.preproc:
+#            X = p.process(*X)
+#        return X
+        return self.preproc.process(*X)
 
-    def postprocess(*X):
-        for p in preprocess.reverse():
-            X = p.revert(X)
-        return X
+    def postprocess(self, *X):
+#        for p in self.preproc.reverse():
+#            X = p.revert(*X)
+#        return X
+        return self.preproc.revert(*X)
 
     @abc.abstractmethod
     def _get_transform(self, index=0):
@@ -120,32 +117,34 @@ class PLSBaseMethod(BaseMethod):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, adj_matrix=None, algorithm=algorithms.NIPALSAlgorithm(),
-                 **kwargs):
+    def __init__(self, algorithm=algorithms.NIPALSAlgorithm(), **kwargs):
 
         BaseMethod.__init__(self, algorithm, **kwargs)
 
-        # Supplied by the user
-        self.adj_matrix = adj_matrix
+#        # Supplied by the user
+#        self.adj_matrix = adj_matrix
 
     def _check_inputs(self):
 
         BaseMethod._check_inputs(self)
 
-        if self.adj_matrix != None and not hasattr(self, "n"):
-            self.n = max(self.adj_matrix.shape)
-        if hasattr(self, "n"):
-            if self.adj_matrix == None and self.n == 1:
-                self.adj_matrix = np.ones((1, 1))
-            elif self.adj_matrix == None and self.n > 1:
-                self.adj_matrix = np.ones((self.n, self.n)) - np.eye(self.n)
-        elif self.adj_matrix == None:
-            raise ValueError('Argument "adj_matrix" must be given')
+#        if self.adj_matrix != None and not hasattr(self, "n"):
+#            self.n = max(self.adj_matrix.shape)
+#        if hasattr(self, "n"):
+#            if self.adj_matrix == None and self.n == 1:
+#                self.adj_matrix = np.ones((1, 1))
+#            elif self.adj_matrix == None and self.n > 1:
+#                self.adj_matrix = np.ones((self.n, self.n)) - np.eye(self.n)
+#        elif self.adj_matrix == None:
+#            raise ValueError('Argument "adj_matrix" must be given')
 
     def fit(self, *X, **kwargs):
 
         X = self._check_arrays(*X)
         X = self.preprocess(*X)
+
+        if not isinstance(X, list):
+            X = list(X)
 
         # Results matrices
         self.W = []
@@ -179,7 +178,7 @@ class PLSBaseMethod(BaseMethod):
                 t = dot(X[i], w[i]) / dot(w[i].T, w[i])
 
                 # Test for null variance
-                if dot(t.T, t) < self.tolerance:
+                if dot(t.T, t) < self.algorithm.tolerance:
                     warnings.warn('Scores of block X[%d] are too small at '
                                   'iteration %d' % (i, a))
 
@@ -191,7 +190,7 @@ class PLSBaseMethod(BaseMethod):
                 self.P[i][:, a] = p.ravel()
 
                 # Generic deflation method. Overload for specific deflation!
-                X[i] = self.deflate(X, p, t, index=i)
+                X[i] = self.deflate(X[i], p, t, index=i)
 
         # Compute W*, the rotation from input space X to transformed space T
         # such that T = XW* = XW(P'W)^-1
@@ -234,11 +233,14 @@ class PLSBaseMethod(BaseMethod):
 
 class PCA(PLSBaseMethod):
 
-    def __init__(self, **kwargs):
-        PLSBaseMethod.__init__(self, adj_matrix=np.ones((1, 1)),
-                               preprocess=[preprocess.Center(),
-                                           preprocess.Scale()],
-                               **kwargs)
+    def __init__(self,
+            algorithm=algorithms.NIPALSAlgorithm(adj_matrix=np.ones((1, 1))),
+            **kwargs):
+
+        prepro = kwargs.pop("preprocess", [pp.Center(),
+                                           pp.Scale()])
+        PLSBaseMethod.__init__(self, preprocess=prepro,
+                               algorithm=algorithm, **kwargs)
 
     def _get_transform(self, index=0):
         return self.P
@@ -269,7 +271,7 @@ class SVD(PCA):
     """
 
     def __init__(self, **kwargs):
-        PCA.__init__(self, **kwargs)
+        PCA.__init__(self, preprocess=[], **kwargs)
 
     def _get_transform(self, index=0):
         return self.V

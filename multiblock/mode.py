@@ -12,7 +12,7 @@ __all__ = ['Mode', 'A', 'NewA', 'B']
 import abc
 import normalisation
 from multiblock.utils import dot
-from numpy import pinv
+from numpy.linalg import pinv
 
 
 class Mode(object):
@@ -24,14 +24,14 @@ class Mode(object):
                                   'specialised!')
 
     def normalise(self, w, X=None):
-        return self.normalise.apply(w, X)
+        return self.norm.apply(w, X)
 
 
 class A(Mode):
 
     def __init__(self):
         Mode.__init__(self)
-        self.normalise = normalisation.UnitVarianceScores()
+        self.norm = normalisation.UnitVarianceScores()
 
     def estimation(self, X, u):
         # TODO: Ok with division here?
@@ -42,14 +42,14 @@ class NewA(A):
 
     def __init__(self):
         Mode.__init__(self)
-        self.normalise = normalisation.UnitNormWeights()
+        self.norm = normalisation.UnitNormWeights()
 
 
 class B(Mode):
 
     def __init__(self):
         Mode.__init__(self)
-        self.normalise = normalisation.UnitVarianceScores()
+        self.norm = normalisation.UnitVarianceScores()
 
     def estimation(self, X, u):
         return dot(pinv(X), u)

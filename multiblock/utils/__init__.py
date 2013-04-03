@@ -17,10 +17,11 @@ from .utils import ssvar
 from .utils import sqrt
 from .utils import rand
 from .utils import zeros
+from .utils import direct
 
 import testing
 
 __all__ = ['dot', 'norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
            'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy',
            'sstot', 'ssvar', 'sqrt', 'rand', 'zeros',
-           'testing']
+           'testing', 'direct']

@@ -23,7 +23,7 @@ class WeightingScheme(object):
 
 
 class Horst(WeightingScheme):
-    def compute(self):
+    def compute(self, *args):
         return 1
 
 

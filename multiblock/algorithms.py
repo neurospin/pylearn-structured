@@ -29,7 +29,7 @@ import start_vector
 import scheme
 import mode
 from multiblock.utils import MAX_ITER, TOLERANCE, make_list, dot, zeros, sqrt
-from numpy import eye
+from numpy import ones, eye
 from numpy.linalg import pinv
 
 __all__ = ['BaseAlgorithm', 'NIPALSBaseAlgorithm', 'NIPALSAlgorithm',
@@ -71,17 +71,19 @@ class NIPALSBaseAlgorithm(BaseAlgorithm):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, adj_matrix,
-                 scheme=scheme.Horst(),
+    def __init__(self, adj_matrix=None, scheme=scheme.Horst(),
                  start_vector=start_vector.LargestStartVector(),
-                 not_normed=False,
+                 not_normed=[],
                  **kwargs):
         """
         Parameters:
         ----------
         adj_matrix : Adjacency matrix that is a numpy array of shape [n, n].
-                     If an element in position adj_matrix[i,j] is 1, then block
-                     i and j are connected, and 0 otherwise.
+                     This matrix defines the path structure of the model. If an
+                     element in position adj_matrix[i,j] is 1, then block i and
+                     j are connected, and 0 otherwise. If this parameter is
+                     omitted, all matrices are assumed to be connected.
+
         scheme     : The inner weighting scheme to use in the algorithm. The
                      scheme may be an instance of Horst, Centroid or Factorial.
         """
@@ -136,11 +138,17 @@ class NIPALSAlgorithm(NIPALSBaseAlgorithm):
         -------
         w          : A list with n numpy arrays of weights of shape [N_i, 1].
         """
-
         n = len(X)
+
+        if self.adj_matrix == None:
+            if n > 1:
+                self.adj_matrix = ones((n, n)) - eye(n, n)
+            else:
+                self.adj_matrix = ones((1, 1))
+
         self.mode = make_list(self.mode, n, mode.NewA())
         self.scheme = make_list(self.scheme, n, scheme.Horst())
-        self.not_normed = make_list(self.not_normed, n, False)
+#        self.not_normed = make_list(self.not_normed, n, False)
 
         w = []
         for Xi in X:
@@ -160,7 +168,7 @@ class NIPALSAlgorithm(NIPALSBaseAlgorithm):
                     tj = dot(Xj, wj)
 
                     # Determine scheme weights
-                    eij = self.scheme.compute(ti, tj)
+                    eij = self.scheme[i].compute(ti, tj)
 
                     # Internal estimation using connected matrices' scores
                     if self.adj_matrix[i, j] != 0 or \
@@ -168,14 +176,14 @@ class NIPALSAlgorithm(NIPALSBaseAlgorithm):
                         ui += eij * tj
 
                 # Outer estimation
-                wi = self.mode.estimation(Xi, ui)
+                wi = self.mode[i].estimation(Xi, ui)
 
                 # Apply proximal operator
                 wi = self.prox_op.prox(wi, i)
 
                 # Apply normalisation depending on the mode
                 if not i in self.not_normed:
-                    wi = self.mode.normalise(wi, Xi)
+                    wi = self.mode[i].normalise(wi, Xi)
 
                 # Check convergence for each weight vector. They all have to
                 # leave converged = True in order for the algorithm to stop.
@@ -232,12 +240,15 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
         -------
         w          : A list with n numpy arrays of weights of shape [N_i, 1].
         """
-
         n = len(X)
+
+        if self.adj_matrix == None:
+            self.adj_matrix = ones((n, n)) - eye(n, n)
+
         # TODO: Add Schäfer and Strimmer's method here if tau == None!
         self.tau = make_list(self.tau, n, 1)  # Default is New Mode A
         self.scheme = make_list(self.scheme, n, scheme.Horst())
-        self.not_normed = make_list(self.not_normed, n, False)
+#        self.not_normed = make_list(self.not_normed, n, False)
 
         invIXX = []
         w = []
@@ -268,7 +279,7 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
                     tj = dot(X[j], w[j])
 
                     # Determine scheme weights
-                    eij = self.scheme.compute(ti, tj)
+                    eij = self.scheme[i].compute(ti, tj)
 
                     # Internal estimation using connected matrices' scores
                     if self.adj_matrix[i, j] != 0 or \
