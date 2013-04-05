@@ -14,7 +14,7 @@ from multiblock.utils import TOLERANCE
 
 
 class PreprocessQueue(object):
-    def __init__(self, pq):
+    def __init__(self, X, pq):
         """ Preprocess queue.
 
         Arguments
@@ -22,20 +22,46 @@ class PreprocessQueue(object):
         pq : Either a PreprocessQueue, a list of Preprocess instances or an
              instance of Preprocess.
         """
-        if isinstance(pq, (tuple, list)):
+
+        super(PreprocessQueue, self).__init__()
+
+        if pq == None:
+            self.queue = []
+        elif isinstance(pq, (tuple, list)):
+            self.queue = []
             for p in pq:
                 if not isinstance(p, Preprocess):
                     raise ValueError('If argument "preprocess" is a list, it '\
                                      'must be a list of Preprocess instances')
-            self.queue = pq
+                self.queue.append(p.__class__(**p.params))
         elif isinstance(pq, PreprocessQueue):
-            self.queue = pq.queue
+            self.queue = []
+            for p in pq.queue:
+                self.queue.append(p.__class__(**p.params))
         elif isinstance(pq, Preprocess):
-            self.queue = [pq]
+            self.queue = [pq.__class__(**pq.params)]
         else:
             raise ValueError('Argument "pq" must either be a PreprocessQueue,'\
                              ' a list of Preprocess instances or an instance '\
                              'of Preprocess')
+
+        # Run once to initialise
+        for p in self.queue:
+            X = p.process(X)
+
+    def push(self, p):
+        """ Adds (pushes) a Preprocess instance to the end of the queue.
+        """
+
+        if not isinstance(p, Preprocess):
+            raise ValueError('Argument must be an instance of "Preprocess"')
+        self.queue.append(p)
+
+    def pop(self):
+        """ Removes (pops) the first Preprocess instance from the queue.
+        """
+
+        self.queue.pop(0)
 
     def process(self, X):
         for p in self.queue:
@@ -43,7 +69,7 @@ class PreprocessQueue(object):
         return X
 
     def revert(self, X):
-        for p in self.queue.reverse():
+        for p in reversed(self.queue):
             X = p.revert(X)
         return X
 
@@ -52,6 +78,8 @@ class Preprocess(object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, **kwargs):
+        super(Preprocess, self).__init__()
+
         self.params = kwargs
 
     @abc.abstractmethod
@@ -68,7 +96,9 @@ class Preprocess(object):
 class Center(Preprocess):
 
     def __init__(self, **kwargs):
-        Preprocess.__init__(self, **kwargs)
+#        Preprocess.__init__(self, **kwargs)
+        super(Center, self).__init__(**kwargs)
+
         self.means = None
 
     def process(self, X):
@@ -104,7 +134,6 @@ class Center(Preprocess):
         if self.means == None:
             raise ValueError('The method "process" must be applied before ' \
                              '"revert" can be applied.')
-
         X = X + self.means
 
         return X
@@ -113,7 +142,9 @@ class Center(Preprocess):
 class Scale(Preprocess):
 
     def __init__(self, **kwargs):
-        Preprocess.__init__(self, **kwargs)
+#        Preprocess.__init__(self, **kwargs)
+        super(Scale, self).__init__(**kwargs)
+
         self.centered = kwargs.pop('centered', True)
         self.stds = None
 

@@ -21,7 +21,9 @@ from copy import copy
 
 __all__ = ['dot', 'norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
            'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy', 'sstot', 'ssvar',
-           'sqrt', 'rand', 'zeros', 'direct']
+           'sqrt', 'rand', 'zeros', 'direct', '_DEBUG', 'debug']
+
+_DEBUG = True
 
 # Settings
 TOLERANCE = 5e-8
@@ -169,3 +171,8 @@ def direct(W, T=None, P=None, compare=False):
         return W, P
     else:
         return W
+
+
+def debug(string):
+    if _DEBUG:
+        print string

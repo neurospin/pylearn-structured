@@ -8,17 +8,16 @@ variable methods for one, two or more blocks of data.
 
 from .methods import PCA
 from .methods import SVD
-#from .methods import EIGSym
-#from .methods import PLSR
-#from .methods import PLSC
-#from .methods import O2PLS
+from .methods import PLSR
+from .methods import PLSC
+from .methods import O2PLS
 
 import algorithms
 import preprocess
-import prox_op
+import prox_ops
 import tests
 import utils
 
-__all__ = ['PCA', 'SVD',  #'PLSR', 'PLSC', 'O2PLS',
-           'prox_op', 'algorithms', 'preprocess',
+__all__ = ['PCA', 'SVD', 'PLSR', 'PLSC', 'O2PLS',
+           'prox_ops', 'algorithms', 'preprocess',
            'tests', 'utils']

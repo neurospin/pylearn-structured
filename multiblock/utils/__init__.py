@@ -18,10 +18,12 @@ from .utils import sqrt
 from .utils import rand
 from .utils import zeros
 from .utils import direct
+from .utils import debug
+from .utils import _DEBUG
 
 import testing
 
 __all__ = ['dot', 'norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
            'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy',
            'sstot', 'ssvar', 'sqrt', 'rand', 'zeros',
-           'testing', 'direct']
+           'testing', 'direct', 'debug', '_DEBUG']

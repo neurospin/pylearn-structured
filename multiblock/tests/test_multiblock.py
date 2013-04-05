@@ -1,17 +1,18 @@
 import numpy as np
 from numpy import dot
-from multiblock.utils import *
-from multiblock.utils.testing import *
+import multiblock.utils as utils
+from multiblock.utils import direct, TOLERANCE, MAX_ITER, corr, norm, normI
+from multiblock.utils.testing import assert_array_almost_equal
 from multiblock import *
-import multiblock.prox_op as prox_op
+import multiblock.prox_ops as prox_ops
 from sklearn.datasets import load_linnerud
 
 from math import log
 from sklearn.pls import PLSRegression
 from sklearn.pls import PLSCanonical
-from sklearn.pls import CCA
-from sklearn.pls import PLSSVD
-from sklearn.pls import _center_scale_xy
+#from sklearn.pls import CCA
+#from sklearn.pls import PLSSVD
+#from sklearn.pls import _center_scale_xy
 
 
 def check_ortho(M, err_msg):
@@ -21,11 +22,11 @@ def check_ortho(M, err_msg):
 
 def test_multiblock():
 
-    test_SVD_PCA()
-#    test_eigsym()
-#    test_o2pls()
+#    test_SVD_PCA()
+##    test_eigsym()
 #    test_predictions()
-#    test_L1_regularisation()
+#    test_o2pls()
+    test_regularisation()
 
 #    n = 10
 #    X, Y = orth_matrix(n)
@@ -84,296 +85,6 @@ def test_multiblock():
 ##        print Yhat
 
 
-
-
-
-def test_o2pls():
-
-    np.random.seed(42)
-
-    # 000011100
-    p  = np.vstack((np.zeros((4,1)), np.ones((3,1)), np.zeros((2,1))))
-    # 001110000
-    q  = np.vstack((np.zeros((2,1)), np.ones((3,1)), np.zeros((4,1))))
-    t  = np.random.randn(10,1)
-
-    # 111111000
-    po = np.vstack((np.ones((4,1)), np.ones((2,1)), np.zeros((3,1))))
-    to = np.random.randn(10,1)
-
-    # 000111111
-    qo = np.vstack((np.zeros((3,1)), np.ones((2,1)), np.ones((4,1))))
-    uo = np.random.randn(10,1)
-
-    Q, R = np.linalg.qr(np.hstack((t, to, uo)))
-    t  = Q[:,[0]]
-    to = Q[:,[1]]
-    uo = Q[:,[2]]
-
-    X = dot(t, p.T) + dot(to, po.T)
-    Y = dot(t, q.T) + dot(uo, qo.T)
-
-    svd = SVD(num_comp = 1)
-    svd.fit(dot(X.T, Y))
-    t_svd = dot(X, svd.U)
-    u_svd = dot(Y, svd.V)
-
-    o2pls = O2PLS(num_comp = [1, 1, 1], center = False, scale = False)
-    o2pls.fit(X, Y)
-
-    Xhat = dot(o2pls.T, o2pls.P.T) + dot(o2pls.To, o2pls.Po.T)
-    assert_array_almost_equal(X, Xhat, decimal=5, err_msg="O2PLS does not" \
-            " give a correct reconstruction of X")
-    Yhat = dot(o2pls.U, o2pls.Q.T) + dot(o2pls.Uo, o2pls.Qo.T)
-    assert_array_almost_equal(Y, Yhat, decimal=5, err_msg="O2PLS does not" \
-            " give a correct reconstruction of Y")
-
-    assert np.abs(corr(o2pls.T, o2pls.U)) > np.abs(corr(t_svd, u_svd))
-    assert np.abs(corr(o2pls.T, o2pls.U)) > np.abs(corr(t_svd, u_svd))
-    assert np.abs(corr(o2pls.T, t)) > np.abs(corr(t_svd, t))
-    assert np.abs(corr(o2pls.U, t)) > np.abs(corr(u_svd, t))
-
-    assert ((p > TOLERANCE) == (np.abs(o2pls.W) > TOLERANCE)).all()
-    assert ((p > TOLERANCE) == (np.abs(o2pls.P) > TOLERANCE)).all()
-    assert ((po > TOLERANCE) == (np.abs(o2pls.Po) > TOLERANCE)).all()
-    assert dot(o2pls.W.T, o2pls.Wo) < TOLERANCE
-
-    assert ((q > TOLERANCE) == (np.abs(o2pls.C) > TOLERANCE)).all()
-    assert ((q > TOLERANCE) == (np.abs(o2pls.Q) > TOLERANCE)).all()
-    assert ((qo > TOLERANCE) == (np.abs(o2pls.Qo) > TOLERANCE)).all()
-    assert dot(o2pls.C.T, o2pls.Co) < TOLERANCE
-
-    W  = np.asarray([[-0.0000000035873],[-0.0000000035873],[-0.0000000035873],
-                     [-0.0000000035873],[ 0.5773502687753],[ 0.5773502687753],
-                     [ 0.5773502700183],[               0],[               0]])
-    W, o2pls.W = direct(W, o2pls.W, compare = True)
-    assert_array_almost_equal(W, o2pls.W, decimal=5, err_msg="O2PLS does not" \
-            " give the correct weights in X")
-    
-    T  = np.asarray([[-0.3320724686729],[ 0.0924349866604],[-0.4330046394993],
-                     [-1.0182038851347],[ 0.1565405190876],[ 0.1565295366198],
-                     [-1.0557643604012],[-0.5130595674519],[ 0.3138616360639],
-                     [-0.3627222076846]])
-    T, o2pls.T = direct(T, o2pls.T, compare = True)
-    assert_array_almost_equal(T, o2pls.T, decimal=5, err_msg="O2PLS does not" \
-            " give the correct scores in X")
-
-    P  = np.asarray([[-0.0000000035873],[-0.0000000035873],[-0.0000000035873],
-                     [-0.0000000035873],[ 0.5773502687753],[ 0.5773502687753],
-                     [ 0.5773502700183],[               0],[               0]])
-    P, o2pls.P = direct(P, o2pls.P, compare = True)
-    assert_array_almost_equal(P, o2pls.P, decimal=5, err_msg="O2PLS does not" \
-            " give the correct loadings in X")
-
-    Wo = np.asarray([[-0.4629100496613],[-0.4629100496613],[-0.4629100496613],
-                     [-0.4629100496613],[-0.1543033544685],[-0.1543033544685],
-                     [ 0.3086066967678],[               0],[               0]])
-    Wo, o2pls.Wo = direct(Wo, o2pls.Wo, compare = True)
-    assert_array_almost_equal(Wo, o2pls.Wo, decimal=5, err_msg="O2PLS does not" \
-            " give the correct unique weights in X")
-
-    To = np.asarray([[ 0.1166363558019],[ 0.3982081656371],[-0.4607187897875],
-                     [ 0.7141661638895],[ 1.3523258395355],[ 0.5103916850288],
-                     [ 0.0373342153684],[-0.5658484610118],[ 0.8644955981846],
-                     [ 0.7835700349552]])
-    To, o2pls.To = direct(To, o2pls.To, compare = True)
-    assert_array_almost_equal(To, o2pls.To, decimal=5, err_msg="O2PLS does not" \
-            " give the correct unique scores in X")
-
-    Po = np.asarray([[-0.4629100479271],[-0.4629100479271],[-0.4629100479271],
-                     [-0.4629100479271],[-0.4629100494572],[-0.4629100494572],
-                     [ 0.0000000000150],[               0],[               0]])
-    Po, o2pls.Po = direct(Po, o2pls.Po, compare = True)
-    assert_array_almost_equal(Po, o2pls.Po, decimal=5, err_msg="O2PLS does not" \
-            " give the correct unique loadings in X")
-
-    C  = np.asarray([[               0],[               0],[ 0.5773502653499],
-                     [ 0.5773502711095],[ 0.5773502711095],[-0.0000000006458],
-                     [-0.0000000006458],[-0.0000000006458],[-0.0000000006458]])
-    C, o2pls.C = direct(C, o2pls.C, compare = True)
-    assert_array_almost_equal(C, o2pls.C, decimal=5, err_msg="O2PLS does not" \
-            " give the correct weights in Y")
-
-    U  = np.asarray([[-0.3320724688962],[ 0.0924349962939],[-0.4330046405197],
-                     [-1.0182039005573],[ 0.1565405177895],[ 0.1565295466182],
-                     [-1.0557643651281],[-0.5130595684168],[ 0.3138616457148],
-                     [-0.3627222001620]])
-    U, o2pls.U = direct(U, o2pls.U, compare = True)
-    assert_array_almost_equal(U, o2pls.U, decimal=5, err_msg="O2PLS does not" \
-            " give the correct scores in Y")
-
-    Q  = np.asarray([[               0],[               0],[ 0.5773502653499],
-                     [ 0.5773502711095],[ 0.5773502711095],[-0.0000000006458],
-                     [-0.0000000006458],[-0.0000000006458],[-0.0000000006458]])
-    Q, o2pls.Q = direct(Q, o2pls.Q, compare = True)
-    assert_array_almost_equal(Q, o2pls.Q, decimal=5, err_msg="O2PLS does not" \
-            " give the correct loadings in Y")
-
-    Co = np.asarray([[-0.0000000000000],[-0.0000000000000],[ 0.3086067007710],
-                     [-0.1543033498817],[-0.1543033498817],[-0.4629100497585],
-                     [-0.4629100497585],[-0.4629100497585],[-0.4629100497585]])
-    Co, o2pls.Co = direct(Co, o2pls.Co, compare = True)
-    assert_array_almost_equal(Co, o2pls.Co, decimal=5, err_msg="O2PLS does not" \
-            " give the correct unique weights in Y")
-
-    Uo = np.asarray([[-1.8954219076301],[ 0.0598668575527],[-0.0696963020914],
-                     [ 0.4526578568357],[-0.1430318048907],[-0.3371378335299],
-                     [ 0.5494330695544],[-0.3942048787367],[ 0.3248866786239],
-                     [-0.4046679696962]])
-    Uo, o2pls.Uo = direct(Uo, o2pls.Uo, compare = True)
-    assert_array_almost_equal(Uo, o2pls.Uo, decimal=5, err_msg="O2PLS does not" \
-            " give the correct unique scores in Y")
-
-    Qo = np.asarray([[               0],[               0],[ 0.0000000008807],
-                     [-0.4629100498755],[-0.4629100498755],[-0.4629100499092],
-                     [-0.4629100499092],[-0.4629100499092],[-0.4629100499092]])
-    Qo, o2pls.Qo = direct(Qo, o2pls.Qo, compare = True)
-    assert_array_almost_equal(Qo, o2pls.Qo, decimal=5, err_msg="O2PLS does not" \
-            " give the correct unique loadings in Y")
-
-
-
-    np.random.seed(42)
-
-    # Test primal version
-    X = np.random.rand(10,5)
-    Y = np.random.rand(10,5)
-
-    X = center(X)
-    Y = center(Y)
-
-#    print X
-#    print Y
-
-    o2pls = O2PLS(num_comp = [3, 2, 2], center = False, scale = False,
-                  tolerance = 5e-12)
-    o2pls.fit(X, Y)
-
-    Xhat = dot(o2pls.T, o2pls.P.T) + dot(o2pls.To, o2pls.Po.T)
-    assert_array_almost_equal(X, Xhat, decimal=5, err_msg="O2PLS does not" \
-            " give a correct reconstruction of X")
-    Yhat = dot(o2pls.U, o2pls.Q.T) + dot(o2pls.Uo, o2pls.Qo.T)
-    assert_array_almost_equal(Y, Yhat, decimal=5, err_msg="O2PLS does not" \
-            " give a correct reconstruction of Y")
-
-    W  = np.asarray([[ 0.28574946790251, 0.80549463591904, 0.46033811220009],
-                     [-0.82069177928760, 0.03104339272344, 0.41068049575333],
-                     [ 0.23145983182932,-0.45751789277098, 0.78402240214039],
-                     [-0.04763457200240, 0.32258037076527,-0.04720569565472],
-                     [ 0.43470626726892,-0.19192181081164, 0.05010836360956]])
-    W, o2pls.W = direct(W, o2pls.W, compare = True)
-    assert_array_almost_equal(W, o2pls.W, decimal=5, err_msg="O2PLS does not" \
-            " give the correct weights in X")
-
-    C  = np.asarray([[ 0.33983623057749,-0.08643744675915, 0.61598479965533],
-                     [-0.21522532354066, 0.76365073948393,-0.04894422260217],
-                     [-0.80644847592354,-0.40113340935286, 0.35039634003963],
-                     [-0.39193158427033, 0.44086245939825, 0.16315472674870],
-                     [-0.18498617630960,-0.23259061820651,-0.68466789737349]])
-    C, o2pls.C = direct(C, o2pls.C, compare = True)
-    assert_array_almost_equal(C, o2pls.C, decimal=5, err_msg="O2PLS does not" \
-            " give the correct weights in Y")
-
-    Wo = np.asarray([[ 0.09275972900527, 0.22138222202790],
-                     [-0.32377665878465, 0.22806033590264],
-                     [ 0.13719457299956,-0.32185438652509],
-                     [-0.48063246869535,-0.81267269197421],
-                     [-0.79795638168787, 0.36735710766490]])
-    Wo, o2pls.Wo = direct(Wo, o2pls.Wo, compare = True)
-    assert_array_almost_equal(Wo, o2pls.Wo, decimal=5, err_msg="O2PLS does not" \
-            " give the correct unique weights in X")
-
-    Co = np.asarray([[-0.28602514350110,-0.64481954689928],
-                     [ 0.41206605980471,-0.44533317148328],
-                     [ 0.21923094429525,-0.13376487405816],
-                     [-0.75775220257515, 0.22632291041065],
-                     [-0.35516274044178,-0.56282414394259]])
-    Co, o2pls.Co = direct(Co, o2pls.Co, compare = True)
-    assert_array_almost_equal(Co, o2pls.Co, decimal=5, err_msg="O2PLS does not" \
-            " give the correct unique weights in Y")
-
-
-
-    np.random.seed(43)
-
-    # Test dual version
-    X = np.random.rand(5,10)
-    Y = np.random.rand(5,10)
-
-    X = center(X)
-    Y = center(Y)
-
-#    print X
-#    print Y
-
-    o2pls = O2PLS(num_comp = [3, 2, 2], center = False, scale = False,
-                  tolerance = 5e-12)
-    o2pls.fit(X, Y)
-
-    Xhat = dot(o2pls.T, o2pls.P.T) + dot(o2pls.To, o2pls.Po.T)
-    assert_array_almost_equal(X, Xhat, decimal=5, err_msg="O2PLS does not" \
-            " give a correct reconstruction of X")
-    Yhat = dot(o2pls.U, o2pls.Q.T) + dot(o2pls.Uo, o2pls.Qo.T)
-    assert_array_almost_equal(Y, Yhat, decimal=5, err_msg="O2PLS does not" \
-            " give a correct reconstruction of Y")
-
-    W = np.asarray([[ 0.660803597278207, 0.283434091506369,-0.101117338537766],
-                    [ 0.199245987632961,-0.371782870650567,-0.105580628700634],
-                    [ 0.049056826578120, 0.510007873722491,-0.052587642609540],
-                    [ 0.227075734276342, 0.321380074146550, 0.386973037543944],
-                    [-0.366361672688720, 0.047162463451118,-0.513205123937845],
-                    [-0.231028371367863,-0.053688420486769, 0.613919597967758],
-                    [-0.441503068093162, 0.531948476266181, 0.122002207828563],
-                    [ 0.155295133662634,-0.243203951406354, 0.327486426731878],
-                    [ 0.177637796765300, 0.210455027475178, 0.022448447240951],
-                    [ 0.177420328030713, 0.162892673626251,-0.251399720667828]])
-    W, o2pls.W = direct(W, o2pls.W, compare = True)
-    assert_array_almost_equal(W, o2pls.W, decimal=5, err_msg="O2PLS does not" \
-            " give the correct weights in X")
-
-    C = np.asarray([[ 0.029463187629622, 0.343448566391335, 0.439488969936543],
-                    [-0.308514636956793, 0.567738611008308, 0.288894827826079],
-                    [-0.041368032721661, 0.240281903256231,-0.165061925028986],
-                    [ 0.507488061231666, 0.220214013827959,-0.197749809945398],
-                    [-0.032831353872698,-0.456872251088426, 0.330712836574687],
-                    [-0.088465736946256, 0.137459131512888,-0.199716885766439],
-                    [ 0.575982215268074, 0.265756602507649, 0.284152520405287],
-                    [-0.174758650490361,-0.236798361028871, 0.559859131854712],
-                    [ 0.474892087711923,-0.156220599204360, 0.286373509842812],
-                    [-0.219026289120523, 0.273412086540475, 0.177725330447690]])
-    C, o2pls.C = direct(C, o2pls.C, compare = True)
-    assert_array_almost_equal(C, o2pls.C, decimal=5, err_msg="O2PLS does not" \
-            " give the correct weights in Y")
-
-    Wo = np.asarray([[-0.072619636061551, 0],
-                     [-0.186139609163295, 0],
-                     [-0.193345377028291, 0],
-                     [-0.416556339157776, 0],
-                     [-0.556155354111327, 0],
-                     [ 0.042355493010538, 0],
-                     [ 0.170141007666872, 0],
-                     [-0.158346774720306, 0],
-                     [-0.079654387080921, 0],
-                     [ 0.614579177338253, 0]])
-    Wo, o2pls.Wo = direct(Wo, o2pls.Wo, compare = True)
-    assert_array_almost_equal(Wo, o2pls.Wo, decimal=5, err_msg="O2PLS does not" \
-            " give the correct unique weights in X")
-
-    Co = np.asarray([[-0.143370887251568, 0],
-                     [ 0.268379847579299, 0],
-                     [ 0.538254868418912, 0],
-                     [-0.076765726998542, 0],
-                     [ 0.011841641465690, 0],
-                     [-0.682168209668947, 0],
-                     [-0.047632336295968, 0],
-                     [-0.032431712285857, 0],
-                     [ 0.059518204830295, 0],
-                     [-0.373428712071223, 0]])
-    Co, o2pls.Co = direct(Co, o2pls.Co, compare = True)
-    assert_array_almost_equal(Co, o2pls.Co, decimal=5, err_msg="O2PLS does not" \
-            " give the correct unique weights in Y")
-
-
 #def test_eigsym():
 #
 #    d = load_linnerud()
@@ -413,12 +124,12 @@ def test_SVD_PCA():
     num_comp = 3
     tol = 5e-12
 
-    preproc = preprocess.PreprocessQueue([preprocess.Center(),
-                                          preprocess.Scale()])
+    preproc = preprocess.PreprocessQueue(Xtr, [preprocess.Center(),
+                                               preprocess.Scale()])
     Xtr = preproc.process(Xtr)
 
     for st in [0.1, 0.01, 0.001, 0.0001, 0]:
-        alg = algorithms.NIPALSAlgorithm(prox_op=prox_op.L1(st),
+        alg = algorithms.NIPALSAlgorithm(prox_op=prox_ops.L1(st),
                                          adj_matrix=np.ones((1, 1)),
                                          tolerance=tol, max_iter=1000)
         svd = SVD(num_comp=num_comp, algorithm=alg)
@@ -447,15 +158,15 @@ def test_SVD_PCA():
     num_comp = 5
     tol = 5e-9
 
-    preproc = preprocess.PreprocessQueue([preprocess.Center(),
-                                          preprocess.Scale()])
+    preproc = preprocess.PreprocessQueue(Xtr, [preprocess.Center(),
+                                               preprocess.Scale()])
     Xtr = preproc.process(Xtr)
 
     for st in [0.1, 0.01, 0.001, 0.0001, 0]:
-        alg = algorithms.NIPALSAlgorithm(prox_op=prox_op.L1(st),
+        alg = algorithms.NIPALSAlgorithm(prox_op=prox_ops.L1(st),
                                          adj_matrix=np.ones((1, 1)),
                                          tolerance=tol, max_iter=1000)
-        pca = PCA(num_comp=num_comp, algorithm=alg, preprocess=None)
+        pca = PCA(num_comp=num_comp, algorithm=alg)
         pca.fit(Xtr)
         Tte = pca.transform(Xtr)
         U, S, V = np.linalg.svd(Xtr)
@@ -477,17 +188,14 @@ def test_SVD_PCA():
     Xte = np.random.rand(20, 50)
     num_comp = 3
 
-    preproc = preprocess.PreprocessQueue([preprocess.Center(),
-                                          preprocess.Scale()])
+    preproc = preprocess.PreprocessQueue(Xtr, [preprocess.Center(),
+                                               preprocess.Scale()])
     Xtr = preproc.process(Xtr)
-#    Xtr, m = center(Xtr, return_means=True)
-#    Xtr, s = scale(Xtr, return_stds=True)
     Xte = preproc.process(Xte)
-#    Xte = (Xte - m) / s
 
     alg = algorithms.NIPALSAlgorithm(adj_matrix=np.ones((1, 1)),
                                      tolerance=tol, max_iter=1000)
-    pca = PCA(num_comp=num_comp, algorithm=alg, preprocess=None)
+    pca = PCA(num_comp=num_comp, algorithm=alg)
     pca.fit(Xtr)
     pca.P, pca.T = direct(pca.P, pca.T)
     Tte = pca.transform(Xte)
@@ -513,13 +221,13 @@ def test_SVD_PCA():
     X = np.random.rand(50, 100)
     num_comp = 50
 
-    preproc = preprocess.PreprocessQueue([preprocess.Center(),
-                                          preprocess.Scale()])
+    preproc = preprocess.PreprocessQueue(X, [preprocess.Center(),
+                                             preprocess.Scale()])
     X = preproc.process(X)
 
     alg = algorithms.NIPALSAlgorithm(adj_matrix=np.ones((1, 1)),
                                      tolerance=tol, max_iter=1000)
-    pca = PCA(num_comp=num_comp, algorithm=alg, preprocess=None)
+    pca = PCA(num_comp=num_comp, algorithm=alg)
     pca.fit(X)
     Xhat_1 = dot(pca.T, pca.P.T)
 
@@ -537,13 +245,13 @@ def test_SVD_PCA():
     X = np.random.rand(100, 50)
     num_comp = 50
 
-    preproc = preprocess.PreprocessQueue([preprocess.Center(),
-                                          preprocess.Scale()])
+    preproc = preprocess.PreprocessQueue(X, [preprocess.Center(),
+                                             preprocess.Scale()])
     X = preproc.process(X)
 
     alg = algorithms.NIPALSAlgorithm(adj_matrix=np.ones((1, 1)),
                                      tolerance=tol, max_iter=1500)
-    pca = PCA(num_comp=num_comp, algorithm=alg, preprocess=None)
+    pca = PCA(num_comp=num_comp, algorithm=alg)
     pca.fit(X)
     Xhat_1 = dot(pca.T, pca.P.T)
 
@@ -561,186 +269,529 @@ def test_SVD_PCA():
 def test_predictions():
 
     d = load_linnerud()
-    X = d.data
-    Y = d.target
+    Xorig = d.data
+    Yorig = d.target
     tol = 5e-12
     miter = 1000
     num_comp = 2
-    Xorig = X.copy()
-    Yorig = Y.copy()
-    SSY = np.sum(Yorig**2)
-    SSX = np.sum(Xorig**2)
+    SSY = np.sum(Yorig ** 2)
+#    SSX = np.sum(Xorig ** 2)
 #    center = True
-    scale  = False
+    scale = False
 
+    if scale:
+        preprocX = preprocess.PreprocessQueue(Xorig, [preprocess.Center(),
+                                                      preprocess.Scale()])
+        preprocY = preprocess.PreprocessQueue(Yorig, [preprocess.Center(),
+                                                      preprocess.Scale()])
+    else:
+        preprocX = preprocess.PreprocessQueue(Xorig, [preprocess.Center()])
+        preprocY = preprocess.PreprocessQueue(Yorig, [preprocess.Center()])
 
-    pls1 = PLSRegression(n_components = num_comp, scale = scale,
-                 tol = tol, max_iter = miter, copy = True)
-    pls1.fit(Xorig, Yorig)
-    Yhat1 = pls1.predict(Xorig)
+    X = Xorig.copy()
+    Y = Yorig.copy()
+    pls1 = PLSRegression(n_components=num_comp, scale=scale,
+                 tol=tol, max_iter=miter, copy=True)
+    pls1.fit(X, Y)
+    Yhat1 = pls1.predict(X)
 
-    SSYdiff1 = np.sum((Yorig-Yhat1)**2)
-#    print "PLSRegression: R2Yhat = %.4f" % (1 - (SSYdiff1 / SSY))
+    SSYdiff1 = np.sum((Y - Yhat1) ** 2)
+    print "PLSRegression: R2Yhat = %.4f" % (1 - (SSYdiff1 / SSY))
 
-    # Compare PLSR and sklearn.PLSRegression
-    pls3 = PLSR(num_comp = num_comp, center = True, scale = scale,
-                tolerance = tol, max_iter = miter)
+    # Compare sklearn.PLSRegression and PLSR
+    X = preprocX.process(Xorig)
+    Y = preprocY.process(Yorig)
+    pls3 = PLSR(num_comp=num_comp)
+    alg = pls3.get_algorithm()
+    alg.set_max_iter(miter)
+    alg.set_tolerance(tol)
+
     pls3.fit(X, Y)
     Yhat3 = pls3.predict(X)
+    Yhat3 = preprocY.revert(Yhat3)
 
-    assert_array_almost_equal(Yhat1, Yhat3, decimal = 5,
-            err_msg = "PLSR gives wrong prediction")
-
-    SSYdiff3 = np.sum((Yorig-Yhat3)**2)
-#    print "PLSR         : R2Yhat = %.4f" % (1 - (SSYdiff3 / SSY))
+    SSYdiff3 = np.sum((Yorig - Yhat3) ** 2)
+    print "PLSR         : R2Yhat = %.4f" % (1 - (SSYdiff3 / SSY))
 
     assert abs(SSYdiff1 - SSYdiff3) < 0.00005
 
+    assert_array_almost_equal(Yhat1, Yhat3, decimal=5,
+            err_msg="PLSR gives wrong prediction")
 
+    # Compare sklearn.PLSCanonical and PLSC
+    X = Xorig.copy()
+    Y = Yorig.copy()
+    pls2 = PLSCanonical(n_components=num_comp, scale=scale,
+                        tol=tol, max_iter=miter, copy=True)
+    pls2.fit(X, Y)
+    Yhat2 = pls2.predict(X)
 
-    pls2 = PLSCanonical(n_components = num_comp, scale = scale,
-                        tol = tol, max_iter = miter, copy = True)
-    pls2.fit(Xorig, Yorig)
-    Yhat2 = pls2.predict(Xorig)
-
-    SSYdiff2 = np.sum((Yorig-Yhat2)**2)
-#    print "PLSCanonical : R2Yhat = %.4f" % (1 - (SSYdiff2 / SSY))
+    SSYdiff2 = np.sum((Yorig - Yhat2) ** 2)
+    print "PLSCanonical : R2Yhat = %.4f" % (1 - (SSYdiff2 / SSY))
 
     # Compare PLSC and sklearn.PLSCanonical
-    pls4 = PLSC(num_comp = num_comp, center = True, scale = scale,
-                tolerance = tol, max_iter = miter)
+    X = preprocX.process(Xorig)
+    Y = preprocY.process(Yorig)
+    pls4 = PLSC(num_comp=num_comp)
+    alg = pls4.get_algorithm()
+    alg.set_max_iter(miter)
+    alg.set_tolerance(tol)
     pls4.fit(X, Y)
     Yhat4 = pls4.predict(X)
+    Yhat4 = preprocY.revert(Yhat4)
 
-    SSYdiff4 = np.sum((Yorig-Yhat4)**2)
-#    print "PLSC         : R2Yhat = %.4f" % (1 - (SSYdiff4 / SSY))
+    SSYdiff4 = np.sum((Yorig - Yhat4) ** 2)
+    print "PLSC         : R2Yhat = %.4f" % (1 - (SSYdiff4 / SSY))
 
     # Compare O2PLS and sklearn.PLSCanonical
-    pls5 = O2PLS(num_comp = [num_comp, 1, 0], center = True, scale = scale,
-                 tolerance = tol, max_iter = miter)
+    X = preprocX.process(Xorig)
+    Y = preprocY.process(Yorig)
+    pls5 = O2PLS(num_comp=[num_comp, 1, 0])
+    alg = pls5.get_algorithm()
+    alg.set_max_iter(miter)
+    alg.set_tolerance(tol)
     pls5.fit(X, Y)
     Yhat5 = pls5.predict(X)
+    Yhat5 = preprocY.revert(Yhat5)
 
-    SSYdiff5 = np.sum((Yorig-Yhat5)**2)
-#    print "O2PLS X-Y    : R2Yhat = %.4f" % (1 - (SSYdiff5 / SSY))
+    SSYdiff5 = np.sum((Yorig - Yhat5) ** 2)
+    print "O2PLS X-Y    : R2Yhat = %.4f" % (1 - (SSYdiff5 / SSY))
 
     assert SSYdiff2 > SSYdiff4
     assert SSYdiff2 > SSYdiff5
 
-
     # Make sure O2PLS is symmetric!
-    pls6 = O2PLS(num_comp = [num_comp, 0, 1], center = True, scale = scale,
-                 tolerance = tol, max_iter = miter)
+    X = preprocX.process(Xorig)
+    Y = preprocY.process(Yorig)
+    pls6 = O2PLS(num_comp=[num_comp, 0, 1])
+    alg = pls6.get_algorithm()
+    alg.set_max_iter(miter)
+    alg.set_tolerance(tol)
     pls6.fit(Y, X)
-    Yhat6 = pls6.predict(Y = X)
+    Yhat6 = pls6.predict(Y=X)
+    Yhat6 = preprocY.revert(Yhat6)
 
-    pls5.W, pls6.C = direct(pls5.W, pls6.C, compare = True)
-    assert_array_almost_equal(pls5.W, pls6.C, decimal = 5,
-            err_msg = "O2PLS is not symmetic")
-    pls5.T, pls6.U = direct(pls5.T, pls6.U, compare = True)
-    assert_array_almost_equal(pls5.T, pls6.U, decimal = 5,
-            err_msg = "O2PLS is not symmetic")
-    pls5.P, pls6.Q = direct(pls5.P, pls6.Q, compare = True)
-    assert_array_almost_equal(pls5.P, pls6.Q, decimal = 5,
-            err_msg = "O2PLS is not symmetic")
+    pls5.W, pls6.C = direct(pls5.W, pls6.C, compare=True)
+    assert_array_almost_equal(pls5.W, pls6.C, decimal=5,
+            err_msg="O2PLS is not symmetic")
+    pls5.T, pls6.U = direct(pls5.T, pls6.U, compare=True)
+    assert_array_almost_equal(pls5.T, pls6.U, decimal=5,
+            err_msg="O2PLS is not symmetic")
+    pls5.P, pls6.Q = direct(pls5.P, pls6.Q, compare=True)
+    assert_array_almost_equal(pls5.P, pls6.Q, decimal=5,
+            err_msg="O2PLS is not symmetic")
 
-    pls5.C, pls6.W = direct(pls5.C, pls6.W, compare = True)
-    assert_array_almost_equal(pls5.C, pls6.W, decimal = 5,
-            err_msg = "O2PLS is not symmetic")
-    pls5.U, pls6.T = direct(pls5.U, pls6.T, compare = True)
-    assert_array_almost_equal(pls5.U, pls6.T, decimal = 5,
-            err_msg = "O2PLS is not symmetic")
-    pls5.Q, pls6.P = direct(pls5.Q, pls6.P, compare = True)
-    assert_array_almost_equal(pls5.Q, pls6.P, decimal = 5,
-            err_msg = "O2PLS is not symmetic")
+    pls5.C, pls6.W = direct(pls5.C, pls6.W, compare=True)
+    assert_array_almost_equal(pls5.C, pls6.W, decimal=5,
+            err_msg="O2PLS is not symmetic")
+    pls5.U, pls6.T = direct(pls5.U, pls6.T, compare=True)
+    assert_array_almost_equal(pls5.U, pls6.T, decimal=5,
+            err_msg="O2PLS is not symmetic")
+    pls5.Q, pls6.P = direct(pls5.Q, pls6.P, compare=True)
+    assert_array_almost_equal(pls5.Q, pls6.P, decimal=5,
+            err_msg="O2PLS is not symmetic")
 
-    assert_array_almost_equal(pls5.Bx, pls6.By, decimal = 5,
-            err_msg = "O2PLS is not symmetic")
-    assert_array_almost_equal(pls5.By, pls6.Bx, decimal = 5,
-            err_msg = "O2PLS is not symmetic")
+    assert_array_almost_equal(pls5.Bx, pls6.By, decimal=5,
+            err_msg="O2PLS is not symmetic")
+    assert_array_almost_equal(pls5.By, pls6.Bx, decimal=5,
+            err_msg="O2PLS is not symmetic")
 
-    SSYdiff6 = np.sum((Yorig-Yhat6)**2)
-#    print "O2PLS Y-X    : R2Yhat = %.4f" % (1 - (SSYdiff6 / SSY))
+    SSYdiff6 = np.sum((Yorig - Yhat6) ** 2)
+    print "O2PLS Y-X    : R2Yhat = %.4f" % (1 - (SSYdiff6 / SSY))
 
     assert abs(SSYdiff6 - SSYdiff5) < TOLERANCE
 
 
+def test_o2pls():
+
+    np.random.seed(42)
+
+    # 000011100
+    p = np.vstack((np.zeros((4, 1)), np.ones((3, 1)), np.zeros((2, 1))))
+    # 001110000
+    q = np.vstack((np.zeros((2, 1)), np.ones((3, 1)), np.zeros((4, 1))))
+    t = np.random.randn(10, 1)
+
+    # 111111000
+    po = np.vstack((np.ones((4, 1)), np.ones((2, 1)), np.zeros((3, 1))))
+    to = np.random.randn(10, 1)
+
+    # 000111111
+    qo = np.vstack((np.zeros((3, 1)), np.ones((2, 1)), np.ones((4, 1))))
+    uo = np.random.randn(10, 1)
+
+    Q, R = np.linalg.qr(np.hstack((t, to, uo)))
+    t = Q[:, [0]]
+    to = Q[:, [1]]
+    uo = Q[:, [2]]
+
+    X = dot(t, p.T) + dot(to, po.T)
+    Y = dot(t, q.T) + dot(uo, qo.T)
+
+    svd = SVD(num_comp=1)
+    svd.fit(dot(X.T, Y))
+    t_svd = dot(X, svd.U)
+    u_svd = dot(Y, svd.V)
+
+    o2pls = O2PLS(num_comp=[1, 1, 1])
+    o2pls.fit(X, Y)
+
+    Xhat = dot(o2pls.T, o2pls.P.T) + dot(o2pls.To, o2pls.Po.T)
+    assert_array_almost_equal(X, Xhat, decimal=5, err_msg="O2PLS does not" \
+            " give a correct reconstruction of X")
+    Yhat = dot(o2pls.U, o2pls.Q.T) + dot(o2pls.Uo, o2pls.Qo.T)
+    assert_array_almost_equal(Y, Yhat, decimal=5, err_msg="O2PLS does not" \
+            " give a correct reconstruction of Y")
+
+    assert np.abs(corr(o2pls.T, o2pls.U)) > np.abs(corr(t_svd, u_svd))
+    assert np.abs(corr(o2pls.T, o2pls.U)) > np.abs(corr(t_svd, u_svd))
+    assert np.abs(corr(o2pls.T, t)) > np.abs(corr(t_svd, t))
+    assert np.abs(corr(o2pls.U, t)) > np.abs(corr(u_svd, t))
+
+    assert ((p > TOLERANCE) == (np.abs(o2pls.W) > TOLERANCE)).all()
+    assert ((p > TOLERANCE) == (np.abs(o2pls.P) > TOLERANCE)).all()
+    assert ((po > TOLERANCE) == (np.abs(o2pls.Po) > TOLERANCE)).all()
+    assert dot(o2pls.W.T, o2pls.Wo) < TOLERANCE
+
+    assert ((q > TOLERANCE) == (np.abs(o2pls.C) > TOLERANCE)).all()
+    assert ((q > TOLERANCE) == (np.abs(o2pls.Q) > TOLERANCE)).all()
+    assert ((qo > TOLERANCE) == (np.abs(o2pls.Qo) > TOLERANCE)).all()
+    assert dot(o2pls.C.T, o2pls.Co) < TOLERANCE
+
+    # Compare to known solution
+    W = np.asarray([[-0.000000003587], [-0.000000003587], [-0.000000003587],
+                    [-0.000000003587], [0.5773502687753], [0.5773502687753],
+                    [0.5773502700183], [0],               [0]])
+    W, o2pls.W = direct(W, o2pls.W, compare=True)
+    assert_array_almost_equal(W, o2pls.W, decimal=5, err_msg="O2PLS does not" \
+            " give the correct weights in X")
+
+    T = np.asarray([[-0.3320724686729], [0.0924349866604], [-0.433004639499],
+                    [-1.0182038851347], [0.1565405190876], [0.1565295366198],
+                    [-1.0557643604012], [-0.513059567452], [0.3138616360639],
+                    [-0.3627222076846]])
+    T, o2pls.T = direct(T, o2pls.T, compare=True)
+    assert_array_almost_equal(T, o2pls.T, decimal=5, err_msg="O2PLS does not" \
+            " give the correct scores in X")
+
+    P = np.asarray([[-0.000000003587], [-0.000000003587], [-0.000000003587],
+                    [-0.000000003587], [0.5773502687753], [0.5773502687753],
+                    [0.5773502700183], [0],               [0]])
+    P, o2pls.P = direct(P, o2pls.P, compare=True)
+    assert_array_almost_equal(P, o2pls.P, decimal=5, err_msg="O2PLS does not" \
+            " give the correct loadings in X")
+
+    Wo = np.asarray([[-0.462910049661], [-0.4629100496613], [-0.4629100496613],
+                     [-0.462910049661], [-0.1543033544685], [-0.1543033544685],
+                     [0.3086066967678], [0],                [0]])
+    Wo, o2pls.Wo = direct(Wo, o2pls.Wo, compare=True)
+    assert_array_almost_equal(Wo, o2pls.Wo, decimal=5, err_msg="O2PLS does " \
+            "not give the correct unique weights in X")
+
+    To = np.asarray([[0.1166363558019], [0.3982081656371], [-0.460718789788],
+                     [0.7141661638895], [1.3523258395355], [0.5103916850288],
+                     [0.0373342153684], [-0.565848461012], [0.8644955981846],
+                     [0.7835700349552]])
+    To, o2pls.To = direct(To, o2pls.To, compare=True)
+    assert_array_almost_equal(To, o2pls.To, decimal=5, err_msg="O2PLS does " \
+            "not give the correct unique scores in X")
+
+    Po = np.asarray([[-0.462910047927], [-0.4629100479271], [-0.4629100479271],
+                     [-0.462910047927], [-0.4629100494572], [-0.4629100494572],
+                     [0.0000000000150], [0],                [0]])
+    Po, o2pls.Po = direct(Po, o2pls.Po, compare=True)
+    assert_array_almost_equal(Po, o2pls.Po, decimal=5, err_msg="O2PLS does " \
+            "not give the correct unique loadings in X")
+
+    C = np.asarray([[0],               [0],               [0.5773502653499],
+                    [0.5773502711095], [0.5773502711095], [-0.000000000646],
+                    [-0.000000000646], [-0.000000000646], [-0.000000000646]])
+    C, o2pls.C = direct(C, o2pls.C, compare=True)
+    assert_array_almost_equal(C, o2pls.C, decimal=5, err_msg="O2PLS does not" \
+            " give the correct weights in Y")
+
+    U = np.asarray([[-0.3320724688962], [0.0924349962939], [-0.433004640520],
+                    [-1.0182039005573], [0.1565405177895], [0.1565295466182],
+                    [-1.0557643651281], [-0.513059568417], [0.3138616457148],
+                    [-0.3627222001620]])
+    U, o2pls.U = direct(U, o2pls.U, compare=True)
+    assert_array_almost_equal(U, o2pls.U, decimal=5, err_msg="O2PLS does not" \
+            " give the correct scores in Y")
+
+    Q = np.asarray([[0],               [0],               [0.5773502653499],
+                    [0.5773502711095], [0.5773502711095], [-0.000000000646],
+                    [-0.000000000646], [-0.000000000646], [-0.000000000646]])
+    Q, o2pls.Q = direct(Q, o2pls.Q, compare=True)
+    assert_array_almost_equal(Q, o2pls.Q, decimal=5, err_msg="O2PLS does not" \
+            " give the correct loadings in Y")
+
+    Co = np.asarray([[-0.000000000000], [-0.0000000000000], [0.3086067007710],
+                     [-0.154303349882], [-0.1543033498817], [-0.462910049756],
+                     [-0.462910049756], [-0.4629100497585], [-0.462910049756]])
+    Co, o2pls.Co = direct(Co, o2pls.Co, compare=True)
+    assert_array_almost_equal(Co, o2pls.Co, decimal=5, err_msg="O2PLS does " \
+            "not give the correct unique weights in Y")
+
+    Uo = np.asarray([[-1.895421907630], [0.0598668575527], [-0.069696302091],
+                     [0.4526578568357], [-0.143031804891], [-0.337137833530],
+                     [0.5494330695544], [-0.394204878737], [0.3248866786239],
+                     [-0.404667969696]])
+    Uo, o2pls.Uo = direct(Uo, o2pls.Uo, compare=True)
+    assert_array_almost_equal(Uo, o2pls.Uo, decimal=5, err_msg="O2PLS does " \
+            "not give the correct unique scores in Y")
+
+    Qo = np.asarray([[0],                [0],                [0.0000000008807],
+                     [-0.4629100498755], [-0.462910049876], [-0.462910049909],
+                     [-0.4629100499092], [-0.462910049909], [-0.462910049909]])
+    Qo, o2pls.Qo = direct(Qo, o2pls.Qo, compare=True)
+    assert_array_almost_equal(Qo, o2pls.Qo, decimal=5, err_msg="O2PLS does " \
+            "not give the correct unique loadings in Y")
+
+    # O2PLS with random dataset, compare to known solution on the data
+    np.random.seed(42)
+
+    # Test primal version
+    X = np.random.rand(10, 5)
+    Y = np.random.rand(10, 5)
+
+    preprocX = preprocess.PreprocessQueue(X, [preprocess.Center()])
+    preprocY = preprocess.PreprocessQueue(Y, [preprocess.Center()])
+    X = preprocX.process(X)
+    Y = preprocY.process(Y)
+
+#    print X
+#    print Y
+
+    o2pls = O2PLS(num_comp=[3, 2, 2])
+    alg = o2pls.get_algorithm()
+    alg.set_tolerance(5e-12)
+    o2pls.fit(X, Y)
+
+    Xhat = dot(o2pls.T, o2pls.P.T) + dot(o2pls.To, o2pls.Po.T)
+    assert_array_almost_equal(X, Xhat, decimal=5, err_msg="O2PLS does not" \
+            " give a correct reconstruction of X")
+    Yhat = dot(o2pls.U, o2pls.Q.T) + dot(o2pls.Uo, o2pls.Qo.T)
+    assert_array_almost_equal(Y, Yhat, decimal=5, err_msg="O2PLS does not" \
+            " give a correct reconstruction of Y")
+
+    W = np.asarray([[0.28574946790251, 0.80549463591904, 0.46033811220009],
+                    [-0.8206917792876, 0.03104339272344, 0.41068049575333],
+                    [0.23145983182932, -0.4575178927710, 0.78402240214039],
+                    [-0.0476345720024, 0.32258037076527, -0.0472056956547],
+                    [0.43470626726892, -0.1919218108116, 0.05010836360956]])
+    W, o2pls.W = direct(W, o2pls.W, compare=True)
+    assert_array_almost_equal(W, o2pls.W, decimal=5, err_msg="O2PLS does not" \
+            " give the correct weights in X")
+
+    C = np.asarray([[0.33983623057749, -0.0864374467592, 0.61598479965533],
+                    [-0.2152253235407, 0.76365073948393, -0.0489442226022],
+                    [-0.8064484759235, -0.4011334093529, 0.35039634003963],
+                    [-0.3919315842703, 0.44086245939825, 0.16315472674870],
+                    [-0.1849861763096, -0.2325906182065, -0.6846678973735]])
+    C, o2pls.C = direct(C, o2pls.C, compare=True)
+    assert_array_almost_equal(C, o2pls.C, decimal=5, err_msg="O2PLS does not" \
+            " give the correct weights in Y")
+
+    Wo = np.asarray([[0.09275972900527, 0.22138222202790],
+                     [-0.3237766587847, 0.22806033590264],
+                     [0.13719457299956, -0.3218543865251],
+                     [-0.4806324686954, -0.8126726919742],
+                     [-0.7979563816879, 0.36735710766490]])
+    Wo, o2pls.Wo = direct(Wo, o2pls.Wo, compare=True)
+    assert_array_almost_equal(Wo, o2pls.Wo, decimal=5, err_msg="O2PLS does " \
+            "not give the correct unique weights in X")
+
+    Co = np.asarray([[-0.2860251435011, -0.6448195468993],
+                     [0.41206605980471, -0.4453331714833],
+                     [0.21923094429525, -0.1337648740582],
+                     [-0.7577522025752, 0.22632291041065],
+                     [-0.3551627404418, -0.5628241439426]])
+    Co, o2pls.Co = direct(Co, o2pls.Co, compare=True)
+    assert_array_almost_equal(Co, o2pls.Co, decimal=5, err_msg="O2PLS does " \
+            "not give the correct unique weights in Y")
+
+    # O2PLS with random dataset, compare to known solution on the data
+    np.random.seed(43)
+
+    # Test dual version
+    X = np.random.rand(5, 10)
+    Y = np.random.rand(5, 10)
+
+    preprocX = preprocess.PreprocessQueue(X, [preprocess.Center()])
+    preprocY = preprocess.PreprocessQueue(Y, [preprocess.Center()])
+    X = preprocX.process(X)
+    Y = preprocY.process(Y)
+
+    o2pls = O2PLS(num_comp=[3, 2, 2])
+    alg = o2pls.get_algorithm()
+    alg.set_tolerance(5e-12)
+    o2pls.fit(X, Y)
+
+    Xhat = dot(o2pls.T, o2pls.P.T) + dot(o2pls.To, o2pls.Po.T)
+    assert_array_almost_equal(X, Xhat, decimal=5, err_msg="O2PLS does not" \
+            " give a correct reconstruction of X")
+    Yhat = dot(o2pls.U, o2pls.Q.T) + dot(o2pls.Uo, o2pls.Qo.T)
+    assert_array_almost_equal(Y, Yhat, decimal=5, err_msg="O2PLS does not" \
+            " give a correct reconstruction of Y")
+
+    W = np.asarray([[0.660803597278207, 0.283434091506369, -0.10111733853777],
+                    [0.199245987632961, -0.37178287065057, -0.10558062870063],
+                    [0.049056826578120, 0.510007873722491, -0.05258764260954],
+                    [0.227075734276342, 0.321380074146550, 0.386973037543944],
+                    [-0.36636167268872, 0.047162463451118, -0.51320512393785],
+                    [-0.23102837136786, -0.05368842048677, 0.613919597967758],
+                    [-0.44150306809316, 0.531948476266181, 0.122002207828563],
+                    [0.155295133662634, -0.24320395140635, 0.327486426731878],
+                    [0.177637796765300, 0.210455027475178, 0.022448447240951],
+                    [0.177420328030713, 0.162892673626251, -0.25139972066789]])
+    W, o2pls.W = direct(W, o2pls.W, compare=True)
+    assert_array_almost_equal(W, o2pls.W, decimal=5, err_msg="O2PLS does not" \
+            " give the correct weights in X")
+
+    C = np.asarray([[0.029463187629622, 0.343448566391335, 0.439488969936543],
+                    [-0.30851463695679, 0.567738611008308, 0.288894827826079],
+                    [-0.04136803272166, 0.240281903256231, -0.16506192502899],
+                    [0.507488061231666, 0.220214013827959, -0.19774980994540],
+                    [-0.03283135387270, -0.45687225108843, 0.330712836574687],
+                    [-0.08846573694626, 0.137459131512888, -0.19971688576644],
+                    [0.575982215268074, 0.265756602507649, 0.284152520405287],
+                    [-0.17475865049036, -0.23679836102887, 0.559859131854712],
+                    [0.474892087711923, -0.15622059920436, 0.286373509842812],
+                    [-0.21902628912052, 0.273412086540475, 0.177725330447690]])
+    C, o2pls.C = direct(C, o2pls.C, compare=True)
+    assert_array_almost_equal(C, o2pls.C, decimal=5, err_msg="O2PLS does not" \
+            " give the correct weights in Y")
+
+    Wo = np.asarray([[-0.07261963606155, 0],
+                     [-0.18613960916330, 0],
+                     [-0.19334537702829, 0],
+                     [-0.41655633915778, 0],
+                     [-0.55615535411133, 0],
+                     [0.042355493010538, 0],
+                     [0.170141007666872, 0],
+                     [-0.15834677472031, 0],
+                     [-0.07965438708092, 0],
+                     [0.614579177338253, 0]])
+    Wo, o2pls.Wo = direct(Wo, o2pls.Wo, compare=True)
+    assert_array_almost_equal(Wo, o2pls.Wo, decimal=5, err_msg="O2PLS does " \
+            "not give the correct unique weights in X")
+
+    Co = np.asarray([[-0.14337088725157, 0],
+                     [0.268379847579299, 0],
+                     [0.538254868418912, 0],
+                     [-0.07676572699854, 0],
+                     [0.011841641465690, 0],
+                     [-0.68216820966895, 0],
+                     [-0.04763233629597, 0],
+                     [-0.03243171228586, 0],
+                     [0.059518204830295, 0],
+                     [-0.37342871207122, 0]])
+    Co, o2pls.Co = direct(Co, o2pls.Co, compare=True)
+    assert_array_almost_equal(Co, o2pls.Co, decimal=5, err_msg="O2PLS does " \
+            "not give the correct unique weights in Y")
 
 
-
-def test_L1_regularisation():
+def test_regularisation():
 
     d = load_linnerud()
-    X = d.data
-    Y = d.target
+    Xorig = d.data
+    Yorig = d.target
 #    print X.shape
 #    print Y.shape
     tol = 5e-12
     miter = 1000
-    Xorig = X.copy()
-    Yorig = Y.copy()
+#    Xorig = X.copy()
+#    Yorig = Y.copy()
     center = True
-    scale  = True
-    inf = 2**30
-    SSY = np.sum(Yorig**2)
+    scale = True
+    inf = 2 ** 30
+    SSY = np.sum(Yorig ** 2)
     num_comp = 2
 
-    # Test Sparse PLSR
-    pls = PLSR(num_comp = num_comp, center = center, scale = scale,
-               tolerance = tol, max_iter = miter)
+    preprocX = preprocess.PreprocessQueue(Xorig, [])
+    preprocY = preprocess.PreprocessQueue(Yorig, [])
+    if center:
+        preprocX.push(preprocess.Center())
+        preprocY.push(preprocess.Center())
+    if scale:
+        preprocX.push(preprocess.Scale())
+        preprocY.push(preprocess.Scale())
+
+    # Test first with PLSR
+    X = preprocX.process(Xorig)
+    Y = preprocY.process(Yorig)
+    pls = PLSR(num_comp=num_comp)
+    alg = pls.get_algorithm()
+    alg.set_tolerance(tol)
+    alg.set_max_iter(miter)
     pls.fit(X, Y)
     Yhat = pls.predict(X)
-    SSYdiff = np.sum((Yorig-Yhat)**2)
+    Yhat = preprocY.revert(Yhat)
+    SSYdiff = np.sum((Yorig - Yhat) ** 2)
     R2Yhat = (1 - (SSYdiff / SSY))
-    print "PLS : R2Yhat = %.6f" % R2Yhat
-
+    utils.debug("PLS : R2Yhat = %.6f" % R2Yhat)
 
     # Test sPLS methods when keeping all variables
-    spls1 = PLSR(num_comp = num_comp, center = center, scale = scale,
-                 tolerance = tol, max_iter = miter,
-                 prox_op = prox_op.L1(0., 0., normaliser = [norm, normI]))
+    spls1 = PLSR(num_comp=num_comp)
+    alg = spls1.get_algorithm()
+    alg.set_tolerance(tol)
+    alg.set_max_iter(miter)
+    alg.set_prox_op(prox_ops.L1(0., 0., normaliser=[norm, normI]))
     spls1.fit(X, Y)
     Yhat1 = spls1.predict(X)
-    SSYdiff1 = np.sum((Yorig-Yhat1)**2)
-    print "sPLS: R2Yhat = %.6f" % (1 - (SSYdiff1 / SSY))
+    Yhat1 = preprocY.revert(Yhat1)
+    SSYdiff1 = np.sum((Yorig - Yhat1) ** 2)
+    utils.debug("sPLS: R2Yhat = %.6f" % (1 - (SSYdiff1 / SSY)))
     assert abs(R2Yhat - (1 - (SSYdiff1 / SSY))) < TOLERANCE
-    assert_array_almost_equal(Yhat, Yhat1, decimal = 5,
-            err_msg = "Sparse PLS with no thresholding does not give correct result")
+    assert_array_almost_equal(Yhat, Yhat1, decimal=5,
+            err_msg="Sparse PLS with no thresholding does not give correct " \
+                    "result")
 
-
-    spls2 = PLSR(num_comp = num_comp, center = center, scale = scale,
-                 tolerance = tol, max_iter = miter,
-                 prox_op = prox_op.L1_binsearch(float('Inf'), float('Inf'), normaliser=[norm, normI]))
+    spls2 = PLSR(num_comp=num_comp)
+    alg = spls2.get_algorithm()
+    alg.set_tolerance(tol)
+    alg.set_max_iter(miter)
+    alg.set_prox_op(prox_ops.L1_binsearch(float('Inf'), float('Inf'),
+                    normaliser=[norm, normI]))
     spls2.fit(X, Y)
     Yhat2 = spls2.predict(X)
-    SSYdiff2 = np.sum((Yorig-Yhat2)**2)
-    print "sPLS: R2Yhat = %.6f" % (1 - (SSYdiff2 / SSY))
+    Yhat2 = preprocY.revert(Yhat2)
+    SSYdiff2 = np.sum((Yorig - Yhat2) ** 2)
+    utils.debug("sPLS: R2Yhat = %.6f" % (1 - (SSYdiff2 / SSY)))
     assert abs(R2Yhat - (1 - (SSYdiff1 / SSY))) < TOLERANCE
-    assert_array_almost_equal(Yhat, Yhat2, decimal = 5,
-            err_msg = "Sparse PLS with no thresholding does not give correct result")
+    assert_array_almost_equal(Yhat, Yhat2, decimal=5,
+            err_msg="Sparse PLS with no thresholding does not give correct " \
+                    "result")
 
-
-    spls3 = PLSR(num_comp = num_comp, center = center, scale = scale,
-                 tolerance = tol, max_iter = miter,
-                 prox_op = prox_op.L0_binsearch(inf, inf, normaliser=[norm, normI]))
+    spls3 = PLSR(num_comp=num_comp)
+    alg = spls3.get_algorithm()
+    alg.set_tolerance(tol)
+    alg.set_max_iter(miter)
+    alg.set_prox_op(prox_ops.L0_binsearch(inf, inf, normaliser=[norm, normI]))
     spls3.fit(X, Y)
     Yhat3 = spls3.predict(X)
-    SSYdiff3 = np.sum((Yorig-Yhat3)**2)
-    print "sPLS: R2Yhat = %.6f" % (1 - (SSYdiff3 / SSY))
-    assert_array_almost_equal(Yhat, Yhat3, decimal = 5,
-            err_msg = "Sparse PLS with no thresholding does not give correct result")
+    Yhat3 = preprocY.revert(Yhat3)
+    SSYdiff3 = np.sum((Yorig - Yhat3) ** 2)
+    utils.debug("sPLS: R2Yhat = %.6f" % (1 - (SSYdiff3 / SSY)))
+    assert_array_almost_equal(Yhat, Yhat3, decimal=5,
+            err_msg="Sparse PLS with no thresholding does not give correct " \
+                    "result")
 
-
-    spls4 = PLSR(num_comp = num_comp, center = center, scale = scale,
-                 tolerance = tol, max_iter = miter,
-                 prox_op = prox_op.L0_by_count(inf, inf, normaliser=[norm, normI]))
+    spls4 = PLSR(num_comp=num_comp)
+    alg = spls4.get_algorithm()
+    alg.set_tolerance(tol)
+    alg.set_max_iter(miter)
+    alg.set_prox_op(prox_ops.L0_by_count(inf, inf, normaliser=[norm, normI]))
     spls4.fit(X, Y)
     Yhat4 = spls4.predict(X)
-    SSYdiff4 = np.sum((Yorig-Yhat4)**2)
-    print "sPLS: R2Yhat = %.6f" % (1 - (SSYdiff4 / SSY))
-    assert_array_almost_equal(Yhat, Yhat4, decimal = 5,
-            err_msg = "Sparse PLS with no thresholding does not give correct result")
+    Yhat4 = preprocY.revert(Yhat4)
+    SSYdiff4 = np.sum((Yorig - Yhat4) ** 2)
+    utils.debug("sPLS: R2Yhat = %.6f" % (1 - (SSYdiff4 / SSY)))
+    assert_array_almost_equal(Yhat, Yhat4, decimal=5,
+            err_msg="Sparse PLS with no thresholding does not give correct " \
+                    "result")
 
+    return
 
     # Create a matrix X (10,11) with variables with
     # correlation 1 throught 0 to a single y variable

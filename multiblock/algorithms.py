@@ -24,10 +24,10 @@ Created on Fri Feb  8 17:24:11 2013
 
 import abc
 import warnings
-import prox_op
-import start_vector
-import scheme
-import mode
+import prox_ops
+import start_vectors
+import schemes
+import modes
 from multiblock.utils import MAX_ITER, TOLERANCE, make_list, dot, zeros, sqrt
 from numpy import ones, eye
 from numpy.linalg import pinv
@@ -45,8 +45,7 @@ class BaseAlgorithm(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, prox_op=prox_op.ProxOp(),
-                 max_iter=MAX_ITER, tolerance=TOLERANCE,
+    def __init__(self, prox_op=None, max_iter=MAX_ITER, tolerance=TOLERANCE,
                  **kwargs):
         """
         max_iter   : The number of iteration before the algorithm is forced
@@ -57,10 +56,29 @@ class BaseAlgorithm(object):
                      will give more acurate results, but will take longer
                      time to compute. The default tolerance is 5E-07.
         """
+        super(BaseAlgorithm, self).__init__()
+
+        if prox_op == None:
+            prox_op = prox_ops.ProxOp()
 
         self.prox_op = prox_op
         self.max_iter = max_iter
         self.tolerance = tolerance
+
+    def set_max_iter(self, max_iter):
+        self.max_iter = max_iter
+
+    def set_tolerance(self, tolerance):
+        self.tolerance = tolerance
+
+    def get_prox_op(self):
+        return self.prox_op
+
+    def set_prox_op(self, prox_op):
+        if not isinstance(prox_op, prox_ops.ProxOp):
+            raise ValueError('The proximal operator must be an instance of ' \
+                             '"ProxOp"')
+        self.prox_op = prox_op
 
     @abc.abstractmethod
     def run(self, *X, **kwargs):
@@ -71,10 +89,8 @@ class NIPALSBaseAlgorithm(BaseAlgorithm):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, adj_matrix=None, scheme=scheme.Horst(),
-                 start_vector=start_vector.LargestStartVector(),
-                 not_normed=[],
-                 **kwargs):
+    def __init__(self, adj_matrix=None, scheme=None, start_vector=None,
+                 not_normed=[], **kwargs):
         """
         Parameters:
         ----------
@@ -88,7 +104,12 @@ class NIPALSBaseAlgorithm(BaseAlgorithm):
                      scheme may be an instance of Horst, Centroid or Factorial.
         """
 
-        BaseAlgorithm.__init__(self, **kwargs)
+        super(NIPALSBaseAlgorithm, self).__init__(**kwargs)
+
+        if scheme == None:
+            scheme = schemes.Horst()
+        if start_vector == None:
+            start_vector = start_vectors.LargestStartVector()
 
         self.adj_matrix = adj_matrix
         self.scheme = scheme
@@ -102,9 +123,7 @@ class NIPALSBaseAlgorithm(BaseAlgorithm):
 
 class NIPALSAlgorithm(NIPALSBaseAlgorithm):
 
-    def __init__(self,
-                 mode=mode.NewA(),
-                 **kwargs):
+    def __init__(self, mode=None, **kwargs):
         """
         Parameters:
         ----------
@@ -112,7 +131,10 @@ class NIPALSAlgorithm(NIPALSBaseAlgorithm):
                      use for a matrix.
         """
 
-        NIPALSBaseAlgorithm.__init__(self, **kwargs)
+        super(NIPALSAlgorithm, self).__init__(**kwargs)
+
+        if mode == None:
+            mode = modes.NewA()
 
         self.mode = mode
 
@@ -146,9 +168,8 @@ class NIPALSAlgorithm(NIPALSBaseAlgorithm):
             else:
                 self.adj_matrix = ones((1, 1))
 
-        self.mode = make_list(self.mode, n, mode.NewA())
-        self.scheme = make_list(self.scheme, n, scheme.Horst())
-#        self.not_normed = make_list(self.not_normed, n, False)
+        self.mode = make_list(self.mode, n, modes.NewA())
+        self.scheme = make_list(self.scheme, n, schemes.Horst())
 
         w = []
         for Xi in X:
@@ -217,7 +238,7 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
                      tau is a single real, all matrices will use this value.
         """
 
-        NIPALSBaseAlgorithm.__init__(self, **kwargs)
+        super(RGCCAAlgorithm, self).__init__(**kwargs)
 
         self.tau = tau
 
@@ -247,7 +268,7 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
 
         # TODO: Add Schäfer and Strimmer's method here if tau == None!
         self.tau = make_list(self.tau, n, 1)  # Default is New Mode A
-        self.scheme = make_list(self.scheme, n, scheme.Horst())
+        self.scheme = make_list(self.scheme, n, schemes.Horst())
 #        self.not_normed = make_list(self.not_normed, n, False)
 
         invIXX = []
