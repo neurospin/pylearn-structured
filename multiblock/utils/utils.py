@@ -173,6 +173,9 @@ def direct(W, T=None, P=None, compare=False):
         return W
 
 
-def debug(string):
+def debug(string="", *args):
     if _DEBUG:
-        print string
+        s = ""
+        for a in args:
+            s = s + str(a)
+        print string, s

@@ -25,7 +25,7 @@ Created on Fri Feb  8 17:24:11 2013
 import abc
 import warnings
 import prox_ops
-import start_vectors
+import multiblock.start_vectors as start_vectors
 import schemes
 import modes
 from multiblock.utils import MAX_ITER, TOLERANCE, make_list, dot, zeros, sqrt
@@ -115,6 +115,12 @@ class NIPALSBaseAlgorithm(BaseAlgorithm):
         self.scheme = scheme
         self.start_vector = start_vector
         self.not_normed = not_normed
+
+    def set_start_vector(self, start_vector):
+        if not isinstance(start_vector, start_vectors.BaseStartVector):
+            raise ValueError('The start vector must be an instance of ' \
+                             '"BaseStartVector"')
+        self.start_vector = start_vector
 
     @abc.abstractmethod
     def run(self, *X, **kwargs):

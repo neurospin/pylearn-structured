@@ -19,14 +19,13 @@ class BaseStartVector(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, size, normalise=True):
+    def __init__(self, normalise=True):
         super(BaseStartVector, self).__init__()
 
-        self.size = size
         self.normalise = normalise
 
     @abc.abstractmethod
-    def get_vector(self, X=None):
+    def get_vector(self, X=None, shape=None):
         raise NotImplementedError('Abstract method "getVector" must be '\
                                   'specialised!')
 
@@ -35,8 +34,13 @@ class RandomStartVector(BaseStartVector):
     def __init__(self):
         super(RandomStartVector, self).__init__()
 
-    def get_vector(self, X=None):
-        w = np.random.rand(self.size, 1)  # Random start vector
+    def get_vector(self, X=None, shape=None):
+        if X == None and shape == None:
+            raise ValueError('Either a matrix X or the shape must be given')
+        if X != None:
+            shape = (X.shape[1], 1)
+
+        w = np.random.rand(*shape)  # Random start vector
 
         if self.normalise:
             return w / norm(w)
@@ -48,8 +52,13 @@ class OnesStartVector(BaseStartVector):
     def __init__(self):
         super(OnesStartVector, self).__init__()
 
-    def get_vector(self, X=None):
-        w = np.ones((self.size, 1))  # Using a vector of ones
+    def get_vector(self, X=None, shape=None):
+        if X == None and shape == None:
+            raise ValueError('Either a matrix X or the shape must be given')
+        if X != None:
+            shape = (X.shape[1], 1)
+
+        w = np.ones(shape)  # Using a vector of ones
 
         if self.normalise:
             return w / norm(w)
@@ -61,8 +70,13 @@ class ZerosStartVector(BaseStartVector):
     def __init__(self):
         super(ZerosStartVector, self).__init__()
 
-    def get_vector(self, X=None):
-        w = np.zeros((self.size, 1))  # Using a vector of zeros
+    def get_vector(self, X=None, shape=None):
+        if X == None and shape == None:
+            raise ValueError('Either a matrix X or the shape must be given')
+        if X != None:
+            shape = (X.shape[1], 1)
+
+        w = np.zeros(shape)  # Using a vector of zeros
 
         if self.normalise:
             return w / norm(w)
@@ -74,7 +88,7 @@ class LargestStartVector(BaseStartVector):
 
     def __init__(self, axis=1, normalise=True):
 #        BaseStartVector.__init__(self, size=None, normalise=normalise)
-        super(LargestStartVector, self).__init__(size=None, normalise=normalise)
+        super(LargestStartVector, self).__init__(normalise=normalise)
         self.axis = axis
 
     def get_vector(self, X):

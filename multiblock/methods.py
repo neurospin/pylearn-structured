@@ -450,24 +450,6 @@ class O2PLS(PLSC):
         self.Ax = num_comp[1]
         self.Ay = num_comp[2]
 
-        prox_op = self.algorithm.get_prox_op()
-        if len(prox_op.parameter) != 0:
-            Xparam = prox_op.parameter[0]
-            Yparam = prox_op.parameter[1]
-            joint_param = [Xparam[0], Yparam[0]]
-            unique_x_param = [Xparam[1]]
-            unique_y_param = [Yparam[1]]
-
-            self.unique_x_op = copy.copy(prox_op)
-            self.unique_x_op.parameter = unique_x_param
-            self.unique_y_op = copy.copy(prox_op)
-            self.unique_y_op.parameter = unique_y_param
-            self.prox_op.parameter = joint_param
-        else:
-            self.unique_x_op = prox_ops.ProxOp()
-            self.unique_y_op = prox_ops.ProxOp()
-            self.prox_op = prox_ops.ProxOp()
-
     def fit(self, X, Y=None, **kwargs):
 
         Y = kwargs.pop('y', Y)
@@ -477,6 +459,24 @@ class O2PLS(PLSC):
 
         self._check_inputs()
         X, Y = self._check_arrays(X, Y)
+
+        prox_op = self.algorithm.get_prox_op()
+        if len(prox_op.parameter) != 0:
+            Xparam = prox_op.parameter[0]
+            Yparam = prox_op.parameter[1]
+            joint_param = [Xparam[0], Yparam[0]]
+            unique_x_param = [Xparam[1]]
+            unique_y_param = [Yparam[1]]
+
+            unique_x_op = copy.copy(prox_op)
+            unique_x_op.parameter = unique_x_param
+            unique_y_op = copy.copy(prox_op)
+            unique_y_op.parameter = unique_y_param
+            prox_op.parameter = joint_param
+        else:
+            unique_x_op = prox_ops.ProxOp()
+            unique_y_op = prox_ops.ProxOp()
+            prox_op = prox_ops.ProxOp()
 
         # Results matrices
         M, N1 = X.shape
@@ -488,15 +488,17 @@ class O2PLS(PLSC):
         self.Uo = np.zeros((M,  self.Ay))
         self.Qo = np.zeros((N2, self.Ay))
 
-        svd_alg = copy.deepcopy(self.algorithm)
-        svd_alg.set_prox_op(self.prox_op)
-        svd = SVD(num_comp=self.A, algorithm=svd_alg, **kwargs)
+        alg = copy.deepcopy(self.algorithm)
+        alg.set_prox_op(prox_op)
+        svd = SVD(num_comp=self.A, algorithm=alg, **kwargs)
         svd.fit(dot(X.T, Y))
         W = svd.U
         C = svd.V
 
-        self.algorithm.set_prox_op(self.unique_x_op)
-        eigsym = SVD(num_comp=1, algorithm=self.algorithm, **kwargs)
+        alg = copy.deepcopy(self.algorithm)
+        alg.set_prox_op(unique_x_op)
+#        self.algorithm.set_prox_op(unique_x_op)
+        eigsym = SVD(num_comp=1, algorithm=alg, **kwargs)
         for a in xrange(self.Ax):
             T = dot(X, W)
             E = X - dot(T, W.T)
@@ -504,12 +506,12 @@ class O2PLS(PLSC):
             eigsym.fit(TE)
             wo = eigsym.V
             s = eigsym.S
-            if s < self.algorithm.tolerance:
+            if s < alg.tolerance:
                 wo = np.zeros(wo.shape)
             to = dot(X, wo)
             toto = dot(to.T, to)
             Xto = dot(X.T, to)
-            if toto > self.algorithm.tolerance:
+            if toto > alg.tolerance:
                 po = Xto / toto
             else:
                 po = np.zeros(Xto.shape)
@@ -520,8 +522,10 @@ class O2PLS(PLSC):
 
             X = X - dot(to, po.T)
 
-        self.algorithm.set_prox_op(self.unique_y_op)
-        eigsym = SVD(num_comp=1, algorithm=self.algorithm, **kwargs)
+        alg = copy.deepcopy(self.algorithm)
+        alg.set_prox_op(unique_y_op)
+#        self.algorithm.set_prox_op(self.unique_y_op)
+        eigsym = SVD(num_comp=1, algorithm=alg, **kwargs)
         for a in xrange(self.Ay):
             U = dot(Y, C)
             F = Y - dot(U, C.T)
@@ -529,12 +533,12 @@ class O2PLS(PLSC):
             eigsym.fit(UF)
             co = eigsym.V
             s = eigsym.S
-            if s < self.algorithm.tolerance:
+            if s < alg.tolerance:
                 co = np.zeros(co.shape)
             uo = dot(Y, co)
             uouo = dot(uo.T, uo)
             Yuo = dot(Y.T, uo)
-            if uouo > self.algorithm.tolerance:
+            if uouo > alg.tolerance:
                 qo = Yuo / uouo
             else:
                 qo = np.zeros(Yuo.shape)
@@ -545,10 +549,11 @@ class O2PLS(PLSC):
 
             Y = Y - dot(uo, qo.T)
 
-        self.algorithm.set_prox_op(self.prox_op)
-        self.algorithm.adj_matrix = None
-        self.algorithm.scheme = schemes.Horst()
-        self.algorithm.mode = modes.NewA()
+        alg = copy.deepcopy(self.algorithm)
+        alg.set_prox_op(prox_op)
+        alg.adj_matrix = None
+        alg.scheme = schemes.Horst()
+        alg.mode = modes.NewA()
 #        PLSC.fit(self, X, Y, **kwargs)
         super(O2PLS, self).fit(X, Y, **kwargs)
 
