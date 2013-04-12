@@ -1,13 +1,14 @@
 import numpy as np
 from numpy import dot
 import multiblock.utils as utils
-from multiblock.utils import direct, TOLERANCE, MAX_ITER, corr, norm, normI
+from multiblock.utils import direct, TOLERANCE, MAX_ITER, corr, cov, norm, normI
 from multiblock.utils import rand, zeros
 from multiblock.utils.testing import assert_array_almost_equal
 from multiblock import *
 import multiblock.start_vectors as start_vectors
 import multiblock.prox_ops as prox_ops
 from sklearn.datasets import load_linnerud
+from numpy import ones, eye
 
 from math import log
 from sklearn.pls import PLSRegression
@@ -24,11 +25,13 @@ def check_ortho(M, err_msg):
 
 def test_multiblock():
 
-    test_SVD_PCA()
-#    test_eigsym()
-    test_predictions()
-    test_o2pls()
-    test_regularisation()
+#    test_SVD_PCA()
+##    test_eigsym()
+#    test_predictions()
+#    test_o2pls()
+#    test_regularisation()
+
+    test_rgcca()
 
 #    n = 10
 #    X, Y = orth_matrix(n)
@@ -126,8 +129,8 @@ def test_SVD_PCA():
     num_comp = 3
     tol = 5e-12
 
-    preproc = preprocess.PreprocessQueue(Xtr, [preprocess.Center(),
-                                               preprocess.Scale()])
+    preproc = preprocess.PreprocessQueue([preprocess.Center(),
+                                          preprocess.Scale()], Xtr)
     Xtr = preproc.process(Xtr)
 
     for st in [0.1, 0.01, 0.001, 0.0001, 0]:
@@ -160,8 +163,8 @@ def test_SVD_PCA():
     num_comp = 5
     tol = 5e-9
 
-    preproc = preprocess.PreprocessQueue(Xtr, [preprocess.Center(),
-                                               preprocess.Scale()])
+    preproc = preprocess.PreprocessQueue([preprocess.Center(),
+                                          preprocess.Scale()], Xtr)
     Xtr = preproc.process(Xtr)
 
     for st in [0.1, 0.01, 0.001, 0.0001, 0]:
@@ -190,8 +193,8 @@ def test_SVD_PCA():
     Xte = np.random.rand(20, 50)
     num_comp = 3
 
-    preproc = preprocess.PreprocessQueue(Xtr, [preprocess.Center(),
-                                               preprocess.Scale()])
+    preproc = preprocess.PreprocessQueue([preprocess.Center(),
+                                          preprocess.Scale()], Xtr)
     Xtr = preproc.process(Xtr)
     Xte = preproc.process(Xte)
 
@@ -223,8 +226,8 @@ def test_SVD_PCA():
     X = np.random.rand(50, 100)
     num_comp = 50
 
-    preproc = preprocess.PreprocessQueue(X, [preprocess.Center(),
-                                             preprocess.Scale()])
+    preproc = preprocess.PreprocessQueue([preprocess.Center(),
+                                          preprocess.Scale()], X)
     X = preproc.process(X)
 
     alg = algorithms.NIPALSAlgorithm(adj_matrix=np.ones((1, 1)),
@@ -247,8 +250,8 @@ def test_SVD_PCA():
     X = np.random.rand(100, 50)
     num_comp = 50
 
-    preproc = preprocess.PreprocessQueue(X, [preprocess.Center(),
-                                             preprocess.Scale()])
+    preproc = preprocess.PreprocessQueue([preprocess.Center(),
+                                          preprocess.Scale()], X)
     X = preproc.process(X)
 
     alg = algorithms.NIPALSAlgorithm(adj_matrix=np.ones((1, 1)),
@@ -282,13 +285,13 @@ def test_predictions():
     scale = False
 
     if scale:
-        preprocX = preprocess.PreprocessQueue(Xorig, [preprocess.Center(),
-                                                      preprocess.Scale()])
-        preprocY = preprocess.PreprocessQueue(Yorig, [preprocess.Center(),
-                                                      preprocess.Scale()])
+        preprocX = preprocess.PreprocessQueue([preprocess.Center(),
+                                               preprocess.Scale()], Xorig)
+        preprocY = preprocess.PreprocessQueue([preprocess.Center(),
+                                               preprocess.Scale()], Yorig)
     else:
-        preprocX = preprocess.PreprocessQueue(Xorig, [preprocess.Center()])
-        preprocY = preprocess.PreprocessQueue(Yorig, [preprocess.Center()])
+        preprocX = preprocess.PreprocessQueue([preprocess.Center()], Xorig)
+        preprocY = preprocess.PreprocessQueue([preprocess.Center()], Yorig)
 
     X = Xorig.copy()
     Y = Yorig.copy()
@@ -556,8 +559,8 @@ def test_o2pls():
     X = np.random.rand(10, 5)
     Y = np.random.rand(10, 5)
 
-    preprocX = preprocess.PreprocessQueue(X, [preprocess.Center()])
-    preprocY = preprocess.PreprocessQueue(Y, [preprocess.Center()])
+    preprocX = preprocess.PreprocessQueue([preprocess.Center()], X)
+    preprocY = preprocess.PreprocessQueue([preprocess.Center()], Y)
     X = preprocX.process(X)
     Y = preprocY.process(Y)
 
@@ -619,8 +622,8 @@ def test_o2pls():
     X = np.random.rand(5, 10)
     Y = np.random.rand(5, 10)
 
-    preprocX = preprocess.PreprocessQueue(X, [preprocess.Center()])
-    preprocY = preprocess.PreprocessQueue(Y, [preprocess.Center()])
+    preprocX = preprocess.PreprocessQueue([preprocess.Center()], X)
+    preprocY = preprocess.PreprocessQueue([preprocess.Center()], Y)
     X = preprocX.process(X)
     Y = preprocY.process(Y)
 
@@ -710,8 +713,8 @@ def test_regularisation():
     SSY = np.sum(Yorig ** 2)
     num_comp = 2
 
-    preprocX = preprocess.PreprocessQueue(Xorig, [])
-    preprocY = preprocess.PreprocessQueue(Yorig, [])
+    preprocX = preprocess.PreprocessQueue([], Xorig)
+    preprocY = preprocess.PreprocessQueue([], Yorig)
     if center:
         preprocX.push(preprocess.Center())
         preprocY.push(preprocess.Center())
@@ -801,8 +804,8 @@ def test_regularisation():
     SSX = np.sum(Xorig ** 2)
     SSY = np.sum(Yorig ** 2)
 
-    preprocX = preprocess.PreprocessQueue(Xorig, [])
-    preprocY = preprocess.PreprocessQueue(Yorig, [])
+    preprocX = preprocess.PreprocessQueue([], Xorig)
+    preprocY = preprocess.PreprocessQueue([], Yorig)
     if center:
         preprocX.push(preprocess.Center())
         preprocY.push(preprocess.Center())
@@ -1093,8 +1096,8 @@ def test_regularisation():
     X = np.hstack((X, rand(n, n)))
     Y = np.hstack((Y, rand(n, n)))
 
-    preprocX = preprocess.PreprocessQueue(X, [])
-    preprocY = preprocess.PreprocessQueue(Y, [])
+    preprocX = preprocess.PreprocessQueue([], X)
+    preprocY = preprocess.PreprocessQueue([], Y)
     if center:
         preprocX.push(preprocess.Center())
         preprocY.push(preprocess.Center())
@@ -1187,6 +1190,72 @@ def test_regularisation():
         assert kappaB > 0.1
         assert kappaAo > 0.1
         assert kappaBo > 0.1
+
+
+def test_rgcca():
+
+    X, Y = orth_matrix(10)
+    Z = np.random.rand(10, 10)
+
+    preprocX = preprocess.PreprocessQueue([preprocess.Center()], X)
+    preprocY = preprocess.PreprocessQueue([preprocess.Center()], Y)
+    preprocZ = preprocess.PreprocessQueue([preprocess.Center()], Z)
+    X = preprocX.process(X)
+    Y = preprocY.process(Y)
+    Z = preprocZ.process(Z)
+
+    rgcca = RGCCA(num_comp=1, tau=0)
+    rgcca.fit(X, Y, Z)
+
+    print "var:", dot(rgcca.T[0].T, rgcca.T[0])
+    print dot(dot(X, rgcca.W[0]).T, dot(X, rgcca.W[0]))
+    print rgcca.T[0]
+    print rgcca.T[1]
+    print rgcca.T[2]
+    print sum_corr(*rgcca.T)
+    print sum_cov(*rgcca.T)
+
+
+def sum_corr(*T, **kwargs):
+
+    n = len(T)
+
+    adj_matrix = kwargs.pop('adj_matrix', None)
+
+    if adj_matrix == None:
+        adj_matrix = ones((n, n)) - eye(n, n)
+
+    cr = 0
+    for i in xrange(n):
+        Ti = T[i]
+        for j in xrange(n):
+            Tj = T[j]
+            if adj_matrix[i, j] != 0:
+                for k in xrange(Tj.shape[1]):
+                    print i, j, k, corr(Ti[:, [k]], Tj[:, [k]])
+                    cr += corr(Ti[:, [k]], Tj[:, [k]])
+    return cr
+
+
+def sum_cov(*T, **kwargs):
+
+    n = len(T)
+
+    adj_matrix = kwargs.pop('adj_matrix', None)
+
+    if adj_matrix == None:
+        adj_matrix = ones((n, n)) - eye(n, n)
+
+    cv = 0
+    for i in xrange(n):
+        Ti = T[i]
+        for j in xrange(n):
+            Tj = T[j]
+            if adj_matrix[i, j] != 0 or adj_matrix[j, i] != 0:
+                for k in xrange(Tj.shape[1]):
+                    print i, j, k, cov(Ti[:, [k]], Tj[:, [k]])
+                    cv += cov(Ti[:, [k]], Tj[:, [k]])
+    return cv
 
 
 def fleiss_kappa(W, k):

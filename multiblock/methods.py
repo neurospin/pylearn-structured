@@ -7,7 +7,7 @@ methods.
 # Author: Tommy Löfstedt <tommy.loefstedt@cea.fr>
 # License: BSD Style.
 
-__all__ = ['PCA', 'SVD', 'PLSR', 'PLSC', 'O2PLS']
+__all__ = ['PCA', 'SVD', 'PLSR', 'PLSC', 'O2PLS', 'RGCCA']
 
 from sklearn.utils import check_arrays
 
@@ -140,9 +140,6 @@ class PLSBaseMethod(BaseMethod):
 
         super(PLSBaseMethod, self).__init__(algorithm=algorithm, **kwargs)
 
-#        # Supplied by the user
-#        self.adj_matrix = adj_matrix
-
     def _check_inputs(self):
 
         super(PLSBaseMethod, self)._check_inputs()
@@ -187,7 +184,7 @@ class PLSBaseMethod(BaseMethod):
             for i in xrange(self.n):
 
                 # Score vector
-                t = dot(X[i], w[i]) / dot(w[i].T, w[i])
+                t = dot(X[i], w[i])  # / dot(w[i].T, w[i])
 
                 # Test for null variance
                 if dot(t.T, t) < self.algorithm.tolerance:
@@ -659,6 +656,18 @@ class O2PLS(PLSC):
         else:  # Y != None
             return Xpred
 
+
+class RGCCA(PLSBaseMethod):
+
+    def __init__(self, num_comp=2, tau=None, **kwargs):
+
+        super(RGCCA, self).__init__(num_comp=num_comp,
+                                    algorithm=algorithms.RGCCAAlgorithm(tau),
+                                    **kwargs)
+
+    def fit(self, X, Y, Z, **kwargs):
+        super(RGCCA, self).fit(X, Y, Z, **kwargs)
+#        print dot(dot(X, self.W[0]).T, dot(X, self.W[0]))
 
 #class Enum(object):
 #    def __init__(self, *sequential, **named):

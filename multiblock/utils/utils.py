@@ -85,7 +85,8 @@ def corr(a, b):
         return _np.zeros((1, 1))
 
     ip = dot(a_.T, b_)
-    return ip / (norma * normb)
+
+    return ip[0, 0] / (norma * normb)
 
 
 def cov(a, b):

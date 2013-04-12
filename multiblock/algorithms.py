@@ -29,6 +29,7 @@ import multiblock.start_vectors as start_vectors
 import schemes
 import modes
 from multiblock.utils import MAX_ITER, TOLERANCE, make_list, dot, zeros, sqrt
+import numpy
 from numpy import ones, eye
 from numpy.linalg import pinv
 
@@ -265,7 +266,7 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
 
         Returns
         -------
-        w          : A list with n numpy arrays of weights of shape [N_i, 1].
+        a          : A list with n numpy arrays of weights of shape [N_i, 1].
         """
         n = len(X)
 
@@ -273,25 +274,25 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
             self.adj_matrix = ones((n, n)) - eye(n, n)
 
         # TODO: Add Schäfer and Strimmer's method here if tau == None!
-        self.tau = make_list(self.tau, n, 1)  # Default is New Mode A
+        self.tau = make_list(self.tau, n, 1)  # Default 1, maximum covariance
         self.scheme = make_list(self.scheme, n, schemes.Horst())
 #        self.not_normed = make_list(self.not_normed, n, False)
 
         invIXX = []
-        w = []
+        a = []
         for i in range(n):
             Xi = X[i]
             XX = dot(Xi.T, Xi)
             I = eye(XX.shape[0])
 
-            w_ = self.start_vector.get_vector(Xi)
+            a_ = self.start_vector.get_vector(Xi)
             invIXX.append(pinv(self.tau[i] * I + \
-                    ((1 - self.tau[i]) / Xi.shape[0]) * XX))
-            invIXXw = dot(invIXX[i], w_)
-            winvIXXw = dot(w_.T, invIXXw)
-            w_ = invIXXw / sqrt(winvIXXw)
+                    ((1.0 - self.tau[i]) / Xi.shape[0]) * XX))
+            invIXXa = dot(invIXX[i], a_)
+            ainvIXXa = dot(a_.T, invIXXa)
+            a_ = invIXXa / sqrt(ainvIXXa)
 
-            w.append(w_)
+            a.append(a_)
 
         # Main RGCCA loop
         self.iterations = 0
@@ -300,38 +301,38 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
             self.converged = True
             for i in xrange(n):
                 Xi = X[i]
-                ti = dot(Xi, w[i])
-                ui = zeros(ti.shape)
+                Xai = dot(Xi, a[i])
+                zi = zeros(Xai.shape)
                 for j in xrange(n):
-                    tj = dot(X[j], w[j])
+                    Xaj = dot(X[j], a[j])
 
                     # Determine scheme weights
-                    eij = self.scheme[i].compute(ti, tj)
+                    eij = self.scheme[i].compute(Xai, Xaj)
 
                     # Internal estimation using connected matrices' scores
                     if self.adj_matrix[i, j] != 0 or \
                             self.adj_matrix[j, i] != 0:
-                        ui += eij * tj
+                        zi += eij * Xaj
 
                 # Outer estimation for block i
-                wi = dot(Xi.T, ui)
-                wi = dot(invIXX[i], wi)
+                Xz = dot(Xi.T, zi)
+                ai = dot(invIXX[i], Xz)
 
-                # Apply proximal operator
-                wi = self.prox_op.prox(wi, i)
+                # Apply the proximal operator
+#                ai = self.prox_op.prox(ai, i)
 
                 # Apply normalisation
                 if not i in self.not_normed:
-                    wi = wi / sqrt(dot(wi.T, dot(invIXX[i], wi)))
+                    ai = ai / sqrt(dot(Xz.T, ai))
 
                 # Check convergence for each weight vector. They all have to
                 # leave converged = True in order for the algorithm to stop.
-                diff = wi - w[i]
+                diff = ai - a[i]
                 if dot(diff.T, diff) > self.tolerance:
                     self.converged = False
 
                 # Save updated weight vector
-                w[i] = wi
+                a[i] = ai
 
             if self.converged:
                 break
@@ -343,7 +344,7 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
 
             self.iterations += 1
 
-        return w
+        return a
 
 
 class ProximalGradientAlgorithm(BaseAlgorithm):

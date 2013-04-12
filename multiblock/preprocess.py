@@ -14,13 +14,15 @@ from multiblock.utils import TOLERANCE
 
 
 class PreprocessQueue(object):
-    def __init__(self, X, pq):
+    def __init__(self, pq, X=None):
         """ Preprocess queue.
 
         Arguments
         ---------
         pq : Either a PreprocessQueue, a list of Preprocess instances or an
              instance of Preprocess.
+
+        X  : An optional matrix to use for initialising the preprocessing.
         """
 
         super(PreprocessQueue, self).__init__()
@@ -46,8 +48,9 @@ class PreprocessQueue(object):
                              'of Preprocess')
 
         # Run once to initialise
-        for p in self.queue:
-            X = p.process(X)
+        if X != None:
+            for p in self.queue:
+                X = p.process(X)
 
     def push(self, p):
         """ Adds (pushes) a Preprocess instance to the end of the queue.
