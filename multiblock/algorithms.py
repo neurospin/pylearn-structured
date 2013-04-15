@@ -123,6 +123,29 @@ class NIPALSBaseAlgorithm(BaseAlgorithm):
                              '"BaseStartVector"')
         self.start_vector = start_vector
 
+    def set_adjacency_matrix(self, adj_matrix):
+        try:
+            adj_matrix = numpy.asarray(adj_matrix)
+        except Exception:
+            raise ValueError('The adjacency matrix must be a numpy array')
+        if not adj_matrix.shape[0] == adj_matrix.shape[1]:
+            raise ValueError('The adjacency matrix must be square')
+
+        self.adj_matrix = adj_matrix
+
+    def set_scheme(self, scheme):
+        if isinstance(scheme, (tuple, list)):
+            for s in scheme:
+                if not isinstance(s, schemes.WeightingScheme):
+                    raise ValueError('Argument "scheme" must be a list or ' \
+                                     'tuple of WeightingSchemes')
+        else:
+            if not isinstance(scheme, schemes.WeightingScheme):
+                raise ValueError('Argument "scheme" must be an instance of ' \
+                                 'WeightingScheme')
+
+        self.scheme = scheme
+
     @abc.abstractmethod
     def run(self, *X, **kwargs):
         raise NotImplementedError('Abstract method "run" must be specialised!')
@@ -287,7 +310,7 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
 
             a_ = self.start_vector.get_vector(Xi)
             invIXX.append(pinv(self.tau[i] * I + \
-                    ((1.0 - self.tau[i]) / Xi.shape[0]) * XX))
+                    ((1.0 - self.tau[i]) / (Xi.shape[0] - 1.0)) * XX))
             invIXXa = dot(invIXX[i], a_)
             ainvIXXa = dot(a_.T, invIXXa)
             a_ = invIXXa / sqrt(ainvIXXa)

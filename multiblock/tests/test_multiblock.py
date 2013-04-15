@@ -7,6 +7,7 @@ from multiblock.utils.testing import assert_array_almost_equal
 from multiblock import *
 import multiblock.start_vectors as start_vectors
 import multiblock.prox_ops as prox_ops
+import multiblock.schemes as schemes
 from sklearn.datasets import load_linnerud
 from numpy import ones, eye
 
@@ -1197,18 +1198,31 @@ def test_rgcca():
     X, Y = orth_matrix(10)
     Z = np.random.rand(10, 10)
 
-    preprocX = preprocess.PreprocessQueue([preprocess.Center()], X)
-    preprocY = preprocess.PreprocessQueue([preprocess.Center()], Y)
-    preprocZ = preprocess.PreprocessQueue([preprocess.Center()], Z)
+    import tests.data.Russett as Russet
+    X, Y, Z = Russet.load()
+
+    preprocX = preprocess.PreprocessQueue([preprocess.Center(), preprocess.Scale()], X)
+    preprocY = preprocess.PreprocessQueue([preprocess.Center(), preprocess.Scale()], Y)
+    preprocZ = preprocess.PreprocessQueue([preprocess.Center(), preprocess.Scale()], Z)
+#    X = 10 * preprocX.process(X)
+#    Y = 10 * preprocY.process(Y)
+#    Z = 10 * preprocZ.process(Z)
     X = preprocX.process(X)
     Y = preprocY.process(Y)
     Z = preprocZ.process(Z)
 
-    rgcca = RGCCA(num_comp=1, tau=0)
+    rgcca = RGCCA(num_comp=1, tau=[0.092423, 0.028221, 0.033664])
+    alg = rgcca.get_algorithm()
+    alg.set_scheme(schemes.Factorial())
+#    alg.set_max_iter(200)
+#    alg.set_tolerance(5e-5)
+    alg.set_adjacency_matrix([[0, 0, 1],
+                              [0, 0, 1],
+                              [1, 1, 0]])
     rgcca.fit(X, Y, Z)
 
-    print "var:", dot(rgcca.T[0].T, rgcca.T[0])
-    print dot(dot(X, rgcca.W[0]).T, dot(X, rgcca.W[0]))
+#    print "var:", dot(rgcca.T[0].T, rgcca.T[0])
+#    print dot(dot(X, rgcca.W[0]).T, dot(X, rgcca.W[0]))
     print rgcca.T[0]
     print rgcca.T[1]
     print rgcca.T[2]
