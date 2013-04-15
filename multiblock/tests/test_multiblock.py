@@ -10,6 +10,7 @@ import multiblock.prox_ops as prox_ops
 import multiblock.schemes as schemes
 from sklearn.datasets import load_linnerud
 from numpy import ones, eye
+from numpy.linalg import eig
 
 from math import log
 from sklearn.pls import PLSRegression
@@ -32,7 +33,9 @@ def test_multiblock():
 #    test_o2pls()
 #    test_regularisation()
 
-    test_rgcca()
+#    test_rgcca()
+
+    test_ista()
 
 #    n = 10
 #    X, Y = orth_matrix(n)
@@ -1228,6 +1231,39 @@ def test_rgcca():
     print rgcca.T[2]
     print sum_corr(*rgcca.T)
     print sum_cov(*rgcca.T)
+
+
+def test_ista():
+    n = 25
+    p = 24
+    lambd = 1
+    X = np.random.randn(n, p)
+    betastar = np.concatenate((np.zeros((p / 2, 1)),
+                               np.random.randn(p / 2, 1)))
+    y = np.dot(X, betastar)
+    D, V = eig(np.dot(X.T, X))
+    t = 0.95 / np.max(D.real)
+
+    ista = algorithms.ISTA(f=mse_l1, grad_g=grad_mse, prox_op=prox_ops.L1(lambd), l=lambd)
+    ista.run(X, y, t=t)
+    #ista(f, grad_g, prox_h, t, X, y, t)
+    print norm(ista.beta - betastar)
+    print ista.iterations
+    import pylab
+    pylab.plot(betastar[:, 0], '-', ista.beta[:, 0], '*')
+    pylab.title("the iteration number is equal to " + str(ista.iterations))
+    xi = [log(n) for n in range(1, (len(ista.f_beta_k) + 1))]
+    #pylab.plot(np.log(xi), ista.f_beta_k, '-')
+    pylab.show()
+    #xf = [log(n) for n in range(1, (len(fista.crit) + 1))]
+    #xi = [log(n) for n in range(1, (len(ista.crit) + 1))]
+    #xfm = [log(n) for n in range(1, (len(fistam.crit) + 1))]
+    #pylab.plot(xf, fista.crit, '--r', xi, ista.crit, '-b', xfm, fistam.crit, ':k')
+    #pylab.show()
+
+
+############################################################################
+############################################################################
 
 
 def sum_corr(*T, **kwargs):
