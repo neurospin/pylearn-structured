@@ -34,7 +34,7 @@ from numpy import ones, eye
 from numpy.linalg import pinv
 
 __all__ = ['BaseAlgorithm', 'NIPALSBaseAlgorithm', 'NIPALSAlgorithm',
-           'RGCCAAlgorithm']
+           'RGCCAAlgorithm', 'ISTA']
 
 
 class BaseAlgorithm(object):
@@ -353,12 +353,14 @@ class ProximalGradientAlgorithm(BaseAlgorithm):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, f, fgrad, **kwargs):
+    def __init__(self, f, grad_g, l, **kwargs):
         """
         """
+        super(ProximalGradientAlgorithm, self).__init__(**kwargs)
 
         self.f = f
-        self.fgrad = fgrad
+        self.grad_g = grad_g
+        self.l = l
 
     @abc.abstractmethod
     def run(self, *X, **kwargs):
@@ -369,10 +371,32 @@ class ISTA(ProximalGradientAlgorithm):
     """ ISTA algorithm.
     """
 
-    def __init__(self, epsilon, **kwargs):
-        ProximalGradientAlgorithm.__init__(self, **kwargs)
+    def __init__(self, **kwargs):
+        super(ISTA, self).__init__(**kwargs)
 
     def run(self, *X, **kwargs):
+        y = X[1]
+        X = X[0]
 
-        for k in xrange(max_iter):
-            beta = prox_op.prox(beta_old - t * fgrad(beta_old, X[0], X[1], l))
+        t = kwargs.pop("t", None)
+        if t == None:
+            raise ValueError("The argument t must be given")
+
+        n, p = X.shape
+        beta_old = numpy.zeros((p, 1))
+        f_old = self.f(X, y, beta_old, self.l)
+        self.f_beta_k = [f_old]
+        for k in xrange(1, self.max_iter + 1):
+            print k
+            beta_new = self.prox_op.prox(beta_old -
+                    t * self.grad_g(X, y, beta_old),
+                    t * self.l)
+            #f1 = self.f(X, y, beta_old, lambd)
+            f_new = self.f(X, y, beta_new, self.l)
+            self.f_beta_k.append(f_new)
+            if abs(f_old - f_new) / f_old < self.tolerance:
+                break
+            beta_old = beta_new
+            f_old = f_new
+        self.beta = beta_new
+        self.iterations = k

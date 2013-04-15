@@ -667,7 +667,51 @@ class RGCCA(PLSBaseMethod):
 
     def fit(self, X, Y, Z, **kwargs):
         super(RGCCA, self).fit(X, Y, Z, **kwargs)
-#        print dot(dot(X, self.W[0]).T, dot(X, self.W[0]))
+
+
+class BaseGradientMethod(BaseMethod):
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, algorithm=None):
+
+        if algorithm == None:
+            algorithm = algorithms.ISTA()
+
+        super(BaseGradientMethod, self).__init__(algorithm=algorithm)
+
+    @abc.abstractmethod
+    def f(self, **kwargs):
+        raise NotImplementedError('Abstract method "f" must be '\
+                                  'specialised!')
+
+    @abc.abstractmethod
+    def grad(self, index=0):
+        raise NotImplementedError('Abstract method "grad" must be '\
+                                  'specialised!')
+
+
+class LinearRegression(BaseMethod):
+
+    def __init__(self, algorithm=None):
+
+        if algorithm == None:
+            algorithm = algorithms.ISTA()
+
+        super(LinearRegression, self).__init__(self, algorithm=algorithm,
+                num_comp=1)
+
+    def f(X, y, beta, l):
+        return np.norm(y - np.dot(X, beta)) ** 2 + l * np.norm(beta, 1)
+
+
+    def grad(X, y, beta):
+        return 2 * np.dot(X.T, np.dot(X, beta) - y)
+
+
+#def prox_l1(beta, alpha):
+#    return (np.abs(beta) > alpha) * (beta - alpha * np.sign(beta - alpha))
+
 
 #class Enum(object):
 #    def __init__(self, *sequential, **named):
