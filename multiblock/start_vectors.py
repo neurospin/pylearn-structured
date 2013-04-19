@@ -66,22 +66,22 @@ class OnesStartVector(BaseStartVector):
             return w
 
 
-class ZerosStartVector(BaseStartVector):
-    def __init__(self):
-        super(ZerosStartVector, self).__init__()
-
-    def get_vector(self, X=None, shape=None):
-        if X == None and shape == None:
-            raise ValueError('Either a matrix X or the shape must be given')
-        if X != None:
-            shape = (X.shape[1], 1)
-
-        w = np.zeros(shape)  # Using a vector of zeros
-
-        if self.normalise:
-            return w / norm(w)
-        else:
-            return w
+#class ZerosStartVector(BaseStartVector):
+#    def __init__(self):
+#        super(ZerosStartVector, self).__init__()
+#
+#    def get_vector(self, X=None, shape=None):
+#        if X == None and shape == None:
+#            raise ValueError('Either a matrix X or the shape must be given')
+#        if X != None:
+#            shape = (X.shape[1], 1)
+#
+#        w = np.zeros(shape)  # Using a vector of zeros
+#
+##        if self.normalise:
+##            return w / norm(w)
+##        else:
+#        return w
 
 
 class LargestStartVector(BaseStartVector):

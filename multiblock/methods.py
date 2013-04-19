@@ -7,7 +7,7 @@ methods.
 # Author: Tommy Löfstedt <tommy.loefstedt@cea.fr>
 # License: BSD Style.
 
-__all__ = ['PCA', 'SVD', 'PLSR', 'PLSC', 'O2PLS', 'RGCCA']
+__all__ = ['PCA', 'SVD', 'PLSR', 'PLSC', 'O2PLS', 'RGCCA', 'LinearRegression']
 
 from sklearn.utils import check_arrays
 
@@ -22,6 +22,7 @@ import copy
 import prox_ops
 import schemes
 import modes
+import error_functions
 
 
 class BaseMethod(object):
@@ -665,49 +666,49 @@ class RGCCA(PLSBaseMethod):
                                     algorithm=algorithms.RGCCAAlgorithm(tau),
                                     **kwargs)
 
-    def fit(self, X, Y, Z, **kwargs):
-        super(RGCCA, self).fit(X, Y, Z, **kwargs)
 
-
-class BaseGradientMethod(BaseMethod):
+class BaseProximalGradientMethod(BaseMethod):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, algorithm=None):
+    def __init__(self, algorithm=None, **kwargs):
 
         if algorithm == None:
             algorithm = algorithms.ISTA()
 
-        super(BaseGradientMethod, self).__init__(algorithm=algorithm)
-
-    @abc.abstractmethod
-    def f(self, **kwargs):
-        raise NotImplementedError('Abstract method "f" must be '\
-                                  'specialised!')
-
-    @abc.abstractmethod
-    def grad(self, index=0):
-        raise NotImplementedError('Abstract method "grad" must be '\
-                                  'specialised!')
+        super(BaseProximalGradientMethod, self).__init__(algorithm=algorithm,
+                                                         **kwargs)
 
 
-class LinearRegression(BaseMethod):
+class LinearRegression(BaseProximalGradientMethod):
 
     def __init__(self, algorithm=None):
 
         if algorithm == None:
-            algorithm = algorithms.ISTA()
+            algorithm = algorithms.ISTARegression()
 
-        super(LinearRegression, self).__init__(self, algorithm=algorithm,
-                num_comp=1)
+        super(LinearRegression, self).__init__(algorithm=algorithm,
+                                               num_comp=1)
 
-    def f(X, y, beta, l):
-        return np.norm(y - np.dot(X, beta)) ** 2 + l * np.norm(beta, 1)
+    def _get_transform(self, index=0):
+        return self.beta
 
+    def fit(self, X, y, h=None, t=None, **kwargs):
 
-    def grad(X, y, beta):
-        return 2 * np.dot(X.T, np.dot(X, beta) - y)
+        g = error_functions.MeanSquareRegressionError(X, y)
+        if h == None:
+            h = error_functions.ZeroErrorFunction()
 
+        self.beta = self.algorithm.run(X, y, g=g, h=h, t=t)
+
+        return self
+
+    def predict(self, X, **kwargs):
+
+        X = np.asarray(X)
+        yhat = dot(X, self.beta)
+
+        return yhat
 
 #def prox_l1(beta, alpha):
 #    return (np.abs(beta) > alpha) * (beta - alpha * np.sign(beta - alpha))

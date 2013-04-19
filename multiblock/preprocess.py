@@ -10,7 +10,7 @@ Created on Thu Mar 28 14:43:21 2013
 __all__ = ['Preprocess', 'Center', 'Scale']
 
 import abc
-from multiblock.utils import TOLERANCE
+import utils
 
 
 class PreprocessQueue(object):
@@ -166,7 +166,7 @@ class Scale(Preprocess):
         if self.stds == None:
             ddof = 1 if self.centered else 0
             self.stds = X.std(axis=0, ddof=ddof)
-            self.stds[self.stds < TOLERANCE] = 1.0
+            self.stds[self.stds < utils.TOLERANCE] = 1.0
 
         X = X / self.stds
 

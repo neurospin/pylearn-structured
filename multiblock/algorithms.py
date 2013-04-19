@@ -28,7 +28,11 @@ import prox_ops
 import multiblock.start_vectors as start_vectors
 import schemes
 import modes
+import error_functions
+
 from multiblock.utils import MAX_ITER, TOLERANCE, make_list, dot, zeros, sqrt
+from multiblock.utils import norm
+
 import numpy
 from numpy import ones, eye
 from numpy.linalg import pinv
@@ -342,7 +346,7 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
                 ai = dot(invIXX[i], Xz)
 
                 # Apply the proximal operator
-#                ai = self.prox_op.prox(ai, i)
+                ai = self.prox_op.prox(ai, i)
 
                 # Apply normalisation
                 if not i in self.not_normed:
@@ -370,56 +374,86 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
         return a
 
 
-class ProximalGradientAlgorithm(BaseAlgorithm):
+class ProximalGradientMethod(BaseAlgorithm):
     """ Proximal gradient method.
+
+    Optimises a function decomposed as f(x) = g(x) + h(x), where f is convex
+    and differentiable and h is convex.
     """
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, f, grad_g, l, **kwargs):
+    def __init__(self, start_vector=None, **kwargs):
         """
         """
-        super(ProximalGradientAlgorithm, self).__init__(**kwargs)
+        super(ProximalGradientMethod, self).__init__(**kwargs)
 
-        self.f = f
-        self.grad_g = grad_g
-        self.l = l
+        if start_vector == None:
+            start_vector = start_vectors.OnesStartVector()
+
+        self.start_vector = start_vector
 
     @abc.abstractmethod
     def run(self, *X, **kwargs):
         raise NotImplementedError('Abstract method "run" must be specialised!')
 
 
-class ISTA(ProximalGradientAlgorithm):
-    """ ISTA algorithm.
+class ISTARegression(ProximalGradientMethod):
+    """ The ISTA algorithm for regression settings.
     """
 
     def __init__(self, **kwargs):
-        super(ISTA, self).__init__(**kwargs)
 
-    def run(self, *X, **kwargs):
-        y = X[1]
-        X = X[0]
+        super(ISTARegression, self).__init__(**kwargs)
 
-        t = kwargs.pop("t", None)
+    def run(self, X, y, g=None, h=None, t=None, tscale=0.95, **kwargs):
+
+        if g == None:
+            g = error_functions.MeanSquareRegressionError(X, y)
+        if h == None:
+            h = error_functions.ZeroErrorFunction()
+
+        if not isinstance(g, error_functions.DifferentiableErrorFunction):
+            raise ValueError('The functions in g must be ' \
+                             'DifferentiableErrorFunctions')
+        if not isinstance(h, error_functions.ConvexErrorFunction):
+            raise ValueError('The functions in h must be ConvexErrorFunction')
+
         if t == None:
-            raise ValueError("The argument t must be given")
+            D, _ = numpy.linalg.eig(numpy.dot(X.T, X))
+            t = tscale / numpy.max(D.real)
 
-        n, p = X.shape
-        beta_old = numpy.zeros((p, 1))
-        f_old = self.f(X, y, beta_old, self.l)
-        self.f_beta_k = [f_old]
-        for k in xrange(1, self.max_iter + 1):
-            print k
-            beta_new = self.prox_op.prox(beta_old -
-                    t * self.grad_g(X, y, beta_old),
-                    t * self.l)
-            #f1 = self.f(X, y, beta_old, lambd)
-            f_new = self.f(X, y, beta_new, self.l)
-            self.f_beta_k.append(f_new)
-            if abs(f_old - f_new) / f_old < self.tolerance:
-                break
-            beta_old = beta_new
+        beta = self.start_vector.get_vector(X)
+        f_old = g.f(beta) + \
+                h.f(beta)
+        self.f = [f_old]
+
+        self.iterations = 0
+        while True:
+            self.converged = True
+
+            beta_ = h.prox(beta - t * g.grad(beta))
+
+            if norm(beta - beta_) / norm(beta) > self.tolerance:
+                self.converged = False
+
+            # Save updated weight vector
+            beta = beta_
+
+            f_new = g.f(beta) + h.f(beta)
+            self.f.append(f_new)
+            if abs(f_old - f_new) / f_old > self.tolerance:
+                self.converged = False
             f_old = f_new
-        self.beta = beta_new
-        self.iterations = k
+
+            self.iterations += 1
+
+            if self.converged:
+                break
+
+            if self.iterations >= self.max_iter:
+                warnings.warn('Maximum number of iterations reached before ' \
+                              'convergence')
+                break
+
+        return beta

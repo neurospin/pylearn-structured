@@ -2,12 +2,13 @@ import numpy as np
 from numpy import dot
 import multiblock.utils as utils
 from multiblock.utils import direct, TOLERANCE, MAX_ITER, corr, cov, norm, normI
-from multiblock.utils import rand, zeros
+from multiblock.utils import rand, zeros, optimal_shrinkage
 from multiblock.utils.testing import assert_array_almost_equal
 from multiblock import *
 import multiblock.start_vectors as start_vectors
 import multiblock.prox_ops as prox_ops
 import multiblock.schemes as schemes
+import multiblock.error_functions as error_functions
 from sklearn.datasets import load_linnerud
 from numpy import ones, eye
 from numpy.linalg import eig
@@ -27,15 +28,7 @@ def check_ortho(M, err_msg):
 
 def test_multiblock():
 
-#    test_SVD_PCA()
-##    test_eigsym()
-#    test_predictions()
-#    test_o2pls()
-#    test_regularisation()
-
-#    test_rgcca()
-
-    test_ista()
+    test_rgcca()
 
 #    n = 10
 #    X, Y = orth_matrix(n)
@@ -1204,25 +1197,30 @@ def test_rgcca():
     import tests.data.Russett as Russet
     X, Y, Z = Russet.load()
 
-    preprocX = preprocess.PreprocessQueue([preprocess.Center(), preprocess.Scale()], X)
-    preprocY = preprocess.PreprocessQueue([preprocess.Center(), preprocess.Scale()], Y)
-    preprocZ = preprocess.PreprocessQueue([preprocess.Center(), preprocess.Scale()], Z)
-#    X = 10 * preprocX.process(X)
-#    Y = 10 * preprocY.process(Y)
-#    Z = 10 * preprocZ.process(Z)
+    preprocX = preprocess.PreprocessQueue([preprocess.Center(),
+                                           preprocess.Scale()], X)
+    preprocY = preprocess.PreprocessQueue([preprocess.Center(),
+                                           preprocess.Scale()], Y)
+    preprocZ = preprocess.PreprocessQueue([preprocess.Center(),
+                                           preprocess.Scale()], Z)
     X = preprocX.process(X)
     Y = preprocY.process(Y)
     Z = preprocZ.process(Z)
 
-    rgcca = RGCCA(num_comp=1, tau=[0.092423, 0.028221, 0.033664])
+    rgcca = RGCCA(num_comp=1, tau=[0.08853216, 0.02703256, 0.03224638])
     alg = rgcca.get_algorithm()
     alg.set_scheme(schemes.Factorial())
-#    alg.set_max_iter(200)
-#    alg.set_tolerance(5e-5)
+    alg.set_max_iter(10000)
+    alg.set_tolerance(5e-16)
     alg.set_adjacency_matrix([[0, 0, 1],
                               [0, 0, 1],
                               [1, 1, 0]])
     rgcca.fit(X, Y, Z)
+
+    print optimal_shrinkage(X, Y, Z)
+    return
+
+    print rgcca.T
 
 #    print "var:", dot(rgcca.T[0].T, rgcca.T[0])
 #    print dot(dot(X, rgcca.W[0]).T, dot(X, rgcca.W[0]))
@@ -1232,11 +1230,65 @@ def test_rgcca():
     print sum_corr(*rgcca.T)
     print sum_cov(*rgcca.T)
 
+    rgcca_tau = [0.08853216, 0.02703256, 0.03224638]
+    rgcca_Y = np.asarray([[-0.2581060, -0.3541558, -0.2852414],
+                          [-0.6397851, -1.3683004,  1.4229316],
+                          [-0.9695762, -0.1979154, -0.2852414],
+                          [2.1606860, -1.6809046,  1.4229316],
+                          [-0.4750739,  1.3613443, -0.8960538],
+                          [-1.2074812,  0.7296799, -0.2852414],
+                          [1.1095658, -1.6462803,  1.4229316],
+                          [-1.0885102,  0.0782205, -0.2852414],
+                          [-0.9417934,  0.5462412, -0.2852414],
+                          [-1.6110535,  0.5688775, -0.2852414],
+                          [0.1160953,  0.2226692, -0.8960538],
+                          [1.2670460, -0.7324438,  1.4229316],
+                          [-0.6726758,  0.7232740, -0.8960538],
+                          [-1.0076108,  0.6578366, -0.8960538],
+                          [-1.0389279,  1.0041065, -0.8960538],
+                          [-0.9222436,  0.7850349, -0.8960538],
+                          [-0.0525236,  0.0103846, -0.2852414],
+                          [1.4873214, -0.6436079, -0.2852414],
+                          [-0.9768778,  0.9725312, -0.8960538],
+                          [-0.9666418,  0.4970342, -0.2852414],
+                          [-0.6602556,  1.0271240, -0.8960538],
+                          [1.8144438,  1.3104280,  1.4229316],
+                          [0.1541442,  1.1320670, -0.8960538],
+                          [0.0374824,  0.0581903,  1.4229316],
+                          [-0.4870049, -0.2455363, -0.2852414],
+                          [0.7942813,  0.3007221, -0.2852414],
+                          [-0.3910296,  1.3047227, -0.8960538],
+                          [1.0206799, -0.8197552,  1.4229316],
+                          [1.9865691, -1.4554270,  1.4229316],
+                          [-0.1196040, -1.2394545,  1.4229316],
+                          [-0.8380409,  0.8593497, -0.8960538],
+                          [0.4551131, -0.6209716,  1.4229316],
+                          [-0.4640969,  0.5050262, -0.8960538],
+                          [-0.6901144,  0.9115942, -0.8960538],
+                          [1.3694153,  0.7842727, -0.8960538],
+                          [0.4442814,  0.4657784, -0.8960538],
+                          [-0.1086340,  1.0150128, -0.8960538],
+                          [-0.3293888,  0.5212566, -0.8960538],
+                          [1.0685954, -1.4426152,  1.4229316],
+                          [1.9993268, -1.7423459,  1.4229316],
+                          [0.4536262,  0.7346846, -0.8960538],
+                          [0.6903006, -2.4302006,  1.4229316],
+                          [-0.2103993, -1.9525402,  1.4229316],
+                          [0.0320053, -0.0646307,  1.4229316],
+                          [-0.7463965, -0.0198625, -0.8960538],
+                          [-0.6622496, -1.2195476, -0.2852414],
+                          [0.0751162,  0.7890309, -0.8960538]])
+
+    rgcca_T = [rgcca_Y[:,[0]], rgcca_Y[:,[1]], rgcca_Y[:,[2]]]
+
+    rgcca_a = [np.asarray([[0.08987555], [-1.15337444], [0.69883370]]),
+               np.asarray([[-0.2886049], [0.7663253]]),
+               np.asarray([[0.8048679], [-0.3052649]])]
+
 
 def test_ista():
-    n = 25
-    p = 24
-    lambd = 1
+    n = 26
+    p = 50
     X = np.random.randn(n, p)
     betastar = np.concatenate((np.zeros((p / 2, 1)),
                                np.random.randn(p / 2, 1)))
@@ -1244,17 +1296,38 @@ def test_ista():
     D, V = eig(np.dot(X.T, X))
     t = 0.95 / np.max(D.real)
 
-    ista = algorithms.ISTA(f=mse_l1, grad_g=grad_mse, prox_op=prox_ops.L1(lambd), l=lambd)
-    ista.run(X, y, t=t)
-    #ista(f, grad_g, prox_h, t, X, y, t)
-    print norm(ista.beta - betastar)
-    print ista.iterations
+    lr = LinearRegression()
+    alg = lr.get_algorithm()
+    alg.set_max_iter(10000)
+    alg.set_tolerance(5e-10)
+    lr.fit(X, y, t=t)
+    alg = lr.get_algorithm()
+
+    print norm(lr.beta - betastar)
+    print alg.iterations
+
+    lr = LinearRegression()
+    alg = lr.get_algorithm()
+    alg.set_max_iter(10000)
+    alg.set_tolerance(5e-10)
+    h = error_functions.L1(0.1)
+    lr.fit(X, y, h=h, t=t)
+
+    print norm(lr.beta - betastar)
+    print alg.iterations
+
+#    print betastar
+#    print lr.beta
+#    print (lr.beta - betastar)
+
     import pylab
-    pylab.plot(betastar[:, 0], '-', ista.beta[:, 0], '*')
-    pylab.title("the iteration number is equal to " + str(ista.iterations))
-    xi = [log(n) for n in range(1, (len(ista.f_beta_k) + 1))]
-    #pylab.plot(np.log(xi), ista.f_beta_k, '-')
+    pylab.plot(betastar[:, 0], '-', lr.beta[:, 0], '*')
+    pylab.title("the iteration number is equal to " + str(alg.iterations))
     pylab.show()
+
+#    xi = [log(n) for n in range(1, (len(alg.f) + 1))]
+#    pylab.plot(np.log(xi), ista.f_beta_k, '-')
+#    pylab.show()
     #xf = [log(n) for n in range(1, (len(fista.crit) + 1))]
     #xi = [log(n) for n in range(1, (len(ista.crit) + 1))]
     #xfm = [log(n) for n in range(1, (len(fistam.crit) + 1))]
@@ -1755,12 +1828,13 @@ def orth_matrix(n=10):
 
 def test_scale():
 
-    d = load_linnerud()
-    X = d.data
-    Y = d.target
-
-    # causes X[:, -1].std() to be zero
-    X[:, -1] = 1.0
+    pass
+#    d = load_linnerud()
+#    X = d.data
+#    Y = d.target
+#
+#    # causes X[:, -1].std() to be zero
+#    X[:, -1] = 1.0
 
 #    methods = [PLSCanonical(), PLSRegression(), CCA(), PLSSVD(),
 #               pls.PCA(), pls.SVD(), pls.PLSR(), pls.PLSC()]
@@ -1776,147 +1850,12 @@ def test_scale():
 
 if __name__ == "__main__":
 
-#    from time import clock
-##    timesPCA  = []
-#    timesFast = []
-#    timesSVD  = []
-#    Xrange = [8000] # range(50, 1000, 50) # + range(100, 1000, 100)
-#    Yrange = range(1,6, 2)#np.linspace(1, n, 2).tolist()
-#    for n in Xrange:
-#        print "Size:", n
-##        tmPCA  = []
-#        tmFast = []
-#        tmSVD  = []
-#        for num_comp in Yrange:
-#            print "Comps:", num_comp
-#            ncomp = int(num_comp + 0.5)
-#            Xtr = np.random.rand(n,n)
-##            Xte = np.random.rand(20,50)
-#            tol   = 5e-14
-#            miter = 1000
-#            Xtr, m = pls.center(Xtr, return_means = True)
-#            Xtr, s = pls.scale(Xtr, return_stds = True)
-##            Xte = (Xte - m) / s
-##            start_time = clock()
-##            pca = pls.PCA(center = False, scale = False, num_comp = ncomp,
-##                          tolerance = tol, max_iter = miter)
-##            pca.fit(Xtr)
-##            tmPCA.append(clock() - start_time)
-#
-#            start_time = clock()
-#            fast = pls.PCAfast(center = False, scale = False, num_comp = ncomp,
-#                               tolerance = tol, max_iter = miter)
-#            fast.fit(Xtr)
-#            tmFast.append(clock() - start_time)
-#
-#            start_time = clock()
-#            U, S, V = np.linalg.svd(Xtr)
-#            T = dot(U, np.diag(S))
-#            P = V.T
-#            T = T[:,0:ncomp]
-#            P = P[:,0:ncomp]
-#            tmSVD.append(clock() - start_time)
-#
-##            P, pca.P, fast.P = pls.direct(P, pca.P, fast.P, compare = True)
-##            T, pca.T, fast.T = pls.direct(T, pca.T, fast.T, compare = True)
-#            P, fast.P = pls.direct(P, fast.P, compare = True)
-#            T, fast.T = pls.direct(T, fast.T, compare = True)
-##        timesPCA.append(tmPCA)
-#        timesFast.append(tmFast)
-#        timesSVD.append(tmSVD)
-##            assert_array_almost_equal(T, pca.T, decimal=2,
-##                    err_msg="numpy.linalg.svd and PCA differ!")
-##            assert_array_almost_equal(T, fast.T, decimal=2,
-##                    err_msg="numpy.linalg.svd and PCAfast differ!")
-#
-##    import matplotlib.pyplot as plt
-##    from matplotlib.pyplot import pcolor
-##
-##    times = np.array(times)
-##    plt.plot()
-##    pcolor(times)
-##    plt.show()
-#
-##    timesPCA = np.array(timesPCA)
-#    timesFast = np.array(timesFast)
-#    timesSVD = np.array(timesSVD)
-#
-##    np.save("timesPCA", timesPCA)
-##    np.save("timesFast", timesPCA)
-##    np.save("timesSVD", timesPCA)
-#
-##    print timesPCA
-#    print timesFast
-#    print timesSVD
-#
-##    from pylab import *
-##    from mpl_toolkits.mplot3d import Axes3D
-##
-##    fig = figure()
-##    ax = Axes3D(fig)
-##    X = np.array(Xrange)#np.arange(-4, 4, 0.25)
-##    Y = np.array(Yrange)#np.arange(-4, 4, 0.25)
-##    X, Y = np.meshgrid(X, Y)
-##
-###    Z = timesPCA
-###    ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='Reds')
-##    Z = timesFast
-##    ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='Greens')
-##    Z = timesSVD
-##    ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='Blues')
-##
-##    show()
-#
-#
-##        print pca.P
-##        print fast.P
-##        print P
-#
-##    Tpca  = pca.transform(Xte)
-##    Tfast = fast.transform(Xte)
-#
+#    test_SVD_PCA()
+##    test_eigsym()
+#    test_predictions()
+#    test_o2pls()
+#    test_regularisation()
     test_multiblock()
+#    test_ista()
+
 #    test_scale()
-
-#    import math
-#    import numpy as np
-#    from time import clock
-#    A = np.random.rand(100000000,1)
-#    num = int(1)
-#
-#    t = clock()
-#    for i in xrange(num):
-#        n = math.sqrt(np.dot(A.T,A))
-#    print clock() - t
-#
-##    t = clock()
-##    for i in xrange(num):
-##        n = math.sqrt(sum(abs(A)**2))
-##    print clock() - t
-#
-##    t = clock()
-##    for i in xrange(num):
-##        n = np.sqrt((np.abs(A)**2).sum())
-##    print clock() - t
-#
-#    t = clock()
-#    for i in xrange(num):
-#        n = np.linalg.norm(A)
-#    print clock() - t
-
-#    from sandlada.multiblock import SVD
-#    A = np.random.rand(6,5)
-#    print A
-#    svd = SVD(num_comp = 2)
-#    svd.fit(A)
-#
-#    print svd.U
-#    print svd.S
-#    print svd.V
-#    print
-#
-#    U, S, V = np.linalg.svd(A)
-#
-#    print U
-#    print np.diag(S)
-#    print (V.T)

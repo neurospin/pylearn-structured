@@ -3,7 +3,8 @@
 The :mod:`multiblock.utils` module includes common functions and constants.
 
 Please add anything you need throughout the whole package to this module.
-(As opposed to having several commong definitions scattered all over the source)
+(As opposed to having several commong definitions scattered all over the
+source).
 
 Created on Thu Feb 8 09:22:00 2013
 
@@ -12,7 +13,7 @@ Created on Thu Feb 8 09:22:00 2013
 @license: BSD Style
 """
 
-import numpy as _np
+import numpy as np
 from numpy import dot
 from numpy.linalg import norm
 from numpy.random import rand
@@ -21,7 +22,8 @@ from copy import copy
 
 __all__ = ['dot', 'norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
            'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy', 'sstot', 'ssvar',
-           'sqrt', 'rand', 'zeros', 'direct', '_DEBUG', 'debug']
+           'sqrt', 'rand', 'zeros', 'direct', '_DEBUG', 'debug',
+           'optimal_shrinkage']
 
 _DEBUG = True
 
@@ -35,7 +37,7 @@ def norm1(x):
 
 
 def norm0(x):
-    return _np.count_nonzero(_np.absolute(x))
+    return np.count_nonzero(np.absolute(x))
 
 
 def normI(x):
@@ -72,8 +74,8 @@ def sign(v):
 
 
 def corr(a, b):
-    ma = _np.mean(a)
-    mb = _np.mean(b)
+    ma = np.mean(a)
+    mb = np.mean(b)
 
     a_ = a - ma
     b_ = b - mb
@@ -82,7 +84,7 @@ def corr(a, b):
     normb = norm(b_)
 
     if norma < TOLERANCE or normb < TOLERANCE:
-        return _np.zeros((1, 1))
+        return np.zeros((1, 1))
 
     ip = dot(a_.T, b_)
 
@@ -90,8 +92,8 @@ def corr(a, b):
 
 
 def cov(a, b):
-    ma = _np.mean(a)
-    mb = _np.mean(b)
+    ma = np.mean(a)
+    mb = np.mean(b)
 
     a_ = a - ma
     b_ = b - mb
@@ -102,13 +104,13 @@ def cov(a, b):
 
 
 def sstot(a):
-    a = _np.asarray(a)
-    return _np.sum(a ** 2)
+    a = np.asarray(a)
+    return np.sum(a ** 2)
 
 
 def ssvar(a):
-    a = _np.asarray(a)
-    return _np.sum(a ** 2, axis=0)
+    a = np.asarray(a)
+    return np.sum(a ** 2, axis=0)
 
 
 def zeros(*shape, **kwargs):
@@ -124,7 +126,7 @@ def zeros(*shape, **kwargs):
     """
     if isinstance(shape[0], (tuple, list)):
         shape = tuple(shape[0])
-    return _np.zeros(shape, **kwargs)
+    return np.zeros(shape, **kwargs)
 
 
 def direct(W, T=None, P=None, compare=False):
@@ -140,7 +142,7 @@ def direct(W, T=None, P=None, compare=False):
                 p = P[:, [j]]
                 cov2 = dot(w.T, p)
         else:
-            cov = dot(w.T, _np.ones(w.shape))
+            cov = dot(w.T, np.ones(w.shape))
         if cov < 0:
             if not compare:
                 w *= -1
@@ -180,3 +182,60 @@ def debug(string="", *args):
         for a in args:
             s = s + str(a)
         print string, s
+
+
+def optimal_shrinkage(*X, **kwargs):
+
+    tau = []
+
+    T = kwargs.pop('T', None)
+
+    if T == None or len(X) != len(T):
+        if T == None:
+            T = [T] * len(X)
+        else:
+            T = [T[0]] * len(X)
+
+    for i in xrange(len(X)):
+        Xi = X[i]
+        Ti = T[i]
+
+        M, N = Xi.shape
+        Si = np.cov(Xi.T)
+        if Ti == None:
+            Ti = np.diag(np.diag(Si))
+
+#        R = _np.corrcoef(X.T)
+        Wm = Si * ((M - 1.0) / M)  # 1 / N instead of 1 / N - 1
+
+        Var_sij = 0
+        for i in xrange(N):
+            for j in xrange(N):
+                wij = np.multiply(Xi[:, [i]], Xi[:, [j]]) - Wm[i, j]
+                Var_sij += np.dot(wij.T, wij)
+        Var_sij = Var_sij[0, 0] * (M / ((M - 1.0) ** 3.0))
+
+#        diag = _np.diag(C)
+#        SS_sij = _np.sum((C - _np.diag(diag)) ** 2.0)
+#        SS_sij += _np.sum((diag - 1.0) ** 2.0)
+
+        d = (Ti - Si) ** 2.0
+
+        l = Var_sij / np.sum(d)
+        l = max(0, min(1, l))
+
+        tau.append(l)
+
+    return tau
+
+#    print Var_sij
+#    print SS_sij
+#    print l
+
+#    i = 0
+#    j = 0
+#    l = 1
+#    m = 1
+#    wij = _np.multiply(X[:, [i]], X[:, [j]]) - Wm[i,j]
+#    wlm = _np.multiply(X[:, [l]], X[:, [m]]) - Wm[l,m]
+#    Cov_sij_slm = N * _np.dot(wij.T, wlm) / ((N - 1.0) ** 3.0)

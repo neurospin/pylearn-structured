@@ -22,43 +22,42 @@ class ProxOp(object):
     The baseclass also works as an identity operator,
     i.e. one for which x == ProxOp.prox(x).
     """
-#    __metaclass__ = abc.ABCMeta
 
     def __init__(self, *parameter, **kwargs):
         super(ProxOp, self).__init__()
 
         self.parameter = list(parameter)
 
-        n = len(self.parameter)
-        self.normaliser = kwargs.pop("normaliser", [norm] * n)
-        if not isinstance(self.normaliser, (tuple, list)):
-            self.normaliser = make_list(self.normaliser, n, default=norm)
+#        n = len(self.parameter)
+#        self.normaliser = kwargs.pop("normaliser", [norm] * n)
+#        if not isinstance(self.normaliser, (tuple, list)):
+#            self.normaliser = make_list(self.normaliser, n, default=norm)
 
-#    @abc.abstractmethod
     def prox(self, x, *args, **kwargs):
-#        raise NotImplementedError('Abstract method "prox" must be specialised!')
         return x
 
 
 class L1(ProxOp):
 
     def __init__(self, *l, **kwargs):
-#        ProxOp.__init__(self, *l, **kwargs)
         super(L1, self).__init__(*l, **kwargs)
 
-    def prox(self, x, index, allow_empty=False, normaliser=None):
+    def prox(self, x, index=None, allow_empty=False, normaliser=None):
 
         xorig = x.copy()
-        lorig = self.parameter[index]
-        l = lorig
-        if normaliser != None:
-            normalise = normaliser[index]
+        if index == None:
+            lorig = self.parameter
         else:
-            normalise = self.normaliser[index]
+            lorig = self.parameter[index]
+        l = lorig
+#        if normaliser != None:
+#            normalise = normaliser[index]
+#        else:
+#            normalise = self.normaliser[index]
 
         warn = False
         while True:
-            x = xorig / normalise(xorig)
+            x = xorig  # / normalise(xorig)
 
             sign = np.sign(x)
             np.absolute(x, x)

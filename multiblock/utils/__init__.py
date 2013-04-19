@@ -20,10 +20,11 @@ from .utils import zeros
 from .utils import direct
 from .utils import debug
 from .utils import _DEBUG
+from .utils import optimal_shrinkage
 
 import testing
 
 __all__ = ['dot', 'norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
            'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy',
            'sstot', 'ssvar', 'sqrt', 'rand', 'zeros',
-           'testing', 'direct', 'debug', '_DEBUG']
+           'testing', 'direct', 'debug', '_DEBUG', 'optimal_shrinkage']
