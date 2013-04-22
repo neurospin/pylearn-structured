@@ -1194,8 +1194,8 @@ def test_rgcca():
     X, Y = orth_matrix(10)
     Z = np.random.rand(10, 10)
 
-    import tests.data.Russett as Russet
-    X, Y, Z = Russet.load()
+    import tests.data.Russett as Russett
+    X, Y, Z = Russett.load()
 
     preprocX = preprocess.PreprocessQueue([preprocess.Center(),
                                            preprocess.Scale()], X)
@@ -1288,7 +1288,7 @@ def test_rgcca():
 
 def test_ista():
     n = 26
-    p = 50
+    p = 24
     X = np.random.randn(n, p)
     betastar = np.concatenate((np.zeros((p / 2, 1)),
                                np.random.randn(p / 2, 1)))
@@ -1855,7 +1855,7 @@ if __name__ == "__main__":
 #    test_predictions()
 #    test_o2pls()
 #    test_regularisation()
-    test_multiblock()
-#    test_ista()
+#    test_multiblock()
+    test_ista()
 
 #    test_scale()

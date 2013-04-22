@@ -19,7 +19,8 @@ import preprocess
 import prox_ops
 import tests
 import utils
+import error_functions
 
 __all__ = ['PCA', 'SVD', 'PLSR', 'PLSC', 'O2PLS', 'RGCCA', 'LinearRegression',
            'prox_ops', 'algorithms', 'preprocess',
-           'tests', 'utils']
+           'tests', 'utils', 'error_functions']

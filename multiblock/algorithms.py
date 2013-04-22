@@ -416,6 +416,9 @@ class ISTARegression(ProximalGradientMethod):
         if not isinstance(g, error_functions.DifferentiableErrorFunction):
             raise ValueError('The functions in g must be ' \
                              'DifferentiableErrorFunctions')
+        if not isinstance(g, error_functions.ConvexErrorFunction):
+            raise ValueError('The functions in g must be ' \
+                             'ConvexErrorFunction')
         if not isinstance(h, error_functions.ConvexErrorFunction):
             raise ValueError('The functions in h must be ConvexErrorFunction')
 

@@ -6,3 +6,6 @@ modules.
 @author: Tommy Löfstedt <tommy.loefstedt@cea.fr>
 """
 
+import data
+
+__all__ = ['data']
