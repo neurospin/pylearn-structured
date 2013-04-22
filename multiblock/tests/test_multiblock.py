@@ -20,6 +20,8 @@ from sklearn.pls import PLSCanonical
 #from sklearn.pls import PLSSVD
 #from sklearn.pls import _center_scale_xy
 
+# this is a dumb comment 
+
 
 def check_ortho(M, err_msg):
     K = np.dot(M.T, M)
