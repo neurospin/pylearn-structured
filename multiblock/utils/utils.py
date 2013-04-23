@@ -100,7 +100,7 @@ def cov(a, b):
 
     ip = dot(a_.T, b_)
 
-    return ip[0, 0] / (a_.shape[0] - 1)
+    return ip[0, 0] / (a_.shape[0] - 1.0)
 
 
 def sstot(a):
@@ -190,7 +190,9 @@ def optimal_shrinkage(*X, **kwargs):
 
     T = kwargs.pop('T', None)
 
-    if T == None or len(X) != len(T):
+    if T == None:
+        T = [T] * len(X)
+    if len(X) != len(T):
         if T == None:
             T = [T] * len(X)
         else:
@@ -227,15 +229,3 @@ def optimal_shrinkage(*X, **kwargs):
         tau.append(l)
 
     return tau
-
-#    print Var_sij
-#    print SS_sij
-#    print l
-
-#    i = 0
-#    j = 0
-#    l = 1
-#    m = 1
-#    wij = _np.multiply(X[:, [i]], X[:, [j]]) - Wm[i,j]
-#    wlm = _np.multiply(X[:, [l]], X[:, [m]]) - Wm[l,m]
-#    Cov_sij_slm = N * _np.dot(wij.T, wlm) / ((N - 1.0) ** 3.0)

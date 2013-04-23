@@ -314,7 +314,7 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
 
             a_ = self.start_vector.get_vector(Xi)
             invIXX.append(pinv(self.tau[i] * I + \
-                    ((1.0 - self.tau[i]) / (Xi.shape[0] - 1.0)) * XX))
+                    ((1.0 - self.tau[i]) / (Xi.shape[0] - 0.0)) * XX))
             invIXXa = dot(invIXX[i], a_)
             ainvIXXa = dot(a_.T, invIXXa)
             a_ = invIXXa / sqrt(ainvIXXa)

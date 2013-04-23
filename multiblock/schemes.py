@@ -10,7 +10,7 @@ Created on Fri Mar 29 08:58:10 2013
 __all__ = ['WeightingScheme', 'Horst', 'Centroid', 'Factorial']
 
 import abc
-from multiblock.utils import sign, corr
+from multiblock.utils import sign, cov
 
 
 class WeightingScheme(object):
@@ -38,7 +38,7 @@ class Centroid(WeightingScheme):
         super(Centroid, self).__init__()
 
     def compute(self, ti, tj):
-        return sign(corr(ti, tj))
+        return sign(cov(ti, tj))
 
 
 class Factorial(WeightingScheme):
@@ -46,4 +46,4 @@ class Factorial(WeightingScheme):
         super(Factorial, self).__init__()
 
     def compute(self, ti, tj):
-        return corr(ti, tj)
+        return cov(ti, tj)
