@@ -460,3 +460,69 @@ class ISTARegression(ProximalGradientMethod):
                 break
 
         return beta
+
+
+class FISTARegression(ISTARegression):
+    """ The fast ISTA algorithm for regression.
+    """
+
+    def __init__(self, **kwargs):
+
+        super(FISTARegression, self).__init__(**kwargs)
+
+    def run(self, X, y, g=None, h=None, t=None, tscale=0.95, **kwargs):
+
+        if g == None:
+            g = error_functions.MeanSquareRegressionError(X, y)
+        if h == None:
+            h = error_functions.ZeroErrorFunction()
+
+        if not isinstance(g, error_functions.DifferentiableErrorFunction):
+            raise ValueError('The functions in g must be ' \
+                             'DifferentiableErrorFunctions')
+        if not isinstance(g, error_functions.ConvexErrorFunction):
+            raise ValueError('The functions in g must be ' \
+                             'ConvexErrorFunction')
+        if not isinstance(h, error_functions.ConvexErrorFunction):
+            raise ValueError('The functions in h must be ConvexErrorFunction')
+
+        if t == None:
+            D, _ = numpy.linalg.eig(numpy.dot(X.T, X))
+            t = tscale / numpy.max(D.real)
+
+        beta = self.start_vector.get_vector(X)
+        beta_ = beta
+        f_old = g.f(beta) + h.f(beta)
+        self.f = [f_old]
+
+        self.iterations = 0
+        while True:
+            self.converged = True
+
+            k = self.iterations + 1
+            z = beta_ - ((k - 2) / (k + 1)) * (beta_ - beta)
+            beta_ = h.prox(z - t * g.grad(z), t)
+
+            if norm(beta - beta_) / norm(beta) > self.tolerance:
+                self.converged = False
+
+            # Save updated weight vector
+            beta = beta_
+
+            f_new = g.f(beta) + h.f(beta)
+            self.f.append(f_new)
+            if abs(f_old - f_new) / f_old > self.tolerance:
+                self.converged = False
+            f_old = f_new
+
+            self.iterations += 1
+
+            if self.converged:
+                break
+
+            if self.iterations >= self.max_iter:
+                warnings.warn('Maximum number of iterations reached before ' \
+                              'convergence')
+                break
+
+        return beta

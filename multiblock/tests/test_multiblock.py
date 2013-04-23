@@ -1314,11 +1314,12 @@ def test_ista():
     alg = lr.get_algorithm()
     alg.set_max_iter(10000)
     alg.set_tolerance(5e-10)
-    h = error_functions.L1(0.1)
+    h = error_functions.L1(10)
     lr.fit(X, y, h=h, t=t)
 
     print norm(lr.beta - betastar)
     print alg.iterations
+    print lr.beta
 
 #    print betastar
 #    print lr.beta
@@ -1859,7 +1860,7 @@ if __name__ == "__main__":
 #    test_predictions()
 #    test_o2pls()
 #    test_regularisation()
-    test_multiblock()
-#    test_ista()
+#    test_multiblock()
+    test_ista()
 
 #    test_scale()

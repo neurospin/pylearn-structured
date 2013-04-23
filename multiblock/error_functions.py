@@ -11,8 +11,9 @@ __all__ = ['ErrorFunction', 'ConvexErrorFunction',
 import abc
 import numpy as np
 
-from utils import norm, norm1
+from utils import norm, norm1, TOLERANCE
 import prox_ops
+import warnings
 
 
 class ErrorFunction(object):
@@ -88,9 +89,8 @@ class ZeroErrorFunction(ConvexErrorFunction, ProximalOperatorErrorFunction):
     def f(self, *args, **kwargs):
         return 0
 
-    def prox(self, beta):
-        prox_op = prox_ops.ProxOp()
-        return prox_op.prox(beta)
+    def prox(self, beta, *args, **kwargs):
+        return beta
 
 
 class MeanSquareRegressionError(DifferentiableErrorFunction,
@@ -110,18 +110,48 @@ class MeanSquareRegressionError(DifferentiableErrorFunction,
 
 
 class L1(ProximalOperatorErrorFunction, ConvexErrorFunction):
-    def __init__(self, l, prox_op=None):
+
+    def __init__(self, l):
         super(L1, self).__init__()
 
         self.l = l
 
-        if prox_op == None:
-            self.prox_op = prox_ops.L1(self.l)
-        else:
-            self.prox_op = prox_op
+#        if prox_op == None:
+#            self.prox_op = prox_ops.L1(self.l)
+#        else:
+#            self.prox_op = prox_op
 
     def f(self, beta):
         return self.l * norm1(beta)
 
-    def prox(self, beta):
-        return self.prox_op.prox(beta)
+#    def prox(self, beta):
+#        return self.prox_op.prox(beta)
+
+    def prox(self, x, factor=1, allow_empty=False):
+
+        xorig = x.copy()
+        lorig = factor * self.l
+        l = lorig
+
+        warn = False
+        while True:
+            x = xorig
+
+            sign = np.sign(x)
+            np.absolute(x, x)
+            x -= l
+            x[x < 0] = 0
+            x = np.multiply(sign, x)
+
+            if norm(x) > TOLERANCE or allow_empty:
+                break
+            else:
+                warn = True
+                # TODO: Improved this!
+                l *= 0.95  # Reduce by 5 % until at least one significant
+
+        if warn:
+            warnings.warn('Soft threshold was too large (all variables ' \
+                          'purged). Threshold reset to %f (was %f)'
+                          % (l, lorig))
+        return x

@@ -685,7 +685,7 @@ class LinearRegression(BaseProximalGradientMethod):
     def __init__(self, algorithm=None):
 
         if algorithm == None:
-            algorithm = algorithms.ISTARegression()
+            algorithm = algorithms.FISTARegression()
 
         super(LinearRegression, self).__init__(algorithm=algorithm,
                                                num_comp=1)
