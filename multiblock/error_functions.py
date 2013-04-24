@@ -10,6 +10,7 @@ __all__ = ['ErrorFunction', 'ConvexErrorFunction',
 
 import abc
 import numpy as np
+import scipy.sparse as sparse
 
 from utils import norm, norm1, TOLERANCE
 import prox_ops
@@ -66,7 +67,8 @@ class DifferentiableErrorFunction(ErrorFunction):
 
     @abc.abstractmethod
     def grad(self, *args, **kwargs):
-        raise NotImplementedError('Abstract method "grad" must be specialised!')
+        raise NotImplementedError('Abstract method "grad" must be ' \
+                                  'specialised!')
 
 
 class NonDifferentiableErrorFunction(ErrorFunction):
@@ -81,12 +83,32 @@ class NonDifferentiableErrorFunction(ErrorFunction):
         raise NotImplementedError('Abstract method "f" must be specialised!')
 
 
-class ZeroErrorFunction(ConvexErrorFunction, ProximalOperatorErrorFunction):
+class CompinedDifferentiableErrorFunction(DifferentiableErrorFunction,
+                                          ConvexErrorFunction):
+
+    def __init__(self, a, b, **kwargs):
+        super(CompinedDifferentiableErrorFunction, self).__init__(**kwargs)
+
+        self.a = a
+        self.b = b
+
+    def f(self, *args, **kwargs):
+        return a.f(*args, **kwargs) + b.f(*args, **kwargs)
+
+    def grad(self, *args, **kwargs):
+        return a.grad(*args, **kwargs) + b.grad(*args, **kwargs)
+
+
+class ZeroErrorFunction(ConvexErrorFunction, DifferentiableErrorFunction,
+                        ProximalOperatorErrorFunction):
 
     def __init__(self):
         super(ZeroErrorFunction, self).__init__()
 
     def f(self, *args, **kwargs):
+        return 0
+
+    def grad(self, *args, **kwargs):
         return 0
 
     def prox(self, beta, *args, **kwargs):
@@ -155,3 +177,97 @@ class L1(ProximalOperatorErrorFunction, ConvexErrorFunction):
                           'purged). Threshold reset to %f (was %f)'
                           % (l, lorig))
         return x
+
+
+class TV(DifferentiableErrorFunction,
+         ConvexErrorFunction):
+
+    def __init__(self, shape, gamma, mu):
+        super(TV, self).__init__()
+
+        self.shape = shape
+        self.gamma = gamma
+        self.mu = mu
+        self.beta_id = None
+
+        self.precompute()
+
+    def f(self, beta):
+
+        if self.beta_id != id(beta):
+            self.compute_alpha(beta)
+            self.beta_id = id(beta)
+
+        return np.dot(self.gAalpha, beta) - \
+                (self.gamma * self.mu / 2.0) * (norm(self.asx) ** 2.0 +
+                                                norm(self.asy) ** 2.0 +
+                                                norm(self.asz) ** 2.0)
+
+    def grad(self, beta):
+
+        if self.beta_id != id(beta):
+            self.compute_alpha(beta)
+            self.beta_id = id(beta)
+
+        return self.gAalpha
+
+    def set_mu(self, mu):
+        self.mu = mu
+
+    def compute_alpha(self, beta):
+
+        # Compute a* for each dimension
+        q = self.gamma / self.mu
+        print self.Ax.shape
+        print beta.shape
+        self.asx = q * self.Ax.dot(beta)
+        self.asy = q * self.Ay.dot(beta)
+        self.asz = q * self.Az.dot(beta)
+
+        # Apply projection
+        asnorm = self.asx ** 2.0 + self.asy ** 2.0 + self.asz ** 2.0
+        asnorm = np.sqrt(asnorm)  # TODO: Optimise by removing the square root
+        i = asnorm > 1
+        self.asx[i] = np.divide(self.asx[i], asnorm[i])
+        self.asy[i] = np.divide(self.asy[i], asnorm[i])
+        self.asz[i] = np.divide(self.asz[i], asnorm[i])
+
+        self.gAalpha = self.gamma * (np.dot(self.Ax.T, self.asx) + \
+                                     np.dot(self.Ay.T, self.asy) + \
+                                     np.dot(self.Az.T, self.asz))
+
+    def precompute(self):
+
+        M = self.shape[0]
+        N = self.shape[1]
+        O = self.shape[2]
+        p = M * N * O
+
+        self.Ax = sparse.eye(p, p, 1, format="csr") \
+                - sparse.eye(p, p, format="csr")
+        self.Ay = sparse.eye(p, p, M, format="csr") \
+                - sparse.eye(p, p, format="csr")
+        self.Az = sparse.eye(p, p, M * N, format="csr") \
+                - sparse.eye(p, p, format="csr")
+
+        ind = np.reshape(xrange(p), (O, M, N))
+        xind = ind[:, :, -1].flatten().tolist()
+        yind = ind[:, -1, :].flatten().tolist()
+        zind = ind[-1, :, :].flatten().tolist()
+
+    #    Ax.data[Ax.indptr[Xxind]] = 0
+        for i in xrange(len(xind)):
+            self.Ax.data[self.Ax.indptr[xind[i]]: \
+                         self.Ax.indptr[xind[i] + 1]] = 0
+        self.Ax.eliminate_zeros()
+
+        for i in xrange(len(yind)):
+            self.Ay.data[self.Ay.indptr[yind[i]]: \
+                         self.Ay.indptr[yind[i] + 1]] = 0
+        self.Ay.eliminate_zeros()
+
+    #    Az.data[Az.indptr[M * N] : ] = 0
+        for i in xrange(len(zind)):
+            self.Az.data[self.Az.indptr[zind[i]]: \
+                         self.Az.indptr[zind[i] + 1]] = 0
+        self.Az.eliminate_zeros()

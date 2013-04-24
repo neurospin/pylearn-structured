@@ -1340,6 +1340,62 @@ def test_ista():
     #pylab.show()
 
 
+def test_tv():
+
+    from time import time
+    start = time()
+    print "time:", (time() - start)
+
+    n = 100
+    p = 10
+    X = np.random.randn(n, p)
+    betastar = np.concatenate((np.zeros((p / 2, 1)),
+                               np.random.randn(p / 2, 1)))
+    y = np.dot(X, betastar)
+    D, V = eig(np.dot(X.T, X))
+    t = 0.95 / np.max(D.real)
+
+    lr = LinearRegression()
+    alg = lr.get_algorithm()
+    alg.set_max_iter(10000)
+    alg.set_tolerance(5e-10)
+    h = error_functions.L1(30)
+    lr.fit(X, y, h=h, t=t)
+
+    print norm(lr.beta - betastar)
+    print alg.iterations
+
+    lr = LinearRegression()
+    alg = lr.get_algorithm()
+    alg.set_max_iter(10000)
+    alg.set_tolerance(5e-10)
+    mu = 0.00001
+    gamma = 1
+    h = error_functions.TV((2, 5, 1), gamma, mu)
+    y = np.dot(X, betastar)
+    D, V = eig(np.dot(X.T, X))
+    t = 0.95 / (np.max(D.real) + (25 / mu))
+    lr.fit(X, y, h=h, t=t)
+
+    print norm(lr.beta - betastar)
+    print alg.iterations
+    print lr.beta
+
+    import pylab
+    pylab.plot(betastar[:, 0], '-', lr.beta[:, 0], '*')
+    pylab.title("the iteration number is equal to " + str(alg.iterations))
+    pylab.show()
+
+#    xi = [log(n) for n in range(1, (len(alg.f) + 1))]
+#    pylab.plot(np.log(xi), ista.f_beta_k, '-')
+#    pylab.show()
+    #xf = [log(n) for n in range(1, (len(fista.crit) + 1))]
+    #xi = [log(n) for n in range(1, (len(ista.crit) + 1))]
+    #xfm = [log(n) for n in range(1, (len(fistam.crit) + 1))]
+    #pylab.plot(xf, fista.crit, '--r', xi, ista.crit, '-b', xfm, fistam.crit, ':k')
+    #pylab.show()
+
+
 ############################################################################
 ############################################################################
 
@@ -1861,6 +1917,7 @@ if __name__ == "__main__":
 #    test_o2pls()
 #    test_regularisation()
 #    test_multiblock()
-    test_ista()
+#    test_ista()
+    test_tv()
 
 #    test_scale()
