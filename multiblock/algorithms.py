@@ -31,7 +31,7 @@ import modes
 import error_functions
 
 from multiblock.utils import MAX_ITER, TOLERANCE, make_list, dot, zeros, sqrt
-from multiblock.utils import norm
+from multiblock.utils import norm, norm1
 
 import numpy
 from numpy import ones, eye
@@ -436,14 +436,9 @@ class ISTARegression(ProximalGradientMethod):
         while True:
             self.converged = True
 
-#            print "beta:\n", beta
-#            print "t:", t
-#            print "grad:\n", g.grad(beta)
-#            print "gradient method:\n", beta - t * g.grad(beta)
-
             beta_ = h.prox(beta - t * g.grad(beta), t)
 
-            if norm(beta - beta_) / norm(beta) > self.tolerance:
+            if norm1(beta - beta_) > self.tolerance * t:
                 self.converged = False
 
             # Save updated weight vector
@@ -451,8 +446,8 @@ class ISTARegression(ProximalGradientMethod):
 
             f_new = g.f(beta) + h.f(beta)
             self.f.append(f_new)
-            if abs(f_old - f_new) / f_old > self.tolerance:
-                self.converged = False
+#            if abs(f_old - f_new) / f_old > self.tolerance:
+#                self.converged = False
             f_old = f_new
 
             self.iterations += 1
@@ -510,13 +505,13 @@ class FISTARegression(ISTARegression):
             beta = beta_
             beta_ = h.prox(z - t * g.grad(z), t)
 
-            if norm(beta - beta_) / norm(beta) > self.tolerance:
+            if norm1(z - beta_) > self.tolerance * t:
                 self.converged = False
 
             f_new = g.f(beta_) + h.f(beta_)
             self.f.append(f_new)
-            if abs(f_old - f_new) / f_old > self.tolerance:
-                self.converged = False
+#            if abs(f_old - f_new) / f_old > self.tolerance:
+#                self.converged = False
             f_old = f_new
 
             self.iterations += 1
@@ -572,25 +567,29 @@ class MonotoneFISTARegression(ISTARegression):
 
             f_new = g.f(beta_) + h.f(beta_)
             if f_new > f_old:
-#                beta_ = beta
-#                for it in xrange(2):
-                beta_ = h.prox(beta - t * g.grad(beta), t)
+                print "Two ISTA steps instead of FISTA!!"
+                for it in xrange(2):
+                    beta = beta_
+                    beta_ = h.prox(beta - t * g.grad(beta), t)
 
-                f_new = g.f(beta_) + h.f(beta_)
+                    f_old = f_new
+                    f_new = g.f(beta_) + h.f(beta_)
+                    self.f.append(f_new)
+                    self.iterations += 1
 
-#                assert(f_new < f_old)
+                    assert(f_new < f_old)
 
-                self.f.append(f_new)
-                self.iterations += 1
+                if norm1(beta - beta_) > max(1e-8, self.tolerance * t):
+                    self.converged = False
             else:
                 self.f.append(f_new)
                 self.iterations += 1
 
-            if norm(beta - beta_) / norm(beta) > self.tolerance:
-                self.converged = False
+                if norm1(z - beta_) > max(1e-8, self.tolerance * t):
+                    self.converged = False
 
-            if abs(f_old - f_new) / f_old > self.tolerance:
-                self.converged = False
+#            if abs(f_old - f_new) / f_old > self.tolerance:
+#                self.converged = False
             f_old = f_new
 
             if self.converged:

@@ -1348,16 +1348,26 @@ def test_tv():
 #    start = time()
 #    print "time:", (time() - start)
 
-    np.random.seed(42)
+#    np.random.seed(42)
 
+#    g = error_functions.TV((3, 2, 2), 1, 0.001)
+#
+#    print g.Ax.todense()
+#    print g.Ay.todense()
+#    print g.Az.todense()
+#
+#    ind = np.reshape(xrange(12), (2, 3, 2))
+#    print ind
+#
+#    return
+
+    eps = 1
+    maxit = 10000
     M = 10
     N = 10
     O = 1
-    eps = 5e-7
-    maxit = 5000
-
-    n = 150
     p = M * N * O
+    n = 75
     X = np.random.randn(n, p)
     betastar = np.concatenate((np.zeros((p / 2, 1)),
                                np.random.randn(p / 2, 1)))
@@ -1385,11 +1395,14 @@ def test_tv():
     pylab.plot(alg.f)
 
 
-    mu = 0.00001
-    gamma = 100
+#    mu = 2.0 * eps / float(p)
+    mu = 0.01
+    gamma = 0.1
     l = 1
     D, V = eig(np.dot(X.T, X))
     t = 0.95 / (np.max(D.real) + (25 / mu))
+    print "t:", t
+    print "mu:", mu
 
 
     # Linear regression with total variation regularisation
@@ -1398,9 +1411,9 @@ def test_tv():
     alg.set_max_iter(5 * maxit)
     alg.set_tolerance(eps)
 
-    g = error_functions.MeanSquareRegressionError(X, y)
-#    g2 = error_functions.TV((M, N, O), gamma, mu)
-#    g = error_functions.CompinedDifferentiableErrorFunction(g1, g2)
+    g1 = error_functions.MeanSquareRegressionError(X, y)
+    g2 = error_functions.TV((M, N, O), gamma, mu)
+    g = error_functions.CompinedDifferentiableErrorFunction(g1, g2)
     h = error_functions.L1(l)
 
     lr.fit(X, y, g=g, h=h, t=t)
@@ -1426,9 +1439,9 @@ def test_tv():
     alg.set_max_iter(5 * maxit)
     alg.set_tolerance(eps)
 
-    g = error_functions.MeanSquareRegressionError(X, y)
-#    g2 = error_functions.TV((M, N, O), gamma, mu)
-#    g = error_functions.CompinedDifferentiableErrorFunction(g1, g2)
+    g1 = error_functions.MeanSquareRegressionError(X, y)
+    g2 = error_functions.TV((M, N, O), gamma, mu)
+    g = error_functions.CompinedDifferentiableErrorFunction(g1, g2)
     h = error_functions.L1(l)
 
     lr.fit(X, y, g=g, h=h, t=t)
@@ -1454,15 +1467,9 @@ def test_tv():
     alg.set_max_iter(5 * maxit)
     alg.set_tolerance(eps)
 
-#    mu = 0.0001
-#    gamma = 1
-#    l = 1
-#    D, V = eig(np.dot(X.T, X))
-#    t = 0.95 / (np.max(D.real) + (25 / mu))
-
-    g = error_functions.MeanSquareRegressionError(X, y)
-#    g2 = error_functions.TV((M, N, O), gamma, mu)
-#    g = error_functions.CompinedDifferentiableErrorFunction(g1, g2)
+    g1 = error_functions.MeanSquareRegressionError(X, y)
+    g2 = error_functions.TV((M, N, O), gamma, mu)
+    g = error_functions.CompinedDifferentiableErrorFunction(g1, g2)
     h = error_functions.L1(l)
 
     lr.fit(X, y, g=g, h=h, t=t)

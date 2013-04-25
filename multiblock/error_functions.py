@@ -201,10 +201,10 @@ class TV(DifferentiableErrorFunction,
             self.compute_alpha(beta)
             self.beta_id = id(beta)
 
-        return np.dot(self.gAalpha.T, beta)[0, 0] - \
-                (self.gamma * self.mu / 2.0) * (norm(self.asx) ** 2.0 +
-                                                norm(self.asy) ** 2.0 +
-                                                norm(self.asz) ** 2.0)
+        return np.dot(self.Aalpha.T, beta)[0, 0] - \
+                (self.mu / 2.0) * (norm(self.asx) ** 2.0 +
+                                   norm(self.asy) ** 2.0 +
+                                   norm(self.asz) ** 2.0)
 
     def grad(self, beta):
 
@@ -212,7 +212,7 @@ class TV(DifferentiableErrorFunction,
             self.compute_alpha(beta)
             self.beta_id = id(beta)
 
-        return self.gAalpha
+        return self.Aalpha
 
     def set_mu(self, mu):
         self.mu = mu
@@ -233,9 +233,9 @@ class TV(DifferentiableErrorFunction,
         self.asy[i] = np.divide(self.asy[i], asnorm[i])
         self.asz[i] = np.divide(self.asz[i], asnorm[i])
 
-        self.gAalpha = self.gamma * (self.Ax.T.dot(self.asx) + \
-                                     self.Ay.T.dot(self.asy) + \
-                                     self.Az.T.dot(self.asz))
+        self.Aalpha = self.Ax.T.dot(self.asx) + \
+                      self.Ay.T.dot(self.asy) + \
+                      self.Az.T.dot(self.asz)
 
     def precompute(self):
 
@@ -244,54 +244,54 @@ class TV(DifferentiableErrorFunction,
         O = self.shape[2]
         p = M * N * O
 
-        from time import time
-        start = time()
+#        from time import time
+#        start = time()
         self.Ax = sparse.eye(p, p, 1, format="csr") \
                 - sparse.eye(p, p, format="csr")
-        print "Ax sparse:", (time() - start)
-        start = time()
-        self.Ay = sparse.eye(p, p, M, format="csr") \
+#        print "Ax sparse:", (time() - start)
+#        start = time()
+        self.Ay = sparse.eye(p, p, N, format="csr") \
                 - sparse.eye(p, p, format="csr")
-        print "Ay sparse:", (time() - start)
-        start = time()
+#        print "Ay sparse:", (time() - start)
+#        start = time()
         self.Az = sparse.eye(p, p, M * N, format="csr") \
                 - sparse.eye(p, p, format="csr")
-        print "Az sparse:", (time() - start)
+#        print "Az sparse:", (time() - start)
 
-        start = time()
+#        start = time()
         ind = np.reshape(xrange(p), (O, M, N))
-        print "reshape xrange p time:", (time() - start)
-        start = time()
+#        print "reshape xrange p time:", (time() - start)
+#        start = time()
         xind = ind[:, :, -1].flatten().tolist()
-        print "x slice flatten tolist:", (time() - start)
-        start = time()
+#        print "x slice flatten tolist:", (time() - start)
+#        start = time()
         yind = ind[:, -1, :].flatten().tolist()
-        print "y slice flatten tolist:", (time() - start)
-        start = time()
+#        print "y slice flatten tolist:", (time() - start)
+#        start = time()
         zind = ind[-1, :, :].flatten().tolist()
-        print "z slice flatten tolist:", (time() - start)
+#        print "z slice flatten tolist:", (time() - start)
 
-        start = time()
+#        start = time()
     #    Ax.data[Ax.indptr[Xxind]] = 0
         for i in xrange(len(xind)):
             self.Ax.data[self.Ax.indptr[xind[i]]: \
                          self.Ax.indptr[xind[i] + 1]] = 0
         self.Ax.eliminate_zeros()
 
-        print "x remove zero rows:", (time() - start)
-        start = time()
+#        print "x remove zero rows:", (time() - start)
+#        start = time()
 
         for i in xrange(len(yind)):
             self.Ay.data[self.Ay.indptr[yind[i]]: \
                          self.Ay.indptr[yind[i] + 1]] = 0
         self.Ay.eliminate_zeros()
 
-        print "y remove zero rows:", (time() - start)
-        start = time()
+#        print "y remove zero rows:", (time() - start)
+#        start = time()
 
     #    Az.data[Az.indptr[M * N] : ] = 0
-#        for i in xrange(len(zind)):
-        self.Az.data[self.Az.indptr[zind[i]]:]=0# \
-                         #self.Az.indptr[zind[i] + 1]] = 0
+        for i in xrange(len(zind)):
+            self.Az.data[self.Az.indptr[zind[i]]: \
+                         self.Az.indptr[zind[i] + 1]] = 0
         self.Az.eliminate_zeros()
-        print "z remove zero rows:", (time() - start)
+#        print "z remove zero rows:", (time() - start)
