@@ -674,7 +674,9 @@ class BaseProximalGradientMethod(BaseMethod):
     def __init__(self, algorithm=None, **kwargs):
 
         if algorithm == None:
-            algorithm = algorithms.ISTA()
+            algorithm = algorithms.FISTARegression()
+
+        print algorithm
 
         super(BaseProximalGradientMethod, self).__init__(algorithm=algorithm,
                                                          **kwargs)
@@ -682,20 +684,17 @@ class BaseProximalGradientMethod(BaseMethod):
 
 class LinearRegression(BaseProximalGradientMethod):
 
-    def __init__(self, algorithm=None):
+    def __init__(self, **kwargs):
 
-        if algorithm == None:
-            algorithm = algorithms.FISTARegression()
-
-        super(LinearRegression, self).__init__(algorithm=algorithm,
-                                               num_comp=1)
+        super(LinearRegression, self).__init__(num_comp=1, **kwargs)
 
     def _get_transform(self, index=0):
         return self.beta
 
-    def fit(self, X, y, h=None, t=None, **kwargs):
+    def fit(self, X, y, g=None, h=None, t=None):
 
-        g = error_functions.MeanSquareRegressionError(X, y)
+        if g == None:
+            g = error_functions.MeanSquareRegressionError(X, y)
         if h == None:
             h = error_functions.ZeroErrorFunction()
 

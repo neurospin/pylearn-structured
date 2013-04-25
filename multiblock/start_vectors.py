@@ -31,8 +31,8 @@ class BaseStartVector(object):
 
 
 class RandomStartVector(BaseStartVector):
-    def __init__(self):
-        super(RandomStartVector, self).__init__()
+    def __init__(self, normalise=True):
+        super(RandomStartVector, self).__init__(normalise=normalise)
 
     def get_vector(self, X=None, shape=None):
         if X == None and shape == None:
@@ -49,8 +49,8 @@ class RandomStartVector(BaseStartVector):
 
 
 class OnesStartVector(BaseStartVector):
-    def __init__(self):
-        super(OnesStartVector, self).__init__()
+    def __init__(self, normalise=True):
+        super(OnesStartVector, self).__init__(normalise=normalise)
 
     def get_vector(self, X=None, shape=None):
         if X == None and shape == None:

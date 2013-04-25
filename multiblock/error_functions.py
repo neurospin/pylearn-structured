@@ -13,7 +13,6 @@ import numpy as np
 import scipy.sparse as sparse
 
 from utils import norm, norm1, TOLERANCE
-import prox_ops
 import warnings
 
 
@@ -93,10 +92,10 @@ class CompinedDifferentiableErrorFunction(DifferentiableErrorFunction,
         self.b = b
 
     def f(self, *args, **kwargs):
-        return a.f(*args, **kwargs) + b.f(*args, **kwargs)
+        return self.a.f(*args, **kwargs) + self.b.f(*args, **kwargs)
 
     def grad(self, *args, **kwargs):
-        return a.grad(*args, **kwargs) + b.grad(*args, **kwargs)
+        return self.a.grad(*args, **kwargs) + self.b.grad(*args, **kwargs)
 
 
 class ZeroErrorFunction(ConvexErrorFunction, DifferentiableErrorFunction,
@@ -151,32 +150,36 @@ class L1(ProximalOperatorErrorFunction, ConvexErrorFunction):
 
     def prox(self, x, factor=1, allow_empty=False):
 
-        xorig = x.copy()
+#        xorig = x.copy()
         lorig = factor * self.l
         l = lorig
 
-        warn = False
-        while True:
-            x = xorig
+        return (np.abs(x) > l) * (x - l * np.sign(x - l))
 
-            sign = np.sign(x)
-            np.absolute(x, x)
-            x -= l
-            x[x < 0] = 0
-            x = np.multiply(sign, x)
-
-            if norm(x) > TOLERANCE or allow_empty:
-                break
-            else:
-                warn = True
-                # TODO: Improved this!
-                l *= 0.95  # Reduce by 5 % until at least one significant
-
-        if warn:
-            warnings.warn('Soft threshold was too large (all variables ' \
-                          'purged). Threshold reset to %f (was %f)'
-                          % (l, lorig))
-        return x
+#        warn = False
+#        while True:
+#            x = xorig
+#
+#            sign = np.sign(x)
+#            np.absolute(x, x)
+#            x -= l
+#            x[x < 0] = 0
+#            x = np.multiply(sign, x)
+#
+##            print "HERE!!!!"
+#
+##            if norm(x) > TOLERANCE or allow_empty:
+#            break
+##            else:
+##                warn = True
+##                # TODO: Improved this!
+##                l *= 0.95  # Reduce by 5 % until at least one significant
+#
+#        if warn:
+#            warnings.warn('Soft threshold was too large (all variables ' \
+#                          'purged). Threshold reset to %f (was %f)'
+#                          % (l, lorig))
+#        return x
 
 
 class TV(DifferentiableErrorFunction,
@@ -198,7 +201,7 @@ class TV(DifferentiableErrorFunction,
             self.compute_alpha(beta)
             self.beta_id = id(beta)
 
-        return np.dot(self.gAalpha, beta) - \
+        return np.dot(self.gAalpha.T, beta)[0, 0] - \
                 (self.gamma * self.mu / 2.0) * (norm(self.asx) ** 2.0 +
                                                 norm(self.asy) ** 2.0 +
                                                 norm(self.asz) ** 2.0)
@@ -218,23 +221,21 @@ class TV(DifferentiableErrorFunction,
 
         # Compute a* for each dimension
         q = self.gamma / self.mu
-        print self.Ax.shape
-        print beta.shape
         self.asx = q * self.Ax.dot(beta)
         self.asy = q * self.Ay.dot(beta)
         self.asz = q * self.Az.dot(beta)
 
         # Apply projection
         asnorm = self.asx ** 2.0 + self.asy ** 2.0 + self.asz ** 2.0
-        asnorm = np.sqrt(asnorm)  # TODO: Optimise by removing the square root
+        asnorm = np.sqrt(asnorm)  # TODO: Speed up by removing the square root
         i = asnorm > 1
         self.asx[i] = np.divide(self.asx[i], asnorm[i])
         self.asy[i] = np.divide(self.asy[i], asnorm[i])
         self.asz[i] = np.divide(self.asz[i], asnorm[i])
 
-        self.gAalpha = self.gamma * (np.dot(self.Ax.T, self.asx) + \
-                                     np.dot(self.Ay.T, self.asy) + \
-                                     np.dot(self.Az.T, self.asz))
+        self.gAalpha = self.gamma * (self.Ax.T.dot(self.asx) + \
+                                     self.Ay.T.dot(self.asy) + \
+                                     self.Az.T.dot(self.asz))
 
     def precompute(self):
 
@@ -243,31 +244,54 @@ class TV(DifferentiableErrorFunction,
         O = self.shape[2]
         p = M * N * O
 
+        from time import time
+        start = time()
         self.Ax = sparse.eye(p, p, 1, format="csr") \
                 - sparse.eye(p, p, format="csr")
+        print "Ax sparse:", (time() - start)
+        start = time()
         self.Ay = sparse.eye(p, p, M, format="csr") \
                 - sparse.eye(p, p, format="csr")
+        print "Ay sparse:", (time() - start)
+        start = time()
         self.Az = sparse.eye(p, p, M * N, format="csr") \
                 - sparse.eye(p, p, format="csr")
+        print "Az sparse:", (time() - start)
 
+        start = time()
         ind = np.reshape(xrange(p), (O, M, N))
+        print "reshape xrange p time:", (time() - start)
+        start = time()
         xind = ind[:, :, -1].flatten().tolist()
+        print "x slice flatten tolist:", (time() - start)
+        start = time()
         yind = ind[:, -1, :].flatten().tolist()
+        print "y slice flatten tolist:", (time() - start)
+        start = time()
         zind = ind[-1, :, :].flatten().tolist()
+        print "z slice flatten tolist:", (time() - start)
 
+        start = time()
     #    Ax.data[Ax.indptr[Xxind]] = 0
         for i in xrange(len(xind)):
             self.Ax.data[self.Ax.indptr[xind[i]]: \
                          self.Ax.indptr[xind[i] + 1]] = 0
         self.Ax.eliminate_zeros()
 
+        print "x remove zero rows:", (time() - start)
+        start = time()
+
         for i in xrange(len(yind)):
             self.Ay.data[self.Ay.indptr[yind[i]]: \
                          self.Ay.indptr[yind[i] + 1]] = 0
         self.Ay.eliminate_zeros()
 
+        print "y remove zero rows:", (time() - start)
+        start = time()
+
     #    Az.data[Az.indptr[M * N] : ] = 0
-        for i in xrange(len(zind)):
-            self.Az.data[self.Az.indptr[zind[i]]: \
-                         self.Az.indptr[zind[i] + 1]] = 0
+#        for i in xrange(len(zind)):
+        self.Az.data[self.Az.indptr[zind[i]]:]=0# \
+                         #self.Az.indptr[zind[i] + 1]] = 0
         self.Az.eliminate_zeros()
+        print "z remove zero rows:", (time() - start)

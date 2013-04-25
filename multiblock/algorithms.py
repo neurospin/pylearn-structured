@@ -38,7 +38,8 @@ from numpy import ones, eye
 from numpy.linalg import pinv
 
 __all__ = ['BaseAlgorithm', 'NIPALSBaseAlgorithm', 'NIPALSAlgorithm',
-           'RGCCAAlgorithm', 'ISTA']
+           'RGCCAAlgorithm', 'ISTARegression', 'FISTARegression',
+           'MonotoneFISTARegression']
 
 
 class BaseAlgorithm(object):
@@ -435,7 +436,12 @@ class ISTARegression(ProximalGradientMethod):
         while True:
             self.converged = True
 
-            beta_ = h.prox(beta - t * g.grad(beta))
+#            print "beta:\n", beta
+#            print "t:", t
+#            print "grad:\n", g.grad(beta)
+#            print "gradient method:\n", beta - t * g.grad(beta)
+
+            beta_ = h.prox(beta - t * g.grad(beta), t)
 
             if norm(beta - beta_) / norm(beta) > self.tolerance:
                 self.converged = False
@@ -501,21 +507,91 @@ class FISTARegression(ISTARegression):
 
             k = self.iterations + 1
             z = beta_ - ((k - 2) / (k + 1)) * (beta_ - beta)
+            beta = beta_
             beta_ = h.prox(z - t * g.grad(z), t)
 
             if norm(beta - beta_) / norm(beta) > self.tolerance:
                 self.converged = False
 
-            # Save updated weight vector
-            beta = beta_
-
-            f_new = g.f(beta) + h.f(beta)
+            f_new = g.f(beta_) + h.f(beta_)
             self.f.append(f_new)
             if abs(f_old - f_new) / f_old > self.tolerance:
                 self.converged = False
             f_old = f_new
 
             self.iterations += 1
+
+            if self.converged:
+                break
+
+            if self.iterations >= self.max_iter:
+                warnings.warn('Maximum number of iterations reached before ' \
+                              'convergence')
+                break
+
+        return beta_
+
+
+class MonotoneFISTARegression(ISTARegression):
+    """ The fast ISTA algorithm for regression.
+    """
+
+    def __init__(self, **kwargs):
+
+        super(MonotoneFISTARegression, self).__init__(**kwargs)
+
+    def run(self, X, y, t=0.95, g=None, h=None, **kwargs):
+
+        if g == None:
+            g = error_functions.MeanSquareRegressionError(X, y)
+        if h == None:
+            h = error_functions.ZeroErrorFunction()
+
+        if not isinstance(g, error_functions.DifferentiableErrorFunction):
+            raise ValueError('The functions in g must be ' \
+                             'DifferentiableErrorFunctions')
+        if not isinstance(g, error_functions.ConvexErrorFunction):
+            raise ValueError('The functions in g must be ' \
+                             'ConvexErrorFunction')
+        if not isinstance(h, error_functions.ConvexErrorFunction):
+            raise ValueError('The functions in h must be ConvexErrorFunction')
+
+        beta = self.start_vector.get_vector(X)
+        beta_ = beta
+        f_old = g.f(beta) + h.f(beta)
+        self.f = [f_old]
+
+        self.iterations = 0
+        while True:
+            self.converged = True
+
+            k = self.iterations + 1
+            z = beta_ - ((k - 2) / (k + 1)) * (beta_ - beta)
+            beta = beta_
+            beta_ = h.prox(z - t * g.grad(z), t)
+
+            f_new = g.f(beta_) + h.f(beta_)
+            if f_new > f_old:
+#                beta_ = beta
+#                for it in xrange(2):
+                beta_ = h.prox(beta - t * g.grad(beta), t)
+
+                f_new = g.f(beta_) + h.f(beta_)
+
+#                assert(f_new < f_old)
+
+                self.f.append(f_new)
+                self.iterations += 1
+            else:
+                self.f.append(f_new)
+                self.iterations += 1
+
+            if norm(beta - beta_) / norm(beta) > self.tolerance:
+                self.converged = False
+
+            if abs(f_old - f_new) / f_old > self.tolerance:
+                self.converged = False
+            f_old = f_new
 
             if self.converged:
                 break

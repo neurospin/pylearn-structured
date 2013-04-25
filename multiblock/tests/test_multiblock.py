@@ -21,6 +21,7 @@ from sklearn.pls import PLSCanonical
 #from sklearn.pls import _center_scale_xy
 
 # this is a dumb comment 
+# not as dumb as this! ;-)
 
 
 def check_ortho(M, err_msg):
@@ -1342,12 +1343,21 @@ def test_ista():
 
 def test_tv():
 
+    import pylab
     from time import time
-    start = time()
-    print "time:", (time() - start)
+#    start = time()
+#    print "time:", (time() - start)
 
-    n = 100
-    p = 10
+    np.random.seed(42)
+
+    M = 10
+    N = 10
+    O = 1
+    eps = 5e-7
+    maxit = 5000
+
+    n = 150
+    p = M * N * O
     X = np.random.randn(n, p)
     betastar = np.concatenate((np.zeros((p / 2, 1)),
                                np.random.randn(p / 2, 1)))
@@ -1355,35 +1365,121 @@ def test_tv():
     D, V = eig(np.dot(X.T, X))
     t = 0.95 / np.max(D.real)
 
+    # "Regular" linear regression with L1 regularisation
     lr = LinearRegression()
     alg = lr.get_algorithm()
-    alg.set_max_iter(10000)
-    alg.set_tolerance(5e-10)
-    h = error_functions.L1(30)
-    lr.fit(X, y, h=h, t=t)
-
-    print norm(lr.beta - betastar)
-    print alg.iterations
-
-    lr = LinearRegression()
-    alg = lr.get_algorithm()
-    alg.set_max_iter(10000)
-    alg.set_tolerance(5e-10)
-    mu = 0.00001
-    gamma = 1
-    h = error_functions.TV((2, 5, 1), gamma, mu)
-    y = np.dot(X, betastar)
-    D, V = eig(np.dot(X.T, X))
-    t = 0.95 / (np.max(D.real) + (25 / mu))
-    lr.fit(X, y, h=h, t=t)
+    alg.set_max_iter(maxit)
+    alg.set_tolerance(eps)
+    h = error_functions.L1(1)
+    lr.fit(X, y, t=t)
 
     print norm(lr.beta - betastar)
     print alg.iterations
     print lr.beta
+    print np.reshape(lr.beta, (O, M, N))  # pz, py, px
 
-    import pylab
+    pylab.subplot(4, 2, 1)
     pylab.plot(betastar[:, 0], '-', lr.beta[:, 0], '*')
-    pylab.title("the iteration number is equal to " + str(alg.iterations))
+    pylab.title("Iterations: " + str(alg.iterations))
+    pylab.subplot(4, 2, 2)
+    pylab.plot(alg.f)
+
+
+    mu = 0.00001
+    gamma = 100
+    l = 1
+    D, V = eig(np.dot(X.T, X))
+    t = 0.95 / (np.max(D.real) + (25 / mu))
+
+
+    # Linear regression with total variation regularisation
+    lr = LinearRegression(algorithm=algorithms.ISTARegression())
+    alg = lr.get_algorithm()
+    alg.set_max_iter(5 * maxit)
+    alg.set_tolerance(eps)
+
+    g = error_functions.MeanSquareRegressionError(X, y)
+#    g2 = error_functions.TV((M, N, O), gamma, mu)
+#    g = error_functions.CompinedDifferentiableErrorFunction(g1, g2)
+    h = error_functions.L1(l)
+
+    lr.fit(X, y, g=g, h=h, t=t)
+
+    print norm(lr.beta - betastar)
+    print alg.iterations
+    print lr.beta
+    print np.reshape(lr.beta, (O, M, N))
+
+    pylab.subplot(4, 2, 3)
+    pylab.plot(betastar[:, 0], '-', lr.beta[:, 0], '*')
+    pylab.title("Iterations: " + str(alg.iterations))
+    pylab.subplot(4, 2, 4)
+    pylab.plot(alg.f)
+#    pylab.title("Iterations: " + str(alg.iterations))
+    gamma_small_beta = lr.beta
+
+
+
+    # Linear regression with total variation regularisation
+    lr = LinearRegression(algorithm=algorithms.FISTARegression())
+    alg = lr.get_algorithm()
+    alg.set_max_iter(5 * maxit)
+    alg.set_tolerance(eps)
+
+    g = error_functions.MeanSquareRegressionError(X, y)
+#    g2 = error_functions.TV((M, N, O), gamma, mu)
+#    g = error_functions.CompinedDifferentiableErrorFunction(g1, g2)
+    h = error_functions.L1(l)
+
+    lr.fit(X, y, g=g, h=h, t=t)
+
+    print norm(lr.beta - betastar)
+    print alg.iterations
+    print lr.beta
+    print np.reshape(lr.beta, (O, M, N))
+
+    pylab.subplot(4, 2, 5)
+    pylab.plot(betastar[:, 0], '-', lr.beta[:, 0], '*')
+    pylab.title("Iterations: " + str(alg.iterations))
+    pylab.subplot(4, 2, 6)
+    pylab.plot(alg.f)
+#    pylab.title("Iterations: " + str(alg.iterations))
+    gamma_small_beta = lr.beta
+
+
+
+    # Linear regression with total variation regularisation
+    lr = LinearRegression(algorithm=algorithms.MonotoneFISTARegression())
+    alg = lr.get_algorithm()
+    alg.set_max_iter(5 * maxit)
+    alg.set_tolerance(eps)
+
+#    mu = 0.0001
+#    gamma = 1
+#    l = 1
+#    D, V = eig(np.dot(X.T, X))
+#    t = 0.95 / (np.max(D.real) + (25 / mu))
+
+    g = error_functions.MeanSquareRegressionError(X, y)
+#    g2 = error_functions.TV((M, N, O), gamma, mu)
+#    g = error_functions.CompinedDifferentiableErrorFunction(g1, g2)
+    h = error_functions.L1(l)
+
+    lr.fit(X, y, g=g, h=h, t=t)
+
+    print norm(lr.beta - betastar)
+    print alg.iterations
+    print lr.beta
+    print np.reshape(lr.beta, (O, M, N))
+
+    print "diff:", norm(gamma_small_beta - lr.beta)
+
+    pylab.subplot(4, 2, 7)
+    pylab.plot(betastar[:, 0], '-', lr.beta[:, 0], '*')
+    pylab.title("Iterations: " + str(alg.iterations))
+    pylab.subplot(4, 2, 8)
+    pylab.plot(alg.f)
+#    pylab.title("Iterations: " + str(alg.iterations))
     pylab.show()
 
 #    xi = [log(n) for n in range(1, (len(alg.f) + 1))]
