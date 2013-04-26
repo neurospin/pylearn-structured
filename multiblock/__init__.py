@@ -20,7 +20,8 @@ import prox_ops
 import tests
 import utils
 import error_functions
+import start_vectors
 
 __all__ = ['PCA', 'SVD', 'PLSR', 'PLSC', 'O2PLS', 'RGCCA', 'LinearRegression',
            'prox_ops', 'algorithms', 'preprocess',
-           'tests', 'utils', 'error_functions']
+           'tests', 'utils', 'error_functions', 'start_vectors']

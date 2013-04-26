@@ -8,11 +8,13 @@ Created on Thu Mar 28 15:35:26 2013
 """
 
 __all__ = ['BaseStartVector', 'RandomStartVector', 'OnesStartVector',
-           'LargestStartVector']
+           'LargestStartVector', 'GaussianCurveVector']
 
 import abc
 import numpy as np
-from multiblock.utils import norm
+import numpy.linalg as la
+import math
+from multiblock.utils import norm, TOLERANCE
 
 
 class BaseStartVector(object):
@@ -102,3 +104,53 @@ class LargestStartVector(BaseStartVector):
             return w / norm(w)
         else:
             return w
+
+
+class GaussianCurveVector(BaseStartVector):
+
+    def __init__(self, normalise=True):
+
+        super(GaussianCurveVector, self).__init__(normalise=normalise)
+
+    def get_vector(self, shape, mean=None, cov=None):
+        if not isinstance(shape, tuple):
+            shape = tuple(shape)
+
+        n = len(shape)
+        if mean == None:
+            mean = [float(s) / 2.0 for s in shape]
+        if cov == None:
+            S = np.eye(n) / 4.0
+#            S = np.diag([s / 2.0 for s in shape])
+            invS = S
+#            detS = 1
+        else:
+            S = np.diag(np.diag(cov))
+            invS = la.pinv(S)
+#            detS = la.det(S)
+#            if detS < TOLERANCE:
+#                detS = TOLERANCE
+
+#        k = 1.0 / math.sqrt(detS * ((2.0 * math.pi) ** n))
+
+        s = []
+        X = 0
+        for i in xrange(n):
+            x = np.arange(shape[i]) - mean[i]
+            X = X + invS[i, i] * (np.reshape(x, [shape[i]]+s) ** 2)
+            s.append(1)
+
+        X = np.exp(-0.5 * X)
+        X /= np.sum(X)
+
+        print invS
+        print np.max(X)
+
+        return X
+
+#        G = np.exp(((x-x0)**2 + (y-y0)**2))
+
+#        if self.normalise:
+#            return w / norm(w)
+#        else:
+#            return w
