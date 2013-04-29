@@ -1350,24 +1350,13 @@ def test_tv():
 
 #    np.random.seed(42)
 
-#    g = error_functions.TV((3, 2, 2), 1, 0.001)
-#
-#    print g.Ax.todense()
-#    print g.Ay.todense()
-#    print g.Az.todense()
-#
-#    ind = np.reshape(xrange(12), (2, 3, 2))
-#    print ind
-#
-#    return
-
-    eps = 1
-    maxit = 10000
+    eps = 0.1
+    maxit = 50000
     M = 10
     N = 10
     O = 1
     p = M * N * O
-    n = 75
+    n = 100
     X = np.random.randn(n, p)
     betastar = np.concatenate((np.zeros((p / 2, 1)),
                                np.random.randn(p / 2, 1)))
@@ -1408,12 +1397,17 @@ def test_tv():
     # Linear regression with total variation regularisation
     lr = LinearRegression(algorithm=algorithms.ISTARegression())
     alg = lr.get_algorithm()
-    alg.set_max_iter(5 * maxit)
+    alg.set_max_iter(maxit)
     alg.set_tolerance(eps)
 
-    g1 = error_functions.MeanSquareRegressionError(X, y)
-    g2 = error_functions.TV((M, N, O), gamma, mu)
-    g = error_functions.CompinedDifferentiableErrorFunction(g1, g2)
+    r = 0
+    for i in xrange(X.shape[1]):
+        r = max(r, abs(utils.cov(X[:, [i]], y)))
+    mus = [r * 0.5 ** i for i in xrange(5)]
+
+    g1 = error_functions.SumSqRegressionError(X, y)
+    g2 = error_functions.TV((M, N, O), gamma, mus)
+    g = error_functions.CombinedErrorFunction(g1, g2)
     h = error_functions.L1(l)
 
     lr.fit(X, y, g=g, h=h, t=t)
@@ -1421,27 +1415,34 @@ def test_tv():
     print norm(lr.beta - betastar)
     print alg.iterations
     print lr.beta
-    print np.reshape(lr.beta, (O, M, N))
+#    print np.reshape(lr.beta, (O, M, N))
 
-    pylab.subplot(4, 2, 3)
-    pylab.plot(betastar[:, 0], '-', lr.beta[:, 0], '*')
-    pylab.title("Iterations: " + str(alg.iterations))
-    pylab.subplot(4, 2, 4)
-    pylab.plot(alg.f)
+#    pylab.subplot(4, 2, 3)
+#    pylab.plot(betastar[:, 0], '-', lr.beta[:, 0], '*')
+#    pylab.title("Iterations: " + str(alg.iterations))
+#    pylab.subplot(4, 2, 4)
+#    pylab.plot(alg.f)
 #    pylab.title("Iterations: " + str(alg.iterations))
     gamma_small_beta = lr.beta
 
+    pylab.subplot(2, 1, 1)
+    pylab.plot(betastar[:, 0], '-', lr.beta[:, 0], '*')
+    pylab.title("Iterations: " + str(alg.iterations))
+    pylab.subplot(2, 1, 2)
+    pylab.plot(alg.f, '.')
+    pylab.show()
 
+    return
 
     # Linear regression with total variation regularisation
     lr = LinearRegression(algorithm=algorithms.FISTARegression())
     alg = lr.get_algorithm()
-    alg.set_max_iter(5 * maxit)
+    alg.set_max_iter(maxit)
     alg.set_tolerance(eps)
 
-    g1 = error_functions.MeanSquareRegressionError(X, y)
+    g1 = error_functions.SumSqRegressionError(X, y)
     g2 = error_functions.TV((M, N, O), gamma, mu)
-    g = error_functions.CompinedDifferentiableErrorFunction(g1, g2)
+    g = error_functions.CombinedDifferentiableErrorFunction(g1, g2)
     h = error_functions.L1(l)
 
     lr.fit(X, y, g=g, h=h, t=t)
@@ -1464,12 +1465,12 @@ def test_tv():
     # Linear regression with total variation regularisation
     lr = LinearRegression(algorithm=algorithms.MonotoneFISTARegression())
     alg = lr.get_algorithm()
-    alg.set_max_iter(5 * maxit)
+    alg.set_max_iter(maxit)
     alg.set_tolerance(eps)
 
-    g1 = error_functions.MeanSquareRegressionError(X, y)
+    g1 = error_functions.SumSqRegressionError(X, y)
     g2 = error_functions.TV((M, N, O), gamma, mu)
-    g = error_functions.CompinedDifferentiableErrorFunction(g1, g2)
+    g = error_functions.CombinedDifferentiableErrorFunction(g1, g2)
     h = error_functions.L1(l)
 
     lr.fit(X, y, g=g, h=h, t=t)

@@ -32,6 +32,16 @@ class BaseStartVector(object):
                                   'specialised!')
 
 
+class IdentityStartVector(BaseStartVector):
+    def __init__(self, vector):
+        super(IdentityStartVector, self).__init__()
+
+        self.vector = vector
+
+    def get_vector(self, *args, **kwargs):
+        return self.vector
+
+
 class RandomStartVector(BaseStartVector):
     def __init__(self, normalise=True):
         super(RandomStartVector, self).__init__(normalise=normalise)

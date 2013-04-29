@@ -23,6 +23,7 @@ import prox_ops
 import schemes
 import modes
 import error_functions
+import start_vectors
 
 
 class BaseMethod(object):
@@ -682,7 +683,32 @@ class BaseProximalGradientMethod(BaseMethod):
                                                          **kwargs)
 
 
-class LinearRegression(BaseProximalGradientMethod):
+class NesterovProximalGradientMethod(BaseProximalGradientMethod):
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, **kwargs):
+        super(NesterovProximalGradientMethod, self).__init__(**kwargs)
+
+    def continuation_run(self, algorithm, err_fnc, *args, **kwargs):
+        start_vector = algorithm.start_vector
+#        f = []
+        for mu in err_fnc.get_mus():
+            print "mu before:", mu
+            err_fnc.set_mu(mu)
+            algorithm.set_start_vector(start_vector)
+            beta = algorithm.run(*args, **kwargs)
+            print "continuation with mu =", err_fnc.get_mu(), \
+                    ", iterations =", algorithm.iterations
+#            f = f + algorithm.f
+            start_vector = start_vectors.IdentityStartVector(beta)
+
+#        algorithm.f = f
+#        algorithm.iterations = len(f)
+
+        return beta
+
+class LinearRegression(NesterovProximalGradientMethod):
 
     def __init__(self, **kwargs):
 
@@ -698,7 +724,12 @@ class LinearRegression(BaseProximalGradientMethod):
         if h == None:
             h = error_functions.ZeroErrorFunction()
 
-        self.beta = self.algorithm.run(X, y, g=g, h=h, t=t)
+        if isinstance(g,
+                      error_functions.NesterovDifferentiableErrorFunction):
+            self.beta = self.continuation_run(self.algorithm, g,
+                                              X, y, g=g, h=h, t=t)
+        else:
+            self.beta = self.algorithm.run(X, y, g=g, h=h, t=t)
 
         return self
 

@@ -82,11 +82,48 @@ class NonDifferentiableErrorFunction(ErrorFunction):
         raise NotImplementedError('Abstract method "f" must be specialised!')
 
 
-class CompinedDifferentiableErrorFunction(DifferentiableErrorFunction,
-                                          ConvexErrorFunction):
+class NesterovApproximatedErrorFunction(DifferentiableErrorFunction,
+                                        ConvexErrorFunction):
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, mus=None, **kwargs):
+        super(NesterovApproximatedErrorFunction, self).__init__(**kwargs)
+
+        self.additional_errfuncs = []
+
+#    @abc.abstractmethod
+#    def f(self, *args, **kwargs):
+#        raise NotImplementedError('Abstract method "f" must be specialised!')
+
+#    @abc.abstractmethod
+#    def grad(self, *args, **kwargs):
+#        raise NotImplementedError('Abstract method "grad" must be ' \
+#                                  'specialised!')
+
+    def add_error_function(self, function):
+        self.additional_errfuncs.append(function)
+
+    def f(self, beta):
+        fsum = 0
+        for func in self.additional_errfuncs:
+            fsum += func.f(beta)
+
+        return fsum
+
+    def grad(self, beta):
+        gradsum = 0
+        for func in self.additional_errfuncs:
+            gradsum += func.grad(beta)
+
+        return gradsum
+
+
+class CombinedErrorFunction(DifferentiableErrorFunction,
+                            ConvexErrorFunction):
 
     def __init__(self, a, b, **kwargs):
-        super(CompinedDifferentiableErrorFunction, self).__init__(**kwargs)
+        super(CombinedErrorFunction, self).__init__(**kwargs)
 
         self.a = a
         self.b = b
@@ -114,11 +151,11 @@ class ZeroErrorFunction(ConvexErrorFunction, DifferentiableErrorFunction,
         return beta
 
 
-class MeanSquareRegressionError(DifferentiableErrorFunction,
+class SumSqRegressionError(DifferentiableErrorFunction,
                                 ConvexErrorFunction):
 
     def __init__(self, X, y):
-        super(MeanSquareRegressionError, self).__init__()
+        super(SumSqRegressionError, self).__init__()
 
         self.X = X
         self.y = y
@@ -134,19 +171,10 @@ class L1(ProximalOperatorErrorFunction, ConvexErrorFunction):
 
     def __init__(self, l):
         super(L1, self).__init__()
-
         self.l = l
-
-#        if prox_op == None:
-#            self.prox_op = prox_ops.L1(self.l)
-#        else:
-#            self.prox_op = prox_op
 
     def f(self, beta):
         return self.l * norm1(beta)
-
-#    def prox(self, beta):
-#        return self.prox_op.prox(beta)
 
     def prox(self, x, factor=1, allow_empty=False):
 
@@ -183,14 +211,14 @@ class L1(ProximalOperatorErrorFunction, ConvexErrorFunction):
 
 
 class TV(DifferentiableErrorFunction,
-         ConvexErrorFunction):
+         ConvexErrorFunction,
+         NesterovApproximatedErrorFunction):
 
     def __init__(self, shape, gamma, mu):
-        super(TV, self).__init__()
+        super(TV, self).__init__(mu)
 
         self.shape = shape
         self.gamma = gamma
-        self.mu = mu
         self.beta_id = None
 
         self.precompute()
@@ -202,7 +230,7 @@ class TV(DifferentiableErrorFunction,
             self.beta_id = id(beta)
 
         return np.dot(self.Aalpha.T, beta)[0, 0] - \
-                (self.mu / 2.0) * (norm(self.asx) ** 2.0 +
+                (self.mus[-1] / 2.0) * (norm(self.asx) ** 2.0 +
                                    norm(self.asy) ** 2.0 +
                                    norm(self.asz) ** 2.0)
 
@@ -213,9 +241,6 @@ class TV(DifferentiableErrorFunction,
             self.beta_id = id(beta)
 
         return self.Aalpha
-
-    def set_mu(self, mu):
-        self.mu = mu
 
     def compute_alpha(self, beta):
 

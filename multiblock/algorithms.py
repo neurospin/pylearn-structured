@@ -52,7 +52,7 @@ class BaseAlgorithm(object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, prox_op=None, max_iter=MAX_ITER, tolerance=TOLERANCE,
-                 **kwargs):
+                 start_vector=None, **kwargs):
         """
         max_iter   : The number of iteration before the algorithm is forced
                      to stop. The default number of iterations is 500.
@@ -66,8 +66,11 @@ class BaseAlgorithm(object):
 
         if prox_op == None:
             prox_op = prox_ops.ProxOp()
+        if start_vector == None:
+            start_vector = start_vectors.OnesStartVector()
 
         self.prox_op = prox_op
+        self.start_vector = start_vector
         self.max_iter = max_iter
         self.tolerance = tolerance
 
@@ -86,6 +89,12 @@ class BaseAlgorithm(object):
                              '"ProxOp"')
         self.prox_op = prox_op
 
+    def set_start_vector(self, start_vector):
+        if not isinstance(start_vector, start_vectors.BaseStartVector):
+            raise ValueError('The start vector must be an instance of ' \
+                             '"BaseStartVector"')
+        self.start_vector = start_vector
+
     @abc.abstractmethod
     def run(self, *X, **kwargs):
         raise NotImplementedError('Abstract method "run" must be specialised!')
@@ -95,8 +104,8 @@ class NIPALSBaseAlgorithm(BaseAlgorithm):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, adj_matrix=None, scheme=None, start_vector=None,
-                 not_normed=[], **kwargs):
+    def __init__(self, adj_matrix=None, scheme=None, not_normed=[],
+                 **kwargs):
         """
         Parameters:
         ----------
@@ -114,19 +123,10 @@ class NIPALSBaseAlgorithm(BaseAlgorithm):
 
         if scheme == None:
             scheme = schemes.Horst()
-        if start_vector == None:
-            start_vector = start_vectors.LargestStartVector()
 
         self.adj_matrix = adj_matrix
         self.scheme = scheme
-        self.start_vector = start_vector
         self.not_normed = not_normed
-
-    def set_start_vector(self, start_vector):
-        if not isinstance(start_vector, start_vectors.BaseStartVector):
-            raise ValueError('The start vector must be an instance of ' \
-                             '"BaseStartVector"')
-        self.start_vector = start_vector
 
     def set_adjacency_matrix(self, adj_matrix):
         try:
@@ -384,15 +384,10 @@ class ProximalGradientMethod(BaseAlgorithm):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, start_vector=None, **kwargs):
+    def __init__(self, **kwargs):
         """
         """
         super(ProximalGradientMethod, self).__init__(**kwargs)
-
-        if start_vector == None:
-            start_vector = start_vectors.OnesStartVector()
-
-        self.start_vector = start_vector
 
     @abc.abstractmethod
     def run(self, *X, **kwargs):
@@ -428,8 +423,9 @@ class ISTARegression(ProximalGradientMethod):
             t = tscale / numpy.max(D.real)
 
         beta = self.start_vector.get_vector(X)
-        f_old = g.f(beta) + \
-                h.f(beta)
+        f_old = g.f(beta) + h.f(beta)
+        print "f_old: ", f_old
+#        print "f before:", self.f
         self.f = [f_old]
 
         self.iterations = 0
