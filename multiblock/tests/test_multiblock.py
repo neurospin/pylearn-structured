@@ -1348,10 +1348,10 @@ def test_tv():
 #    start = time()
 #    print "time:", (time() - start)
 
-#    np.random.seed(42)
+    np.random.seed(42)
 
     eps = 0.1
-    maxit = 50000
+    maxit = 10000
     M = 10
     N = 10
     O = 1
@@ -1361,32 +1361,35 @@ def test_tv():
     betastar = np.concatenate((np.zeros((p / 2, 1)),
                                np.random.randn(p / 2, 1)))
     y = np.dot(X, betastar)
+
+#    np.savetxt('test.txt', np.vstack((X, betastar.T)), delimiter='\t')
+
     D, V = eig(np.dot(X.T, X))
     t = 0.95 / np.max(D.real)
 
-    # "Regular" linear regression with L1 regularisation
-    lr = LinearRegression()
-    alg = lr.get_algorithm()
-    alg.set_max_iter(maxit)
-    alg.set_tolerance(eps)
-    h = error_functions.L1(1)
-    lr.fit(X, y, t=t)
-
-    print norm(lr.beta - betastar)
-    print alg.iterations
-    print lr.beta
-    print np.reshape(lr.beta, (O, M, N))  # pz, py, px
-
-    pylab.subplot(4, 2, 1)
-    pylab.plot(betastar[:, 0], '-', lr.beta[:, 0], '*')
-    pylab.title("Iterations: " + str(alg.iterations))
-    pylab.subplot(4, 2, 2)
-    pylab.plot(alg.f)
+#    # "Regular" linear regression with L1 regularisation
+#    lr = LinearRegression()
+#    alg = lr.get_algorithm()
+#    alg.set_max_iter(maxit)
+#    alg.set_tolerance(eps)
+#    h = error_functions.L1(1)
+#    lr.fit(X, y, t=t)
+#
+#    print norm(lr.beta - betastar)
+#    print alg.iterations
+#    print lr.beta
+#    print np.reshape(lr.beta, (O, M, N))  # pz, py, px
+#
+#    pylab.subplot(4, 2, 1)
+#    pylab.plot(betastar[:, 0], '-', lr.beta[:, 0], '*')
+#    pylab.title("Iterations: " + str(alg.iterations))
+#    pylab.subplot(4, 2, 2)
+#    pylab.plot(alg.f)
 
 
 #    mu = 2.0 * eps / float(p)
     mu = 0.01
-    gamma = 0.1
+    gamma = 1
     l = 1
     D, V = eig(np.dot(X.T, X))
     t = 0.95 / (np.max(D.real) + (25 / mu))
@@ -1403,18 +1406,22 @@ def test_tv():
     r = 0
     for i in xrange(X.shape[1]):
         r = max(r, abs(utils.cov(X[:, [i]], y)))
-    mus = [r * 0.5 ** i for i in xrange(5)]
+    mus = [r * 0.1 ** i for i in xrange(5)]
+#    mus = mus[0:1]
 
     g1 = error_functions.SumSqRegressionError(X, y)
-    g2 = error_functions.TV((M, N, O), gamma, mus)
-    g = error_functions.CombinedErrorFunction(g1, g2)
+    g2 = error_functions.TV((M, N, O), gamma, mus[0])
+    print "Creating: CombinedNesterovErrorFunction"
+    print "mro:", error_functions.CombinedNesterovErrorFunction.__mro__
+    g = error_functions.CombinedNesterovErrorFunction(g1, g2, mus)
+    print "---------------------------------------"
     h = error_functions.L1(l)
 
     lr.fit(X, y, g=g, h=h, t=t)
 
-    print norm(lr.beta - betastar)
-    print alg.iterations
-    print lr.beta
+#    print norm(lr.beta - betastar)
+#    print alg.iterations
+#    print lr.beta
 #    print np.reshape(lr.beta, (O, M, N))
 
 #    pylab.subplot(4, 2, 3)

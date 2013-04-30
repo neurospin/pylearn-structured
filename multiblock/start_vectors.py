@@ -147,7 +147,7 @@ class GaussianCurveVector(BaseStartVector):
         X = 0
         for i in xrange(n):
             x = np.arange(shape[i]) - mean[i]
-            X = X + invS[i, i] * (np.reshape(x, [shape[i]]+s) ** 2)
+            X = X + invS[i, i] * (np.reshape(x, [shape[i]] + s) ** 2)
             s.append(1)
 
         X = np.exp(-0.5 * X)

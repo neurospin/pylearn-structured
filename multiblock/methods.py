@@ -2,10 +2,11 @@
 """
 The :mod:`multiblock.methods` module includes several different multiblock
 methods.
-"""
 
-# Author: Tommy Löfstedt <tommy.loefstedt@cea.fr>
-# License: BSD Style.
+@author:  Tommy Löfstedt <tommy.loefstedt@cea.fr>
+@email:   tommy.loefstedt@cea.fr
+@license: BSD Style.
+"""
 
 __all__ = ['PCA', 'SVD', 'PLSR', 'PLSC', 'O2PLS', 'RGCCA', 'LinearRegression']
 
@@ -687,26 +688,29 @@ class NesterovProximalGradientMethod(BaseProximalGradientMethod):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, **kwargs):
-        super(NesterovProximalGradientMethod, self).__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        super(NesterovProximalGradientMethod, self).__init__(*args, **kwargs)
 
     def continuation_run(self, algorithm, err_fnc, *args, **kwargs):
+
         start_vector = algorithm.start_vector
-#        f = []
+        f = []
         for mu in err_fnc.get_mus():
-            print "mu before:", mu
             err_fnc.set_mu(mu)
+            err_fnc.precompute()
             algorithm.set_start_vector(start_vector)
             beta = algorithm.run(*args, **kwargs)
             print "continuation with mu =", err_fnc.get_mu(), \
                     ", iterations =", algorithm.iterations
-#            f = f + algorithm.f
+            f = f + algorithm.f
+
             start_vector = start_vectors.IdentityStartVector(beta)
 
-#        algorithm.f = f
-#        algorithm.iterations = len(f)
+        algorithm.f = f
+        algorithm.iterations = len(f)
 
         return beta
+
 
 class LinearRegression(NesterovProximalGradientMethod):
 
@@ -720,12 +724,11 @@ class LinearRegression(NesterovProximalGradientMethod):
     def fit(self, X, y, g=None, h=None, t=None):
 
         if g == None:
-            g = error_functions.MeanSquareRegressionError(X, y)
+            g = error_functions.SumSqRegressionError(X, y)
         if h == None:
             h = error_functions.ZeroErrorFunction()
 
-        if isinstance(g,
-                      error_functions.NesterovDifferentiableErrorFunction):
+        if isinstance(g, error_functions.NesterovErrorFunction):
             self.beta = self.continuation_run(self.algorithm, g,
                                               X, y, g=g, h=h, t=t)
         else:

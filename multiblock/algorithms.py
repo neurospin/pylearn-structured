@@ -37,6 +37,8 @@ import numpy
 from numpy import ones, eye
 from numpy.linalg import pinv
 
+import gc
+
 __all__ = ['BaseAlgorithm', 'NIPALSBaseAlgorithm', 'NIPALSAlgorithm',
            'RGCCAAlgorithm', 'ISTARegression', 'FISTARegression',
            'MonotoneFISTARegression']
@@ -423,9 +425,9 @@ class ISTARegression(ProximalGradientMethod):
             t = tscale / numpy.max(D.real)
 
         beta = self.start_vector.get_vector(X)
+        mu = g.get_mus()[-1]
+#        f_old = g.f(beta, mu=mu) + h.f(beta)
         f_old = g.f(beta) + h.f(beta)
-        print "f_old: ", f_old
-#        print "f before:", self.f
         self.f = [f_old]
 
         self.iterations = 0
@@ -440,8 +442,11 @@ class ISTARegression(ProximalGradientMethod):
             # Save updated weight vector
             beta = beta_
 
+#            f_new = g.f(beta, mu=mu) + h.f(beta)
             f_new = g.f(beta) + h.f(beta)
+#            gc.disable()
             self.f.append(f_new)
+#            gc.enable()
 #            if abs(f_old - f_new) / f_old > self.tolerance:
 #                self.converged = False
             f_old = f_new
