@@ -38,6 +38,7 @@ from numpy import ones, eye
 from numpy.linalg import pinv
 
 import gc
+from time import time
 
 __all__ = ['BaseAlgorithm', 'NIPALSBaseAlgorithm', 'NIPALSAlgorithm',
            'RGCCAAlgorithm', 'ISTARegression', 'FISTARegression',
@@ -421,13 +422,13 @@ class ISTARegression(ProximalGradientMethod):
             raise ValueError('The functions in h must be ConvexErrorFunction')
 
         if t == None:
-            D, _ = numpy.linalg.eig(numpy.dot(X.T, X))
-            t = tscale / numpy.max(D.real)
+            t = tscale / g.Lipschitz()
+            print "t:", t
 
         beta = self.start_vector.get_vector(X)
         mu = g.get_mus()[-1]
-#        f_old = g.f(beta, mu=mu) + h.f(beta)
-        f_old = g.f(beta) + h.f(beta)
+        f_old = g.f(beta, mu=mu) + h.f(beta)
+#        f_old = g.f(beta) + h.f(beta)
         self.f = [f_old]
 
         self.iterations = 0
@@ -439,19 +440,19 @@ class ISTARegression(ProximalGradientMethod):
             if norm1(beta - beta_) > self.tolerance * t:
                 self.converged = False
 
-            # Save updated weight vector
-            beta = beta_
-
-#            f_new = g.f(beta, mu=mu) + h.f(beta)
-            f_new = g.f(beta) + h.f(beta)
-#            gc.disable()
-            self.f.append(f_new)
-#            gc.enable()
-#            if abs(f_old - f_new) / f_old > self.tolerance:
-#                self.converged = False
-            f_old = f_new
-
-            self.iterations += 1
+#            f_new = g.f(beta) + h.f(beta)
+            f_new = g.f(beta_, mu=mu) + h.f(beta_)
+            if f_new > f_old:  # Early stopping
+                self.converged = True
+                warnings.warn('Early stopping kicked in. Mu is too large!')
+            else:
+                # Save updated values
+                beta = beta_
+                f_old = f_new
+#                gc.disable()
+                self.f.append(f_new)
+#                gc.enable()
+                self.iterations += 1
 
             if self.converged:
                 break
@@ -489,12 +490,14 @@ class FISTARegression(ISTARegression):
             raise ValueError('The functions in h must be ConvexErrorFunction')
 
         if t == None:
-            D, _ = numpy.linalg.eig(numpy.dot(X.T, X))
-            t = tscale / numpy.max(D.real)
+            t = tscale / g.Lipschitz()
+            print "t:", t
 
         beta = self.start_vector.get_vector(X)
         beta_ = beta
-        f_old = g.f(beta) + h.f(beta)
+        mu = g.get_mus()[-1]
+        f_old = g.f(beta, mu=mu) + h.f(beta)
+#        f_old = g.f(beta) + h.f(beta)
         self.f = [f_old]
 
         self.iterations = 0
@@ -509,7 +512,8 @@ class FISTARegression(ISTARegression):
             if norm1(z - beta_) > self.tolerance * t:
                 self.converged = False
 
-            f_new = g.f(beta_) + h.f(beta_)
+            f_new = g.f(beta, mu=mu) + h.f(beta)
+#            f_new = g.f(beta_) + h.f(beta_)
             self.f.append(f_new)
 #            if abs(f_old - f_new) / f_old > self.tolerance:
 #                self.converged = False
@@ -536,7 +540,7 @@ class MonotoneFISTARegression(ISTARegression):
 
         super(MonotoneFISTARegression, self).__init__(**kwargs)
 
-    def run(self, X, y, t=0.95, g=None, h=None, **kwargs):
+    def run(self, X, y, g=None, h=None, t=None, tscale=0.95, ista_steps=2, **kwargs):
 
         if g == None:
             g = error_functions.MeanSquareRegressionError(X, y)
@@ -552,10 +556,16 @@ class MonotoneFISTARegression(ISTARegression):
         if not isinstance(h, error_functions.ConvexErrorFunction):
             raise ValueError('The functions in h must be ConvexErrorFunction')
 
+        if t == None:
+            t = tscale / g.Lipschitz()
+            print "t:", t
+
         beta = self.start_vector.get_vector(X)
         beta_ = beta
-        f_old = g.f(beta) + h.f(beta)
-        self.f = [f_old]
+        mu = g.get_mus()[-1]
+        f_new = g.f(beta, mu=mu) + h.f(beta)
+#        f_old = g.f(beta) + h.f(beta)
+        self.f = [f_new]
 
         self.iterations = 0
         while True:
@@ -566,32 +576,41 @@ class MonotoneFISTARegression(ISTARegression):
             beta = beta_
             beta_ = h.prox(z - t * g.grad(z), t)
 
-            f_new = g.f(beta_) + h.f(beta_)
+            f_old = f_new
+            f_new = g.f(beta, mu=mu) + h.f(beta)
+#            f_new = g.f(beta_) + h.f(beta_)
+            stop_early = False
             if f_new > f_old:
-                print "Two ISTA steps instead of FISTA!!"
-                for it in xrange(2):
+                print ista_steps, "ISTA steps instead of FISTA!!"
+
+                beta_ = beta  # One step back to old beta
+                for it in xrange(ista_steps):
                     beta = beta_
                     beta_ = h.prox(beta - t * g.grad(beta), t)
 
                     f_old = f_new
-                    f_new = g.f(beta_) + h.f(beta_)
-                    self.f.append(f_new)
-                    self.iterations += 1
+                    f_new = g.f(beta, mu=mu) + h.f(beta)
+#                    f_new = g.f(beta_) + h.f(beta_)
 
-                    assert(f_new < f_old)
+#                    assert(f_new < f_old)
+                    if f_new > f_old:  # Early stopping
+                        self.converged = True
+                        stop_early = True
+                        warnings.warn('Early stopping kicked in. Mu is too ' \
+                                      'large!')
+                        break
+                    else:
+                        self.f.append(f_new)
+                        self.iterations += 1
 
-                if norm1(beta - beta_) > max(1e-8, self.tolerance * t):
+                if not stop_early and norm1(beta - beta_) > self.tolerance * t:
                     self.converged = False
             else:
                 self.f.append(f_new)
                 self.iterations += 1
 
-                if norm1(z - beta_) > max(1e-8, self.tolerance * t):
+                if norm1(z - beta_) > self.tolerance * t:
                     self.converged = False
-
-#            if abs(f_old - f_new) / f_old > self.tolerance:
-#                self.converged = False
-            f_old = f_new
 
             if self.converged:
                 break

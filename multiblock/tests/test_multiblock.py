@@ -1352,10 +1352,10 @@ def test_tv():
 
     eps = 0.1
     maxit = 10000
-    M = 10
-    N = 10
+    M = 16
+    N = 16
     O = 1
-    p = M * N * O
+    p = M * N * O  # Must be even!
     n = 100
     X = np.random.randn(n, p)
     betastar = np.concatenate((np.zeros((p / 2, 1)),
@@ -1388,26 +1388,27 @@ def test_tv():
 
 
 #    mu = 2.0 * eps / float(p)
-    mu = 0.01
+#    mu = 0.01
     gamma = 1
     l = 1
-    D, V = eig(np.dot(X.T, X))
-    t = 0.95 / (np.max(D.real) + (25 / mu))
-    print "t:", t
-    print "mu:", mu
-
-
-    # Linear regression with total variation regularisation
-    lr = LinearRegression(algorithm=algorithms.ISTARegression())
-    alg = lr.get_algorithm()
-    alg.set_max_iter(maxit)
-    alg.set_tolerance(eps)
 
     r = 0
     for i in xrange(X.shape[1]):
         r = max(r, abs(utils.cov(X[:, [i]], y)))
-    mus = [r * 0.1 ** i for i in xrange(5)]
-#    mus = mus[0:1]
+    mus = [r * 0.5 ** i for i in xrange(5)]
+#    mus = [mus[-1]]
+
+#    D, V = eig(np.dot(X.T, X))
+#    t = 0.95 / (np.max(D.real) + (25.0 / mus[-1]))
+#    print "t:", t
+#    print "mu:", mu
+
+
+    # Linear regression with total variation regularisation
+    lr = LinearRegression(algorithm=algorithms.MonotoneFISTARegression())
+    alg = lr.get_algorithm()
+    alg.set_max_iter(maxit)
+    alg.set_tolerance(eps)
 
     g1 = error_functions.SumSqRegressionError(X, y)
     g2 = error_functions.TV((M, N, O), gamma, mus[0])
@@ -1417,7 +1418,7 @@ def test_tv():
     print "---------------------------------------"
     h = error_functions.L1(l)
 
-    lr.fit(X, y, g=g, h=h, t=t)
+    lr.fit(X, y, g=g, h=h)
 
 #    print norm(lr.beta - betastar)
 #    print alg.iterations

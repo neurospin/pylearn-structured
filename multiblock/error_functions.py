@@ -63,6 +63,11 @@ class DifferentiableErrorFunction(ErrorFunction):
         raise NotImplementedError('Abstract method "grad" must be ' \
                                   'specialised!')
 
+    @abc.abstractmethod
+    def Lipschitz(self):
+        raise NotImplementedError('Abstract method "grad" must be ' \
+                                  'specialised!')
+
 
 class NesterovErrorFunction(DifferentiableErrorFunction, ConvexErrorFunction):
     """An error function approximated using the Nesterov technique.
@@ -120,6 +125,9 @@ class CombinedErrorFunction(DifferentiableErrorFunction, ConvexErrorFunction):
     def grad(self, *args, **kwargs):
         return self.a.grad(*args, **kwargs) + self.b.grad(*args, **kwargs)
 
+    def Lipschitz(self):
+        return self.a.Lipschitz() + self.b.Lipschitz()
+
 
 class CombinedNesterovErrorFunction(CombinedErrorFunction,
                                     NesterovErrorFunction):
@@ -141,11 +149,11 @@ class CombinedNesterovErrorFunction(CombinedErrorFunction,
         self.set_mus(mus)
         self.set_mu(mus[-1])
 
-    def f(self, *args, **kwargs):
-        return self.a.f(*args, **kwargs) + self.b.f(*args, **kwargs)
-
-    def grad(self, *args, **kwargs):
-        return self.a.grad(*args, **kwargs) + self.b.grad(*args, **kwargs)
+#    def f(self, *args, **kwargs):
+#        return self.a.f(*args, **kwargs) + self.b.f(*args, **kwargs)
+#
+#    def grad(self, *args, **kwargs):
+#        return self.a.grad(*args, **kwargs) + self.b.grad(*args, **kwargs)
 
     def precompute(self, *args, **kwargs):
         if isinstance(self.a, NesterovErrorFunction):
@@ -196,6 +204,9 @@ class ZeroErrorFunction(ConvexErrorFunction, DifferentiableErrorFunction,
     def prox(self, beta, *args, **kwargs):
         return beta
 
+    def Lipschitz(self):
+        return 0
+
 
 class SumSqRegressionError(DifferentiableErrorFunction,
                            ConvexErrorFunction):
@@ -206,11 +217,17 @@ class SumSqRegressionError(DifferentiableErrorFunction,
         self.X = X
         self.y = y
 
+        D, V = np.linalg.eig(np.dot(self.X.T, self.X))
+        self.t = np.max(D.real)
+
     def f(self, beta, **kwargs):
         return norm(self.y - np.dot(self.X, beta)) ** 2
 
     def grad(self, beta, **kwargs):
         return 2 * np.dot(self.X.T, np.dot(self.X, beta) - self.y)
+
+    def Lipschitz(self):
+        return self.t
 
 
 class L1(ProximalOperatorErrorFunction, ConvexErrorFunction):
@@ -299,6 +316,10 @@ class TV(NesterovErrorFunction):
 #            self.mu_id = id(self.get_mu())
 
         return self.Aalpha
+
+    def Lipschitz(self):
+
+        return 25.0 / self.get_mu()
 
     def compute_alpha(self, beta, mu):
 
