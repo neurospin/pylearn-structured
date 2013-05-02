@@ -15,6 +15,8 @@ import scipy.sparse as sparse
 from utils import norm, norm1, TOLERANCE
 import warnings
 
+from time import time
+
 
 class ErrorFunction(object):
 
@@ -33,7 +35,6 @@ class ConvexErrorFunction(ErrorFunction):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, **kwargs):
-        print "CxEF created"
         super(ConvexErrorFunction, self).__init__(**kwargs)
 
 
@@ -55,7 +56,6 @@ class DifferentiableErrorFunction(ErrorFunction):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, **kwargs):
-        print "DEF created"
         super(DifferentiableErrorFunction, self).__init__(**kwargs)
 
     @abc.abstractmethod
@@ -76,8 +76,6 @@ class NesterovErrorFunction(DifferentiableErrorFunction, ConvexErrorFunction):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, mus=None, **kwargs):
-
-        print "NEF created", mus
         super(NesterovErrorFunction, self).__init__(**kwargs)
 
         if mus != None:
@@ -113,7 +111,6 @@ class CombinedErrorFunction(DifferentiableErrorFunction, ConvexErrorFunction):
             raise ValueError('Two error functions must be given as ' \
                              'arguments to the constructor')
 
-        print "CEF created", a, b
         super(CombinedErrorFunction, self).__init__(**kwargs)
 
         self.a = a
@@ -143,7 +140,6 @@ class CombinedNesterovErrorFunction(CombinedErrorFunction,
     """
 
     def __init__(self, a, b, mus):
-        print "CNEF created", a, b, mus
         super(CombinedNesterovErrorFunction, self).__init__(a=a, b=b)
 
         self.set_mus(mus)
@@ -156,13 +152,16 @@ class CombinedNesterovErrorFunction(CombinedErrorFunction,
 #        return self.a.grad(*args, **kwargs) + self.b.grad(*args, **kwargs)
 
     def precompute(self, *args, **kwargs):
-        if isinstance(self.a, NesterovErrorFunction):
+#        if isinstance(self.a, NesterovErrorFunction):
+        if hasattr(self.a, 'precompute'):
             self.a.precompute(*args, **kwargs)
-        if isinstance(self.b, NesterovErrorFunction):
+#        if isinstance(self.b, NesterovErrorFunction):
+        if hasattr(self.b, 'precompute'):
             self.b.precompute(*args, **kwargs)
 
     def get_mus(self):
-        if isinstance(self.a, NesterovErrorFunction):
+#        if isinstance(self.a, NesterovErrorFunction):
+        if hasattr(self.a, 'get_mus'):
             return self.a.get_mus()
         else:
             return self.b.get_mus()
@@ -171,21 +170,26 @@ class CombinedNesterovErrorFunction(CombinedErrorFunction,
         if not isinstance(mus, (tuple, list)):
             mus = [mus]
 
-        if isinstance(self.a, NesterovErrorFunction):
+#        if isinstance(self.a, NesterovErrorFunction):
+        if hasattr(self.a, 'set_mus'):
             self.a.set_mus(mus)
-        if isinstance(self.b, NesterovErrorFunction):
+#        if isinstance(self.b, NesterovErrorFunction):
+        if hasattr(self.b, 'set_mus'):
             self.b.set_mus(mus)
 
     def get_mu(self):
-        if isinstance(self.a, NesterovErrorFunction):
+#        if isinstance(self.a, NesterovErrorFunction):
+        if hasattr(self.a, 'get_mu'):
             return self.a.get_mu()
         else:
             return self.b.get_mu()
 
     def set_mu(self, mu):
-        if isinstance(self.a, NesterovErrorFunction):
+#        if isinstance(self.a, NesterovErrorFunction):
+        if hasattr(self.a, 'set_mu'):
             self.a.set_mu(mu)
-        if isinstance(self.b, NesterovErrorFunction):
+#        if isinstance(self.b, NesterovErrorFunction):
+        if hasattr(self.b, 'set_mu'):
             self.b.set_mu(mu)
 
 
@@ -217,6 +221,8 @@ class SumSqRegressionError(DifferentiableErrorFunction,
         self.X = X
         self.y = y
 
+        self._Xy = np.dot(self.X.T, self.y)
+
         D, V = np.linalg.eig(np.dot(self.X.T, self.X))
         self.t = np.max(D.real)
 
@@ -224,7 +230,8 @@ class SumSqRegressionError(DifferentiableErrorFunction,
         return norm(self.y - np.dot(self.X, beta)) ** 2
 
     def grad(self, beta, **kwargs):
-        return 2 * np.dot(self.X.T, np.dot(self.X, beta) - self.y)
+#        return 2 * np.dot(self.X.T, np.dot(self.X, beta) - self.y)
+        return 2 * (np.dot(self.X.T, np.dot(self.X, beta)) - self._Xy)
 
     def Lipschitz(self):
         return self.t
@@ -242,22 +249,23 @@ class L1(ProximalOperatorErrorFunction, ConvexErrorFunction):
 
     def prox(self, x, factor=1, allow_empty=False):
 
+        l = factor * self.l
+#        return (np.abs(x) > l) * (x - l * np.sign(x - l))
+
 #        xorig = x.copy()
-        lorig = factor * self.l
-        l = lorig
-
-        return (np.abs(x) > l) * (x - l * np.sign(x - l))
-
+#        lorig = factor * self.l
+#        l = lorig
+#
 #        warn = False
 #        while True:
 #            x = xorig
 #
-#            sign = np.sign(x)
-#            np.absolute(x, x)
-#            x -= l
-#            x[x < 0] = 0
-#            x = np.multiply(sign, x)
-#
+        sign = np.sign(x)
+        np.absolute(x, x)
+        x -= l
+        x[x < 0] = 0
+        x = np.multiply(sign, x)
+
 ##            print "HERE!!!!"
 #
 ##            if norm(x) > TOLERANCE or allow_empty:
@@ -271,7 +279,7 @@ class L1(ProximalOperatorErrorFunction, ConvexErrorFunction):
 #            warnings.warn('Soft threshold was too large (all variables ' \
 #                          'purged). Threshold reset to %f (was %f)'
 #                          % (l, lorig))
-#        return x
+        return x
 
 
 class TV(NesterovErrorFunction):
@@ -294,26 +302,24 @@ class TV(NesterovErrorFunction):
         if (mu == None):
             mu = self.get_mus()[-1]
 
-#        print "f:", self.get_mus()
-
-#        if self.beta_id != id(beta) or self.mu_id != id(mu):
-        self.compute_alpha(beta, mu)
-#            self.beta_id = id(beta)
-#            self.mu_id = id(mu)
+        if self.beta_id != id(beta) or self.mu_id != id(mu):
+            self.compute_alpha(beta, mu)
+            self.beta_id = id(beta)
+            self.mu_id = id(mu)
 
         return np.dot(self.Aalpha.T, beta)[0, 0] - \
-                (mu / 2.0) * (norm(self.asx) ** 2.0 +
-                              norm(self.asy) ** 2.0 +
-                              norm(self.asz) ** 2.0)
+                (mu / 2.0) * (np.sum(self.asx ** 2.0) +
+                              np.sum(self.asy ** 2.0) +
+                              np.sum(self.asz ** 2.0))
 
     def grad(self, beta):
 
 #        print "grad:", self.get_mus()
 
-#        if self.beta_id != id(beta) or self.mu_id != id(self.get_mu()):
-        self.compute_alpha(beta, self.get_mu())
-#            self.beta_id = id(beta)
-#            self.mu_id = id(self.get_mu())
+        if self.beta_id != id(beta) or self.mu_id != id(self.get_mu()):
+            self.compute_alpha(beta, self.get_mu())
+            self.beta_id = id(beta)
+            self.mu_id = id(self.get_mu())
 
         return self.Aalpha
 
@@ -330,17 +336,21 @@ class TV(NesterovErrorFunction):
         self.asz = q * self.Az.dot(beta)
 
         # Apply projection
-        asnorm = self.asx ** 2.0 + self.asy ** 2.0 + self.asz ** 2.0
-        asnorm = np.sqrt(asnorm)  # TODO: Speed up by removing the square root
+        asnorm = self.asx ** 2.0 + self.asy ** 2.0 + self.asz ** 2.0  # )**0.5
+#        asnorm = np.sqrt(asnorm)
         i = asnorm > 1
 
-        self.asx[i] = np.divide(self.asx[i], asnorm[i])
-        self.asy[i] = np.divide(self.asy[i], asnorm[i])
-        self.asz[i] = np.divide(self.asz[i], asnorm[i])
+        asnorm_i = asnorm[i] ** 0.5  # Square root is taken here. Faster.
+        self.asx[i] = np.divide(self.asx[i], asnorm_i)
+        self.asy[i] = np.divide(self.asy[i], asnorm_i)
+        self.asz[i] = np.divide(self.asz[i], asnorm_i)
 
-        self.Aalpha = self.Ax.T.dot(self.asx) + \
-                      self.Ay.T.dot(self.asy) + \
-                      self.Az.T.dot(self.asz)
+#        self.Aalpha = self.Ax.T.dot(self.asx) + \
+#                      self.Ay.T.dot(self.asy) + \
+#                      self.Az.T.dot(self.asz)
+        self.Aalpha = np.add(np.add(self.Ax.T.dot(self.asx),
+                                    self.Ay.T.dot(self.asy), self.buff),
+                                    self.Az.T.dot(self.asz), self.buff)
 
     def precompute(self):
 
@@ -351,16 +361,17 @@ class TV(NesterovErrorFunction):
 
 #        from time import time
 #        start = time()
-        self.Ax = sparse.eye(p, p, 1, format="csr") \
-                - sparse.eye(p, p, format="csr")
+        smtype = 'csr'
+        self.Ax = sparse.eye(p, p, 1, format=smtype) \
+                - sparse.eye(p, p)
 #        print "Ax sparse:", (time() - start)
 #        start = time()
-        self.Ay = sparse.eye(p, p, N, format="csr") \
-                - sparse.eye(p, p, format="csr")
+        self.Ay = sparse.eye(p, p, N, format=smtype) \
+                - sparse.eye(p, p)
 #        print "Ay sparse:", (time() - start)
 #        start = time()
-        self.Az = sparse.eye(p, p, M * N, format="csr") \
-                - sparse.eye(p, p, format="csr")
+        self.Az = sparse.eye(p, p, M * N, format=smtype) \
+                - sparse.eye(p, p)
 #        print "Az sparse:", (time() - start)
 
 #        start = time()
@@ -395,8 +406,12 @@ class TV(NesterovErrorFunction):
 #        start = time()
 
     #    Az.data[Az.indptr[M * N] : ] = 0
-        for i in xrange(len(zind)):
-            self.Az.data[self.Az.indptr[zind[i]]: \
-                         self.Az.indptr[zind[i] + 1]] = 0
+#        for i in xrange(len(zind)):
+#            self.Az.data[self.Az.indptr[zind[i]]: \
+#                         self.Az.indptr[zind[i] + 1]] = 0
+        self.Az.data[self.Az.indptr[zind[0]]: \
+                     self.Az.indptr[zind[-1] + 1]] = 0
         self.Az.eliminate_zeros()
 #        print "z remove zero rows:", (time() - start)
+
+        self.buff = np.zeros((self.Ax.shape[0], 1))

@@ -1352,8 +1352,8 @@ def test_tv():
 
     eps = 0.1
     maxit = 10000
-    M = 16
-    N = 16
+    M = 20
+    N = 20
     O = 1
     p = M * N * O  # Must be even!
     n = 100
@@ -1417,6 +1417,9 @@ def test_tv():
     g = error_functions.CombinedNesterovErrorFunction(g1, g2, mus)
     print "---------------------------------------"
     h = error_functions.L1(l)
+
+#    g.f(alg.start_vector.get_vector())
+#    return
 
     lr.fit(X, y, g=g, h=h)
 
@@ -2030,6 +2033,13 @@ if __name__ == "__main__":
 #    test_regularisation()
 #    test_multiblock()
 #    test_ista()
-    test_tv()
+    import cProfile
+    import pstats
+
+    cProfile.run('test_tv()', 'prof_output')
+
+    p = pstats.Stats('prof_output')
+    p.sort_stats('calls').print_stats(20)
+    
 
 #    test_scale()
