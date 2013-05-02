@@ -697,7 +697,7 @@ class NesterovProximalGradientMethod(BaseProximalGradientMethod):
         f = []
         for mu in err_fnc.get_mus():
             err_fnc.set_mu(mu)
-            err_fnc.precompute()
+#            err_fnc.precompute()
             algorithm.set_start_vector(start_vector)
             beta = algorithm.run(*args, **kwargs)
             print "continuation with mu =", err_fnc.get_mu(), \
@@ -715,7 +715,6 @@ class NesterovProximalGradientMethod(BaseProximalGradientMethod):
 class LinearRegression(NesterovProximalGradientMethod):
 
     def __init__(self, **kwargs):
-
         super(LinearRegression, self).__init__(num_comp=1, **kwargs)
 
     def _get_transform(self, index=0):

@@ -282,11 +282,11 @@ class L1(ProximalOperatorErrorFunction, ConvexErrorFunction):
         return x
 
 
-class TV(NesterovErrorFunction):
+class TotalVariation(NesterovErrorFunction):
 
     def __init__(self, shape, gamma, mu, **kwargs):
 
-        super(TV, self).__init__(**kwargs)
+        super(TotalVariation, self).__init__(**kwargs)
 
         self.shape = shape
         self.gamma = gamma
@@ -415,3 +415,100 @@ class TV(NesterovErrorFunction):
 #        print "z remove zero rows:", (time() - start)
 
         self.buff = np.zeros((self.Ax.shape[0], 1))
+
+
+class GroupLassoOverlap(NesterovErrorFunction):
+
+    def __init__(self, p, groups, gamma, mu, weights=None, **kwargs):
+        """
+        Parameters:
+        ----------
+        groups: A list of list, with the outer list being the groups and the
+                inner list the variables in the group. E.g. [[1,2],[2,3]]
+                contains two groups ([1,2] and [2,3]) with variable 1 and 2
+                in the first group and variables 2 and 3 in the second
+                group.
+        """
+
+        super(GroupLassoOverlap, self).__init__(**kwargs)
+
+        self.p = p
+        self.groups = groups
+        self.gamma = gamma
+        self.set_mu(mu)
+
+        if weights == None:
+            self.weights = [1] * len(groups)
+        else:
+            self.weights = weights
+
+        self.beta_id = None
+        self.mu_id = None
+
+        self.precompute()
+
+    def f(self, beta, mu=None):
+
+        if (mu == None):
+            mu = self.get_mus()[-1]
+
+        if self.beta_id != id(beta) or self.mu_id != id(mu):
+            self.compute_alpha(beta, mu)
+            self.beta_id = id(beta)
+            self.mu_id = id(mu)
+
+        sumastar = 0
+        for g in xrange(len(self.astar)):
+            sumastar += np.sum(self.astar[g] ** 2.0)
+
+        return np.dot(self.Aalpha.T, beta)[0, 0] - (mu / 2.0) * sumastar
+
+    def grad(self, beta):
+
+#        print "grad:", self.get_mus()
+
+        if self.beta_id != id(beta) or self.mu_id != id(self.get_mu()):
+            self.compute_alpha(beta, self.get_mu())
+            self.beta_id = id(beta)
+            self.mu_id = id(self.get_mu())
+
+        return self.Aalpha
+
+    def Lipschitz(self):
+
+        return self.max_col_norm / self.mu
+
+    def compute_alpha(self, beta, mu):
+
+        # Compute a* for each dimension
+        self.Aalpha = 0
+        q = self.gamma / mu
+        for g in xrange(len(self.A)):
+            astar = q * self.A[g].dot(beta)
+            normas = np.sqrt(np.dot(astar.T, astar))
+            if normas > 1:
+                astar /= normas
+
+            self.astar[g] = astar
+
+            self.Aalpha += self.A[g].T.dot(astar)
+
+    def precompute(self):
+
+        self.A = list()
+
+        powers = np.zeros(self.p)
+        for g in xrange(len(self.groups)):
+            Gi = self.groups[g]
+            lenGi = len(Gi)
+            Ag = sparse.lil_matrix((lenGi, self.p))
+            for i in xrange(lenGi):
+                w = self.weights[g]
+                Ag[i, Gi[i]] = w
+                powers[Gi[i]] += w ** 2.0
+
+            self.A.append(Ag)
+
+        self.max_col_norm = np.sqrt(np.max(powers))
+
+        self.astar = [0] * len(self.groups)
