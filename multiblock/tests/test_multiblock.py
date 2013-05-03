@@ -1352,11 +1352,11 @@ def test_tv():
 
     eps = 0.1
     maxit = 10000
-    M = 10
-    N = 10
+    M = 100
+    N = 100
     O = 1
     p = M * N * O  # Must be even!
-    n = 100
+    n = 500
     X = np.random.randn(n, p)
     betastar = np.concatenate((np.zeros((p / 2, 1)),
                                np.random.randn(p / 2, 1)))
@@ -1403,7 +1403,6 @@ def test_tv():
 #    print "t:", t
 #    print "mu:", mu
 
-
     # Linear regression with total variation regularisation
     lr = LinearRegression(algorithm=algorithms.MonotoneFISTARegression())
     alg = lr.get_algorithm()
@@ -1411,11 +1410,14 @@ def test_tv():
     alg.set_tolerance(eps)
 
     g1 = error_functions.SumSqRegressionError(X, y)
+    start = time()
     g2 = error_functions.TotalVariation((M, N, O), gamma, mus[0])
     g = error_functions.CombinedNesterovErrorFunction(g1, g2, mus)
     h = error_functions.L1(l)
 
     lr.fit(X, y, g=g, h=h)
+    print "time:", time() - start
+
 
 #    print norm(lr.beta - betastar)
 #    print alg.iterations
@@ -1446,7 +1448,7 @@ def test_tv():
     alg.set_tolerance(eps)
 
     g1 = error_functions.SumSqRegressionError(X, y)
-    g2 = error_functions.TV((M, N, O), gamma, mu)
+    g2 = error_functions.TotalVariation((M, N, O), gamma, mu)
     g = error_functions.CombinedDifferentiableErrorFunction(g1, g2)
     h = error_functions.L1(l)
 
@@ -1474,7 +1476,7 @@ def test_tv():
     alg.set_tolerance(eps)
 
     g1 = error_functions.SumSqRegressionError(X, y)
-    g2 = error_functions.TV((M, N, O), gamma, mu)
+    g2 = error_functions.TotalVariation((M, N, O), gamma, mu)
     g = error_functions.CombinedDifferentiableErrorFunction(g1, g2)
     h = error_functions.L1(l)
 
@@ -1538,11 +1540,13 @@ def test_gl():
 
     groups = [range(p / 2), range(p / 2, p)]
     g1 = error_functions.SumSqRegressionError(X, y)
+    start = time()
     g2 = error_functions.GroupLassoOverlap(p, groups, gamma, mus[0])
 
     g = error_functions.CombinedNesterovErrorFunction(g1, g2, mus)
     h = error_functions.L1(l)
     lr.fit(X, y, g=g, h=h)
+    print "time:", time() - start
 
     pylab.subplot(2, 1, 1)
     pylab.plot(betastar[:, 0], '-', lr.beta[:, 0], '*')
@@ -2074,9 +2078,8 @@ if __name__ == "__main__":
 #    test_regularisation()
 #    test_multiblock()
 #    test_ista()
-#    test_tv()
-
-    test_gl()
+    test_tv()
+#    test_gl()
 
 #    import cProfile
 #    import pstats

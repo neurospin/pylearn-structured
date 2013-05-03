@@ -223,8 +223,10 @@ class SumSqRegressionError(DifferentiableErrorFunction,
 
         self._Xy = np.dot(self.X.T, self.y)
 
-        D, V = np.linalg.eig(np.dot(self.X.T, self.X))
-        self.t = np.max(D.real)
+#        D, V = np.linalg.eig(np.dot(self.X.T, self.X))
+#        self.t = np.max(D.real)
+        _, s, _ = np.linalg.svd(X, full_matrices=False)  # False == faster
+        self.t = np.max(s) ** 2.0
 
     def f(self, beta, **kwargs):
         return norm(self.y - np.dot(self.X, beta)) ** 2
@@ -314,8 +316,6 @@ class TotalVariation(NesterovErrorFunction):
 
     def grad(self, beta):
 
-#        print "grad:", self.get_mus()
-
         if self.beta_id != id(beta) or self.mu_id != id(self.get_mu()):
             self.compute_alpha(beta, self.get_mu())
             self.beta_id = id(beta)
@@ -348,9 +348,12 @@ class TotalVariation(NesterovErrorFunction):
 #        self.Aalpha = self.Ax.T.dot(self.asx) + \
 #                      self.Ay.T.dot(self.asy) + \
 #                      self.Az.T.dot(self.asz)
-        self.Aalpha = np.add(np.add(self.Ax.T.dot(self.asx),
-                                    self.Ay.T.dot(self.asy), self.buff),
-                                    self.Az.T.dot(self.asz), self.buff)
+#        self.Aalpha = np.add(np.add(self.Ax.T.dot(self.asx),
+#                                    self.Ay.T.dot(self.asy), self.buff),
+#                                    self.Az.T.dot(self.asz), self.buff)
+        self.Aalpha = np.add(np.add(self.Axt.dot(self.asx),
+                                    self.Ayt.dot(self.asy), self.buff),
+                                    self.Azt.dot(self.asz), self.buff)
 
     def precompute(self):
 
@@ -378,13 +381,13 @@ class TotalVariation(NesterovErrorFunction):
         ind = np.reshape(xrange(p), (O, M, N))
 #        print "reshape xrange p time:", (time() - start)
 #        start = time()
-        xind = ind[:, :, -1].flatten().tolist()
+        xind = ind[:, :, -1].flatten()#.tolist()
 #        print "x slice flatten tolist:", (time() - start)
 #        start = time()
-        yind = ind[:, -1, :].flatten().tolist()
+        yind = ind[:, -1, :].flatten()#.tolist()
 #        print "y slice flatten tolist:", (time() - start)
 #        start = time()
-        zind = ind[-1, :, :].flatten().tolist()
+        zind = ind[-1, :, :].flatten()#.tolist()
 #        print "z slice flatten tolist:", (time() - start)
 
 #        start = time()
@@ -414,12 +417,17 @@ class TotalVariation(NesterovErrorFunction):
         self.Az.eliminate_zeros()
 #        print "z remove zero rows:", (time() - start)
 
+        self.Axt = self.Ax.T
+        self.Ayt = self.Ay.T
+        self.Azt = self.Az.T
+
         self.buff = np.zeros((self.Ax.shape[0], 1))
 
 
 class GroupLassoOverlap(NesterovErrorFunction):
 
-    def __init__(self, p, groups, gamma, mu, weights=None, **kwargs):
+    def __init__(self, num_variables, groups, gamma, mu, weights=None,
+                 **kwargs):
         """
         Parameters:
         ----------
@@ -432,7 +440,7 @@ class GroupLassoOverlap(NesterovErrorFunction):
 
         super(GroupLassoOverlap, self).__init__(**kwargs)
 
-        self.p = p
+        self.num_variables = num_variables
         self.groups = groups
         self.gamma = gamma
         self.set_mu(mu)
@@ -491,23 +499,27 @@ class GroupLassoOverlap(NesterovErrorFunction):
 
             self.astar[g] = astar
 
-            self.Aalpha += self.A[g].T.dot(astar)
+#            self.Aalpha += self.A[g].T.dot(astar)
+            self.Aalpha += self.At[g].dot(astar)
 
     def precompute(self):
 
         self.A = list()
+        self.At = list()
 
-        powers = np.zeros(self.p)
+        powers = np.zeros(self.num_variables)
         for g in xrange(len(self.groups)):
             Gi = self.groups[g]
             lenGi = len(Gi)
-            Ag = sparse.lil_matrix((lenGi, self.p))
+            Ag = sparse.lil_matrix((lenGi, self.num_variables))
             for i in xrange(lenGi):
                 w = self.weights[g]
                 Ag[i, Gi[i]] = w
                 powers[Gi[i]] += w ** 2.0
 
-            self.A.append(Ag)
+            # Matrix operations are a lot faster when the sparse matrix is csr
+            self.A.append(Ag.tocsr())
+            self.At.append(self.A[-1].T)
 
         self.max_col_norm = np.sqrt(np.max(powers))
 

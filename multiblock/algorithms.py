@@ -444,14 +444,13 @@ class ISTARegression(ProximalGradientMethod):
             f_new = g.f(beta_, mu=mu) + h.f(beta_)
             if f_new > f_old:  # Early stopping
                 self.converged = True
-                warnings.warn('Early stopping kicked in. Mu is too large!')
+                warnings.warn('Early stopping criterion triggered. Moving on' \
+                              'to smaller mu.')
             else:
                 # Save updated values
                 beta = beta_
                 f_old = f_new
-#                gc.disable()
                 self.f.append(f_new)
-#                gc.enable()
                 self.iterations += 1
 
             if self.converged:
@@ -596,8 +595,8 @@ class MonotoneFISTARegression(ISTARegression):
                     if f_new > f_old:  # Early stopping
                         self.converged = True
                         stop_early = True
-                        warnings.warn('Early stopping kicked in. Mu is too ' \
-                                      'large!')
+                        warnings.warn('Early stopping criterion triggered. ' \
+                                      'Moving on to smaller mu.')
                         break
                     else:
                         self.f.append(f_new)
