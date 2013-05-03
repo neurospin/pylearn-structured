@@ -9,6 +9,6 @@ repository.
 
 Dependencies
 ------------
-Python 2.7.x
-NumPy >= 1.6.1
-Scipy >= 0.9.0
+ * Python 2.7.x
+ * NumPy >= 1.6.1
+ * Scipy >= 0.9.0
