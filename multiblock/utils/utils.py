@@ -22,7 +22,7 @@ from copy import copy
 
 __all__ = ['dot', 'norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
            'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy', 'sstot', 'ssvar',
-           'sqrt', 'rand', 'zeros', 'direct', '_DEBUG', 'debug',
+           'sqrt', 'rand', 'zeros', 'direct', '_DEBUG', 'debug', 'warning',
            'optimal_shrinkage']
 
 _DEBUG = True
@@ -182,6 +182,14 @@ def debug(string="", *args):
         for a in args:
             s = s + str(a)
         print string, s
+
+
+def warning(string="", *args):
+    if _DEBUG:
+        s = ""
+        for a in args:
+            s = s + str(a)
+        print "WARNING:", string, s
 
 
 def optimal_shrinkage(*X, **kwargs):
