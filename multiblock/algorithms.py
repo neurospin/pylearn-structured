@@ -159,6 +159,15 @@ class NIPALSBaseAlgorithm(BaseAlgorithm):
         raise NotImplementedError('Abstract method "run" must be specialised!')
 
 
+class SparseSVD(NIPALSBaseAlgorithm):
+
+    def __init__(self, **kwargs):
+        super(SparseSVD, self).__init__(**kwargs)
+
+    def run(self, X, **kwargs):
+        pass
+
+
 class NIPALSAlgorithm(NIPALSBaseAlgorithm):
 
     def __init__(self, mode=None, **kwargs):
