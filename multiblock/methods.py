@@ -695,6 +695,8 @@ class NesterovProximalGradientMethod(BaseProximalGradientMethod):
 
         start_vector = algorithm.start_vector
         f = []
+#        fs = []
+#        fl = []
         for mu in err_fnc.get_mus():
             err_fnc.set_mu(mu)
 #            err_fnc.precompute()
@@ -703,11 +705,17 @@ class NesterovProximalGradientMethod(BaseProximalGradientMethod):
             print "continuation with mu =", err_fnc.get_mu(), \
                     ", iterations =", algorithm.iterations
             f = f + algorithm.f
+#            fs = fs + algorithm.fs
+#            fl = fl + algorithm.fl
 
             start_vector = start_vectors.IdentityStartVector(beta)
 
         algorithm.f = f
+#        algorithm.fs = fs
+#        algorithm.fl = fl
         algorithm.iterations = len(f)
+#        algorithm.iterationss = len(fs)
+#        algorithm.iterationsl = len(fl)
 
         return beta
 

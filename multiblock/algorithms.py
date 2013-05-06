@@ -31,7 +31,7 @@ import modes
 import error_functions
 
 from multiblock.utils import MAX_ITER, TOLERANCE, make_list, dot, zeros, sqrt
-from multiblock.utils import norm, norm1
+from multiblock.utils import norm, norm1, warning
 
 import numpy
 from numpy import ones, eye
@@ -444,8 +444,8 @@ class ISTARegression(ProximalGradientMethod):
             f_new = g.f(beta_, mu=mu) + h.f(beta_)
             if f_new > f_old:  # Early stopping
                 self.converged = True
-                warnings.warn('Early stopping criterion triggered. Moving on' \
-                              'to smaller mu.')
+                warning('Early stopping criterion triggered. Moving on' \
+                        'to smaller mu.')
             else:
                 # Save updated values
                 beta = beta_
@@ -457,8 +457,8 @@ class ISTARegression(ProximalGradientMethod):
                 break
 
             if self.iterations >= self.max_iter:
-                warnings.warn('Maximum number of iterations reached before ' \
-                              'convergence')
+                warning('Maximum number of iterations reached before ' \
+                        'convergence')
                 break
 
         return beta
@@ -539,7 +539,8 @@ class MonotoneFISTARegression(ISTARegression):
 
         super(MonotoneFISTARegression, self).__init__(**kwargs)
 
-    def run(self, X, y, g=None, h=None, t=None, tscale=0.95, ista_steps=2, **kwargs):
+    def run(self, X, y, g=None, h=None, t=None, tscale=0.95, ista_steps=2,
+            **kwargs):
 
         if g == None:
             g = error_functions.MeanSquareRegressionError(X, y)
@@ -559,11 +560,19 @@ class MonotoneFISTARegression(ISTARegression):
             t = tscale / g.Lipschitz()
             print "t:", t
 
-        beta = self.start_vector.get_vector(X)
+        beta = numpy.dot(numpy.linalg.pinv(X), y)
+#        beta = self.start_vector.get_vector(X)
         beta_ = beta
-        mu = g.get_mus()[-1]
-        f_new = g.f(beta, mu=mu) + h.f(beta)
-#        f_old = g.f(beta) + h.f(beta)
+#        mus = g.get_mus()
+        if isinstance(g, error_functions.NesterovErrorFunction):
+            mu = g.get_mus()[-1] / 1.0
+        else:
+            mu = 1
+
+        f_new = g.f(beta_, mu=mu) + h.f(beta_)
+        f_old = f_new
+        fcurr_new = g.f(beta_) + h.f(beta_)
+        fcurr_old = fcurr_new
         self.f = [f_new]
 
         self.iterations = 0
@@ -575,11 +584,15 @@ class MonotoneFISTARegression(ISTARegression):
             beta = beta_
             beta_ = h.prox(z - t * g.grad(z), t)
 
+            hbeta = h.f(beta_)
+            fcurr_old = fcurr_new
+            fcurr_new = g.f(beta_) + hbeta
+
             f_old = f_new
-            f_new = g.f(beta, mu=mu) + h.f(beta)
-#            f_new = g.f(beta_) + h.f(beta_)
+            f_new = g.f(beta_, mu=mu) + hbeta
+
             stop_early = False
-            if f_new > f_old:
+            if fcurr_new > fcurr_old:
                 print ista_steps, "ISTA steps instead of FISTA!!"
 
                 beta_ = beta  # One step back to old beta
@@ -587,16 +600,19 @@ class MonotoneFISTARegression(ISTARegression):
                     beta = beta_
                     beta_ = h.prox(beta - t * g.grad(beta), t)
 
-                    f_old = f_new
-                    f_new = g.f(beta, mu=mu) + h.f(beta)
-#                    f_new = g.f(beta_) + h.f(beta_)
+                    hbeta = h.f(beta_)
 
-#                    assert(f_new < f_old)
+                    fcurr_old = fcurr_new
+                    fcurr_new = g.f(beta_) + hbeta
+
+                    f_old = f_new
+                    f_new = g.f(beta_, mu=mu) + hbeta
+
                     if f_new > f_old:  # Early stopping
                         self.converged = True
                         stop_early = True
-                        warnings.warn('Early stopping criterion triggered. ' \
-                                      'Moving on to smaller mu.')
+                        warning('Early stopping criterion triggered. ' \
+                                'Moving on to smaller mu.')
                         break
                     else:
                         self.f.append(f_new)
@@ -604,6 +620,14 @@ class MonotoneFISTARegression(ISTARegression):
 
                 if not stop_early and norm1(beta - beta_) > self.tolerance * t:
                     self.converged = False
+
+            elif f_new > f_old:  # Early stopping
+                self.converged = True
+                stop_early = True
+                warning('Early stopping criterion triggered. ' \
+                        'Moving on to smaller mu.')
+                break
+
             else:
                 self.f.append(f_new)
                 self.iterations += 1

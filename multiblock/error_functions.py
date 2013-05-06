@@ -12,7 +12,7 @@ import abc
 import numpy as np
 import scipy.sparse as sparse
 
-from utils import norm, norm1, TOLERANCE
+from utils import warning, norm, norm1, TOLERANCE
 import warnings
 
 from time import time
@@ -301,6 +301,9 @@ class TotalVariation(NesterovErrorFunction):
 
     def f(self, beta, mu=None):
 
+        if self.gamma <= TOLERANCE:
+            return 0
+
         if (mu == None):
             mu = self.get_mus()[-1]
 
@@ -316,6 +319,9 @@ class TotalVariation(NesterovErrorFunction):
 
     def grad(self, beta):
 
+        if self.gamma <= TOLERANCE:
+            return np.zeros((np.prod(self.shape), 1))
+
         if self.beta_id != id(beta) or self.mu_id != id(self.get_mu()):
             self.compute_alpha(beta, self.get_mu())
             self.beta_id = id(beta)
@@ -325,7 +331,10 @@ class TotalVariation(NesterovErrorFunction):
 
     def Lipschitz(self):
 
-        return 25.0 / self.get_mu()
+        if self.gamma < TOLERANCE:
+            return 0
+
+        return 20 / self.get_mu()
 
     def compute_alpha(self, beta, mu):
 
@@ -381,13 +390,13 @@ class TotalVariation(NesterovErrorFunction):
         ind = np.reshape(xrange(p), (O, M, N))
 #        print "reshape xrange p time:", (time() - start)
 #        start = time()
-        xind = ind[:, :, -1].flatten()#.tolist()
+        xind = ind[:, :, -1].flatten().tolist()
 #        print "x slice flatten tolist:", (time() - start)
 #        start = time()
-        yind = ind[:, -1, :].flatten()#.tolist()
+        yind = ind[:, -1, :].flatten().tolist()
 #        print "y slice flatten tolist:", (time() - start)
 #        start = time()
-        zind = ind[-1, :, :].flatten()#.tolist()
+        zind = ind[-1, :, :].flatten().tolist()
 #        print "z slice flatten tolist:", (time() - start)
 
 #        start = time()

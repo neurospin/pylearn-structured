@@ -1356,7 +1356,7 @@ def test_tv():
     N = 100
     O = 1
     p = M * N * O  # Must be even!
-    n = 500
+    n = 100
     X = np.random.randn(n, p)
     betastar = np.concatenate((np.zeros((p / 2, 1)),
                                np.random.randn(p / 2, 1)))
@@ -1386,22 +1386,12 @@ def test_tv():
 #    pylab.subplot(4, 2, 2)
 #    pylab.plot(alg.f)
 
-
-#    mu = 2.0 * eps / float(p)
-#    mu = 0.01
     gamma = 1
     l = 1
-
     r = 0
     for i in xrange(X.shape[1]):
         r = max(r, abs(utils.cov(X[:, [i]], y)))
     mus = [r * 0.5 ** i for i in xrange(5)]
-#    mus = [mus[-1]]
-
-#    D, V = eig(np.dot(X.T, X))
-#    t = 0.95 / (np.max(D.real) + (25.0 / mus[-1]))
-#    print "t:", t
-#    print "mu:", mu
 
     # Linear regression with total variation regularisation
     lr = LinearRegression(algorithm=algorithms.MonotoneFISTARegression())
@@ -1415,6 +1405,7 @@ def test_tv():
     g = error_functions.CombinedNesterovErrorFunction(g1, g2, mus)
     h = error_functions.L1(l)
 
+#    lr.fit(X, y)
     lr.fit(X, y, g=g, h=h)
     print "time:", time() - start
 
@@ -1432,11 +1423,16 @@ def test_tv():
 #    pylab.title("Iterations: " + str(alg.iterations))
     gamma_small_beta = lr.beta
 
-    pylab.subplot(2, 1, 1)
+#    pylab.subplot(2, 1, 1)
     pylab.plot(betastar[:, 0], '-', lr.beta[:, 0], '*')
     pylab.title("Iterations: " + str(alg.iterations))
-    pylab.subplot(2, 1, 2)
-    pylab.plot(alg.f, '.')
+#    pylab.subplot(2, 1, 2)
+#    pylab.plot(alg.f, '.')
+    pylab.show()
+
+#    pylab.plot(alg.fl, '-r')
+    pylab.plot(alg.f, '-b')
+#    pylab.plot(alg.fs, '-g')
     pylab.show()
 
     return
