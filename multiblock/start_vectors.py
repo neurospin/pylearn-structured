@@ -104,7 +104,7 @@ class LargestStartVector(BaseStartVector):
         self.axis = axis
 
     def get_vector(self, X):
-        idx = np.argmax(np.sum(X ** 2, axis=self.axis))
+        idx = np.argmax(np.sum(X ** 2.0, axis=self.axis))
         if self.axis == 0:
             w = X[:, [idx]]  # Using column with largest sum of squares
         else:

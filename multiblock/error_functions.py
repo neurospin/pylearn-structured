@@ -299,7 +299,7 @@ class TotalVariation(NesterovErrorFunction):
 
         self.precompute()
 
-        self.lambda_max = 
+#        self.lambda_max = 
 
     def f(self, beta, mu=None):
 

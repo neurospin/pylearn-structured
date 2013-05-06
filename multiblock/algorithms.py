@@ -36,13 +36,14 @@ from multiblock.utils import norm, norm1, warning
 import numpy
 from numpy import ones, eye
 from numpy.linalg import pinv
+import scipy.sparse as sparse
 
 import gc
 from time import time
 
-__all__ = ['BaseAlgorithm', 'NIPALSBaseAlgorithm', 'NIPALSAlgorithm',
-           'RGCCAAlgorithm', 'ISTARegression', 'FISTARegression',
-           'MonotoneFISTARegression']
+__all__ = ['BaseAlgorithm', 'SparseSVD', 'NIPALSBaseAlgorithm',
+           'NIPALSAlgorithm', 'RGCCAAlgorithm', 'ISTARegression',
+           'FISTARegression', 'MonotoneFISTARegression']
 
 
 class BaseAlgorithm(object):
@@ -161,11 +162,58 @@ class NIPALSBaseAlgorithm(BaseAlgorithm):
 
 class SparseSVD(NIPALSBaseAlgorithm):
 
-    def __init__(self, **kwargs):
-        super(SparseSVD, self).__init__(**kwargs)
+    def __init__(self, max_iter=None, start_vector=None, **kwargs):
+        if max_iter == None:
+            max_iter = 10
+        if start_vector == None:
+            start_vector = start_vectors.OnesStartVector()
+        super(SparseSVD, self).__init__(max_iter=max_iter,
+                                        start_vector=start_vector, **kwargs)
 
     def run(self, X, **kwargs):
-        pass
+        """ Performs SVD of sparse matrices. This is faster than applying the
+        general SVD.
+
+        Arguments:
+        X : The matrix to decompose
+        """
+
+        M, N = X.shape
+
+#        p = sparse.csc_matrix(self.start_vector.get_vector(X))
+        p = self.start_vector.get_vector(X)
+        Xt = X.T
+#        if M <= N:
+#            K = X.dot(Xt)
+#            t = X.dot(p)
+#            for it in xrange(self.max_iter):
+#                t_ = t
+#                t = K.dot(t_) / numpy.sqrt(numpy.sum(t_ ** 2.0))
+#
+#                if norm(t_ - t) / norm(t) < TOLERANCE:
+#                    print "broke!!"
+#                    break
+#
+#            p = Xt.dot(t)
+#            p /= numpy.sqrt(numpy.sum(p ** 2.0))
+#            t = X.dot(p)
+#
+#        else:
+        K = Xt.dot(X)
+        for it in xrange(self.max_iter):
+            p_ = p
+            p = K.dot(p_) / numpy.sqrt((p_ ** 2.0).sum())
+
+            if norm(p_ - p) / norm(p) < TOLERANCE:
+                print "broke!!"
+                break
+
+        t = X.dot(p)
+
+        sigma = numpy.sqrt((t ** 2.0).sum())
+        t /= sigma
+
+        return t, sigma, p
 
 
 class NIPALSAlgorithm(NIPALSBaseAlgorithm):

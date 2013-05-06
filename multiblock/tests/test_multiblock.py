@@ -12,6 +12,8 @@ import multiblock.error_functions as error_functions
 from sklearn.datasets import load_linnerud
 from numpy import ones, eye
 from numpy.linalg import eig
+import scipy.sparse as sparse
+from time import time
 
 from math import log
 from sklearn.pls import PLSRegression
@@ -2074,8 +2076,27 @@ if __name__ == "__main__":
 #    test_regularisation()
 #    test_multiblock()
 #    test_ista()
-    test_tv()
+#    test_tv()
 #    test_gl()
+
+    np.random.seed(42)
+#    A = np.random.rand(10000, 10000)
+#    A[A < 0.5] = 0
+#    A = sparse.csr_matrix(A)
+    A = sparse.rand(10000, 10000, 0.1, format="csr")
+
+    start = time()
+    ssvd = algorithms.SparseSVD(max_iter=5)
+    u, s, v = ssvd.run(A)
+    print s
+    print "time:", (time() - start)
+
+    start = time()
+    ssvd = algorithms.SparseSVD(max_iter=50)
+    u, s, v = ssvd.run(A)
+    print s
+    print "time:", (time() - start)
+    
 
 #    import cProfile
 #    import pstats
