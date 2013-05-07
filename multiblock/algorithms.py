@@ -161,6 +161,15 @@ class NIPALSBaseAlgorithm(BaseAlgorithm):
 
 
 class SparseSVD(NIPALSBaseAlgorithm):
+    """A kernel SVD implementation for sparse CSR matrices.
+
+    This is usually faster than NIPALSAlgorithm when density < 20% and when
+    M << N or N << M (at least one order of magnitude). When M == N >= 10000 it
+    is faster when the density < 1% and always faster regardless of density
+    when M == N < 10000.
+
+    These are ballpark estimates that may differ on your computer.
+    """
 
     def __init__(self, max_iter=None, start_vector=None, **kwargs):
         if max_iter == None:
@@ -177,43 +186,50 @@ class SparseSVD(NIPALSBaseAlgorithm):
         Arguments:
         X : The matrix to decompose
         """
-
         M, N = X.shape
-
-#        p = sparse.csc_matrix(self.start_vector.get_vector(X))
         p = self.start_vector.get_vector(X)
         Xt = X.T
-#        if M <= N:
-#            K = X.dot(Xt)
+        if M < N:
+            K = X.dot(Xt)
+            t = X.dot(p)
+            self.iterations = 0
+            for it in xrange(self.max_iter):
+                t_ = t
+                t = K.dot(t_)
+                t /= numpy.sqrt(numpy.sum(t_ ** 2.0))
+
+                self.iterations += 1
+
+                diff = t_ - t
+                if (numpy.sum(diff ** 2.0)) < TOLERANCE:
+                    print "broke at", self.iterations
+                    break
+
+            p = Xt.dot(t)
+            p /= numpy.sqrt(numpy.sum(p ** 2.0))
 #            t = X.dot(p)
-#            for it in xrange(self.max_iter):
-#                t_ = t
-#                t = K.dot(t_) / numpy.sqrt(numpy.sum(t_ ** 2.0))
-#
-#                if norm(t_ - t) / norm(t) < TOLERANCE:
-#                    print "broke!!"
-#                    break
-#
-#            p = Xt.dot(t)
-#            p /= numpy.sqrt(numpy.sum(p ** 2.0))
+
+        else:
+            K = Xt.dot(X)
+            self.iterations = 0
+            for it in xrange(self.max_iter):
+                p_ = p
+                p = K.dot(p_)
+                p /= numpy.sqrt(numpy.sum(p ** 2.0))
+
+                self.iterations += 1
+
+                diff = p_ - p
+                if (numpy.sum(diff ** 2.0)) < TOLERANCE:
+                    print "broke at", self.iterations
+                    break
+
 #            t = X.dot(p)
-#
-#        else:
-        K = Xt.dot(X)
-        for it in xrange(self.max_iter):
-            p_ = p
-            p = K.dot(p_) / numpy.sqrt((p_ ** 2.0).sum())
 
-            if norm(p_ - p) / norm(p) < TOLERANCE:
-                print "broke!!"
-                break
+#        sigma = numpy.sqrt(numpy.sum(t ** 2.0))
+#        t /= sigma
 
-        t = X.dot(p)
-
-        sigma = numpy.sqrt((t ** 2.0).sum())
-        t /= sigma
-
-        return t, sigma, p
+        return p
 
 
 class NIPALSAlgorithm(NIPALSBaseAlgorithm):
@@ -310,6 +326,8 @@ class NIPALSAlgorithm(NIPALSBaseAlgorithm):
                 # Save updated weight vector
                 w[i] = wi
 
+            self.iterations += 1
+
             if self.converged:
                 break
 
@@ -317,8 +335,6 @@ class NIPALSAlgorithm(NIPALSBaseAlgorithm):
                 warnings.warn('Maximum number of iterations reached before ' \
                               'convergence')
                 break
-
-            self.iterations += 1
 
         return w
 
@@ -422,6 +438,8 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
                 # Save updated weight vector
                 a[i] = ai
 
+            self.iterations += 1
+
             if self.converged:
                 break
 
@@ -429,8 +447,6 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
                 warnings.warn('Maximum number of iterations reached before ' \
                               'convergence')
                 break
-
-            self.iterations += 1
 
         return a
 

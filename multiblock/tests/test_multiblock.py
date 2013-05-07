@@ -1347,27 +1347,22 @@ def test_tv():
 
     import pylab
     from time import time
-#    start = time()
-#    print "time:", (time() - start)
 
     np.random.seed(42)
 
     eps = 0.1
     maxit = 10000
-    M = 10
-    N = 10
+    M = 100
+    N = 100
     O = 1
     p = M * N * O  # Must be even!
-    n = 10
+    n = 100
     X = np.random.randn(n, p)
     betastar = np.concatenate((np.zeros((p / 2, 1)),
                                np.random.randn(p / 2, 1)))
     y = np.dot(X, betastar)
 
 #    np.savetxt('test.txt', np.vstack((X, betastar.T)), delimiter='\t')
-
-#    D, V = eig(np.dot(X.T, X))
-#    t = 0.95 / np.max(D.real)
 
 #    # "Regular" linear regression with L1 regularisation
 #    lr = LinearRegression()
@@ -1388,17 +1383,12 @@ def test_tv():
 #    pylab.subplot(4, 2, 2)
 #    pylab.plot(alg.f)
 
-    gamma = 0.1
+    gamma = 0.01
     l = 1
     r = 0
-#    for i in xrange(X.shape[1]):
-#        r = max(r, abs(utils.cov(X[:, [i]], y)))
-#    mus = [r * 0.5 ** i for i in xrange(5)]
-#    g2 = error_functions.TotalVariation((M, N, O), gamma, [1])
-#    mus = [g2.Lipschitz()]
-#    for k in xrange(5):
-#        tau = 2.0 / (k + 3.0)
-#        mus.append((1.0 - tau) * mus[-1])
+    for i in xrange(X.shape[1]):
+        r = max(r, abs(utils.cov(X[:, [i]], y)))
+    mus = [r * 0.5 ** i for i in xrange(5)]
 
     # Linear regression with total variation regularisation
     lr = LinearRegression(algorithm=algorithms.MonotoneFISTARegression())
@@ -1409,13 +1399,11 @@ def test_tv():
     g1 = error_functions.SumSqRegressionError(X, y)
     start = time()
     g2 = error_functions.TotalVariation((M, N, O), gamma, mus[0])
+    print "time TV init:", time() - start
     g = error_functions.CombinedNesterovErrorFunction(g1, g2, mus)
     h = error_functions.L1(l)
 
-#    lr.fit(X, y)
     lr.fit(X, y, g=g, h=h)
-    print "time:", time() - start
-
 
 #    print norm(lr.beta - betastar)
 #    print alg.iterations
@@ -2085,37 +2073,34 @@ if __name__ == "__main__":
 #    test_gl()
 
 #    np.random.seed(42)
-##    A = np.random.rand(10000, 10000)
-##    A[A < 0.5] = 0
-##    A = sparse.csr_matrix(A)
-#    A = sparse.rand(10000, 10000, 0.1, format="csr")
+#    A = sparse.rand(10000, 10000, 0.01, format="lil").tocsr()
+#    B = A.todense()
 #
 #    start = time()
-#    ssvd = algorithms.SparseSVD(max_iter=5)
-#    u, s, v = ssvd.run(A)
+#    svd = SVD(num_comp=1).fit(B)
+#    u = svd.U
+#    s = svd.S
+#    v = svd.V
 #    print s
-#    print "time:", (time() - start)
+#    print "time:", (time() - start), svd.get_algorithm().iterations
+#    B = None
 #
 #    start = time()
-#    ssvd = algorithms.SparseSVD(max_iter=50)
-#    u, s, v = ssvd.run(A)
+#    v = algorithms.SparseSVD(max_iter=10).run(A)
+#    u = A.dot(v)
+#    s = np.sqrt(np.sum(u ** 2.0))
 #    print s
 #    print "time:", (time() - start)
 
-#    import pylab
-#    mu = [1]
-#    for k in xrange(100):
-#        tau = 2.0 / (k + 3.0)
-#        mu.append((1.0 - tau) * mu[-1])
-#
-#    pylab.plot(mu)
-#    pylab.show()
-    
+#    start = time()
+#    u, s, v = algorithms.SparseSVD(max_iter=50).run(A)
+#    print s
+#    print "time:", (time() - start)
+
 #    import cProfile
 #    import pstats
 #    cProfile.run('test_tv()', 'prof_output')
 #    p = pstats.Stats('prof_output')
 #    p.sort_stats('calls').print_stats(20)
-    
 
 #    test_scale()

@@ -6,16 +6,21 @@ Created on Mon Apr 22 10:54:29 2013
 """
 
 __all__ = ['ErrorFunction', 'ConvexErrorFunction',
-           'DifferentiableErrorFunction', 'NonDifferentiableErrorFunction']
+           'ProximalOperatorErrorFunction', 'DifferentiableErrorFunction',
+           'NesterovErrorFunction', 'CombinedErrorFunction',
+           'CombinedNesterovErrorFunction',
+
+           'ZeroErrorFunction', 'SumSqRegressionError', 'L1',
+           'TotalVariation', 'GroupLassoOverlap']
 
 import abc
 import numpy as np
 import scipy.sparse as sparse
-
-from utils import warning, norm, norm1, TOLERANCE
+from time import time
 import warnings
 
-from time import time
+import algorithms
+from utils import warning, norm, norm1, TOLERANCE
 
 
 class ErrorFunction(object):
@@ -299,7 +304,10 @@ class TotalVariation(NesterovErrorFunction):
 
         self.precompute()
 
-#        self.lambda_max = 
+        A = sparse.vstack((self.Ax, self.Ay, self.Az))
+        v = algorithms.SparseSVD(max_iter=10).run(A)
+        u = A.dot(v)
+        self.lambda_max = np.sum(u ** 2.0)
 
     def f(self, beta, mu=None):
 
@@ -336,7 +344,7 @@ class TotalVariation(NesterovErrorFunction):
         if self.gamma < TOLERANCE:
             return 0
 
-        return 20 / self.get_mu()
+        return self.lambda_max / self.get_mu()
 
     def compute_alpha(self, beta, mu):
 
