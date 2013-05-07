@@ -1354,11 +1354,11 @@ def test_tv():
 
     eps = 0.1
     maxit = 10000
-    M = 100
-    N = 100
+    M = 10
+    N = 10
     O = 1
     p = M * N * O  # Must be even!
-    n = 100
+    n = 10
     X = np.random.randn(n, p)
     betastar = np.concatenate((np.zeros((p / 2, 1)),
                                np.random.randn(p / 2, 1)))
@@ -1388,12 +1388,17 @@ def test_tv():
 #    pylab.subplot(4, 2, 2)
 #    pylab.plot(alg.f)
 
-    gamma = 1
+    gamma = 0.1
     l = 1
     r = 0
-    for i in xrange(X.shape[1]):
-        r = max(r, abs(utils.cov(X[:, [i]], y)))
-    mus = [r * 0.5 ** i for i in xrange(5)]
+#    for i in xrange(X.shape[1]):
+#        r = max(r, abs(utils.cov(X[:, [i]], y)))
+#    mus = [r * 0.5 ** i for i in xrange(5)]
+#    g2 = error_functions.TotalVariation((M, N, O), gamma, [1])
+#    mus = [g2.Lipschitz()]
+#    for k in xrange(5):
+#        tau = 2.0 / (k + 3.0)
+#        mus.append((1.0 - tau) * mus[-1])
 
     # Linear regression with total variation regularisation
     lr = LinearRegression(algorithm=algorithms.MonotoneFISTARegression())
@@ -2076,28 +2081,36 @@ if __name__ == "__main__":
 #    test_regularisation()
 #    test_multiblock()
 #    test_ista()
-#    test_tv()
+    test_tv()
 #    test_gl()
 
-    np.random.seed(42)
-#    A = np.random.rand(10000, 10000)
-#    A[A < 0.5] = 0
-#    A = sparse.csr_matrix(A)
-    A = sparse.rand(10000, 10000, 0.1, format="csr")
+#    np.random.seed(42)
+##    A = np.random.rand(10000, 10000)
+##    A[A < 0.5] = 0
+##    A = sparse.csr_matrix(A)
+#    A = sparse.rand(10000, 10000, 0.1, format="csr")
+#
+#    start = time()
+#    ssvd = algorithms.SparseSVD(max_iter=5)
+#    u, s, v = ssvd.run(A)
+#    print s
+#    print "time:", (time() - start)
+#
+#    start = time()
+#    ssvd = algorithms.SparseSVD(max_iter=50)
+#    u, s, v = ssvd.run(A)
+#    print s
+#    print "time:", (time() - start)
 
-    start = time()
-    ssvd = algorithms.SparseSVD(max_iter=5)
-    u, s, v = ssvd.run(A)
-    print s
-    print "time:", (time() - start)
-
-    start = time()
-    ssvd = algorithms.SparseSVD(max_iter=50)
-    u, s, v = ssvd.run(A)
-    print s
-    print "time:", (time() - start)
+#    import pylab
+#    mu = [1]
+#    for k in xrange(100):
+#        tau = 2.0 / (k + 3.0)
+#        mu.append((1.0 - tau) * mu[-1])
+#
+#    pylab.plot(mu)
+#    pylab.show()
     
-
 #    import cProfile
 #    import pstats
 #    cProfile.run('test_tv()', 'prof_output')

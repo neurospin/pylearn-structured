@@ -617,8 +617,8 @@ class MonotoneFISTARegression(ISTARegression):
             t = tscale / g.Lipschitz()
             print "t:", t
 
-        beta = numpy.dot(numpy.linalg.pinv(X), y)
-#        beta = self.start_vector.get_vector(X)
+#        beta = numpy.dot(numpy.linalg.pinv(X), y)
+        beta = self.start_vector.get_vector(X)
         beta_ = beta
 #        mus = g.get_mus()
         if isinstance(g, error_functions.NesterovErrorFunction):
@@ -701,3 +701,49 @@ class MonotoneFISTARegression(ISTARegression):
                 break
 
         return beta
+
+
+class ExcessiveGapMethod(BaseAlgorithm):
+    """ Baseclass for algorithms implementing the excessive gap technique.
+
+    Optimises a function decomposed as f(x) = g(x) + h(x), where g is
+    strongly convex and twice differentiable and h is convex and Nesterov.
+    """
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, **kwargs):
+        super(ExcessiveGapMethod, self).__init__(**kwargs)
+
+    @abc.abstractmethod
+    def run(self, *X, **kwargs):
+        raise NotImplementedError('Abstract method "run" must be ' \
+                                  'specialised!')
+
+
+class ExcessiveGapRegression(ExcessiveGapMethod):
+    """ The excessive gap method for linear regression.
+    """
+
+    def __init__(self, **kwargs):
+
+        super(ExcessiveGapRegression, self).__init__(**kwargs)
+
+    def run(self, X, y, g=None, h=None, t=None, **kwargs):
+
+        if g == None:
+            g = error_functions.MeanSquareRegressionError(X, y)
+        if h == None:
+            h = error_functions.ZeroErrorFunction()
+
+        if not isinstance(g, error_functions.DifferentiableErrorFunction):
+            raise ValueError('The functions in g must be ' \
+                             'DifferentiableErrorFunctions')
+        if not isinstance(g, error_functions.ConvexErrorFunction):
+            raise ValueError('The functions in g must be ' \
+                             'ConvexErrorFunction')
+        if not isinstance(h, error_functions.NesterovErrorFunction):
+            raise ValueError('The functions in h must be ' \
+                             'NesterovErrorFunction')
+
+        
