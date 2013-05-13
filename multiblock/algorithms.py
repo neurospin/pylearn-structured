@@ -175,7 +175,7 @@ class SparseSVD(NIPALSBaseAlgorithm):
         if max_iter == None:
             max_iter = 10
         if start_vector == None:
-            start_vector = start_vectors.OnesStartVector()
+            start_vector = start_vectors.RandomStartVector()
         super(SparseSVD, self).__init__(max_iter=max_iter,
                                         start_vector=start_vector, **kwargs)
 
@@ -485,21 +485,16 @@ class ISTARegression(ProximalGradientMethod):
         if h == None:
             h = error_functions.ZeroErrorFunction()
 
-#        if not isinstance(g, error_functions.DifferentiableErrorFunction):
-#            raise ValueError('The functions in g must be ' \
-#                             'DifferentiableErrorFunctions')
-#        if not isinstance(g, error_functions.ConvexErrorFunction):
-#            raise ValueError('The functions in g must be ' \
-#                             'ConvexErrorFunction')
-#        if not isinstance(h, error_functions.ConvexErrorFunction):
-#            raise ValueError('The functions in h must be ConvexErrorFunction')
-
         if t == None:
             t = tscale / g.Lipschitz()
             print "t:", t
 
         beta = self.start_vector.get_vector(X)
-        mu = g.get_mus()[-1]
+        if isinstance(g, error_functions.NesterovErrorFunction):
+            mu = g.get_mus()[-1]
+        else:
+            mu = 1
+
         f_old = g.f(beta, mu=mu) + h.f(beta)
 #        f_old = g.f(beta) + h.f(beta)
         self.f = [f_old]
@@ -521,10 +516,11 @@ class ISTARegression(ProximalGradientMethod):
                         'to smaller mu.')
             else:
                 # Save updated values
-                beta = beta_
                 f_old = f_new
                 self.f.append(f_new)
                 self.iterations += 1
+
+            beta = beta_
 
             if self.converged:
                 break
@@ -638,7 +634,7 @@ class MonotoneFISTARegression(ISTARegression):
         beta_ = beta
 #        mus = g.get_mus()
         if isinstance(g, error_functions.NesterovErrorFunction):
-            mu = g.get_mus()[-1] / 1.0
+            mu = g.get_mus()[-1]
         else:
             mu = 1
 
@@ -752,14 +748,12 @@ class ExcessiveGapRegression(ExcessiveGapMethod):
         if h == None:
             h = error_functions.ZeroErrorFunction()
 
-        if not isinstance(g, error_functions.DifferentiableErrorFunction):
-            raise ValueError('The functions in g must be ' \
-                             'DifferentiableErrorFunctions')
-        if not isinstance(g, error_functions.ConvexErrorFunction):
-            raise ValueError('The functions in g must be ' \
-                             'ConvexErrorFunction')
-        if not isinstance(h, error_functions.NesterovErrorFunction):
-            raise ValueError('The functions in h must be ' \
-                             'NesterovErrorFunction')
+        self.iterations = 0
+        while True:
+            self.converged = True
 
-        
+            k = self.iterations + 1
+
+            tau = 2.0 / (k + 3.0)
+
+            uk = (1.0 - tau) * alpha + tau * alpha_hat_muk(beta)

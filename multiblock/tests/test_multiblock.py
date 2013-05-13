@@ -1427,20 +1427,20 @@ def test_ista():
 def test_tv():
 
     import pylab
-    from time import time
 
     np.random.seed(42)
 
     eps = 0.1
     maxit = 10000
-    M = 100
-    N = 100
+    M = 300
+    N = 1
     O = 1
     p = M * N * O  # Must be even!
-    n = 100
+    n = 50
     X = np.random.randn(n, p)
     betastar = np.concatenate((np.zeros((p / 2, 1)),
                                np.random.randn(p / 2, 1)))
+    betastar = np.sort(np.abs(betastar), axis=0)
     y = np.dot(X, betastar)
 
 #    np.savetxt('test.txt', np.vstack((X, betastar.T)), delimiter='\t')
@@ -1464,15 +1464,16 @@ def test_tv():
 #    pylab.subplot(4, 2, 2)
 #    pylab.plot(alg.f)
 
-    gamma = 0.01
-    l = 1
+    gamma = 1
+    l = 0.1
     r = 0
     for i in xrange(X.shape[1]):
         r = max(r, abs(utils.cov(X[:, [i]], y)))
     mus = [r * 0.5 ** i for i in xrange(5)]
 
+    total_start = time()
     # Linear regression with total variation regularisation
-    lr = LinearRegression(algorithm=algorithms.MonotoneFISTARegression())
+    lr = LinearRegression(algorithm=algorithms.ISTARegression())
     alg = lr.get_algorithm()
     alg.set_max_iter(maxit)
     alg.set_tolerance(eps)
@@ -1485,6 +1486,7 @@ def test_tv():
     h = error_functions.L1(l)
 
     lr.fit(X, y, g=g, h=h)
+    print "Total time:", (time()-total_start)
 
 #    print norm(lr.beta - betastar)
 #    print alg.iterations
@@ -1497,18 +1499,13 @@ def test_tv():
 #    pylab.subplot(4, 2, 4)
 #    pylab.plot(alg.f)
 #    pylab.title("Iterations: " + str(alg.iterations))
-    gamma_small_beta = lr.beta
 
 #    pylab.subplot(2, 1, 1)
     pylab.plot(betastar[:, 0], '-', lr.beta[:, 0], '*')
     pylab.title("Iterations: " + str(alg.iterations))
-#    pylab.subplot(2, 1, 2)
-#    pylab.plot(alg.f, '.')
     pylab.show()
-
-#    pylab.plot(alg.fl, '-r')
+#
     pylab.plot(alg.f, '-b')
-#    pylab.plot(alg.fs, '-g')
     pylab.show()
 
     return

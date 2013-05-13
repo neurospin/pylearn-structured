@@ -226,7 +226,7 @@ class SumSqRegressionError(DifferentiableErrorFunction,
         self.X = X
         self.y = y
 
-        self._Xy = np.dot(self.X.T, self.y)
+#        self._Xy = np.dot(self.X.T, self.y)
 
 #        D, V = np.linalg.eig(np.dot(self.X.T, self.X))
 #        self.t = np.max(D.real)
@@ -237,8 +237,8 @@ class SumSqRegressionError(DifferentiableErrorFunction,
         return norm(self.y - np.dot(self.X, beta)) ** 2
 
     def grad(self, beta, **kwargs):
-#        return 2 * np.dot(self.X.T, np.dot(self.X, beta) - self.y)
-        return 2 * (np.dot(self.X.T, np.dot(self.X, beta)) - self._Xy)
+        return 2 * np.dot(self.X.T, np.dot(self.X, beta) - self.y)
+#        return 2 * (np.dot(self.X.T, np.dot(self.X, beta)) - self._Xy)
 
     def Lipschitz(self):
         return self.t
@@ -257,7 +257,7 @@ class L1(ProximalOperatorErrorFunction, ConvexErrorFunction):
     def prox(self, x, factor=1, allow_empty=False):
 
         l = factor * self.l
-#        return (np.abs(x) > l) * (x - l * np.sign(x - l))
+        return (np.abs(x) > l) * (x - l * np.sign(x - l))
 
 #        xorig = x.copy()
 #        lorig = factor * self.l
@@ -266,12 +266,12 @@ class L1(ProximalOperatorErrorFunction, ConvexErrorFunction):
 #        warn = False
 #        while True:
 #            x = xorig
-#
-        sign = np.sign(x)
-        np.absolute(x, x)
-        x -= l
-        x[x < 0] = 0
-        x = np.multiply(sign, x)
+
+#        sign = np.sign(x)
+#        np.absolute(x, x)
+#        x -= l
+#        x[x < 0] = 0
+#        x = np.multiply(sign, x)
 
 ##            print "HERE!!!!"
 #
@@ -381,60 +381,35 @@ class TotalVariation(NesterovErrorFunction):
         O = self.shape[2]
         p = M * N * O
 
-#        from time import time
-#        start = time()
         smtype = 'csr'
         self.Ax = sparse.eye(p, p, 1, format=smtype) \
                 - sparse.eye(p, p)
-#        print "Ax sparse:", (time() - start)
-#        start = time()
         self.Ay = sparse.eye(p, p, N, format=smtype) \
                 - sparse.eye(p, p)
-#        print "Ay sparse:", (time() - start)
-#        start = time()
         self.Az = sparse.eye(p, p, M * N, format=smtype) \
                 - sparse.eye(p, p)
-#        print "Az sparse:", (time() - start)
 
-#        start = time()
         ind = np.reshape(xrange(p), (O, M, N))
-#        print "reshape xrange p time:", (time() - start)
-#        start = time()
         xind = ind[:, :, -1].flatten().tolist()
-#        print "x slice flatten tolist:", (time() - start)
-#        start = time()
         yind = ind[:, -1, :].flatten().tolist()
-#        print "y slice flatten tolist:", (time() - start)
-#        start = time()
         zind = ind[-1, :, :].flatten().tolist()
-#        print "z slice flatten tolist:", (time() - start)
 
-#        start = time()
-    #    Ax.data[Ax.indptr[Xxind]] = 0
         for i in xrange(len(xind)):
             self.Ax.data[self.Ax.indptr[xind[i]]: \
                          self.Ax.indptr[xind[i] + 1]] = 0
         self.Ax.eliminate_zeros()
-
-#        print "x remove zero rows:", (time() - start)
-#        start = time()
 
         for i in xrange(len(yind)):
             self.Ay.data[self.Ay.indptr[yind[i]]: \
                          self.Ay.indptr[yind[i] + 1]] = 0
         self.Ay.eliminate_zeros()
 
-#        print "y remove zero rows:", (time() - start)
-#        start = time()
-
-    #    Az.data[Az.indptr[M * N] : ] = 0
 #        for i in xrange(len(zind)):
 #            self.Az.data[self.Az.indptr[zind[i]]: \
 #                         self.Az.indptr[zind[i] + 1]] = 0
         self.Az.data[self.Az.indptr[zind[0]]: \
                      self.Az.indptr[zind[-1] + 1]] = 0
         self.Az.eliminate_zeros()
-#        print "z remove zero rows:", (time() - start)
 
         self.Axt = self.Ax.T
         self.Ayt = self.Ay.T
