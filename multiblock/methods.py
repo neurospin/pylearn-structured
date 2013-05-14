@@ -8,7 +8,8 @@ methods.
 @license: BSD Style.
 """
 
-__all__ = ['PCA', 'SVD', 'PLSR', 'PLSC', 'O2PLS', 'RGCCA', 'LinearRegression']
+__all__ = ['PCA', 'SVD', 'PLSR', 'PLSC', 'O2PLS', 'RGCCA',
+           'LinearRegression', 'LogisticRegression']
 
 from sklearn.utils import check_arrays
 
@@ -676,7 +677,7 @@ class BaseProximalGradientMethod(BaseMethod):
     def __init__(self, algorithm=None, **kwargs):
 
         if algorithm == None:
-            algorithm = algorithms.FISTARegression()
+            algorithm = algorithms.ISTARegression()
 
         print algorithm
 
@@ -732,6 +733,37 @@ class LinearRegression(NesterovProximalGradientMethod):
 
         if g == None:
             g = error_functions.SumSqRegressionError(X, y)
+        if h == None:
+            h = error_functions.ZeroErrorFunction()
+
+        if isinstance(g, error_functions.NesterovErrorFunction):
+            self.beta = self.continuation_run(self.algorithm, g,
+                                              X, y, g=g, h=h, t=t)
+        else:
+            self.beta = self.algorithm.run(X, y, g=g, h=h, t=t)
+
+        return self
+
+    def predict(self, X, **kwargs):
+
+        X = np.asarray(X)
+        yhat = dot(X, self.beta)
+
+        return yhat
+
+
+class LogisticRegression(NesterovProximalGradientMethod):
+
+    def __init__(self, **kwargs):
+        super(LogisticRegression, self).__init__(num_comp=1, **kwargs)
+
+    def _get_transform(self, index=0):
+        return self.beta
+
+    def fit(self, X, y, g=None, h=None, t=None):
+
+        if g == None:
+            g = error_functions.LogisticRegressionError(X, y)
         if h == None:
             h = error_functions.ZeroErrorFunction()
 

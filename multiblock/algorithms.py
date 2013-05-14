@@ -33,7 +33,7 @@ import error_functions
 from multiblock.utils import MAX_ITER, TOLERANCE, make_list, dot, zeros, sqrt
 from multiblock.utils import norm, norm1, warning
 
-import numpy
+import numpy as np
 from numpy import ones, eye
 from numpy.linalg import pinv
 import scipy.sparse as sparse
@@ -134,7 +134,7 @@ class NIPALSBaseAlgorithm(BaseAlgorithm):
 
     def set_adjacency_matrix(self, adj_matrix):
         try:
-            adj_matrix = numpy.asarray(adj_matrix)
+            adj_matrix = np.asarray(adj_matrix)
         except Exception:
             raise ValueError('The adjacency matrix must be a numpy array')
         if not adj_matrix.shape[0] == adj_matrix.shape[1]:
@@ -196,17 +196,17 @@ class SparseSVD(NIPALSBaseAlgorithm):
             for it in xrange(self.max_iter):
                 t_ = t
                 t = K.dot(t_)
-                t /= numpy.sqrt(numpy.sum(t_ ** 2.0))
+                t /= np.sqrt(np.sum(t_ ** 2.0))
 
                 self.iterations += 1
 
                 diff = t_ - t
-                if (numpy.sum(diff ** 2.0)) < TOLERANCE:
+                if (np.sum(diff ** 2.0)) < TOLERANCE:
                     print "broke at", self.iterations
                     break
 
             p = Xt.dot(t)
-            p /= numpy.sqrt(numpy.sum(p ** 2.0))
+            p /= np.sqrt(np.sum(p ** 2.0))
 #            t = X.dot(p)
 
         else:
@@ -215,12 +215,12 @@ class SparseSVD(NIPALSBaseAlgorithm):
             for it in xrange(self.max_iter):
                 p_ = p
                 p = K.dot(p_)
-                p /= numpy.sqrt(numpy.sum(p ** 2.0))
+                p /= np.sqrt(np.sum(p ** 2.0))
 
                 self.iterations += 1
 
                 diff = p_ - p
-                if (numpy.sum(diff ** 2.0)) < TOLERANCE:
+                if (np.sum(diff ** 2.0)) < TOLERANCE:
                     print "broke at", self.iterations
                     break
 
@@ -368,6 +368,9 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
         X          : A tuple or list with n numpy arrays of shape [M, N_i],
                      i=1,...,n. These are the training set.
 
+        bias       : Whether or not to use a biased covariance estimation.
+                     Default is False.
+
         Returns
         -------
         a          : A list with n numpy arrays of weights of shape [N_i, 1].
@@ -382,6 +385,9 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
         self.scheme = make_list(self.scheme, n, schemes.Horst())
 #        self.not_normed = make_list(self.not_normed, n, False)
 
+        bias = kwargs.pop('bias', False)
+        ddof = 0.0 if bias else 1.0
+
         invIXX = []
         a = []
         for i in range(n):
@@ -391,7 +397,7 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
 
             a_ = self.start_vector.get_vector(Xi)
             invIXX.append(pinv(self.tau[i] * I + \
-                    ((1.0 - self.tau[i]) / (Xi.shape[0] - 0.0)) * XX))
+                    ((1.0 - self.tau[i]) / (Xi.shape[0] - ddof)) * XX))
             invIXXa = dot(invIXX[i], a_)
             ainvIXXa = dot(a_.T, invIXXa)
             a_ = invIXXa / sqrt(ainvIXXa)
@@ -480,11 +486,6 @@ class ISTARegression(ProximalGradientMethod):
 
     def run(self, X, y, g=None, h=None, t=None, tscale=0.95, **kwargs):
 
-        if g == None:
-            g = error_functions.MeanSquareRegressionError(X, y)
-        if h == None:
-            h = error_functions.ZeroErrorFunction()
-
         if t == None:
             t = tscale / g.Lipschitz()
             print "t:", t
@@ -504,6 +505,7 @@ class ISTARegression(ProximalGradientMethod):
             self.converged = True
 
             beta_ = h.prox(beta - t * g.grad(beta), t)
+#            beta_ = h.prox(beta - np.dot(np.linalg.pinv(g.hessian(beta)), g.grad(beta)))
 
             if norm1(beta - beta_) > self.tolerance * t:
                 self.converged = False
@@ -543,27 +545,16 @@ class FISTARegression(ISTARegression):
 
     def run(self, X, y, g=None, h=None, t=None, tscale=0.95, **kwargs):
 
-        if g == None:
-            g = error_functions.MeanSquareRegressionError(X, y)
-        if h == None:
-            h = error_functions.ZeroErrorFunction()
-
-        if not isinstance(g, error_functions.DifferentiableErrorFunction):
-            raise ValueError('The functions in g must be ' \
-                             'DifferentiableErrorFunctions')
-        if not isinstance(g, error_functions.ConvexErrorFunction):
-            raise ValueError('The functions in g must be ' \
-                             'ConvexErrorFunction')
-        if not isinstance(h, error_functions.ConvexErrorFunction):
-            raise ValueError('The functions in h must be ConvexErrorFunction')
-
         if t == None:
             t = tscale / g.Lipschitz()
             print "t:", t
 
         beta = self.start_vector.get_vector(X)
         beta_ = beta
-        mu = g.get_mus()[-1]
+        if isinstance(g, error_functions.NesterovErrorFunction):
+            mu = g.get_mus()[-1]
+        else:
+            mu = 1
         f_old = g.f(beta, mu=mu) + h.f(beta)
 #        f_old = g.f(beta) + h.f(beta)
         self.f = [f_old]
@@ -678,6 +669,7 @@ class MonotoneFISTARegression(ISTARegression):
                     f_new = g.f(beta_, mu=mu) + hbeta
 
                     if f_new > f_old:  # Early stopping
+                        print "f_new > f_old == ", f_new, ">", f_old
                         self.converged = True
                         stop_early = True
                         warning('Early stopping criterion triggered. ' \
@@ -724,7 +716,7 @@ class ExcessiveGapMethod(BaseAlgorithm):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, **kwargs):
+    def __init__(self, X, y, **kwargs):
         super(ExcessiveGapMethod, self).__init__(**kwargs)
 
     @abc.abstractmethod
@@ -741,19 +733,82 @@ class ExcessiveGapRegression(ExcessiveGapMethod):
 
         super(ExcessiveGapRegression, self).__init__(**kwargs)
 
-    def run(self, X, y, g=None, h=None, t=None, **kwargs):
+    def run(self, X, y, g=None, h=None, **kwargs):
+        super(ExcessiveGapRegression, self).__init__(**kwargs)
 
         if g == None:
             g = error_functions.MeanSquareRegressionError(X, y)
         if h == None:
             h = error_functions.ZeroErrorFunction()
 
+        self.X = X
+        self.y = y
+
+        beta_hat_0 = self.beta_hat_0_1
+
         self.iterations = 0
         while True:
             self.converged = True
 
             k = self.iterations + 1
-
             tau = 2.0 / (k + 3.0)
 
-            uk = (1.0 - tau) * alpha + tau * alpha_hat_muk(beta)
+            u = (1.0 - tau) * alpha + tau * alpha_hat_muk(beta)
+            beta_new = (1.0 - tau) * beta_old + tau * beta_hat_0(u)
+            mu_new = (1.0 - tau) * mu_old
+            alpha_new = v(u)
+
+            
+
+    def beta_hat_0_1(self, alpha):
+        """ Straight-forward naive Ridge regression.
+        """
+        self.X = 0
+        self.y = 0
+        self.A = 0
+        self.l = 0
+
+        XX = np.dot(self.X.T, self.X)
+        XXI = XX + (1.0 - self.l) * np.eye(XX.shape[0])
+        invXXI = np.linalg.pinv(XXI)
+        v = np.dot(self.X.T, self.y) - np.dot(self.A.T, alpha) / 2.0
+
+        return np.dot(invXXI, v)
+
+    def beta_hat_0_2(self, alpha):
+        """ Approximation using linear regression for the parts of X'y - A'u/2.
+        """
+        self.X = 0
+        self.y = 0
+        self.A = 0
+        self.l = 0
+
+        XX = np.dot(self.X, self.X.T)
+        XXI = XX + (1.0 - self.l) * np.eye(XX.shape[0])
+        invXXI = np.linalg.pinv(XXI)
+        w = np.dot(self.X.T, self.y) - np.dot(self.A.T, alpha) / 2.0
+        g = np.dot(np.linalg.pinv(XX), np.dot(self.X, w))
+
+        return np.dot(self.X.T, np.dot(invXXI, g))
+
+    def beta_hat_0_3(self, alpha):
+        """ Using the dual form of ridge regression for the X'y part and an
+        approximation using linear regression for the A'u/2 part.
+        """
+        self.X = 0
+        self.y = 0
+        self.A = 0
+        self.l = 0
+
+        XX = np.dot(self.X, self.X.T)
+        XXI = XX + (1.0 - self.l) * np.eye(XX.shape[0])
+        invXXI = np.linalg.pinv(XXI)
+
+        beta_ridge = np.dot(self.X.T, np.dot(invXXI, self.y))
+
+        w = np.dot(self.A.T, alpha) / 2.0
+        g = np.dot(np.linalg.pinv(XX), np.dot(self.X, w))
+
+        beta_approx = np.dot(self.X.T, np.dot(invXXI, g))
+
+        return beta_ridge - beta_approx

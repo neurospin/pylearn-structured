@@ -10,12 +10,15 @@ __all__ = ['ErrorFunction', 'ConvexErrorFunction',
            'NesterovErrorFunction', 'CombinedErrorFunction',
            'CombinedNesterovErrorFunction',
 
-           'ZeroErrorFunction', 'SumSqRegressionError', 'L1',
+           'ZeroErrorFunction', 'SumSqRegressionError',
+           'LogisticRegressionError',
+           'L1',
            'TotalVariation', 'GroupLassoOverlap']
 
 import abc
 import numpy as np
 import scipy.sparse as sparse
+import math
 from time import time
 import warnings
 
@@ -239,6 +242,46 @@ class SumSqRegressionError(DifferentiableErrorFunction,
     def grad(self, beta, **kwargs):
         return 2 * np.dot(self.X.T, np.dot(self.X, beta) - self.y)
 #        return 2 * (np.dot(self.X.T, np.dot(self.X, beta)) - self._Xy)
+
+    def Lipschitz(self):
+        return self.t
+
+
+class LogisticRegressionError(DifferentiableErrorFunction,
+                              ConvexErrorFunction):
+
+    def __init__(self, X, y, **kwargs):
+        super(LogisticRegressionError, self).__init__(**kwargs)
+
+        self.X = X
+        self.y = y
+
+        V = 0.5 * np.eye(X.shape[0])  # pi(x) * (1 - pi(x)) <= 0.25 = 0.5 * 0.5
+        VX = np.dot(V, X)
+        _, s, _ = np.linalg.svd(VX, full_matrices=False)  # False == faster
+        self.t = np.max(s) ** 2.0
+
+    def f(self, beta, **kwargs):
+        logit = np.dot(self.X, beta)
+        expt = np.exp(logit)
+        return -np.sum(np.multiply(self.y, logit) + np.log(1 + expt))
+
+    def grad(self, beta, **kwargs):
+        logit = np.dot(self.X, beta)
+        expt = np.exp(logit)
+        pix = np.divide(expt, expt + 1)
+        return -np.dot(self.X.T, self.y - pix)
+
+    def hessian(self, beta, **kwargs):
+        logit = np.dot(self.X, beta)
+        expt = np.exp(logit)
+        pix = np.divide(expt, expt + 1)
+        pixpix = np.multiply(pix, 1 - pix)
+
+        V = np.diag(pixpix.flatten())
+        XVX = np.dot(np.dot(self.X.T, V), self.X)
+
+        return XVX
 
     def Lipschitz(self):
         return self.t
