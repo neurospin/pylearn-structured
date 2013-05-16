@@ -17,8 +17,8 @@ import abc
 import warnings
 import numpy as np
 from numpy.linalg import inv, pinv
-from multiblock.utils import dot, direct
-#import preprocess as pp
+from multiblock.utils import direct
+
 import algorithms
 import copy
 import prox_ops
@@ -92,26 +92,23 @@ class BaseMethod(object):
                                  % (0, M, i, X[i].shape[0]))
         return X
 
-#    def preprocess(self, *X):
-#        X = list(X)
-#        if self.preproc == None:
-#            return X
-#
-#        for i in xrange(len(X)):
-#            if self.preproc[i] != None:
-#                X[i] = self.preproc[i].process(X[i])
-#        return X
-#
-#    def postprocess(self, *X):
-#        X = list(X)
-#
-#        if self.preproc == None:
-#            return X
-#
-#        for i in xrange(len(X)):
-#            if self.preproc[i] != None:
-#                X[i] = self.preproc[i].revert(X[i])
-#        return X
+    def get_max_iter(self):
+        return self.get_algorithm()._get_max_iter()
+
+    def set_max_iter(self, max_iter):
+        self.get_algorithm()._set_max_iter(max_iter)
+
+    def get_tolerance(self):
+        self.get_algorithm()._get_tolerance()
+
+    def set_tolerance(self, tolerance):
+        self.get_algorithm()._set_tolerance(tolerance)
+
+    def get_start_vector(self):
+        return self.get_algorithm()._get_start_vector()
+
+    def set_start_vector(self, start_vector):
+        self.get_algorithm()._set_start_vector(start_vector)
 
     def get_algorithm(self):
         return self.algorithm
@@ -122,13 +119,19 @@ class BaseMethod(object):
                              '"BaseAlgorithm"')
         self.algorithm = algorithm
 
+    def get_prox_op(self):
+        return self.get_algorithm()._get_prox_op()
+
+    def set_prox_op(self, prox_op):
+        self.get_algorithm()._set_prox_op(prox_op)
+
     @abc.abstractmethod
     def _get_transform(self, index=0):
         raise NotImplementedError('Abstract method "_get_transform" must be '\
                                   'specialised!')
 
     def deflate(self, X, w, t, p, index=None):
-        return X - dot(t, p.T)
+        return X - np.dot(t, p.T)
 
     @abc.abstractmethod
     def fit(self, *X, **kwargs):
@@ -157,6 +160,18 @@ class PLSBaseMethod(BaseMethod):
 #                self.adj_matrix = np.ones((self.n, self.n)) - np.eye(self.n)
 #        elif self.adj_matrix == None:
 #            raise ValueError('Argument "adj_matrix" must be given')
+
+    def set_scheme(self, scheme):
+        self.get_algorithm()._set_scheme(scheme)
+
+    def get_scheme(self):
+        return self.get_algorithm()._get_scheme()
+
+    def set_adjacency_matrix(self, adj_matrix):
+        self.get_algorithm()._set_adjacency_matrix(adj_matrix)
+
+    def get_adjacency_matrix(self):
+        return self.get_algorithm()._set_adjacency_matrix()
 
     def fit(self, *X, **kwargs):
 
@@ -188,15 +203,15 @@ class PLSBaseMethod(BaseMethod):
             for i in xrange(self.n):
 
                 # Score vector
-                t = dot(X[i], w[i])  # / dot(w[i].T, w[i])
+                t = np.dot(X[i], w[i])  # / np.dot(w[i].T, w[i])
 
                 # Test for null variance
-                if dot(t.T, t) < self.algorithm.tolerance:
+                if np.dot(t.T, t) < self.algorithm.tolerance:
                     warnings.warn('Scores of block X[%d] are too small at '
                                   'iteration %d' % (i, a))
 
                 # Loading vector
-                p = dot(X[i].T, t) / dot(t.T, t)
+                p = np.dot(X[i].T, t) / np.dot(t.T, t)
 
                 # If we should make all weights correlate with np.ones((N,1))
                 if self.norm_dir:
@@ -212,7 +227,7 @@ class PLSBaseMethod(BaseMethod):
         # Compute W*, the rotation from input space X to transformed space T
         # such that T = XW* = XW(P'W)^-1
         for i in xrange(self.n):
-            self.Ws[i] = dot(self.W[i], inv(dot(self.P[i].T, self.W[i])))
+            self.Ws[i] = np.dot(self.W[i], inv(np.dot(self.P[i].T, self.W[i])))
 
         return self
 
@@ -238,7 +253,7 @@ class PLSBaseMethod(BaseMethod):
         T = []
         for i in xrange(self.n):
             # Apply rotation
-            t = dot(X[i], self._get_transform(i))
+            t = np.dot(X[i], self._get_transform(i))
 
             T.append(t)
 
@@ -282,7 +297,7 @@ class SVD(PCA):
 
     The decomposition generates matrices such that
 
-        dot(U, dot(S, V.T)) == X
+        np.dot(U, np.dot(S, V.T)) == X
     """
 
     def __init__(self, **kwargs):
@@ -328,7 +343,7 @@ class PLSR(PLSBaseMethod):
 
     def deflate(self, X, w, t, p, index=None):
         if index == 0:
-            return X - dot(t, p.T)  # Deflate X using its loadings
+            return X - np.dot(t, p.T)  # Deflate X using its loadings
         else:
             return X  # Do not deflate Y
 
@@ -346,7 +361,7 @@ class PLSR(PLSBaseMethod):
         self.P = self.P[0]
         self.Ws = self.Ws[0]
 
-        self.B = dot(self.Ws, self.C.T)
+        self.B = np.dot(self.Ws, self.C.T)
 
         return self
 
@@ -355,7 +370,7 @@ class PLSR(PLSBaseMethod):
 #        if self.preproc != None and self.preproc[0] != None:
 #            X = self.preproc[0].process(X)
 
-        Ypred = dot(X, self.B)
+        Ypred = np.dot(X, self.B)
 
 #        if self.preproc != None and self.preproc[1] != None:
 #            Ypred = self.preproc[1].revert(Ypred)
@@ -406,22 +421,22 @@ class PLSC(PLSR):
             return self.Cs
 
     def deflate(self, X, w, t, p, index=None):
-        return X - dot(t, p.T)  # Deflate using their loadings
+        return X - np.dot(t, p.T)  # Deflate using their loadings
 
     def fit(self, X, Y=None, **kwargs):
         Y = kwargs.pop('y', Y)
 #        PLSR.fit(self, X, Y, **kwargs)
         super(PLSC, self).fit(X, Y, **kwargs)
 
-        self.Cs = dot(self.C, inv(dot(self.Q.T, self.C)))
+        self.Cs = np.dot(self.C, inv(np.dot(self.Q.T, self.C)))
 
-        self.Dx = dot(pinv(self.T), self.U)
-        self.Dy = dot(pinv(self.U), self.T)
+        self.Dx = np.dot(pinv(self.T), self.U)
+        self.Dy = np.dot(pinv(self.U), self.T)
 
-        self.Bx = dot(self.Ws, dot(self.Dx, self.Q.T))  # Yhat = XW*DxQ' = XBx
-        self.By = dot(self.Cs, dot(self.Dy, self.P.T))  # Xhat = YC*DyP' = YBy
-#        self.Bx = dot(self.Ws, self.Q.T)               # Yhat = XW*Q' = XBx
-#        self.By = dot(self.Cs, self.P.T)               # Xhat = XC*P' = YBy
+        self.Bx = np.dot(self.Ws, np.dot(self.Dx, self.Q.T))  # Yhat = XW*DxQ' = XBx
+        self.By = np.dot(self.Cs, np.dot(self.Dy, self.P.T))  # Xhat = YC*DyP' = YBy
+#        self.Bx = np.dot(self.Ws, self.Q.T)               # Yhat = XW*Q' = XBx
+#        self.By = np.dot(self.Cs, self.P.T)               # Xhat = XC*P' = YBy
         del self.B
 
         return self
@@ -430,11 +445,11 @@ class PLSC(PLSR):
         Y = kwargs.pop('y', Y)
 
         X = np.asarray(X)
-        Ypred = dot(X, self.Bx)
+        Ypred = np.dot(X, self.Bx)
 
         if Y != None:
             Y = np.asarray(Y)
-            Xpred = dot(Y, self.By)
+            Xpred = np.dot(Y, self.By)
 
             return Ypred, Xpred
 
@@ -461,7 +476,7 @@ class O2PLS(PLSC):
         self._check_inputs()
         X, Y = self._check_arrays(X, Y)
 
-        prox_op = self.algorithm.get_prox_op()
+        prox_op = self.get_prox_op()
         if len(prox_op.parameter) != 0:
             Xparam = prox_op.parameter[0]
             Yparam = prox_op.parameter[1]
@@ -490,28 +505,27 @@ class O2PLS(PLSC):
         self.Qo = np.zeros((N2, self.Ay))
 
         alg = copy.deepcopy(self.algorithm)
-        alg.set_prox_op(prox_op)
         svd = SVD(num_comp=self.A, algorithm=alg, **kwargs)
-        svd.fit(dot(X.T, Y))
+        svd.set_prox_op(prox_op)
+        svd.fit(np.dot(X.T, Y))
         W = svd.U
         C = svd.V
 
         alg = copy.deepcopy(self.algorithm)
-        alg.set_prox_op(unique_x_op)
-#        self.algorithm.set_prox_op(unique_x_op)
         eigsym = SVD(num_comp=1, algorithm=alg, **kwargs)
+        eigsym.set_prox_op(unique_x_op)
         for a in xrange(self.Ax):
-            T = dot(X, W)
-            E = X - dot(T, W.T)
-            TE = dot(T.T, E)
+            T = np.dot(X, W)
+            E = X - np.dot(T, W.T)
+            TE = np.dot(T.T, E)
             eigsym.fit(TE)
             wo = eigsym.V
             s = eigsym.S
             if s < alg.tolerance:
                 wo = np.zeros(wo.shape)
-            to = dot(X, wo)
-            toto = dot(to.T, to)
-            Xto = dot(X.T, to)
+            to = np.dot(X, wo)
+            toto = np.dot(to.T, to)
+            Xto = np.dot(X.T, to)
             if toto > alg.tolerance:
                 po = Xto / toto
             else:
@@ -521,24 +535,23 @@ class O2PLS(PLSC):
             self.To[:, a] = to.ravel()
             self.Po[:, a] = po.ravel()
 
-            X = X - dot(to, po.T)
+            X = X - np.dot(to, po.T)
 
         alg = copy.deepcopy(self.algorithm)
-        alg.set_prox_op(unique_y_op)
-#        self.algorithm.set_prox_op(self.unique_y_op)
         eigsym = SVD(num_comp=1, algorithm=alg, **kwargs)
+        eigsym.set_prox_op(unique_y_op)
         for a in xrange(self.Ay):
-            U = dot(Y, C)
-            F = Y - dot(U, C.T)
-            UF = dot(U.T, F)
+            U = np.dot(Y, C)
+            F = Y - np.dot(U, C.T)
+            UF = np.dot(U.T, F)
             eigsym.fit(UF)
             co = eigsym.V
             s = eigsym.S
             if s < alg.tolerance:
                 co = np.zeros(co.shape)
-            uo = dot(Y, co)
-            uouo = dot(uo.T, uo)
-            Yuo = dot(Y.T, uo)
+            uo = np.dot(Y, co)
+            uouo = np.dot(uo.T, uo)
+            Yuo = np.dot(Y.T, uo)
             if uouo > alg.tolerance:
                 qo = Yuo / uouo
             else:
@@ -548,15 +561,17 @@ class O2PLS(PLSC):
             self.Uo[:, a] = uo.ravel()
             self.Qo[:, a] = qo.ravel()
 
-            Y = Y - dot(uo, qo.T)
+            Y = Y - np.dot(uo, qo.T)
 
+        alg_old = self.algorithm
         alg = copy.deepcopy(self.algorithm)
-        alg.set_prox_op(prox_op)
+        alg._set_prox_op(prox_op)
         alg.adj_matrix = None
         alg.scheme = schemes.Horst()
         alg.mode = modes.NewA()
-#        PLSC.fit(self, X, Y, **kwargs)
+        self.algorithm = alg
         super(O2PLS, self).fit(X, Y, **kwargs)
+        self.algorithm = alg_old
 
         return self
 
@@ -570,10 +585,10 @@ class O2PLS(PLSC):
 #                X -= self.means[0]
 #                X /= self.stds[0]
                 for a in xrange(self.Ax):
-                    to = dot(X, self.Wo[:, [a]])
-                    X = X - dot(to, self.Po[:, [a]].T)
-#                To = dot(X, self.Wo)
-#                X = X - dot(To, self.Po.T)
+                    to = np.dot(X, self.Wo[:, [a]])
+                    X = X - np.dot(to, self.Po[:, [a]].T)
+#                To = np.dot(X, self.Wo)
+#                X = X - np.dot(To, self.Po.T)
 #                X *= self.stds[0]
 #                X += self.means[0]
 
@@ -581,10 +596,10 @@ class O2PLS(PLSC):
 #                Y -= self.means[1]
 #                Y /= self.stds[1]
                 for a in xrange(self.Ay):
-                    uo = dot(Y, self.Co[:, [a]])
-                    Y = Y - dot(uo, self.Qo[:, [a]].T)
-#                Uo = dot(Y, self.Co)
-#                Y = Y - dot(Uo, self.Qo.T)
+                    uo = np.dot(Y, self.Co[:, [a]])
+                    Y = Y - np.dot(uo, self.Qo[:, [a]].T)
+#                Uo = np.dot(Y, self.Co)
+#                Y = Y - np.dot(Uo, self.Qo.T)
 #                Y *= self.stds[1]
 #                Y += self.means[1]
 
@@ -597,10 +612,10 @@ class O2PLS(PLSC):
 #                X -= self.means[0]
 #                X /= self.stds[0]
                 for a in xrange(self.Ax):
-                    to = dot(X, self.Wo[:, [a]])
-                    X = X - dot(to, self.Po[:, [a]].T)
-#                To = dot(X, self.Wo)
-#                X = X - dot(To, self.Po.T)
+                    to = np.dot(X, self.Wo[:, [a]])
+                    X = X - np.dot(to, self.Po[:, [a]].T)
+#                To = np.dot(X, self.Wo)
+#                X = X - np.dot(To, self.Po.T)
 #                X *= self.stds[0]
 #                X += self.means[0]
 
@@ -622,17 +637,17 @@ class O2PLS(PLSC):
 #                X -= self.means[0]
 #                X /= self.stds[0]
             for a in xrange(self.Ax):
-                to = dot(X, self.Wo[:, [a]])
-                X = X - dot(to, self.Po[:, [a]].T)
-#            To = dot(X, self.Wo)
+                to = np.dot(X, self.Wo[:, [a]])
+                X = X - np.dot(to, self.Po[:, [a]].T)
+#            To = np.dot(X, self.Wo)
 #            if copy:
-#                X = X - dot(To, self.Po.T)
+#                X = X - np.dot(To, self.Po.T)
 #            else:
-#                X -= dot(To, self.Po.T)
+#                X -= np.dot(To, self.Po.T)
 
-#            self.Bx = dot(self.Ws, dot(self.Dx, self.Q.T))
-#            Ypred = (dot(X, self.Bx)*self.stds[1]) + self.means[1]
-            Ypred = dot(X, self.Bx)
+#            self.Bx = np.dot(self.Ws, np.dot(self.Dx, self.Q.T))
+#            Ypred = (np.dot(X, self.Bx)*self.stds[1]) + self.means[1]
+            Ypred = np.dot(X, self.Bx)
 
         if Y != None:
             Y = np.asarray(Y)
@@ -642,16 +657,16 @@ class O2PLS(PLSC):
 #                Y -= self.means[1]
 #                Y /= self.stds[1]
             for a in xrange(self.Ay):
-                uo = dot(Y, self.Co[:, [a]])
-                Y = Y - dot(uo, self.Qo[:, [a]].T)
-#            Uo = dot(Y, self.Co)
+                uo = np.dot(Y, self.Co[:, [a]])
+                Y = Y - np.dot(uo, self.Qo[:, [a]].T)
+#            Uo = np.dot(Y, self.Co)
 #            if copy:
-#                Y = Y - dot(Uo, self.Qo.T)
+#                Y = Y - np.dot(Uo, self.Qo.T)
 #            else:
-#                Y -= dot(Uo, self.Qo.T)
+#                Y -= np.dot(Uo, self.Qo.T)
 
-#            Xpred = (dot(Y, self.By)*self.stds[0]) + self.means[0]
-            Xpred = dot(Y, self.By)
+#            Xpred = (np.dot(Y, self.By)*self.stds[0]) + self.means[0]
+            Xpred = np.dot(Y, self.By)
 
         if X != None and Y != None:
             return Ypred, Xpred
@@ -670,44 +685,27 @@ class RGCCA(PLSBaseMethod):
                                     **kwargs)
 
 
-class BaseProximalGradientMethod(BaseMethod):
+class ContinuationRun(BaseMethod):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, algorithm=None, **kwargs):
+    def __init__(self, method, mus, *args, **kwargs):
+        super(ContinuationRun, self).__init__(*args, **kwargs)
 
-        if algorithm == None:
-            algorithm = algorithms.ISTARegression()
+        self.method = method
 
-        print algorithm
+    def fit(self, *X, **kwargs):
+#    def continuation_run(self, algorithm, err_fnc, *args, **kwargs):
 
-        super(BaseProximalGradientMethod, self).__init__(algorithm=algorithm,
-                                                         **kwargs)
-
-
-class NesterovProximalGradientMethod(BaseProximalGradientMethod):
-
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(self, *args, **kwargs):
-        super(NesterovProximalGradientMethod, self).__init__(*args, **kwargs)
-
-    def continuation_run(self, algorithm, err_fnc, *args, **kwargs):
-
-        start_vector = algorithm.start_vector
+        start_vector = self.method.get_algorithm().start_vector
         f = []
-#        fs = []
-#        fl = []
         for mu in err_fnc.get_mus():
             err_fnc.set_mu(mu)
-#            err_fnc.precompute()
             algorithm.set_start_vector(start_vector)
             beta = algorithm.run(*args, **kwargs)
             print "continuation with mu =", err_fnc.get_mu(), \
                     ", iterations =", algorithm.iterations
             f = f + algorithm.f
-#            fs = fs + algorithm.fs
-#            fl = fl + algorithm.fl
 
             start_vector = start_vectors.IdentityStartVector(beta)
 
@@ -721,33 +719,62 @@ class NesterovProximalGradientMethod(BaseProximalGradientMethod):
         return beta
 
 
+class NesterovProximalGradientMethod(BaseMethod):
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, g=None, h=None, algorithm=None, **kwargs):
+        super(NesterovProximalGradientMethod, self).__init__(num_comp=1,
+                                                             **kwargs)
+        self.set_g(g)
+        self.set_h(h)
+
+        if algorithm == None:
+            algorithm = algorithms.ISTARegression()
+        self.set_algorithm(algorithm)
+
+    def get_g(self):
+        return self.g
+
+    def set_g(self, g):
+        self.g = g
+
+    def get_h(self):
+        return self.h
+
+    def set_h(self, h):
+        self.h = h
+
+
 class LinearRegression(NesterovProximalGradientMethod):
 
-    def __init__(self, **kwargs):
+    def __init__(self, X=None, y=None, **kwargs):
         super(LinearRegression, self).__init__(num_comp=1, **kwargs)
+
+        if X != None and y != None:
+            self.get_g(error_functions.SumOfSquaresRegressionError(X, y))
 
     def _get_transform(self, index=0):
         return self.beta
 
-    def fit(self, X, y, g=None, h=None, t=None):
-
+    def fit(self, g=None, h=None, t=None):
         if g == None:
-            g = error_functions.SumSqRegressionError(X, y)
+            if self.g == None:
+                raise ValueError('The function g must be given at ' \
+                                 'construction or when fitting')
+            g = self.g
         if h == None:
-            h = error_functions.ZeroErrorFunction()
+            if self.h == None:
+                raise ValueError('The function h must be given at ' \
+                                 'construction or when fitting')
+            h = self.h
 
-        if isinstance(g, error_functions.NesterovErrorFunction):
-            self.beta = self.continuation_run(self.algorithm, g,
-                                              X, y, g=g, h=h, t=t)
-        else:
-            self.beta = self.algorithm.run(X, y, g=g, h=h, t=t)
+        self.beta = self.algorithm.run(g=g, h=h, t=t)
 
         return self
 
     def predict(self, X, **kwargs):
-
-        X = np.asarray(X)
-        yhat = dot(X, self.beta)
+        yhat = np.dot(X, self.beta)
 
         return yhat
 
@@ -778,22 +805,6 @@ class LogisticRegression(NesterovProximalGradientMethod):
     def predict(self, X, **kwargs):
 
         X = np.asarray(X)
-        yhat = dot(X, self.beta)
+        yhat = np.dot(X, self.beta)
 
         return yhat
-
-#def prox_l1(beta, alpha):
-#    return (np.abs(beta) > alpha) * (beta - alpha * np.sign(beta - alpha))
-
-
-#class Enum(object):
-#    def __init__(self, *sequential, **named):
-#        enums = dict(zip(sequential, range(len(sequential))), **named)
-#        for k, v in enums.items():
-#            setattr(self, k, v)
-#
-#    def __setattr__(self, name, value): # Read-only
-#        raise TypeError("Enum attributes are read-only.")
-#
-#    def __str__(self):
-#        return "Enum: "+str(self.__dict__)

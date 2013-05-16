@@ -14,13 +14,12 @@ Created on Thu Feb 8 09:22:00 2013
 """
 
 import numpy as np
-from numpy import dot
 from numpy.linalg import norm
 from numpy.random import rand
 from numpy import sqrt
 from copy import copy
 
-__all__ = ['dot', 'norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
+__all__ = ['norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
            'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy', 'sstot', 'ssvar',
            'sqrt', 'rand', 'zeros', 'direct', '_DEBUG', 'debug', 'warning',
            'optimal_shrinkage']
@@ -86,7 +85,7 @@ def corr(a, b):
     if norma < TOLERANCE or normb < TOLERANCE:
         return np.zeros((1, 1))
 
-    ip = dot(a_.T, b_)
+    ip = np.dot(a_.T, b_)
 
     return ip[0, 0] / (norma * normb)
 
@@ -98,7 +97,7 @@ def cov(a, b):
     a_ = a - ma
     b_ = b - mb
 
-    ip = dot(a_.T, b_)
+    ip = np.dot(a_.T, b_)
 
     return ip[0, 0] / (a_.shape[0] - 1.0)
 
@@ -137,12 +136,12 @@ def direct(W, T=None, P=None, compare=False):
         w = W[:, [j]]
         if compare:
             t = T[:, [j]]
-            cov = dot(w.T, t)
+            cov = np.dot(w.T, t)
             if P != None:
                 p = P[:, [j]]
-                cov2 = dot(w.T, p)
+                cov2 = np.dot(w.T, p)
         else:
-            cov = dot(w.T, np.ones(w.shape))
+            cov = np.dot(w.T, np.ones(w.shape))
         if cov < 0:
             if not compare:
                 w *= -1
@@ -237,3 +236,16 @@ def optimal_shrinkage(*X, **kwargs):
         tau.append(l)
 
     return tau
+
+
+#class Enum(object):
+#    def __init__(self, *sequential, **named):
+#        enums = dict(zip(sequential, range(len(sequential))), **named)
+#        for k, v in enums.items():
+#            setattr(self, k, v)
+#
+#    def __setattr__(self, name, value): # Read-only
+#        raise TypeError("Enum attributes are read-only.")
+#
+#    def __str__(self):
+#        return "Enum: "+str(self.__dict__)

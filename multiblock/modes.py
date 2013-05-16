@@ -11,8 +11,8 @@ __all__ = ['Mode', 'A', 'NewA', 'B']
 
 import abc
 import normalisation
-from multiblock.utils import dot
 from numpy.linalg import pinv
+import numpy as np
 
 
 class Mode(object):
@@ -40,7 +40,7 @@ class A(Mode):
 
     def estimation(self, X, u):
         # TODO: Ok with division here?
-        return dot(X.T, u) / dot(u.T, u)
+        return np.dot(X.T, u) / np.dot(u.T, u)
 
 
 class NewA(A):
@@ -61,4 +61,4 @@ class B(Mode):
         self.norm = normalisation.UnitVarianceScores()
 
     def estimation(self, X, u):
-        return dot(pinv(X), u)
+        return np.dot(pinv(X), u)

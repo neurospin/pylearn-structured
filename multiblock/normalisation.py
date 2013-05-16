@@ -11,7 +11,7 @@ __all__ = ['Normalisation', 'NoNormalisation', 'UnitNormWeights',
            'UnitVarianceScores']
 
 import abc
-from multiblock.utils import norm, dot, sqrt
+from multiblock.utils import norm, sqrt
 
 
 class Normalisation(object):
@@ -47,6 +47,6 @@ class UnitVarianceScores(object):
         super(UnitVarianceScores, self).__init__()
 
     def apply(self, w, X):
-        w = w / norm(dot(X, w))
+        w = w / norm(np.dot(X, w))
         w = w * sqrt(X.shape[0])  # N, number of elements in t = Xw
         return w

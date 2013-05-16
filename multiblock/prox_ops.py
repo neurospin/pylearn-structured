@@ -13,7 +13,7 @@ Created on Thu Feb 7 11:50:00 2013
 #import abc
 import warnings
 import numpy as np
-from multiblock.utils import TOLERANCE, MAX_ITER, norm, norm1, norm0, make_list
+from multiblock.utils import TOLERANCE, MAX_ITER, norm, norm1, norm0
 
 
 class ProxOp(object):
@@ -60,7 +60,7 @@ class L1(ProxOp):
             x = xorig  # / normalise(xorig)
 
             sign = np.sign(x)
-            np.absolute(x, x)
+            x = np.absolute(x)
             x -= l
             x[x < 0] = 0
             x = np.multiply(sign, x)

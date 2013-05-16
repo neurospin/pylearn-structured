@@ -2,56 +2,87 @@
 """
 Created on Mon Apr 22 10:54:29 2013
 
-@author: tl236864
+@author:  Tommy Löfstedt
+@email:   tommy.loefstedt@cea.fr
+@license: BSD Style.
+
 """
 
-__all__ = ['ErrorFunction', 'ConvexErrorFunction',
-           'ProximalOperatorErrorFunction', 'DifferentiableErrorFunction',
-           'NesterovErrorFunction', 'CombinedErrorFunction',
-           'CombinedNesterovErrorFunction',
+__all__ = ['LossFunction', 'LipschitzContinuous', 'Differentiable',
 
-           'ZeroErrorFunction', 'SumSqRegressionError',
-           'LogisticRegressionError',
+           'ConvexLossFunction',
+           'LinearRegressionError', 'LogisticRegressionError',
+
+           'ProximalOperator',
+           'ZeroErrorFunction',
            'L1',
-           'TotalVariation', 'GroupLassoOverlap']
+
+           'NesterovFunction',
+           'TotalVariation', 'GroupLassoOverlap',
+
+           'CombinedLossFunction',
+           'CombinedNesterovLossFunction']
 
 import abc
 import numpy as np
 import scipy.sparse as sparse
-import math
-from time import time
-import warnings
 
 import algorithms
-from utils import warning, norm, norm1, TOLERANCE
+from utils import norm, norm1, TOLERANCE
 
 
-class ErrorFunction(object):
+class LossFunction(object):
 
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, **kwargs):
-        super(ErrorFunction, self).__init__(**kwargs)
+        super(LossFunction, self).__init__(**kwargs)
 
     @abc.abstractmethod
     def f(self, *args, **kwargs):
         raise NotImplementedError('Abstract method "f" must be specialised!')
 
 
-class ConvexErrorFunction(ErrorFunction):
+class LipschitzContinuous(object):
 
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, **kwargs):
-        super(ConvexErrorFunction, self).__init__(**kwargs)
+        super(LipschitzContinuous, self).__init__(**kwargs)
+
+    @abc.abstractmethod
+    def Lipschitz(self, **kwargs):
+        raise NotImplementedError('Abstract method "Lipschitz" must be ' \
+                                  'specialised!')
 
 
-class ProximalOperatorErrorFunction(ErrorFunction):
+class Differentiable(object):
 
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, **kwargs):
-        super(ProximalOperatorErrorFunction, self).__init__(**kwargs)
+        super(Differentiable, self).__init__(**kwargs)
+
+    @abc.abstractmethod
+    def grad(self, *args, **kwargs):
+        raise NotImplementedError('Abstract method "grad" must be ' \
+                                  'specialised!')
+
+
+class ConvexLossFunction(LossFunction):
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, **kwargs):
+        super(ConvexLossFunction, self).__init__(**kwargs)
+
+
+class ProximalOperator(ConvexLossFunction):
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, **kwargs):
+        super(ProximalOperator, self).__init__(**kwargs)
 
     @abc.abstractmethod
     def prox(self, x):
@@ -59,32 +90,14 @@ class ProximalOperatorErrorFunction(ErrorFunction):
                                   'specialised!')
 
 
-class DifferentiableErrorFunction(ErrorFunction):
-
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(self, **kwargs):
-        super(DifferentiableErrorFunction, self).__init__(**kwargs)
-
-    @abc.abstractmethod
-    def grad(self, *args, **kwargs):
-        raise NotImplementedError('Abstract method "grad" must be ' \
-                                  'specialised!')
-
-    @abc.abstractmethod
-    def Lipschitz(self):
-        raise NotImplementedError('Abstract method "grad" must be ' \
-                                  'specialised!')
-
-
-class NesterovErrorFunction(DifferentiableErrorFunction, ConvexErrorFunction):
-    """An error function approximated using the Nesterov technique.
+class NesterovFunction(Differentiable, LipschitzContinuous):
+    """A loss function approximated using the Nesterov technique.
     """
 
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, mus=None, **kwargs):
-        super(NesterovErrorFunction, self).__init__(**kwargs)
+        super(NesterovFunction, self).__init__(**kwargs)
 
         if mus != None:
             self.mus = mus
@@ -111,15 +124,14 @@ class NesterovErrorFunction(DifferentiableErrorFunction, ConvexErrorFunction):
         self.mu = mu
 
 
-class CombinedErrorFunction(DifferentiableErrorFunction, ConvexErrorFunction):
+class CombinedLossFunction(LossFunction):
 
     def __init__(self, a=None, b=None, **kwargs):
+        super(CombinedLossFunction, self).__init__(**kwargs)
 
         if a == None or b == None:
-            raise ValueError('Two error functions must be given as ' \
+            raise ValueError('Two loss functions must be given as ' \
                              'arguments to the constructor')
-
-        super(CombinedErrorFunction, self).__init__(**kwargs)
 
         self.a = a
         self.b = b
@@ -127,128 +139,95 @@ class CombinedErrorFunction(DifferentiableErrorFunction, ConvexErrorFunction):
     def f(self, *args, **kwargs):
         return self.a.f(*args, **kwargs) + self.b.f(*args, **kwargs)
 
+
+class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
+    """A loss function contructed as the sum of two loss functions, where
+    at least one of them is a Nesterov function, i.e. a loss function computed
+    using the Nestrov technique.
+
+    This function is of the form
+
+        g = g1 + g2,
+
+    where at least one of g1 or g2 are Nesterov functions.
+    """
+
+    def __init__(self, a, b, mu):
+        super(CombinedNesterovLossFunction, self).__init__(a=a, b=b)
+
+        self.set_mu(mu)
+
     def grad(self, *args, **kwargs):
         return self.a.grad(*args, **kwargs) + self.b.grad(*args, **kwargs)
 
     def Lipschitz(self):
         return self.a.Lipschitz() + self.b.Lipschitz()
 
-
-class CombinedNesterovErrorFunction(CombinedErrorFunction,
-                                    NesterovErrorFunction):
-    """An error function contructed as the sum of two error functions, where
-    at least one of them is a Nesterov error function, i.e. an error function
-    computed using the Nestrov technique.
-
-    This function is of the form
-
-        g = g1 + g2,
-
-    where either g1 or g2 is a Nesterov function.
-    """
-
-    def __init__(self, a, b, mus):
-        super(CombinedNesterovErrorFunction, self).__init__(a=a, b=b)
-
-        self.set_mus(mus)
-        self.set_mu(mus[-1])
-
-#    def f(self, *args, **kwargs):
-#        return self.a.f(*args, **kwargs) + self.b.f(*args, **kwargs)
-#
-#    def grad(self, *args, **kwargs):
-#        return self.a.grad(*args, **kwargs) + self.b.grad(*args, **kwargs)
-
     def precompute(self, *args, **kwargs):
-#        if isinstance(self.a, NesterovErrorFunction):
         if hasattr(self.a, 'precompute'):
             self.a.precompute(*args, **kwargs)
-#        if isinstance(self.b, NesterovErrorFunction):
         if hasattr(self.b, 'precompute'):
             self.b.precompute(*args, **kwargs)
 
-    def get_mus(self):
-#        if isinstance(self.a, NesterovErrorFunction):
-        if hasattr(self.a, 'get_mus'):
-            return self.a.get_mus()
-        else:
-            return self.b.get_mus()
-
-    def set_mus(self, mus):
-        if not isinstance(mus, (tuple, list)):
-            mus = [mus]
-
-#        if isinstance(self.a, NesterovErrorFunction):
-        if hasattr(self.a, 'set_mus'):
-            self.a.set_mus(mus)
-#        if isinstance(self.b, NesterovErrorFunction):
-        if hasattr(self.b, 'set_mus'):
-            self.b.set_mus(mus)
+#    def get_mus(self):
+#        if hasattr(self.b, 'get_mus'):
+#            return self.b.get_mus()
+#        else:
+#            return self.a.get_mus()
+#
+#    def set_mus(self, mus):
+#        if not isinstance(mus, (tuple, list)):
+#            mus = [mus]
+#
+#        if hasattr(self.a, 'set_mus'):
+#            self.a.set_mus(mus)
+#        if hasattr(self.b, 'set_mus'):
+#            self.b.set_mus(mus)
 
     def get_mu(self):
-#        if isinstance(self.a, NesterovErrorFunction):
-        if hasattr(self.a, 'get_mu'):
-            return self.a.get_mu()
-        else:
+        if hasattr(self.a, 'get_mu') and hasattr(self.b, 'get_mu'):
+            return min(self.a.get_mu(), self.b.get_mu())
+        elif hasattr(self.b, 'get_mu'):
             return self.b.get_mu()
+        else:
+            return self.a.get_mu()
 
     def set_mu(self, mu):
-#        if isinstance(self.a, NesterovErrorFunction):
         if hasattr(self.a, 'set_mu'):
             self.a.set_mu(mu)
-#        if isinstance(self.b, NesterovErrorFunction):
         if hasattr(self.b, 'set_mu'):
             self.b.set_mu(mu)
 
 
-class ZeroErrorFunction(ConvexErrorFunction, DifferentiableErrorFunction,
-                        ProximalOperatorErrorFunction):
-
-    def __init__(self, **kwargs):
-        super(ZeroErrorFunction, self).__init__(**kwargs)
-
-    def f(self, *args, **kwargs):
-        return 0
-
-    def grad(self, *args, **kwargs):
-        return 0
-
-    def prox(self, beta, *args, **kwargs):
-        return beta
-
-    def Lipschitz(self):
-        return 0
-
-
-class SumSqRegressionError(DifferentiableErrorFunction,
-                           ConvexErrorFunction):
+class LinearRegressionError(ConvexLossFunction,
+                            Differentiable,
+                            LipschitzContinuous):
 
     def __init__(self, X, y, **kwargs):
-        super(SumSqRegressionError, self).__init__(**kwargs)
+        super(LinearRegressionError, self).__init__(**kwargs)
 
         self.X = X
         self.y = y
+        self.Xy = np.dot(X.T, y)
 
-#        self._Xy = np.dot(self.X.T, self.y)
-
-#        D, V = np.linalg.eig(np.dot(self.X.T, self.X))
-#        self.t = np.max(D.real)
         _, s, _ = np.linalg.svd(X, full_matrices=False)  # False == faster
         self.t = np.max(s) ** 2.0
 
     def f(self, beta, **kwargs):
-        return norm(self.y - np.dot(self.X, beta)) ** 2
+#        return norm(self.y - np.dot(self.X, beta)) ** 2
+        return np.sum((self.y - np.dot(self.X, beta)) ** 2.0)
 
     def grad(self, beta, **kwargs):
-        return 2 * np.dot(self.X.T, np.dot(self.X, beta) - self.y)
-#        return 2 * (np.dot(self.X.T, np.dot(self.X, beta)) - self._Xy)
+#        return 2.0 * np.dot(self.X.T, np.dot(self.X, beta) - self.y)
+        return 2.0 * (np.dot(self.X.T, np.dot(self.X, beta)) - self.Xy)
 
     def Lipschitz(self):
         return self.t
 
 
-class LogisticRegressionError(DifferentiableErrorFunction,
-                              ConvexErrorFunction):
+class LogisticRegressionError(ConvexLossFunction,
+                              Differentiable,
+                              LipschitzContinuous):
 
     def __init__(self, X, y, **kwargs):
         super(LogisticRegressionError, self).__init__(**kwargs)
@@ -287,7 +266,25 @@ class LogisticRegressionError(DifferentiableErrorFunction,
         return self.t
 
 
-class L1(ProximalOperatorErrorFunction, ConvexErrorFunction):
+class ZeroErrorFunction(ProximalOperator, Differentiable, LipschitzContinuous):
+
+    def __init__(self, **kwargs):
+        super(ZeroErrorFunction, self).__init__(**kwargs)
+
+    def f(self, *args, **kwargs):
+        return 0
+
+    def grad(self, *args, **kwargs):
+        return 0
+
+    def prox(self, beta, *args, **kwargs):
+        return beta
+
+    def Lipschitz(self):
+        return 0
+
+
+class L1(ProximalOperator):
 
     def __init__(self, l, **kwargs):
         super(L1, self).__init__(**kwargs)
@@ -332,7 +329,9 @@ class L1(ProximalOperatorErrorFunction, ConvexErrorFunction):
         return x
 
 
-class TotalVariation(NesterovErrorFunction):
+class TotalVariation(ConvexLossFunction,
+                     NesterovFunction,
+                     LipschitzContinuous):
 
     def __init__(self, shape, gamma, mu, **kwargs):
 
@@ -358,7 +357,7 @@ class TotalVariation(NesterovErrorFunction):
             return 0
 
         if (mu == None):
-            mu = self.get_mus()[-1]
+            mu = self.get_mu()
 
         if self.beta_id != id(beta) or self.mu_id != id(mu):
             self.compute_alpha(beta, mu)
@@ -461,7 +460,9 @@ class TotalVariation(NesterovErrorFunction):
         self.buff = np.zeros((self.Ax.shape[0], 1))
 
 
-class GroupLassoOverlap(NesterovErrorFunction):
+class GroupLassoOverlap(ConvexLossFunction,
+                        NesterovFunction,
+                        LipschitzContinuous):
 
     def __init__(self, num_variables, groups, gamma, mu, weights=None,
                  **kwargs):
@@ -495,7 +496,7 @@ class GroupLassoOverlap(NesterovErrorFunction):
     def f(self, beta, mu=None):
 
         if (mu == None):
-            mu = self.get_mus()[-1]
+            mu = self.get_mu()
 
         if self.beta_id != id(beta) or self.mu_id != id(mu):
             self.compute_alpha(beta, mu)
@@ -509,8 +510,6 @@ class GroupLassoOverlap(NesterovErrorFunction):
         return np.dot(self.Aalpha.T, beta)[0, 0] - (mu / 2.0) * sumastar
 
     def grad(self, beta):
-
-#        print "grad:", self.get_mus()
 
         if self.beta_id != id(beta) or self.mu_id != id(self.get_mu()):
             self.compute_alpha(beta, self.get_mu())

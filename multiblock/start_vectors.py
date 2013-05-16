@@ -8,23 +8,34 @@ Created on Thu Mar 28 15:35:26 2013
 """
 
 __all__ = ['BaseStartVector', 'RandomStartVector', 'OnesStartVector',
-           'LargestStartVector', 'GaussianCurveVector']
+           'ZerosStartVector', 'LargestStartVector', 'GaussianCurveVector']
 
 import abc
 import numpy as np
 import numpy.linalg as la
-import math
-from multiblock.utils import norm, TOLERANCE
+from multiblock.utils import norm
 
 
 class BaseStartVector(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, normalise=True):
+    def __init__(self, X=None, shape=None, normalise=True):
         super(BaseStartVector, self).__init__()
 
+        self.X = X
+        self.shape = shape
         self.normalise = normalise
+
+    def _check_X_shape(self, X, shape):
+        if self.X == None and X == None \
+                and self.shape == None and shape == None:
+            raise ValueError('A matrix X or a shape must be must be given ' \
+                             'either at construction or to this method.')
+        X = X if X != None else self.X
+        shape = shape if shape != None else self.shape
+
+        return X, shape
 
     @abc.abstractmethod
     def get_vector(self, X=None, shape=None):
@@ -33,8 +44,8 @@ class BaseStartVector(object):
 
 
 class IdentityStartVector(BaseStartVector):
-    def __init__(self, vector):
-        super(IdentityStartVector, self).__init__()
+    def __init__(self, vector, **kwargs):
+        super(IdentityStartVector, self).__init__(**kwargs)
 
         self.vector = vector
 
@@ -43,14 +54,14 @@ class IdentityStartVector(BaseStartVector):
 
 
 class RandomStartVector(BaseStartVector):
-    def __init__(self, normalise=True):
-        super(RandomStartVector, self).__init__(normalise=normalise)
+    def __init__(self, normalise=True, **kwargs):
+        super(RandomStartVector, self).__init__(normalise=normalise, **kwargs)
 
-    def get_vector(self, X=None, shape=None):
-        if X == None and shape == None:
-            raise ValueError('Either a matrix X or the shape must be given')
+    def get_vector(self, X=None, shape=None, axis=1):
+        X, shape = self._check_X_shape(X, shape)
+
         if X != None:
-            shape = (X.shape[1], 1)
+            shape = (X.shape[axis], 1)
 
         w = np.random.rand(*shape)  # Random start vector
 
@@ -61,14 +72,14 @@ class RandomStartVector(BaseStartVector):
 
 
 class OnesStartVector(BaseStartVector):
-    def __init__(self, normalise=True):
-        super(OnesStartVector, self).__init__(normalise=normalise)
+    def __init__(self, normalise=True, **kwargs):
+        super(OnesStartVector, self).__init__(normalise=normalise, **kwargs)
 
-    def get_vector(self, X=None, shape=None):
-        if X == None and shape == None:
-            raise ValueError('Either a matrix X or the shape must be given')
+    def get_vector(self, X=None, shape=None, axis=1):
+        X, shape = self._check_X_shape(X, shape)
+
         if X != None:
-            shape = (X.shape[1], 1)
+            shape = (X.shape[axis], 1)
 
         w = np.ones(shape)  # Using a vector of ones
 
@@ -78,34 +89,36 @@ class OnesStartVector(BaseStartVector):
             return w
 
 
-#class ZerosStartVector(BaseStartVector):
-#    def __init__(self):
-#        super(ZerosStartVector, self).__init__()
-#
-#    def get_vector(self, X=None, shape=None):
-#        if X == None and shape == None:
-#            raise ValueError('Either a matrix X or the shape must be given')
-#        if X != None:
-#            shape = (X.shape[1], 1)
-#
-#        w = np.zeros(shape)  # Using a vector of zeros
-#
-##        if self.normalise:
-##            return w / norm(w)
-##        else:
-#        return w
+class ZerosStartVector(BaseStartVector):
+    """A start vector of zeros.
+
+    Use with care! Be aware that using this in algorithms that are not aware
+    may result in division by zero since the norm of this start vector is 0.
+    """
+    def __init__(self, **kwargs):
+        super(ZerosStartVector, self).__init__(normalise=False, **kwargs)
+
+    def get_vector(self, X=None, shape=None, axis=1):
+        X, shape = self._check_X_shape(X, shape)
+
+        if X != None:
+            shape = (X.shape[axis], 1)
+
+        w = np.zeros(shape)  # Using a vector of zeros
+
+        return w
 
 
 class LargestStartVector(BaseStartVector):
 
-    def __init__(self, axis=1, normalise=True):
-#        BaseStartVector.__init__(self, size=None, normalise=normalise)
-        super(LargestStartVector, self).__init__(normalise=normalise)
-        self.axis = axis
+    def __init__(self, normalise=True, **kwargs):
+        super(LargestStartVector, self).__init__(normalise=normalise, **kwargs)
 
-    def get_vector(self, X):
-        idx = np.argmax(np.sum(X ** 2.0, axis=self.axis))
-        if self.axis == 0:
+    def get_vector(self, X, axis=1):
+        X, _ = self._check_X_shape(X, None)
+
+        idx = np.argmax(np.sum(X ** 2.0, axis=axis))
+        if axis == 0:
             w = X[:, [idx]]  # Using column with largest sum of squares
         else:
             w = X[[idx], :].T  # Using row with largest sum of squares
@@ -118,11 +131,14 @@ class LargestStartVector(BaseStartVector):
 
 class GaussianCurveVector(BaseStartVector):
 
-    def __init__(self, normalise=True):
+    def __init__(self, normalise=True, **kwargs):
+        super(GaussianCurveVector, self).__init__(normalise=normalise,
+                                                  **kwargs)
 
-        super(GaussianCurveVector, self).__init__(normalise=normalise)
-
-    def get_vector(self, shape, mean=None, cov=None):
+    def get_vector(self, X=None, shape=None, mean=None, cov=None, axis=1):
+        X, shape = self._check_X_shape(X, shape)
+        if X != None:
+            shape = (X.shape[axis], 1)
         if not isinstance(shape, tuple):
             shape = tuple(shape)
 

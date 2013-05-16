@@ -30,16 +30,16 @@ import schemes
 import modes
 import error_functions
 
-from multiblock.utils import MAX_ITER, TOLERANCE, make_list, dot, zeros, sqrt
+from multiblock.utils import MAX_ITER, TOLERANCE, make_list, zeros, sqrt
 from multiblock.utils import norm, norm1, warning
 
 import numpy as np
 from numpy import ones, eye
 from numpy.linalg import pinv
-import scipy.sparse as sparse
+#import scipy.sparse as sparse
 
-import gc
-from time import time
+#import gc
+#from time import time
 
 __all__ = ['BaseAlgorithm', 'SparseSVD', 'NIPALSBaseAlgorithm',
            'NIPALSAlgorithm', 'RGCCAAlgorithm', 'ISTARegression',
@@ -78,22 +78,25 @@ class BaseAlgorithm(object):
         self.max_iter = max_iter
         self.tolerance = tolerance
 
-    def set_max_iter(self, max_iter):
+    def _set_max_iter(self, max_iter):
         self.max_iter = max_iter
 
-    def set_tolerance(self, tolerance):
+    def _set_tolerance(self, tolerance):
         self.tolerance = tolerance
 
-    def get_prox_op(self):
+    def _get_prox_op(self):
         return self.prox_op
 
-    def set_prox_op(self, prox_op):
+    def _set_prox_op(self, prox_op):
         if not isinstance(prox_op, prox_ops.ProxOp):
             raise ValueError('The proximal operator must be an instance of ' \
                              '"ProxOp"')
         self.prox_op = prox_op
 
-    def set_start_vector(self, start_vector):
+    def _get_start_vector(self):
+        return self.start_vector
+
+    def _set_start_vector(self, start_vector):
         if not isinstance(start_vector, start_vectors.BaseStartVector):
             raise ValueError('The start vector must be an instance of ' \
                              '"BaseStartVector"')
@@ -132,7 +135,10 @@ class NIPALSBaseAlgorithm(BaseAlgorithm):
         self.scheme = scheme
         self.not_normed = not_normed
 
-    def set_adjacency_matrix(self, adj_matrix):
+    def _get_adjacency_matrix(self):
+        return self.adj_matrix
+
+    def _set_adjacency_matrix(self, adj_matrix):
         try:
             adj_matrix = np.asarray(adj_matrix)
         except Exception:
@@ -142,7 +148,7 @@ class NIPALSBaseAlgorithm(BaseAlgorithm):
 
         self.adj_matrix = adj_matrix
 
-    def set_scheme(self, scheme):
+    def _set_scheme(self, scheme):
         if isinstance(scheme, (tuple, list)):
             for s in scheme:
                 if not isinstance(s, schemes.WeightingScheme):
@@ -292,12 +298,12 @@ class NIPALSAlgorithm(NIPALSBaseAlgorithm):
             self.converged = True
             for i in xrange(n):
                 Xi = X[i]
-                ti = dot(Xi, w[i])
+                ti = np.dot(Xi, w[i])
                 ui = zeros(ti.shape)
                 for j in xrange(n):
                     Xj = X[j]
                     wj = w[j]
-                    tj = dot(Xj, wj)
+                    tj = np.dot(Xj, wj)
 
                     # Determine scheme weights
                     eij = self.scheme[i].compute(ti, tj)
@@ -320,7 +326,7 @@ class NIPALSAlgorithm(NIPALSBaseAlgorithm):
                 # Check convergence for each weight vector. They all have to
                 # leave converged = True in order for the algorithm to stop.
                 diff = wi - w[i]
-                if dot(diff.T, diff) > self.tolerance:
+                if np.dot(diff.T, diff) > self.tolerance:
                     self.converged = False
 
                 # Save updated weight vector
@@ -392,14 +398,14 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
         a = []
         for i in range(n):
             Xi = X[i]
-            XX = dot(Xi.T, Xi)
+            XX = np.dot(Xi.T, Xi)
             I = eye(XX.shape[0])
 
             a_ = self.start_vector.get_vector(Xi)
             invIXX.append(pinv(self.tau[i] * I + \
                     ((1.0 - self.tau[i]) / (Xi.shape[0] - ddof)) * XX))
-            invIXXa = dot(invIXX[i], a_)
-            ainvIXXa = dot(a_.T, invIXXa)
+            invIXXa = np.dot(invIXX[i], a_)
+            ainvIXXa = np.dot(a_.T, invIXXa)
             a_ = invIXXa / sqrt(ainvIXXa)
 
             a.append(a_)
@@ -411,10 +417,10 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
             self.converged = True
             for i in xrange(n):
                 Xi = X[i]
-                Xai = dot(Xi, a[i])
+                Xai = np.dot(Xi, a[i])
                 zi = zeros(Xai.shape)
                 for j in xrange(n):
-                    Xaj = dot(X[j], a[j])
+                    Xaj = np.dot(X[j], a[j])
 
                     # Determine scheme weights
                     eij = self.scheme[i].compute(Xai, Xaj)
@@ -425,20 +431,20 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
                         zi += eij * Xaj
 
                 # Outer estimation for block i
-                Xz = dot(Xi.T, zi)
-                ai = dot(invIXX[i], Xz)
+                Xz = np.dot(Xi.T, zi)
+                ai = np.dot(invIXX[i], Xz)
 
                 # Apply the proximal operator
                 ai = self.prox_op.prox(ai, i)
 
                 # Apply normalisation
                 if not i in self.not_normed:
-                    ai = ai / sqrt(dot(Xz.T, ai))
+                    ai = ai / sqrt(np.dot(Xz.T, ai))
 
                 # Check convergence for each weight vector. They all have to
                 # leave converged = True in order for the algorithm to stop.
                 diff = ai - a[i]
-                if dot(diff.T, diff) > self.tolerance:
+                if np.dot(diff.T, diff) > self.tolerance:
                     self.converged = False
 
                 # Save updated weight vector
@@ -467,8 +473,6 @@ class ProximalGradientMethod(BaseAlgorithm):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, **kwargs):
-        """
-        """
         super(ProximalGradientMethod, self).__init__(**kwargs)
 
     @abc.abstractmethod
@@ -481,48 +485,38 @@ class ISTARegression(ProximalGradientMethod):
     """
 
     def __init__(self, **kwargs):
-
         super(ISTARegression, self).__init__(**kwargs)
 
-    def run(self, X, y, g=None, h=None, t=None, tscale=0.95, **kwargs):
+    def run(self, g=None, h=None, t=None, tscale=0.95, **kwargs):
 
         if t == None:
             t = tscale / g.Lipschitz()
-            print "t:", t
 
-        beta = self.start_vector.get_vector(X)
-        if isinstance(g, error_functions.NesterovErrorFunction):
-            mu = g.get_mus()[-1]
-        else:
-            mu = 1
-
-        f_old = g.f(beta, mu=mu) + h.f(beta)
-#        f_old = g.f(beta) + h.f(beta)
+        beta_old = self.start_vector.get_vector()
+        f_old = g.f(beta_old) + h.f(beta_old)
         self.f = [f_old]
 
         self.iterations = 0
         while True:
             self.converged = True
 
-            beta_ = h.prox(beta - t * g.grad(beta), t)
+            beta_new = h.prox(beta_old - t * g.grad(beta_old), t)
 #            beta_ = h.prox(beta - np.dot(np.linalg.pinv(g.hessian(beta)), g.grad(beta)))
 
-            if norm1(beta - beta_) > self.tolerance * t:
+            if norm1(beta_old - beta_new) > self.tolerance * t:
                 self.converged = False
 
-#            f_new = g.f(beta) + h.f(beta)
-            f_new = g.f(beta_, mu=mu) + h.f(beta_)
+            f_new = g.f(beta_new) + h.f(beta_new)
             if f_new > f_old:  # Early stopping
                 self.converged = True
-                warning('Early stopping criterion triggered. Moving on' \
-                        'to smaller mu.')
+                warning('Early stopping criterion triggered.')
             else:
                 # Save updated values
                 f_old = f_new
                 self.f.append(f_new)
                 self.iterations += 1
 
-            beta = beta_
+            beta_old = beta_new
 
             if self.converged:
                 break
@@ -532,7 +526,7 @@ class ISTARegression(ProximalGradientMethod):
                         'convergence')
                 break
 
-        return beta
+        return beta_new
 
 
 class FISTARegression(ISTARegression):
@@ -602,25 +596,11 @@ class MonotoneFISTARegression(ISTARegression):
     def run(self, X, y, g=None, h=None, t=None, tscale=0.95, ista_steps=2,
             **kwargs):
 
-        if g == None:
-            g = error_functions.MeanSquareRegressionError(X, y)
-        if h == None:
-            h = error_functions.ZeroErrorFunction()
-
-        if not isinstance(g, error_functions.DifferentiableErrorFunction):
-            raise ValueError('The functions in g must be ' \
-                             'DifferentiableErrorFunctions')
-        if not isinstance(g, error_functions.ConvexErrorFunction):
-            raise ValueError('The functions in g must be ' \
-                             'ConvexErrorFunction')
-        if not isinstance(h, error_functions.ConvexErrorFunction):
-            raise ValueError('The functions in h must be ConvexErrorFunction')
-
         if t == None:
             t = tscale / g.Lipschitz()
             print "t:", t
 
-#        beta = numpy.dot(numpy.linalg.pinv(X), y)
+#        beta = np.dot(numpy.linalg.pinv(X), y)
         beta = self.start_vector.get_vector(X)
         beta_ = beta
 #        mus = g.get_mus()
@@ -736,15 +716,14 @@ class ExcessiveGapRegression(ExcessiveGapMethod):
     def run(self, X, y, g=None, h=None, **kwargs):
         super(ExcessiveGapRegression, self).__init__(**kwargs)
 
-        if g == None:
-            g = error_functions.MeanSquareRegressionError(X, y)
-        if h == None:
-            h = error_functions.ZeroErrorFunction()
-
         self.X = X
         self.y = y
 
+        zero = start_vectors.ZerosStartVector().get_vector(self.X)
+
         beta_hat_0 = self.beta_hat_0_1
+
+        beta = beta_hat_0(zero)
 
         self.iterations = 0
         while True:

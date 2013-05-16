@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from .utils import dot
 from .utils import norm
 from .utils import norm1
 from .utils import norm0
@@ -25,7 +24,7 @@ from .utils import optimal_shrinkage
 
 import testing
 
-__all__ = ['dot', 'norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
+__all__ = ['norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
            'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy',
            'sstot', 'ssvar', 'sqrt', 'rand', 'zeros',
            'testing', 'direct', 'debug', 'warning', '_DEBUG',

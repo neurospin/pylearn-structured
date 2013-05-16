@@ -136,20 +136,18 @@ def test_SVD_PCA():
     Xtr = preproc.process(Xtr)
 
     for st in [0.1, 0.01, 0.001, 0.0001, 0]:
-        alg = algorithms.NIPALSAlgorithm(prox_op=prox_ops.L1(st),
-                                         adj_matrix=np.ones((1, 1)),
-                                         tolerance=tol, max_iter=1000)
-        svd = SVD(num_comp=num_comp, algorithm=alg)
+        svd = SVD(num_comp=num_comp)
+        svd.set_prox_op(prox_ops.L1(st))
+        svd.set_tolerance(tol)
+        svd.set_max_iter(1000)
         svd.fit(Xtr)
 
-        # numpy.lialg.svd
         U, S, V = np.linalg.svd(Xtr)
         V = V.T
         S = np.diag(S)
         U = U[:, 0:num_comp]
         S = S[:, 0:num_comp]
         V = V[:, 0:num_comp]
-        #SVDte = dot(Xte, V)
 
         if st < tol:
             num_decimals = 5
@@ -170,11 +168,12 @@ def test_SVD_PCA():
     Xtr = preproc.process(Xtr)
 
     for st in [0.1, 0.01, 0.001, 0.0001, 0]:
-        alg = algorithms.NIPALSAlgorithm(prox_op=prox_ops.L1(st),
-                                         adj_matrix=np.ones((1, 1)),
-                                         tolerance=tol, max_iter=1000)
-        pca = PCA(num_comp=num_comp, algorithm=alg)
+        pca = PCA(num_comp=num_comp)
+        svd.set_prox_op(prox_ops.L1(st))
+        svd.set_tolerance(tol)
+        svd.set_max_iter(1000)
         pca.fit(Xtr)
+
         Tte = pca.transform(Xtr)
         U, S, V = np.linalg.svd(Xtr)
         V = V.T
@@ -200,10 +199,11 @@ def test_SVD_PCA():
     Xtr = preproc.process(Xtr)
     Xte = preproc.process(Xte)
 
-    alg = algorithms.NIPALSAlgorithm(adj_matrix=np.ones((1, 1)),
-                                     tolerance=tol, max_iter=1000)
-    pca = PCA(num_comp=num_comp, algorithm=alg)
+    pca = PCA(num_comp=num_comp)
+    pca.set_tolerance(tol)
+    pca.set_max_iter(1000)
     pca.fit(Xtr)
+
     pca.P, pca.T = direct(pca.P, pca.T)
     Tte = pca.transform(Xte)
 
@@ -232,10 +232,11 @@ def test_SVD_PCA():
                                           preprocess.Scale()], X)
     X = preproc.process(X)
 
-    alg = algorithms.NIPALSAlgorithm(adj_matrix=np.ones((1, 1)),
-                                     tolerance=tol, max_iter=1000)
-    pca = PCA(num_comp=num_comp, algorithm=alg)
+    pca = PCA(num_comp=num_comp)
+    pca.set_tolerance(tol)
+    pca.set_max_iter(1000)
     pca.fit(X)
+
     Xhat_1 = dot(pca.T, pca.P.T)
 
     U, S, V = np.linalg.svd(X, full_matrices=False)
@@ -256,9 +257,10 @@ def test_SVD_PCA():
                                           preprocess.Scale()], X)
     X = preproc.process(X)
 
-    alg = algorithms.NIPALSAlgorithm(adj_matrix=np.ones((1, 1)),
-                                     tolerance=tol, max_iter=1500)
-    pca = PCA(num_comp=num_comp, algorithm=alg)
+    pca = PCA(num_comp=num_comp)
+    pca.set_prox_op(prox_ops.L1(st))
+    pca.set_tolerance(tol)
+    pca.set_max_iter(1500)
     pca.fit(X)
     Xhat_1 = dot(pca.T, pca.P.T)
 
@@ -303,22 +305,21 @@ def test_predictions():
     Yhat1 = pls1.predict(X)
 
     SSYdiff1 = np.sum((Y - Yhat1) ** 2)
-    print "PLSRegression: R2Yhat = %.4f" % (1 - (SSYdiff1 / SSY))
+    utils.debug("PLSRegression: R2Yhat = %.4f" % (1 - (SSYdiff1 / SSY)))
 
     # Compare sklearn.PLSRegression and PLSR
     X = preprocX.process(Xorig)
     Y = preprocY.process(Yorig)
     pls3 = PLSR(num_comp=num_comp)
-    alg = pls3.get_algorithm()
-    alg.set_max_iter(miter)
-    alg.set_tolerance(tol)
+    pls3.set_max_iter(miter)
+    pls3.set_tolerance(tol)
 
     pls3.fit(X, Y)
     Yhat3 = pls3.predict(X)
     Yhat3 = preprocY.revert(Yhat3)
 
     SSYdiff3 = np.sum((Yorig - Yhat3) ** 2)
-    print "PLSR         : R2Yhat = %.4f" % (1 - (SSYdiff3 / SSY))
+    utils.debug("PLSR         : R2Yhat = %.4f" % (1 - (SSYdiff3 / SSY)))
 
     assert abs(SSYdiff1 - SSYdiff3) < 0.00005
 
@@ -334,35 +335,35 @@ def test_predictions():
     Yhat2 = pls2.predict(X)
 
     SSYdiff2 = np.sum((Yorig - Yhat2) ** 2)
-    print "PLSCanonical : R2Yhat = %.4f" % (1 - (SSYdiff2 / SSY))
+    utils.debug("PLSCanonical : R2Yhat = %.4f" % (1 - (SSYdiff2 / SSY)))
 
     # Compare PLSC and sklearn.PLSCanonical
     X = preprocX.process(Xorig)
     Y = preprocY.process(Yorig)
     pls4 = PLSC(num_comp=num_comp)
-    alg = pls4.get_algorithm()
-    alg.set_max_iter(miter)
-    alg.set_tolerance(tol)
+    pls4.set_max_iter(miter)
+    pls4.set_tolerance(tol)
     pls4.fit(X, Y)
+
     Yhat4 = pls4.predict(X)
     Yhat4 = preprocY.revert(Yhat4)
 
     SSYdiff4 = np.sum((Yorig - Yhat4) ** 2)
-    print "PLSC         : R2Yhat = %.4f" % (1 - (SSYdiff4 / SSY))
+    utils.debug("PLSC         : R2Yhat = %.4f" % (1 - (SSYdiff4 / SSY)))
 
     # Compare O2PLS and sklearn.PLSCanonical
     X = preprocX.process(Xorig)
     Y = preprocY.process(Yorig)
     pls5 = O2PLS(num_comp=[num_comp, 1, 0])
-    alg = pls5.get_algorithm()
-    alg.set_max_iter(miter)
-    alg.set_tolerance(tol)
+    pls5.set_max_iter(miter)
+    pls5.set_tolerance(tol)
     pls5.fit(X, Y)
+
     Yhat5 = pls5.predict(X)
     Yhat5 = preprocY.revert(Yhat5)
 
     SSYdiff5 = np.sum((Yorig - Yhat5) ** 2)
-    print "O2PLS X-Y    : R2Yhat = %.4f" % (1 - (SSYdiff5 / SSY))
+    utils.debug("O2PLS X-Y    : R2Yhat = %.4f" % (1 - (SSYdiff5 / SSY)))
 
     assert SSYdiff2 > SSYdiff4
     assert SSYdiff2 > SSYdiff5
@@ -371,10 +372,10 @@ def test_predictions():
     X = preprocX.process(Xorig)
     Y = preprocY.process(Yorig)
     pls6 = O2PLS(num_comp=[num_comp, 0, 1])
-    alg = pls6.get_algorithm()
-    alg.set_max_iter(miter)
-    alg.set_tolerance(tol)
+    pls6.set_max_iter(miter)
+    pls6.set_tolerance(tol)
     pls6.fit(Y, X)
+
     Yhat6 = pls6.predict(Y=X)
     Yhat6 = preprocY.revert(Yhat6)
 
@@ -404,7 +405,7 @@ def test_predictions():
             err_msg="O2PLS is not symmetic")
 
     SSYdiff6 = np.sum((Yorig - Yhat6) ** 2)
-    print "O2PLS Y-X    : R2Yhat = %.4f" % (1 - (SSYdiff6 / SSY))
+    utils.debug("O2PLS Y-X    : R2Yhat = %.4f" % (1 - (SSYdiff6 / SSY)))
 
     assert abs(SSYdiff6 - SSYdiff5) < TOLERANCE
 
@@ -570,8 +571,7 @@ def test_o2pls():
 #    print Y
 
     o2pls = O2PLS(num_comp=[3, 2, 2])
-    alg = o2pls.get_algorithm()
-    alg.set_tolerance(5e-12)
+    o2pls.set_tolerance(5e-12)
     o2pls.fit(X, Y)
 
     Xhat = dot(o2pls.T, o2pls.P.T) + dot(o2pls.To, o2pls.Po.T)
@@ -630,8 +630,7 @@ def test_o2pls():
     Y = preprocY.process(Y)
 
     o2pls = O2PLS(num_comp=[3, 2, 2])
-    alg = o2pls.get_algorithm()
-    alg.set_tolerance(5e-12)
+    o2pls.set_tolerance(5e-12)
     o2pls.fit(X, Y)
 
     Xhat = dot(o2pls.T, o2pls.P.T) + dot(o2pls.To, o2pls.Po.T)
@@ -728,9 +727,8 @@ def test_regularisation():
     X = preprocX.process(Xorig)
     Y = preprocY.process(Yorig)
     pls = PLSR(num_comp=num_comp)
-    alg = pls.get_algorithm()
-    alg.set_tolerance(tol)
-    alg.set_max_iter(miter)
+    pls.set_tolerance(tol)
+    pls.set_max_iter(miter)
     pls.fit(X, Y)
     Yhat = pls.predict(X)
     Yhat = preprocY.revert(Yhat)
@@ -740,10 +738,9 @@ def test_regularisation():
 
     # Test sPLS methods when keeping all variables
     spls1 = PLSR(num_comp=num_comp)
-    alg = spls1.get_algorithm()
-    alg.set_tolerance(tol)
-    alg.set_max_iter(miter)
-    alg.set_prox_op(prox_ops.L1(0., 0., normaliser=[norm, normI]))
+    spls1.set_tolerance(tol)
+    spls1.set_max_iter(miter)
+    spls1.set_prox_op(prox_ops.L1(0., 0., normaliser=[norm, normI]))
     spls1.fit(X, Y)
     Yhat1 = spls1.predict(X)
     Yhat1 = preprocY.revert(Yhat1)
@@ -754,49 +751,49 @@ def test_regularisation():
             err_msg="Sparse PLS with no thresholding does not give correct " \
                     "result")
 
-    spls2 = PLSR(num_comp=num_comp)
-    alg = spls2.get_algorithm()
-    alg.set_tolerance(tol)
-    alg.set_max_iter(miter)
-    alg.set_prox_op(prox_ops.L1_binsearch(float('Inf'), float('Inf'),
-                    normaliser=[norm, normI]))
-    spls2.fit(X, Y)
-    Yhat2 = spls2.predict(X)
-    Yhat2 = preprocY.revert(Yhat2)
-    SSYdiff2 = np.sum((Yorig - Yhat2) ** 2)
-    utils.debug("sPLS: R2Yhat = %.6f" % (1 - (SSYdiff2 / SSY)))
-    assert abs(R2Yhat - (1 - (SSYdiff1 / SSY))) < TOLERANCE
-    assert_array_almost_equal(Yhat, Yhat2, decimal=5,
-            err_msg="Sparse PLS with no thresholding does not give correct " \
-                    "result")
-
-    spls3 = PLSR(num_comp=num_comp)
-    alg = spls3.get_algorithm()
-    alg.set_tolerance(tol)
-    alg.set_max_iter(miter)
-    alg.set_prox_op(prox_ops.L0_binsearch(inf, inf, normaliser=[norm, normI]))
-    spls3.fit(X, Y)
-    Yhat3 = spls3.predict(X)
-    Yhat3 = preprocY.revert(Yhat3)
-    SSYdiff3 = np.sum((Yorig - Yhat3) ** 2)
-    utils.debug("sPLS: R2Yhat = %.6f" % (1 - (SSYdiff3 / SSY)))
-    assert_array_almost_equal(Yhat, Yhat3, decimal=5,
-            err_msg="Sparse PLS with no thresholding does not give correct " \
-                    "result")
-
-    spls4 = PLSR(num_comp=num_comp)
-    alg = spls4.get_algorithm()
-    alg.set_tolerance(tol)
-    alg.set_max_iter(miter)
-    alg.set_prox_op(prox_ops.L0_by_count(inf, inf, normaliser=[norm, normI]))
-    spls4.fit(X, Y)
-    Yhat4 = spls4.predict(X)
-    Yhat4 = preprocY.revert(Yhat4)
-    SSYdiff4 = np.sum((Yorig - Yhat4) ** 2)
-    utils.debug("sPLS: R2Yhat = %.6f" % (1 - (SSYdiff4 / SSY)))
-    assert_array_almost_equal(Yhat, Yhat4, decimal=5,
-            err_msg="Sparse PLS with no thresholding does not give correct " \
-                    "result")
+#    spls2 = PLSR(num_comp=num_comp)
+##    alg = spls2.get_algorithm()
+#    spls2.set_tolerance(tol)
+#    spls2.set_max_iter(miter)
+#    spls2.set_prox_op(prox_ops.L1_binsearch(float('Inf'), float('Inf'),
+#                      normaliser=[norm, normI]))
+#    spls2.fit(X, Y)
+#    Yhat2 = spls2.predict(X)
+#    Yhat2 = preprocY.revert(Yhat2)
+#    SSYdiff2 = np.sum((Yorig - Yhat2) ** 2)
+#    utils.debug("sPLS: R2Yhat = %.6f" % (1 - (SSYdiff2 / SSY)))
+#    assert abs(R2Yhat - (1 - (SSYdiff1 / SSY))) < TOLERANCE
+#    assert_array_almost_equal(Yhat, Yhat2, decimal=5,
+#            err_msg="Sparse PLS with no thresholding does not give correct " \
+#                    "result")
+#
+#    spls3 = PLSR(num_comp=num_comp)
+#    alg = spls3.get_algorithm()
+#    alg.set_tolerance(tol)
+#    alg.set_max_iter(miter)
+#    alg.set_prox_op(prox_ops.L0_binsearch(inf, inf, normaliser=[norm, normI]))
+#    spls3.fit(X, Y)
+#    Yhat3 = spls3.predict(X)
+#    Yhat3 = preprocY.revert(Yhat3)
+#    SSYdiff3 = np.sum((Yorig - Yhat3) ** 2)
+#    utils.debug("sPLS: R2Yhat = %.6f" % (1 - (SSYdiff3 / SSY)))
+#    assert_array_almost_equal(Yhat, Yhat3, decimal=5,
+#            err_msg="Sparse PLS with no thresholding does not give correct " \
+#                    "result")
+#
+#    spls4 = PLSR(num_comp=num_comp)
+#    alg = spls4.get_algorithm()
+#    alg.set_tolerance(tol)
+#    alg.set_max_iter(miter)
+#    alg.set_prox_op(prox_ops.L0_by_count(inf, inf, normaliser=[norm, normI]))
+#    spls4.fit(X, Y)
+#    Yhat4 = spls4.predict(X)
+#    Yhat4 = preprocY.revert(Yhat4)
+#    SSYdiff4 = np.sum((Yorig - Yhat4) ** 2)
+#    utils.debug("sPLS: R2Yhat = %.6f" % (1 - (SSYdiff4 / SSY)))
+#    assert_array_almost_equal(Yhat, Yhat4, decimal=5,
+#            err_msg="Sparse PLS with no thresholding does not give correct " \
+#                    "result")
 
     # Create a matrix X (10,11) with variables with
     # correlation 1 throught 0 to a single y variable
@@ -821,9 +818,8 @@ def test_regularisation():
     num_comp = n_sz - 1
     # Analyse with PLSR
     pls = PLSR(num_comp=num_comp)
-    alg = pls.get_algorithm()
-    alg.set_tolerance(tol)
-    alg.set_max_iter(miter)
+    pls.set_tolerance(tol)
+    pls.set_max_iter(miter)
     pls.fit(X, Y)
     Yhat = pls.predict(X)
     Yhat = preprocY.revert(Yhat)
@@ -834,9 +830,8 @@ def test_regularisation():
     num_comp = 1
     # Analyse with PLSR
     pls = PLSR(num_comp=num_comp)
-    alg = pls.get_algorithm()
-    alg.set_tolerance(tol)
-    alg.set_max_iter(miter)
+    pls.set_tolerance(tol)
+    pls.set_max_iter(miter)
     pls.fit(X, Y)
     Yhat = pls.predict(X)
     Yhat = preprocY.revert(Yhat)
@@ -846,12 +841,12 @@ def test_regularisation():
 
     # Analyse with Sparse PLSR (L1)
     nonzero = []
-    for l in np.linspace(0, 0.5, 11).tolist():
+    for l in np.linspace(0, 0.9, 10).tolist():
         spls1 = PLSR(num_comp=num_comp)
-        alg = spls1.get_algorithm()
-        alg.set_tolerance(tol)
-        alg.set_max_iter(miter)
-        alg.set_prox_op(prox_ops.L1(l, 0, normaliser=[norm, normI]))
+#        alg = spls1.get_algorithm()
+        spls1.set_tolerance(tol)
+        spls1.set_max_iter(miter)
+        spls1.set_prox_op(prox_ops.L1(l, 0, normaliser=[norm, normI]))
         spls1.fit(X, Y)
         Yhat1 = spls1.predict(X)
         Yhat1 = preprocY.revert(Yhat1)
@@ -866,86 +861,85 @@ def test_regularisation():
         assert all(x >= y for x, y in zip(nonzero, nonzero[1:]))
     assert abs(R2Yhat1 - 1) < TOLERANCE
 
-    # Analyse with Sparse PLSR (L1_binsearch)
-    utils.debug()
-    utils.debug("PLS :         R2Yhat=%.6f, num_comp=%d" % (R2Yhat, num_comp))
-    nonzero = []
-    for s in [float('Inf'), 3.0, 2.5, 2.0, 1.5, 1.0, 0.5, 0.25, 0.125, 0.0625,
-              0.03125, 0]:
-        spls2 = PLSR(num_comp=num_comp)
-        alg = spls2.get_algorithm()
-        alg.set_tolerance(tol)
-        alg.set_max_iter(miter)
-        alg.set_prox_op(prox_ops.L1_binsearch(s, float('Inf'),
-                                              normaliser=[norm, normI]))
-        spls2.fit(X, Y)
-        Yhat2 = spls2.predict(X)
-        Yhat2 = preprocY.revert(Yhat2)
-        SSYdiff2 = np.sum((Yorig - Yhat2) ** 2)
-        R2Yhat2 = 1 - (SSYdiff2 / SSY)
-        nonzero.append(np.count_nonzero(spls2.W))
-        utils.debug("sPLS: s=%-4.2f, R2Yhat=%.6f, num_comp=%d, nonzero=%d" \
-                % (s, R2Yhat2, num_comp, nonzero[-1]))
-
-        assert all(x <= y for x, y in zip(np.abs(spls2.W)[:, 0],
-                                          (np.abs(spls2.W)[:, 0])[1:]))
-        assert all(x >= y for x, y in zip(nonzero, nonzero[1:]))
-    assert abs(R2Yhat2 - 1) < TOLERANCE
-
-    # Analyse with Sparse PLSR (L0_binsearch)
-    utils.debug()
-    utils.debug("PLS :        R2Yhat=%.6f, num_comp=%d" % (R2Yhat, num_comp))
-    nonzero = []
-    for n in [100, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]:
-        spls3 = PLSR(num_comp=num_comp)
-        alg = spls3.get_algorithm()
-        alg.set_tolerance(tol)
-        alg.set_max_iter(miter)
-        alg.set_prox_op(prox_ops.L0_binsearch(n, 100,
-                                              normaliser=[norm, normI]))
-        spls3.fit(X, Y)
-        Yhat3 = spls3.predict(X)
-        Yhat3 = preprocY.revert(Yhat3)
-        SSYdiff3 = np.sum((Yorig - Yhat3) ** 2)
-        R2Yhat3 = 1 - (SSYdiff3 / SSY)
-        nonzero.append(np.count_nonzero(spls3.W))
-        utils.debug("sPLS: n=%3d, R2Yhat=%.6f, num_comp=%d, nonzero=%d" \
-                % (n, R2Yhat3, num_comp, nonzero[-1]))
-
-        assert all(x <= y for x, y in zip(np.abs(spls3.W)[:, 0],
-                                          (np.abs(spls3.W)[:, 0])[1:]))
-        assert all(x >= y for x, y in zip(nonzero, nonzero[1:]))
-    assert abs(R2Yhat3 - 1) < TOLERANCE
-
-    # Analyse with Sparse PLSR (L0_by_count)
-    utils.debug()
-    utils.debug("PLS :        R2Yhat=%.6f, num_comp=%d" % (R2Yhat, num_comp))
-    nonzero = []
-    for n in [100] + range(11, -1, -1):
-        spls4 = PLSR(num_comp=num_comp)
-        alg = spls4.get_algorithm()
-        alg.set_tolerance(tol)
-        alg.set_max_iter(miter)
-        alg.set_prox_op(prox_ops.L0_by_count(n, 100, normaliser=[norm, normI]))
-        spls4.fit(X, Y)
-        Yhat4 = spls4.predict(X)
-        Yhat4 = preprocY.revert(Yhat4)
-        SSYdiff4 = np.sum((Yorig - Yhat4) ** 2)
-        R2Yhat4 = 1 - (SSYdiff4 / SSY)
-        nonzero.append(np.count_nonzero(spls4.W))
-        utils.debug("sPLS: n=%3d, R2Yhat=%.6f, num_comp=%d, nonzero=%d" \
-                % (n, R2Yhat4, num_comp, nonzero[-1]))
-
-        assert all(x <= y for x, y in zip(np.abs(spls4.W)[:, 0],
-                                          (np.abs(spls4.W)[:, 0])[1:]))
-        assert all(x >= y for x, y in zip(nonzero, nonzero[1:]))
-    assert abs(R2Yhat4 - 1) < TOLERANCE
+#    # Analyse with Sparse PLSR (L1_binsearch)
+#    utils.debug()
+#    utils.debug("PLS :         R2Yhat=%.6f, num_comp=%d" % (R2Yhat, num_comp))
+#    nonzero = []
+#    for s in [float('Inf'), 3.0, 2.5, 2.0, 1.5, 1.0, 0.5, 0.25, 0.125, 0.0625,
+#              0.03125, 0]:
+#        spls2 = PLSR(num_comp=num_comp)
+#        alg = spls2.get_algorithm()
+#        alg.set_tolerance(tol)
+#        alg.set_max_iter(miter)
+#        alg.set_prox_op(prox_ops.L1_binsearch(s, float('Inf'),
+#                                              normaliser=[norm, normI]))
+#        spls2.fit(X, Y)
+#        Yhat2 = spls2.predict(X)
+#        Yhat2 = preprocY.revert(Yhat2)
+#        SSYdiff2 = np.sum((Yorig - Yhat2) ** 2)
+#        R2Yhat2 = 1 - (SSYdiff2 / SSY)
+#        nonzero.append(np.count_nonzero(spls2.W))
+#        utils.debug("sPLS: s=%-4.2f, R2Yhat=%.6f, num_comp=%d, nonzero=%d" \
+#                % (s, R2Yhat2, num_comp, nonzero[-1]))
+#
+#        assert all(x <= y for x, y in zip(np.abs(spls2.W)[:, 0],
+#                                          (np.abs(spls2.W)[:, 0])[1:]))
+#        assert all(x >= y for x, y in zip(nonzero, nonzero[1:]))
+#    assert abs(R2Yhat2 - 1) < TOLERANCE
+#
+#    # Analyse with Sparse PLSR (L0_binsearch)
+#    utils.debug()
+#    utils.debug("PLS :        R2Yhat=%.6f, num_comp=%d" % (R2Yhat, num_comp))
+#    nonzero = []
+#    for n in [100, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]:
+#        spls3 = PLSR(num_comp=num_comp)
+#        alg = spls3.get_algorithm()
+#        alg.set_tolerance(tol)
+#        alg.set_max_iter(miter)
+#        alg.set_prox_op(prox_ops.L0_binsearch(n, 100,
+#                                              normaliser=[norm, normI]))
+#        spls3.fit(X, Y)
+#        Yhat3 = spls3.predict(X)
+#        Yhat3 = preprocY.revert(Yhat3)
+#        SSYdiff3 = np.sum((Yorig - Yhat3) ** 2)
+#        R2Yhat3 = 1 - (SSYdiff3 / SSY)
+#        nonzero.append(np.count_nonzero(spls3.W))
+#        utils.debug("sPLS: n=%3d, R2Yhat=%.6f, num_comp=%d, nonzero=%d" \
+#                % (n, R2Yhat3, num_comp, nonzero[-1]))
+#
+#        assert all(x <= y for x, y in zip(np.abs(spls3.W)[:, 0],
+#                                          (np.abs(spls3.W)[:, 0])[1:]))
+#        assert all(x >= y for x, y in zip(nonzero, nonzero[1:]))
+#    assert abs(R2Yhat3 - 1) < TOLERANCE
+#
+#    # Analyse with Sparse PLSR (L0_by_count)
+#    utils.debug()
+#    utils.debug("PLS :        R2Yhat=%.6f, num_comp=%d" % (R2Yhat, num_comp))
+#    nonzero = []
+#    for n in [100] + range(11, -1, -1):
+#        spls4 = PLSR(num_comp=num_comp)
+#        alg = spls4.get_algorithm()
+#        alg.set_tolerance(tol)
+#        alg.set_max_iter(miter)
+#        alg.set_prox_op(prox_ops.L0_by_count(n, 100, normaliser=[norm, normI]))
+#        spls4.fit(X, Y)
+#        Yhat4 = spls4.predict(X)
+#        Yhat4 = preprocY.revert(Yhat4)
+#        SSYdiff4 = np.sum((Yorig - Yhat4) ** 2)
+#        R2Yhat4 = 1 - (SSYdiff4 / SSY)
+#        nonzero.append(np.count_nonzero(spls4.W))
+#        utils.debug("sPLS: n=%3d, R2Yhat=%.6f, num_comp=%d, nonzero=%d" \
+#                % (n, R2Yhat4, num_comp, nonzero[-1]))
+#
+#        assert all(x <= y for x, y in zip(np.abs(spls4.W)[:, 0],
+#                                          (np.abs(spls4.W)[:, 0])[1:]))
+#        assert all(x >= y for x, y in zip(nonzero, nonzero[1:]))
+#    assert abs(R2Yhat4 - 1) < TOLERANCE
 
     # Analyse with O2PLS
     o2pls = O2PLS(num_comp=[num_comp, 8, 0])
-    alg = o2pls.get_algorithm()
-    alg.set_tolerance(tol)
-    alg.set_max_iter(miter)
+    o2pls.set_tolerance(tol)
+    o2pls.set_max_iter(miter)
     o2pls.fit(X, Y)
     Yhat = o2pls.predict(X)
     Yhat = preprocY.revert(Yhat)
@@ -959,13 +953,12 @@ def test_regularisation():
     nonzeroW = []
     nonzeroWo = []
     n_cp = 1
-    for l in np.linspace(0, 0.55, 12).tolist():
+    for l in np.linspace(0, 0.9, 10).tolist():
         num_orth = max(n_sz - n_cp, 0)
         so2pls1 = O2PLS(num_comp=[num_comp, num_orth, 0])
-        alg = so2pls1.get_algorithm()
-        alg.set_tolerance(tol)
-        alg.set_max_iter(miter)
-        alg.set_prox_op(prox_ops.L1([l, l], [0, 0]))
+        so2pls1.set_tolerance(tol)
+        so2pls1.set_max_iter(miter)
+        so2pls1.set_prox_op(prox_ops.L1([l, l], [0, 0]))
         so2pls1.fit(X, Y)
         Yhat1 = so2pls1.predict(X)
         Yhat1 = preprocY.revert(Yhat1)
@@ -986,109 +979,109 @@ def test_regularisation():
 #        assert all(x <= y for x, y in zip(nonzeroWo, nonzeroWo[1:]))
     assert abs(R2Yhat1 - 1) < 0.0005  # TOLERANCE
 
-    # Analyse with Sparse O2PLS (L1_binsearch)
-    utils.debug()
-    utils.debug("O2PLS :         R2Yhat=%.5f, num_comp=%d" \
-            % (R2Yhat, num_comp))
-    nonzeroW = []
-    nonzeroWo = []
-    n_cp = 0
-    for s in [float('Inf'), 3.0, 2.5, 2.0, 1.5, 1.0, 0.5, 0.25, 0.125, 0.0625,
-              0.03125, 0]:
-        num_orth = max(n_sz - n_cp, 0)
-        so2pls2 = O2PLS(num_comp=[num_comp, num_orth, 0])
-        alg = so2pls2.get_algorithm()
-        alg.set_tolerance(tol)
-        alg.set_max_iter(miter)
-        alg.set_prox_op(prox_ops.L1_binsearch([s, s], [float('Inf')] * 2))
-        so2pls2.fit(X, Y)
-        Yhat2 = so2pls2.predict(X)
-        Yhat2 = preprocY.revert(Yhat2)
-        SSYdiff2 = np.sum((Yorig - Yhat2) ** 2)
-        R2Yhat2 = 1 - (SSYdiff2 / SSY)
-        nonzeroW.append(np.count_nonzero(so2pls2.W[:, [0]]))
-        if so2pls2.Wo.shape[1] > 0:
-            nonzeroWo.append(np.count_nonzero(so2pls2.Wo[:, [0]]))
-        else:
-            nonzeroWo.append(0)
-        utils.debug("sO2PLS: s=%4.2f, R2Yhat=%.5f, num_comp=%d, " \
-                    "num_orth=%2d, nonzeroW=%2d, nonzeroWo=%2d" \
-                    % (s, R2Yhat2, num_comp, num_orth, nonzeroW[-1],
-                       nonzeroWo[-1]))
-        n_cp += 1
-
-#        assert all(x <= y for x, y in zip(np.abs(so2pls2.W)[:,0], (np.abs(so2pls2.W)[:,0])[1:]))
+#    # Analyse with Sparse O2PLS (L1_binsearch)
+#    utils.debug()
+#    utils.debug("O2PLS :         R2Yhat=%.5f, num_comp=%d" \
+#            % (R2Yhat, num_comp))
+#    nonzeroW = []
+#    nonzeroWo = []
+#    n_cp = 0
+#    for s in [float('Inf'), 3.0, 2.5, 2.0, 1.5, 1.0, 0.5, 0.25, 0.125, 0.0625,
+#              0.03125, 0]:
+#        num_orth = max(n_sz - n_cp, 0)
+#        so2pls2 = O2PLS(num_comp=[num_comp, num_orth, 0])
+#        alg = so2pls2.get_algorithm()
+#        alg.set_tolerance(tol)
+#        alg.set_max_iter(miter)
+#        alg.set_prox_op(prox_ops.L1_binsearch([s, s], [float('Inf')] * 2))
+#        so2pls2.fit(X, Y)
+#        Yhat2 = so2pls2.predict(X)
+#        Yhat2 = preprocY.revert(Yhat2)
+#        SSYdiff2 = np.sum((Yorig - Yhat2) ** 2)
+#        R2Yhat2 = 1 - (SSYdiff2 / SSY)
+#        nonzeroW.append(np.count_nonzero(so2pls2.W[:, [0]]))
+#        if so2pls2.Wo.shape[1] > 0:
+#            nonzeroWo.append(np.count_nonzero(so2pls2.Wo[:, [0]]))
+#        else:
+#            nonzeroWo.append(0)
+#        utils.debug("sO2PLS: s=%4.2f, R2Yhat=%.5f, num_comp=%d, " \
+#                    "num_orth=%2d, nonzeroW=%2d, nonzeroWo=%2d" \
+#                    % (s, R2Yhat2, num_comp, num_orth, nonzeroW[-1],
+#                       nonzeroWo[-1]))
+#        n_cp += 1
+#
+##        assert all(x <= y for x, y in zip(np.abs(so2pls2.W)[:,0], (np.abs(so2pls2.W)[:,0])[1:]))
+##        assert all(x >= y for x, y in zip(nonzeroW, nonzeroW[1:]))
+##        assert all(x <= y for x, y in zip(nonzeroWo, nonzeroWo[1:]))
+#    assert abs(R2Yhat2 - 1) < 0.0005  # TOLERANCE
+#
+#    # Analyse with Sparse O2PLS (L0_binsearch)
+#    utils.debug()
+#    utils.debug("O2PLS :        R2Yhat=%.6f, num_comp=%d" % (R2Yhat, num_comp))
+#    nonzeroW = []
+#    nonzeroWo = []
+#    n_cp = 0
+#    for n in [100, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]:
+#        num_orth = max(n_sz - n_cp, 0)
+#        so2pls3 = O2PLS(num_comp=[num_comp, num_orth, 0])
+#        alg = so2pls3.get_algorithm()
+#        alg.set_tolerance(tol)
+#        alg.set_max_iter(miter)
+#        alg.set_prox_op(prox_ops.L0_binsearch([n, n], [100, 100]))
+#        so2pls3.fit(X, Y)
+#        Yhat3 = so2pls3.predict(X)
+#        Yhat3 = preprocY.revert(Yhat3)
+#        SSYdiff3 = np.sum((Yorig - Yhat3) ** 2)
+#        R2Yhat3 = 1 - (SSYdiff3 / SSY)
+#        nonzeroW.append(np.count_nonzero(so2pls3.W[:, 0]))
+#        if so2pls3.Wo.shape[1] > 0:
+#            nonzeroWo.append(np.count_nonzero(so2pls3.Wo[:, 0]))
+#        else:
+#            nonzeroWo.append(0)
+#        utils.debug("sO2PLS: n=%3d, R2Yhat=%.6f, num_comp=%d, num_orth=%2d, " \
+#                    "nonzeroW=%2d, nonzeroWo=%2d" \
+#                    % (n, R2Yhat3, num_comp, num_orth, nonzeroW[-1],
+#                       nonzeroWo[-1]))
+#        n_cp += 1
+#
+##        assert all(x <= y for x, y in zip(np.abs(so2pls3.W)[:,0], (np.abs(so2pls3.W)[:,0])[1:]))
 #        assert all(x >= y for x, y in zip(nonzeroW, nonzeroW[1:]))
-#        assert all(x <= y for x, y in zip(nonzeroWo, nonzeroWo[1:]))
-    assert abs(R2Yhat2 - 1) < 0.0005  # TOLERANCE
-
-    # Analyse with Sparse O2PLS (L0_binsearch)
-    utils.debug()
-    utils.debug("O2PLS :        R2Yhat=%.6f, num_comp=%d" % (R2Yhat, num_comp))
-    nonzeroW = []
-    nonzeroWo = []
-    n_cp = 0
-    for n in [100, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]:
-        num_orth = max(n_sz - n_cp, 0)
-        so2pls3 = O2PLS(num_comp=[num_comp, num_orth, 0])
-        alg = so2pls3.get_algorithm()
-        alg.set_tolerance(tol)
-        alg.set_max_iter(miter)
-        alg.set_prox_op(prox_ops.L0_binsearch([n, n], [100, 100]))
-        so2pls3.fit(X, Y)
-        Yhat3 = so2pls3.predict(X)
-        Yhat3 = preprocY.revert(Yhat3)
-        SSYdiff3 = np.sum((Yorig - Yhat3) ** 2)
-        R2Yhat3 = 1 - (SSYdiff3 / SSY)
-        nonzeroW.append(np.count_nonzero(so2pls3.W[:, 0]))
-        if so2pls3.Wo.shape[1] > 0:
-            nonzeroWo.append(np.count_nonzero(so2pls3.Wo[:, 0]))
-        else:
-            nonzeroWo.append(0)
-        utils.debug("sO2PLS: n=%3d, R2Yhat=%.6f, num_comp=%d, num_orth=%2d, " \
-                    "nonzeroW=%2d, nonzeroWo=%2d" \
-                    % (n, R2Yhat3, num_comp, num_orth, nonzeroW[-1],
-                       nonzeroWo[-1]))
-        n_cp += 1
-
-#        assert all(x <= y for x, y in zip(np.abs(so2pls3.W)[:,0], (np.abs(so2pls3.W)[:,0])[1:]))
-        assert all(x >= y for x, y in zip(nonzeroW, nonzeroW[1:]))
-#        assert all(x <= y for x, y in zip(nonzeroWo, nonzeroWo[1:]))
-    assert abs(R2Yhat3 - 1) < TOLERANCE
-
-    utils.debug()
-    utils.debug("O2PLS :          R2Yhat = %.6f, num_comp = %d" \
-            % (R2Yhat, num_comp))
-    nonzeroW = []
-    nonzeroWo = []
-    n_cp = 0
-    for n in [100, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]:
-        num_orth = max(n_sz - n_cp, 0)
-        so2pls4 = O2PLS(num_comp=[num_comp, num_orth, 0])
-        alg = so2pls4.get_algorithm()
-        alg.set_tolerance(tol)
-        alg.set_max_iter(miter)
-        alg.set_prox_op(prox_ops.L0_by_count([n, n], [100, 100],
-                                             normaliser=[norm, norm]))
-        so2pls4.fit(X, Y)
-        Yhat4 = so2pls4.predict(X)
-        Yhat4 = preprocY.revert(Yhat4)
-        SSYdiff4 = np.sum((Yorig - Yhat4) ** 2)
-        R2Yhat4 = 1 - (SSYdiff4 / SSY)
-        nonzeroW.append(np.count_nonzero(so2pls4.W[:, 0]))
-        if so2pls4.Wo.shape[1] > 0:
-            nonzeroWo.append(np.count_nonzero(so2pls4.Wo[:, 0]))
-        else:
-            nonzeroWo.append(0)
-        utils.debug("sO2PLS: n = %3d, R2Yhat = %.6f, num_comp = %d, " \
-                    "nonzeroW: %2d, nonzeroWo: %2d" \
-                    % (n, R2Yhat4, num_comp, nonzeroW[-1], nonzeroWo[-1]))
-        n_cp += 1
-
-#        assert all(x <= y for x, y in zip(np.abs(so2pls4.W)[:,0], (np.abs(so2pls4.W)[:,0])[1:]))
-        assert all(x >= y for x, y in zip(nonzeroW, nonzeroW[1:]))
-#        assert all(x <= y for x, y in zip(nonzeroWo, nonzeroWo[1:]))
-    assert abs(R2Yhat4 - 1) < TOLERANCE
+##        assert all(x <= y for x, y in zip(nonzeroWo, nonzeroWo[1:]))
+#    assert abs(R2Yhat3 - 1) < TOLERANCE
+#
+#    utils.debug()
+#    utils.debug("O2PLS :          R2Yhat = %.6f, num_comp = %d" \
+#            % (R2Yhat, num_comp))
+#    nonzeroW = []
+#    nonzeroWo = []
+#    n_cp = 0
+#    for n in [100, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]:
+#        num_orth = max(n_sz - n_cp, 0)
+#        so2pls4 = O2PLS(num_comp=[num_comp, num_orth, 0])
+#        alg = so2pls4.get_algorithm()
+#        alg.set_tolerance(tol)
+#        alg.set_max_iter(miter)
+#        alg.set_prox_op(prox_ops.L0_by_count([n, n], [100, 100],
+#                                             normaliser=[norm, norm]))
+#        so2pls4.fit(X, Y)
+#        Yhat4 = so2pls4.predict(X)
+#        Yhat4 = preprocY.revert(Yhat4)
+#        SSYdiff4 = np.sum((Yorig - Yhat4) ** 2)
+#        R2Yhat4 = 1 - (SSYdiff4 / SSY)
+#        nonzeroW.append(np.count_nonzero(so2pls4.W[:, 0]))
+#        if so2pls4.Wo.shape[1] > 0:
+#            nonzeroWo.append(np.count_nonzero(so2pls4.Wo[:, 0]))
+#        else:
+#            nonzeroWo.append(0)
+#        utils.debug("sO2PLS: n = %3d, R2Yhat = %.6f, num_comp = %d, " \
+#                    "nonzeroW: %2d, nonzeroWo: %2d" \
+#                    % (n, R2Yhat4, num_comp, nonzeroW[-1], nonzeroWo[-1]))
+#        n_cp += 1
+#
+##        assert all(x <= y for x, y in zip(np.abs(so2pls4.W)[:,0], (np.abs(so2pls4.W)[:,0])[1:]))
+#        assert all(x >= y for x, y in zip(nonzeroW, nonzeroW[1:]))
+##        assert all(x <= y for x, y in zip(nonzeroWo, nonzeroWo[1:]))
+#    assert abs(R2Yhat4 - 1) < TOLERANCE
 
     # Testing agreement of different runs by using Fleiss kappa
     utils.debug()
@@ -1117,11 +1110,11 @@ def test_regularisation():
         B = zeros(Y.shape[1], num)
         for run in xrange(num):
             spls1 = PLSR(num_comp=num_comp)
-            alg = spls1.get_algorithm()
-            alg.set_tolerance(tol)
-            alg.set_max_iter(miter)
-            alg.set_prox_op(prox_ops.L1(l, l, normaliser=[norm, normI]))
-            alg.set_start_vector(start_vectors.RandomStartVector())
+#            alg = spls1.get_algorithm()
+            spls1.set_tolerance(tol)
+            spls1.set_max_iter(miter)
+            spls1.set_prox_op(prox_ops.L1(l, l, normaliser=[norm, normI]))
+            spls1.set_start_vector(start_vectors.RandomStartVector())
             spls1.fit(X, Y)
             Yhat1 = spls1.predict(X)
             Yhat1 = preprocY.revert(Yhat1)
@@ -1155,11 +1148,10 @@ def test_regularisation():
         Bo = zeros(Y.shape[1], num)
         for run in xrange(num):
             so2pls1 = O2PLS(num_comp=[num_comp, 2, 2])
-            alg = so2pls1.get_algorithm()
-            alg.set_tolerance(tol)
-            alg.set_max_iter(miter)
-            alg.set_prox_op(prox_ops.L1([l, l], [l, l]))
-            alg.set_start_vector(start_vectors.RandomStartVector())
+            so2pls1.set_tolerance(tol)
+            so2pls1.set_max_iter(miter)
+            so2pls1.set_prox_op(prox_ops.L1([l, l], [l, l]))
+            so2pls1.set_start_vector(start_vectors.RandomStartVector())
             so2pls1.fit(X, Y)
             Yhat1 = so2pls1.predict(X)
             Yhat1 = preprocY.revert(Yhat1)
@@ -1167,9 +1159,9 @@ def test_regularisation():
             R2Yhat1 = 1 - (SSYdiff1 / SSY)
             nonzeroW.append(np.count_nonzero(so2pls1.W[:, 0]))
             nonzeroWo.append(np.count_nonzero(so2pls1.Wo[:, [0]]))
-            print "O2PLS: l = %.2f, R2Yhat = %.6f, num_comp = %d, " \
+            utils.debug("O2PLS: l = %.2f, R2Yhat = %.6f, num_comp = %d, " \
                   "nonzeroW: %d, nonzeroWo: %d" \
-                  % (l, R2Yhat1, num_comp, nonzeroW[-1], nonzeroWo[-1])
+                  % (l, R2Yhat1, num_comp, nonzeroW[-1], nonzeroWo[-1]))
 
             A[:, run] = np.abs(so2pls1.W[:, 0])
             B[:, run] = np.abs(so2pls1.C[:, 0])
@@ -1216,14 +1208,13 @@ def test_rgcca():
     Z = preprocZ.process(Z)
 
     rgcca = RGCCA(num_comp=1, tau=optimal_shrinkage(X, Y, Z))
-    alg = rgcca.get_algorithm()
-    alg.set_start_vector(start_vectors.OnesStartVector())
-    alg.set_scheme(schemes.Factorial())
-    alg.set_max_iter(10000)
-    alg.set_tolerance(5e-12)
-    alg.set_adjacency_matrix([[0, 0, 1],
-                              [0, 0, 1],
-                              [1, 1, 0]])
+    rgcca.set_start_vector(start_vectors.OnesStartVector())
+    rgcca.set_scheme(schemes.Factorial())
+    rgcca.set_max_iter(10000)
+    rgcca.set_tolerance(5e-12)
+    rgcca.set_adjacency_matrix([[0, 0, 1],
+                                [0, 0, 1],
+                                [1, 1, 0]])
     rgcca.fit(X, Y, Z)
 
 #    result = RGCCA::rgccak(A, C, tau=tau, scheme="factorial", scale=TRUE,
@@ -1300,22 +1291,24 @@ def test_rgcca():
         assert_array_almost_equal(rgcca_a[i], rgcca.W[i], decimal=4,
                 err_msg="RGCCA does not give the correct weights")
 
-
-    rgcca = RGCCA(num_comp=1, tau=[1, 0, 1])
-    alg = rgcca.get_algorithm()
-    alg.set_start_vector(start_vectors.OnesStartVector())
-    alg.set_scheme(schemes.Horst())
-    alg.set_max_iter(10000)
-    alg.set_tolerance(5e-12)
-    alg.set_adjacency_matrix([[0, 0, 1],
-                              [0, 0, 1],
-                              [1, 1, 0]])
+    tau = [1.0, 0.0, 1.0]
+    rgcca = RGCCA(num_comp=1, tau=tau)
+    rgcca.set_start_vector(start_vectors.OnesStartVector())
+    rgcca.set_scheme(schemes.Horst())
+    rgcca.set_max_iter(10000)
+    rgcca.set_tolerance(5e-12)
+    rgcca.set_adjacency_matrix([[0, 0, 1],
+                                [0, 0, 1],
+                                [1, 1, 0]])
     rgcca.fit(X, Y, Z)
 
 #    print sum_corr(*rgcca.T)
 #    print sum_cov(*rgcca.T)
 #    print rgcca.T
 
+#    result = RGCCA::rgccak(A, C, tau=tau, scheme="horst", scale=TRUE,
+#                           verbose=TRUE, init="svd", bias=FALSE,
+#                           tol = .Machine$double.eps)
     rgcca_Y = np.asarray([[-1.08408558, 0.35278204, -0.01135023],
                           [-1.57769579, 1.34673245, 1.66322570],
                           [-0.67885386, 0.19281535, -0.01135023],
@@ -1371,20 +1364,101 @@ def test_rgcca():
         assert_array_almost_equal(rgcca_T[i], rgcca.T[i], decimal=4,
                 err_msg="RGCCA does not give the correct scores")
 
-    rgcca_a = [np.asarray([[-0.05801702],
-                           [-1.00898259],
-                           [0.66649974]]),
-               np.asarray([[0.3320846],
-                           [-0.7253266]]),
-               np.asarray([[0.7850165],
-                           [-0.3208365]])]
+    rgcca_a = [np.asarray([[-0.6207702],
+                           [-0.7594084],
+                           [0.1947902]]),
+               np.asarray([[0.2758329],
+                           [-0.7623184]]),
+               np.asarray([[0.7890375],
+                           [-0.6143451]])]
 
     for i in xrange(len(rgcca_a)):
         rgcca_a[i], rgcca.W[i] = direct(rgcca_a[i], rgcca.W[i], compare=True)
         assert_array_almost_equal(rgcca_a[i], rgcca.W[i], decimal=4,
                 err_msg="RGCCA does not give the correct weights")
 
+    tau = [0.5, 1.0, 0.5]
+    rgcca = RGCCA(num_comp=1, tau=tau)
+    rgcca.set_start_vector(start_vectors.OnesStartVector())
+    rgcca.set_scheme(schemes.Centroid())
+    rgcca.set_max_iter(10000)
+    rgcca.set_tolerance(5e-12)
+    rgcca.set_adjacency_matrix([[0, 0, 1],
+                                [0, 0, 1],
+                                [1, 1, 0]])
+    rgcca.fit(X, Y, Z)
 
+#    result = RGCCA::rgccak(A, C, tau=tau, scheme="centroid", scale=TRUE,
+#                           verbose=TRUE, init="svd", bias=FALSE,
+#                           tol = .Machine$double.eps)
+
+    rgcca_Y = np.asarray([[-0.63758064, 0.32572337, -0.09147646],
+                          [-1.10918357, 1.82531118, 1.48710404],
+                          [-0.71496356, 0.33305975, -0.09147646],
+                          [1.84597188, 2.04833385, 1.48710404],
+                          [-1.04151881, -2.09388644, -1.06044215],
+                          [-1.19508109, -0.87607593, -0.09147646],
+                          [1.41018757, 2.23483839, 1.48710404],
+                          [-1.44460513, -0.41345100, -0.09147646],
+                          [-1.05733654, -0.59754389, -0.09147646],
+                          [-1.61365967, -0.65022480, -0.09147646],
+                          [-0.14670461, -0.24512974, -1.06044215],
+                          [1.62151955, 1.08739948, 1.48710404],
+                          [-0.68923163, -0.97987196, -1.06044215],
+                          [-1.14359046, -0.91660939, -1.06044215],
+                          [-0.75695434, -1.44055217, -1.06044215],
+                          [-0.96809137, -0.96038812, -1.06044215],
+                          [0.30058863, 0.38245751, -0.09147646],
+                          [1.40264187, 1.05871033, -0.09147646],
+                          [-1.10616401, -1.27803940, -1.06044215],
+                          [-0.72139769, -0.69075827, -0.09147646],
+                          [-0.56126831, -1.44960592, -1.06044215],
+                          [1.83685500, -2.00506631, 1.48710404],
+                          [-0.40876917, -1.39707658, -1.06044215],
+                          [0.36228965, 0.06346779, 1.48710404],
+                          [-0.59333879, 0.29550631, -0.09147646],
+                          [1.27548368, -0.50097057, -0.09147646],
+                          [-0.21926025, -1.90276029, -1.06044215],
+                          [0.91162524, 1.29059729, 1.48710404],
+                          [1.66975408, 1.67196583, 1.48710404],
+                          [-0.26085870, 1.71834567, 1.48710404],
+                          [-0.69002328, -1.01463483, -1.06044215],
+                          [0.42029059, 1.00602942, 1.48710404],
+                          [-0.37840608, -0.53130130, -1.06044215],
+                          [-0.98227198, -1.32911662, -1.06044215],
+                          [1.40202935, -1.04764245, -1.06044215],
+                          [1.07543988, -0.36577060, -1.06044215],
+                          [0.08287892, -1.45109593, -1.06044215],
+                          [-0.39720025, -0.68777824, -1.06044215],
+                          [1.14567544, 1.87955789, 1.48710404],
+                          [2.00282063, 2.19132490, 1.48710404],
+                          [0.52631171, -1.18448399, -1.06044215],
+                          [0.48729836, 2.76832751, 1.48710404],
+                          [-0.09480629, 2.68050481, 1.48710404],
+                          [-0.29717888, 0.23060217, 1.48710404],
+                          [-1.11686321, 0.31930862, -1.06044215],
+                          [-0.31671152, 1.47912232, -0.09147646],
+                          [0.88335781, -0.88065964, -1.06044215]])
+
+    rgcca_T = [rgcca_Y[:, [0]], rgcca_Y[:, [1]], rgcca_Y[:, [2]]]
+
+    for i in xrange(len(rgcca_T)):
+        rgcca_T[i], rgcca.T[i] = direct(rgcca_T[i], rgcca.T[i], compare=True)
+        assert_array_almost_equal(rgcca_T[i], rgcca.T[i], decimal=4,
+                err_msg="RGCCA does not give the correct scores")
+
+    rgcca_a = [np.asarray([[-0.4233274],
+                           [-0.7356075],
+                           [0.4764125]]),
+               np.asarray([[0.6716633],
+                           [-0.7408565]]),
+               np.asarray([[0.7438057],
+                           [-0.4842587]])]
+
+    for i in xrange(len(rgcca_a)):
+        rgcca_a[i], rgcca.W[i] = direct(rgcca_a[i], rgcca.W[i], compare=True)
+        assert_array_almost_equal(rgcca_a[i], rgcca.W[i], decimal=4,
+                err_msg="RGCCA does not give the correct weights")
 
 
 def test_ista():
@@ -2208,11 +2282,10 @@ def test_scale():
 
 if __name__ == "__main__":
 
-#    test_SVD_PCA()
-#    test_eigsym()
-#    test_predictions()
-#    test_o2pls()
-#    test_regularisation()
+    test_SVD_PCA()
+    test_predictions()
+    test_o2pls()
+    test_regularisation()
     test_multiblock()
 #    test_ista()
 #    test_tv()
