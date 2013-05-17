@@ -487,12 +487,16 @@ class ISTARegression(ProximalGradientMethod):
     def __init__(self, **kwargs):
         super(ISTARegression, self).__init__(**kwargs)
 
-    def run(self, g=None, h=None, t=None, tscale=0.95, **kwargs):
+    def run(self, X, g=None, h=None, t=None, tscale=0.95, **kwargs):
+
+        if h == None:
+            h = error_functions.ZeroErrorFunction()
 
         if t == None:
             t = tscale / g.Lipschitz()
 
-        beta_old = self.start_vector.get_vector()
+        beta_old = self.start_vector.get_vector(X)
+        beta_new = beta_old
         f_old = g.f(beta_old) + h.f(beta_old)
         self.f = [f_old]
 
@@ -501,7 +505,6 @@ class ISTARegression(ProximalGradientMethod):
             self.converged = True
 
             beta_new = h.prox(beta_old - t * g.grad(beta_old), t)
-#            beta_ = h.prox(beta - np.dot(np.linalg.pinv(g.hessian(beta)), g.grad(beta)))
 
             if norm1(beta_old - beta_new) > self.tolerance * t:
                 self.converged = False
@@ -537,52 +540,44 @@ class FISTARegression(ISTARegression):
 
         super(FISTARegression, self).__init__(**kwargs)
 
-    def run(self, X, y, g=None, h=None, t=None, tscale=0.95, **kwargs):
+    def run(self, X, g=None, h=None, t=None, tscale=0.95, **kwargs):
+
+        if h == None:
+            h = error_functions.ZeroErrorFunction()
 
         if t == None:
             t = tscale / g.Lipschitz()
-            print "t:", t
 
-        beta = self.start_vector.get_vector(X)
-        beta_ = beta
-        if isinstance(g, error_functions.NesterovErrorFunction):
-            mu = g.get_mus()[-1]
-        else:
-            mu = 1
-        f_old = g.f(beta, mu=mu) + h.f(beta)
-#        f_old = g.f(beta) + h.f(beta)
-        self.f = [f_old]
+        beta_old = self.start_vector.get_vector(X)
+        beta_new = beta_old
+        f_new = g.f(beta_new) + h.f(beta_new)
+        self.f = [f_new]
 
         self.iterations = 0
         while True:
             self.converged = True
 
-            k = self.iterations + 1
-            z = beta_ - ((k - 2) / (k + 1)) * (beta_ - beta)
-            beta = beta_
-            beta_ = h.prox(z - t * g.grad(z), t)
+            k = float(self.iterations + 1.0)
+            z = beta_new - ((k - 2.0) / (k + 1.0)) * (beta_new - beta_old)
+            beta_old = beta_new
+            beta_new = h.prox(z - t * g.grad(z), t)
 
-            if norm1(z - beta_) > self.tolerance * t:
+            if norm1(z - beta_new) > self.tolerance * t:  # z - beta_new
                 self.converged = False
 
-            f_new = g.f(beta, mu=mu) + h.f(beta)
-#            f_new = g.f(beta_) + h.f(beta_)
+            f_new = g.f(beta_new) + h.f(beta_new)
             self.f.append(f_new)
-#            if abs(f_old - f_new) / f_old > self.tolerance:
-#                self.converged = False
-            f_old = f_new
-
             self.iterations += 1
 
             if self.converged:
                 break
 
             if self.iterations >= self.max_iter:
-                warnings.warn('Maximum number of iterations reached before ' \
-                              'convergence')
+                warning('Maximum number of iterations reached before ' \
+                        'convergence')
                 break
 
-        return beta_
+        return beta_new
 
 
 class MonotoneFISTARegression(ISTARegression):
@@ -593,98 +588,104 @@ class MonotoneFISTARegression(ISTARegression):
 
         super(MonotoneFISTARegression, self).__init__(**kwargs)
 
-    def run(self, X, y, g=None, h=None, t=None, tscale=0.95, ista_steps=2,
-            **kwargs):
+    def run(self, X, g=None, h=None, t=None, tscale=0.95, ista_steps=2,
+            early_stopping_mu=None, **kwargs):
+
+        if h == None:
+            h = error_functions.ZeroErrorFunction()
 
         if t == None:
             t = tscale / g.Lipschitz()
-            print "t:", t
 
-#        beta = np.dot(numpy.linalg.pinv(X), y)
-        beta = self.start_vector.get_vector(X)
-        beta_ = beta
-#        mus = g.get_mus()
-        if isinstance(g, error_functions.NesterovErrorFunction):
-            mu = g.get_mus()[-1]
-        else:
-            mu = 1
+        beta_old = self.start_vector.get_vector(X)
+        beta_new = beta_old
 
-        f_new = g.f(beta_, mu=mu) + h.f(beta_)
-        f_old = f_new
-        fcurr_new = g.f(beta_) + h.f(beta_)
-        fcurr_old = fcurr_new
+        f_old = g.f(beta_old) + h.f(beta_old)
+        f_new = f_old
         self.f = [f_new]
 
         self.iterations = 0
         while True:
             self.converged = True
 
-            k = self.iterations + 1
-            z = beta_ - ((k - 2) / (k + 1)) * (beta_ - beta)
-            beta = beta_
-            beta_ = h.prox(z - t * g.grad(z), t)
+            k = float(self.iterations + 1.0)
+            z = beta_new - ((k - 2.0) / (k + 1.0)) * (beta_new - beta_old)
+            beta_old = beta_new
+            beta_new = h.prox(z - t * g.grad(z), t)
 
-            hbeta = h.f(beta_)
-            fcurr_old = fcurr_new
-            fcurr_new = g.f(beta_) + hbeta
+            h_beta_new = h.f(beta_new)
 
             f_old = f_new
-            f_new = g.f(beta_, mu=mu) + hbeta
+            f_new = g.f(beta_new) + h_beta_new
 
             stop_early = False
-            if fcurr_new > fcurr_old:
+            if f_new > f_old:  # FISTA increased the value of f
                 print ista_steps, "ISTA steps instead of FISTA!!"
 
-                beta_ = beta  # One step back to old beta
+                beta_new = beta_old  # Go one step back to old beta
                 for it in xrange(ista_steps):
-                    beta = beta_
-                    beta_ = h.prox(beta - t * g.grad(beta), t)
+                    beta_old = beta_new
+                    beta_new = h.prox(beta_old - t * g.grad(beta_old), t)
 
-                    hbeta = h.f(beta_)
-
-                    fcurr_old = fcurr_new
-                    fcurr_new = g.f(beta_) + hbeta
+                    h_beta_new = h.f(beta_new)
 
                     f_old = f_new
-                    f_new = g.f(beta_, mu=mu) + hbeta
+                    f_new = g.f(beta_new) + h_beta_new
 
-                    if f_new > f_old:  # Early stopping
-                        print "f_new > f_old == ", f_new, ">", f_old
-                        self.converged = True
-                        stop_early = True
-                        warning('Early stopping criterion triggered. ' \
-                                'Moving on to smaller mu.')
-                        break
-                    else:
-                        self.f.append(f_new)
-                        self.iterations += 1
+                    if early_stopping_mu != None:
+                        es_f_old = g.f(beta_old, mu=early_stopping_mu) \
+                                 + h.f(beta_old)
+                        es_f_new = g.f(beta_new, mu=early_stopping_mu) \
+                                 + h_beta_new
 
-                if not stop_early and norm1(beta - beta_) > self.tolerance * t:
+                        if es_f_new > es_f_old:  # Early stopping
+                            self.converged = True
+                            stop_early = True
+                            warning('Early stopping criterion triggered. ' \
+                                    'Moving on to smaller mu.')
+                            break
+                        else:
+                            f_new = es_f_new
+
+                    self.f.append(f_new)
+                    self.iterations += 1
+
+                if not stop_early \
+                        and norm1(beta_old - beta_new) > self.tolerance * t:
                     self.converged = False
 
-            elif f_new > f_old:  # Early stopping
-                self.converged = True
-                stop_early = True
-                warning('Early stopping criterion triggered. ' \
-                        'Moving on to smaller mu.')
-                break
+            elif early_stopping_mu != None:
+                es_f_old = g.f(beta_old, mu=early_stopping_mu) + h.f(beta_old)
+                es_f_new = g.f(beta_new, mu=early_stopping_mu) + h_beta_new
 
+                if es_f_new > es_f_old:  # Early stopping
+                    self.converged = True
+                    stop_early = True
+                    warning('Early stopping criterion triggered. ' \
+                            'Moving on to smaller mu.')
+                    break
+                else:
+                    self.f.append(es_f_new)
+                    self.iterations += 1
+
+                    if norm1(z - beta_new) > self.tolerance * t:
+                        self.converged = False
             else:
                 self.f.append(f_new)
                 self.iterations += 1
 
-                if norm1(z - beta_) > self.tolerance * t:
+                if norm1(z - beta_new) > self.tolerance * t:
                     self.converged = False
 
             if self.converged:
                 break
 
             if self.iterations >= self.max_iter:
-                warnings.warn('Maximum number of iterations reached before ' \
-                              'convergence')
+                warning('Maximum number of iterations reached before ' \
+                        'convergence')
                 break
 
-        return beta
+        return beta_new
 
 
 class ExcessiveGapMethod(BaseAlgorithm):

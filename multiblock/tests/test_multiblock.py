@@ -1519,10 +1519,10 @@ def test_tv():
 
     eps = 0.1
     maxit = 10000
-    M = 300
-    N = 1
-    O = 1
-    p = M * N * O  # Must be even!
+    px = 300
+    py = 1
+    pz = 1
+    p = px * py * pz  # Must be even!
     n = 50
     X = np.random.randn(n, p)
     betastar = np.concatenate((np.zeros((p / 2, 1)),
@@ -1567,7 +1567,7 @@ def test_tv():
 
     g1 = error_functions.SumSqRegressionError(X, y)
     start = time()
-    g2 = error_functions.TotalVariation((M, N, O), gamma, mus[0])
+    g2 = error_functions.TotalVariation((pz, py, px), gamma, mus[0])
     print "time TV init:", time() - start
     g = error_functions.CombinedNesterovErrorFunction(g1, g2, mus)
     h = error_functions.L1(l)
@@ -1604,7 +1604,7 @@ def test_tv():
     alg.set_tolerance(eps)
 
     g1 = error_functions.SumSqRegressionError(X, y)
-    g2 = error_functions.TotalVariation((M, N, O), gamma, mu)
+    g2 = error_functions.TotalVariation((pz, py, px), gamma, mu)
     g = error_functions.CombinedDifferentiableErrorFunction(g1, g2)
     h = error_functions.L1(l)
 
@@ -1632,7 +1632,7 @@ def test_tv():
     alg.set_tolerance(eps)
 
     g1 = error_functions.SumSqRegressionError(X, y)
-    g2 = error_functions.TotalVariation((M, N, O), gamma, mu)
+    g2 = error_functions.TotalVariation((pz, py, px), gamma, mu)
     g = error_functions.CombinedDifferentiableErrorFunction(g1, g2)
     h = error_functions.L1(l)
 
@@ -1641,7 +1641,7 @@ def test_tv():
     print norm(lr.beta - betastar)
     print alg.iterations
     print lr.beta
-    print np.reshape(lr.beta, (O, M, N))
+    print np.reshape(lr.beta, (pz, py, px))
 
     print "diff:", norm(gamma_small_beta - lr.beta)
 

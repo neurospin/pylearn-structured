@@ -9,7 +9,8 @@ methods.
 """
 
 __all__ = ['PCA', 'SVD', 'PLSR', 'PLSC', 'O2PLS', 'RGCCA',
-           'LinearRegression', 'LogisticRegression']
+           'LinearRegression', 'LinearRegressionTV',
+           'LogisticRegression']
 
 from sklearn.utils import check_arrays
 
@@ -26,6 +27,7 @@ import schemes
 import modes
 import error_functions
 import start_vectors
+import preprocess
 
 
 class BaseMethod(object):
@@ -724,14 +726,14 @@ class NesterovProximalGradientMethod(BaseMethod):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, g=None, h=None, algorithm=None, **kwargs):
+        if algorithm == None:
+            algorithm = algorithms.FISTARegression()
+
         super(NesterovProximalGradientMethod, self).__init__(num_comp=1,
-                                                             **kwargs)
+                                                           algorithm=algorithm,
+                                                           **kwargs)
         self.set_g(g)
         self.set_h(h)
-
-        if algorithm == None:
-            algorithm = algorithms.ISTARegression()
-        self.set_algorithm(algorithm)
 
     def get_g(self):
         return self.g
@@ -749,27 +751,73 @@ class NesterovProximalGradientMethod(BaseMethod):
 class LinearRegression(NesterovProximalGradientMethod):
 
     def __init__(self, X=None, y=None, **kwargs):
-        super(LinearRegression, self).__init__(num_comp=1, **kwargs)
+        super(LinearRegression, self).__init__(**kwargs)
 
         if X != None and y != None:
-            self.get_g(error_functions.SumOfSquaresRegressionError(X, y))
+            self.get_g(error_functions.LinearRegressionError(X, y))
 
     def _get_transform(self, index=0):
         return self.beta
 
-    def fit(self, g=None, h=None, t=None):
-        if g == None:
-            if self.g == None:
-                raise ValueError('The function g must be given at ' \
-                                 'construction or when fitting')
-            g = self.g
-        if h == None:
-            if self.h == None:
-                raise ValueError('The function h must be given at ' \
-                                 'construction or when fitting')
-            h = self.h
+    def fit(self, X=None, y=None, t=None):
 
-        self.beta = self.algorithm.run(g=g, h=h, t=t)
+        if X != None and y != None:
+            self.get_g(error_functions.LinearRegressionError(X, y))
+
+        if self.get_g() == None:
+            raise ValueError('The function g must be given at either at ' \
+                             'construction or when fitting')
+
+        self.beta = self.algorithm.run(g=self.get_g(), t=t)
+
+        return self
+
+    def predict(self, X, **kwargs):
+        yhat = np.dot(X, self.beta)
+
+        return yhat
+
+
+class LinearRegressionTV(NesterovProximalGradientMethod):
+
+    def __init__(self, shape, gamma, mu, mask=None, X=None, y=None, **kwargs):
+
+        super(LinearRegressionTV, self).__init__(**kwargs)
+
+        self.mask = preprocess.Mask(mask)
+
+        self.SSreg = None
+        if X != None and y != None:
+            X = self.mask.process(X)
+            self.SSreg = error_functions.LinearRegressionError(X, y)
+
+        self.TV = error_functions.TotalVariation(shape, gamma, mu, mask)
+
+        if self.SSreg != None:
+            self.set_g(error_functions.CombinedNesterovLossFunction(self.SSreg,
+                                                                    self.TV))
+
+    def _get_transform(self, **kwargs):
+        return self.beta
+
+    def fit(self, X, y, **kwargs):
+
+        if X != None and y != None:
+            X = self.mask.process(X)
+            self.SSreg = error_functions.LinearRegressionError(X, y)
+
+        if self.SSreg == None:
+            raise ValueError('The matrices X and ymust be given either at ' \
+                             'construction or when fitting')
+
+        self.set_g(error_functions.CombinedNesterovLossFunction(self.SSreg,
+                                                                self.TV))
+
+        self.beta = self.algorithm.run(X, g=self.get_g(), **kwargs)
+
+        print self.beta.shape
+        self.beta = self.mask.revert(self.beta)
+        print self.beta.shape
 
         return self
 

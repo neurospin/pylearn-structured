@@ -15,7 +15,7 @@ __all__ = ['LossFunction', 'LipschitzContinuous', 'Differentiable',
 
            'ProximalOperator',
            'ZeroErrorFunction',
-           'L1',
+           'L1', 'L2', 'ElasticNet',
 
            'NesterovFunction',
            'TotalVariation', 'GroupLassoOverlap',
@@ -28,7 +28,7 @@ import numpy as np
 import scipy.sparse as sparse
 
 import algorithms
-from utils import norm, norm1, TOLERANCE
+from utils import norm, norm1, TOLERANCE, delete_sparse_csr_row
 
 
 class LossFunction(object):
@@ -152,10 +152,8 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
     where at least one of g1 or g2 are Nesterov functions.
     """
 
-    def __init__(self, a, b, mu):
+    def __init__(self, a, b):
         super(CombinedNesterovLossFunction, self).__init__(a=a, b=b)
-
-        self.set_mu(mu)
 
     def grad(self, *args, **kwargs):
         return self.a.grad(*args, **kwargs) + self.b.grad(*args, **kwargs)
@@ -329,17 +327,71 @@ class L1(ProximalOperator):
         return x
 
 
+class L2(ProximalOperator):
+    """The proximal operator for the function lambda*0.5*norm(x)**2.
+    """
+
+    def __init__(self, l, **kwargs):
+        super(L2, self).__init__(**kwargs)
+
+        self.l = l
+
+    def f(self, x):
+        return self.l * 0.5 * np.sum(x ** 2.0)
+
+    def prox(self, x, factor=1):
+
+        l = factor * self.l
+        return x / (1.0 + l)
+
+
+class ElasticNet(ProximalOperator):
+    """The proximal operator of the function
+
+    lambda * norm1(x) + (1.0 - lambda) * 0.5 * norm(x) ** 2.
+    """
+    def __init__(self, l, **kwargs):
+        super(ElasticNet, self).__init__(**kwargs)
+
+        self.l = l
+        self.l1 = L1(l)
+
+    def f(self, x):
+        return self.l * norm1(x) + (1.0 - self.l) * 0.5 * np.sum(x ** 2.0)
+
+    def prox(self, x, factor=1, allow_empty=False):
+
+        l = factor * self.l
+        return self.l1.prox(x, factor=factor, allow_empty=allow_empty) \
+                / (2.0 - l)
+
+
 class TotalVariation(ConvexLossFunction,
                      NesterovFunction,
                      LipschitzContinuous):
 
-    def __init__(self, shape, gamma, mu, **kwargs):
+    def __init__(self, shape, gamma, mu, mask=None, **kwargs):
+        """Construct a TotalVariation loss function.
 
+        Parameters:
+        ---------
+        shape : The shape of the 3D image. Must be a 3-tuple. If the image is
+                2D, let the Z dimension be 1, and if the "image" is 1D, let the
+                Y and Z dimensions be 1. The tuple must be of the form
+                (Z, Y, X).
+
+        gamma : The regularisation parameter for the TV regularisation.
+
+        mu    : The Nesterov function regularisation parameter.
+
+        mask  : A 1-dimensional mask representing the 3D image mask.
+        """
         super(TotalVariation, self).__init__(**kwargs)
 
         self.shape = shape
         self.gamma = gamma
         self.set_mu(mu)
+        self.mask = mask
 
         self.beta_id = None
         self.mu_id = None
@@ -416,25 +468,51 @@ class TotalVariation(ConvexLossFunction,
                                     self.Ayt.dot(self.asy), self.buff),
                                     self.Azt.dot(self.asz), self.buff)
 
+    def _find_mask_ind(self, mask, ind):
+        xshift = np.concatenate((mask[:, :, 1:], -np.ones((mask.shape[0],
+                                                           mask.shape[1],
+                                                           1))),
+                                axis=2)
+        yshift = np.concatenate((mask[:, 1:, :], -np.ones((mask.shape[0],
+                                                           1,
+                                                           mask.shape[2]))),
+                                axis=1)
+        zshift = np.concatenate((mask[1:, :, :], -np.ones((1,
+                                                           mask.shape[1],
+                                                           mask.shape[2]))),
+                                axis=0)
+
+        xind = ind[(mask - xshift) > 0]
+        yind = ind[(mask - yshift) > 0]
+        zind = ind[(mask - zshift) > 0]
+
+        return xind.flatten().tolist(), \
+               yind.flatten().tolist(), \
+               zind.flatten().tolist()
+
     def precompute(self):
 
-        M = self.shape[0]
-        N = self.shape[1]
-        O = self.shape[2]
-        p = M * N * O
+        Z = self.shape[0]
+        Y = self.shape[1]
+        X = self.shape[2]
+        p = X * Y * Z
 
         smtype = 'csr'
         self.Ax = sparse.eye(p, p, 1, format=smtype) \
                 - sparse.eye(p, p)
-        self.Ay = sparse.eye(p, p, N, format=smtype) \
+        self.Ay = sparse.eye(p, p, X, format=smtype) \
                 - sparse.eye(p, p)
-        self.Az = sparse.eye(p, p, M * N, format=smtype) \
+        self.Az = sparse.eye(p, p, X * Y, format=smtype) \
                 - sparse.eye(p, p)
 
-        ind = np.reshape(xrange(p), (O, M, N))
-        xind = ind[:, :, -1].flatten().tolist()
-        yind = ind[:, -1, :].flatten().tolist()
-        zind = ind[-1, :, :].flatten().tolist()
+        ind = np.reshape(xrange(p), (Z, Y, X))
+        if self.mask != None:
+            mask = np.reshape(self.mask, (Z, Y, X))
+            xind, yind, zind = self._find_mask_ind(mask, ind)
+        else:
+            xind = ind[:, :, -1].flatten().tolist()
+            yind = ind[:, -1, :].flatten().tolist()
+            zind = ind[-1, :, :].flatten().tolist()
 
         for i in xrange(len(xind)):
             self.Ax.data[self.Ax.indptr[xind[i]]: \
@@ -453,11 +531,35 @@ class TotalVariation(ConvexLossFunction,
                      self.Az.indptr[zind[-1] + 1]] = 0
         self.Az.eliminate_zeros()
 
-        self.Axt = self.Ax.T
-        self.Ayt = self.Ay.T
-        self.Azt = self.Az.T
+        # Remove rows corresponding to indices excluded in all dimensions
+        toremove = list(set(xind).intersection(yind).intersection(zind))
+        toremove.sort()
+        toremove.reverse()  # Remove from end so that indices are not changed
+        if len(toremove) > 0:
+            print "toremove:", toremove
+        for i in toremove:
+            delete_sparse_csr_row(self.Ax, i)
+            delete_sparse_csr_row(self.Ay, i)
+            delete_sparse_csr_row(self.Az, i)
 
-        self.buff = np.zeros((self.Ax.shape[0], 1))
+        self.Ax = self.Ax.T.tocsr()
+        self.Ay = self.Ay.T.tocsr()
+        self.Az = self.Az.T.tocsr()
+        for i in reversed(xrange(p)):
+            if self.mask[i] == 0:
+                delete_sparse_csr_row(self.Ax, i)
+                delete_sparse_csr_row(self.Ay, i)
+                delete_sparse_csr_row(self.Az, i)
+
+        self.Axt = self.Ax
+        self.Ayt = self.Ay
+        self.Azt = self.Az
+
+        self.Ax = self.Ax.T
+        self.Ay = self.Ay.T
+        self.Az = self.Az.T
+
+        self.buff = np.zeros((self.Ax.shape[1], 1))
 
 
 class GroupLassoOverlap(ConvexLossFunction,

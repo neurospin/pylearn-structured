@@ -20,22 +20,11 @@ class BaseStartVector(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, X=None, shape=None, normalise=True):
+    def __init__(self, shape=None, normalise=True):
         super(BaseStartVector, self).__init__()
 
-        self.X = X
         self.shape = shape
         self.normalise = normalise
-
-    def _check_X_shape(self, X, shape):
-        if self.X == None and X == None \
-                and self.shape == None and shape == None:
-            raise ValueError('A matrix X or a shape must be must be given ' \
-                             'either at construction or to this method.')
-        X = X if X != None else self.X
-        shape = shape if shape != None else self.shape
-
-        return X, shape
 
     @abc.abstractmethod
     def get_vector(self, X=None, shape=None):
@@ -58,8 +47,8 @@ class RandomStartVector(BaseStartVector):
         super(RandomStartVector, self).__init__(normalise=normalise, **kwargs)
 
     def get_vector(self, X=None, shape=None, axis=1):
-        X, shape = self._check_X_shape(X, shape)
-
+        if X == None and shape == None:
+            raise ValueError('A matrix X or a shape must be must be given.')
         if X != None:
             shape = (X.shape[axis], 1)
 
@@ -76,8 +65,8 @@ class OnesStartVector(BaseStartVector):
         super(OnesStartVector, self).__init__(normalise=normalise, **kwargs)
 
     def get_vector(self, X=None, shape=None, axis=1):
-        X, shape = self._check_X_shape(X, shape)
-
+        if X == None and shape == None:
+            raise ValueError('A matrix X or a shape must be must be given.')
         if X != None:
             shape = (X.shape[axis], 1)
 
@@ -99,8 +88,8 @@ class ZerosStartVector(BaseStartVector):
         super(ZerosStartVector, self).__init__(normalise=False, **kwargs)
 
     def get_vector(self, X=None, shape=None, axis=1):
-        X, shape = self._check_X_shape(X, shape)
-
+        if X == None and shape == None:
+            raise ValueError('A matrix X or a shape must be must be given.')
         if X != None:
             shape = (X.shape[axis], 1)
 
@@ -115,7 +104,8 @@ class LargestStartVector(BaseStartVector):
         super(LargestStartVector, self).__init__(normalise=normalise, **kwargs)
 
     def get_vector(self, X, axis=1):
-        X, _ = self._check_X_shape(X, None)
+        if X == None:
+            raise ValueError('A matrix X must be must be given.')
 
         idx = np.argmax(np.sum(X ** 2.0, axis=axis))
         if axis == 0:
@@ -136,7 +126,8 @@ class GaussianCurveVector(BaseStartVector):
                                                   **kwargs)
 
     def get_vector(self, X=None, shape=None, mean=None, cov=None, axis=1):
-        X, shape = self._check_X_shape(X, shape)
+        if X == None and shape == None:
+            raise ValueError('A matrix X or a shape must be must be given.')
         if X != None:
             shape = (X.shape[axis], 1)
         if not isinstance(shape, tuple):

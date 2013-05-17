@@ -7,10 +7,11 @@ Created on Thu Mar 28 14:43:21 2013
 @license: BSD Style
 """
 
-__all__ = ['Preprocess', 'Center', 'Scale']
+__all__ = ['Preprocess', 'Center', 'Scale', 'Mask']
 
 import abc
 import utils
+import numpy as np
 
 
 class PreprocessQueue(object):
@@ -192,3 +193,67 @@ class Scale(Preprocess):
         X = X * self.stds
 
         return X
+
+
+class Mask(Preprocess):
+    """Applies a mask to the columns of a matrix.
+
+    The columns are removed, and on revert the columns removed are set to zero.
+
+    Arguments
+    ---------
+    mask : The mask to apply. Must be an integer vector where 0 means excluded.
+    """
+
+    def __init__(self, mask, **kwargs):
+
+        super(Mask, self).__init__(**kwargs)
+
+        self.mask = mask
+        self.included = None
+        self.excluded = None
+        self.shape = None
+
+    def process(self, X):
+
+        # Transposed? Weights vectors are likely transposed.
+        self.transposed = False
+        if X.shape[0] == len(self.mask) and X.shape[1] != len(self.mask):
+            X = X.T
+            self.transposed = True
+
+        if X.shape[1] != len(self.mask):
+            raise ValueError('The matrix X does not fit the mask!')
+
+        mask = np.array(self.mask, dtype=int)
+        self.included = mask != 0
+        self.excluded = mask == 0
+        self.shape = X.shape
+        X = X[:, self.included]
+
+        if self.transposed:
+            X = X.T
+
+        return X
+
+    def revert(self, X):
+
+        # Transposed? Weights vectors are likely transposed.
+        transposed = False
+        axis = 0
+        if X.shape[0] == len(self.mask) and X.shape[1] != len(self.mask):
+            X = X.T
+            transposed = True
+            axis = 1
+
+        if self.included == None:
+            raise ValueError('The method "process" must be applied before ' \
+                             '"revert" can be applied.')
+
+        X_ = np.zeros((X.shape[axis], len(self.mask)), dtype=X.dtype)
+        X_[:, self.included] = X
+
+        if transposed:
+            X_ = X_.T
+
+        return X_

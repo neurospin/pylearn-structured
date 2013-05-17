@@ -13,6 +13,7 @@ Created on Thu Feb 8 09:22:00 2013
 @license: BSD Style
 """
 
+import scipy
 import numpy as np
 from numpy.linalg import norm
 from numpy.random import rand
@@ -22,7 +23,7 @@ from copy import copy
 __all__ = ['norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
            'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy', 'sstot', 'ssvar',
            'sqrt', 'rand', 'zeros', 'direct', '_DEBUG', 'debug', 'warning',
-           'optimal_shrinkage']
+           'optimal_shrinkage', 'delete_sparse_csr_row']
 
 _DEBUG = True
 
@@ -236,6 +237,21 @@ def optimal_shrinkage(*X, **kwargs):
         tau.append(l)
 
     return tau
+
+
+def delete_sparse_csr_row(mat, i):
+    """Delete row i in-place from sparse matrix mat (CSR format).
+    """
+    n = mat.indptr[i + 1] - mat.indptr[i]
+    if n > 0:
+        mat.data[mat.indptr[i]:-n] = mat.data[mat.indptr[i + 1]:]
+        mat.data = mat.data[:-n]
+        mat.indices[mat.indptr[i]:-n] = mat.indices[mat.indptr[i + 1]:]
+        mat.indices = mat.indices[:-n]
+    mat.indptr[i:-1] = mat.indptr[i + 1:]
+    mat.indptr[i:] -= n
+    mat.indptr = mat.indptr[:-1]
+    mat._shape = (mat._shape[0] - 1, mat._shape[1])
 
 
 #class Enum(object):
