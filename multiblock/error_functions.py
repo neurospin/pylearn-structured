@@ -424,7 +424,7 @@ class TotalVariation(ConvexLossFunction,
     def grad(self, beta):
 
         if self.gamma <= TOLERANCE:
-            return np.zeros((np.prod(self.shape), 1))
+            return np.zeros(beta.shape)
 
         if self.beta_id != id(beta) or self.mu_id != id(self.get_mu()):
             self.compute_alpha(beta, self.get_mu())
@@ -535,29 +535,30 @@ class TotalVariation(ConvexLossFunction,
         toremove = list(set(xind).intersection(yind).intersection(zind))
         toremove.sort()
         toremove.reverse()  # Remove from end so that indices are not changed
-        if len(toremove) > 0:
-            print "toremove:", toremove
+#        if len(toremove) > 0:
+#            print "toremove:", toremove
         for i in toremove:
             delete_sparse_csr_row(self.Ax, i)
             delete_sparse_csr_row(self.Ay, i)
             delete_sparse_csr_row(self.Az, i)
 
-        self.Ax = self.Ax.T.tocsr()
-        self.Ay = self.Ay.T.tocsr()
-        self.Az = self.Az.T.tocsr()
-        for i in reversed(xrange(p)):
-            if self.mask[i] == 0:
-                delete_sparse_csr_row(self.Ax, i)
-                delete_sparse_csr_row(self.Ay, i)
-                delete_sparse_csr_row(self.Az, i)
+        if self.mask != None:
+            self.Axt = self.Ax.T.tocsr()
+            self.Ayt = self.Ay.T.tocsr()
+            self.Azt = self.Az.T.tocsr()
+            for i in reversed(xrange(p)):
+                if self.mask[i] == 0:
+                    delete_sparse_csr_row(self.Axt, i)
+                    delete_sparse_csr_row(self.Ayt, i)
+                    delete_sparse_csr_row(self.Azt, i)
 
-        self.Axt = self.Ax
-        self.Ayt = self.Ay
-        self.Azt = self.Az
-
-        self.Ax = self.Ax.T
-        self.Ay = self.Ay.T
-        self.Az = self.Az.T
+            self.Ax = self.Axt.T
+            self.Ay = self.Ayt.T
+            self.Az = self.Azt.T
+        else:
+            self.Axt = self.Ax.T
+            self.Ayt = self.Ay.T
+            self.Azt = self.Az.T
 
         self.buff = np.zeros((self.Ax.shape[1], 1))
 

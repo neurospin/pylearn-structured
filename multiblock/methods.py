@@ -784,11 +784,15 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
 
         super(LinearRegressionTV, self).__init__(**kwargs)
 
-        self.mask = preprocess.Mask(mask)
+        if mask != None:
+            self.mask = preprocess.Mask(mask)
+        else:
+            self.mask = None
 
         self.SSreg = None
         if X != None and y != None:
-            X = self.mask.process(X)
+            if self.mask != None:
+                X = self.mask.process(X)
             self.SSreg = error_functions.LinearRegressionError(X, y)
 
         self.TV = error_functions.TotalVariation(shape, gamma, mu, mask)
@@ -803,7 +807,8 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
     def fit(self, X, y, **kwargs):
 
         if X != None and y != None:
-            X = self.mask.process(X)
+            if self.mask != None:
+                X = self.mask.process(X)
             self.SSreg = error_functions.LinearRegressionError(X, y)
 
         if self.SSreg == None:
@@ -815,9 +820,8 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
 
         self.beta = self.algorithm.run(X, g=self.get_g(), **kwargs)
 
-        print self.beta.shape
-        self.beta = self.mask.revert(self.beta)
-        print self.beta.shape
+        if self.mask != None:
+            self.beta = self.mask.revert(self.beta.T).T
 
         return self
 

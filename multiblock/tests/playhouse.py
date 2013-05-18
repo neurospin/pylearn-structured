@@ -36,8 +36,11 @@ def test_tv():
     beta = np.zeros((nrows, ncols))
     for i in xrange(nrows):
         for j in xrange(ncols):
-            if (((x[i] - 3) ** 2 + (y[j] - 3) ** 2 > 8) &
-                ((x[i] - 3) ** 2 + (y[j] - 3) ** 2 < 25)):
+#            if (((x[i] - 3) ** 2 + (y[j] - 3) ** 2 > 8) &
+#                ((x[i] - 3) ** 2 + (y[j] - 3) ** 2 < 25)):
+#                mask[i, j] = 1
+
+            if ((x[i] - 3) ** 2 + (y[j] - 3) ** 2 < 25):
                 mask[i, j] = 1
 
             if (((x[i] + 1) ** 2 + (y[j] - 5) ** 2 > 5) &
@@ -70,8 +73,6 @@ def test_tv():
     X = np.random.multivariate_normal(mean, sigma, n)
     y = np.dot(X, beta1D)
 
-
-
 #    px = 1
 #    py = 300
 #    pz = 1
@@ -83,17 +84,17 @@ def test_tv():
 #    beta1D = np.sort(np.abs(betastar), axis=0)
 #    y = np.dot(X, beta1D)
 
-    eps = 0.01
-    maxit = 5000
+    eps = 0.0000001
+    maxit = 1000000
 
-    gamma = 1
+    gamma = 1.0
     l = 0.1
 
 #    r = 0
 #    for i in xrange(X.shape[1]):
 #        r = max(r, abs(utils.cov(X[:, [i]], y)))
 #    mus = [r * 0.5 ** i for i in xrange(5)]
-    mu = 0.01
+    mu = 1.0
 
     total_start = time()
     init_start = time()
@@ -109,12 +110,12 @@ def test_tv():
 
     lrtv.fit(X, y)
     alg = lrtv.get_algorithm()
+    print "alg:", alg
 
     print "Total time:", (time() - total_start)
     print "Total iterations:", alg.iterations
     print "Total iterations:", len(alg.f)
     print "Error:", alg.f[-1]
-    
 
     plot.subplot(2, 2, 1)
     plot.plot(beta1D[:, 0], '-', lrtv.beta[:, 0], '*')

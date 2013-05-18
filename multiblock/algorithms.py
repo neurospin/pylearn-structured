@@ -483,7 +483,6 @@ class ProximalGradientMethod(BaseAlgorithm):
 class ISTARegression(ProximalGradientMethod):
     """ The ISTA algorithm for regression settings.
     """
-
     def __init__(self, **kwargs):
         super(ISTARegression, self).__init__(**kwargs)
 
@@ -494,13 +493,14 @@ class ISTARegression(ProximalGradientMethod):
 
         if t == None:
             t = tscale / g.Lipschitz()
+            print "t:", t
 
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
         f_old = g.f(beta_old) + h.f(beta_old)
         self.f = [f_old]
 
-        self.iterations = 0
+        self.iterations = 1
         while True:
             self.converged = True
 
@@ -510,14 +510,15 @@ class ISTARegression(ProximalGradientMethod):
                 self.converged = False
 
             f_new = g.f(beta_new) + h.f(beta_new)
-            if f_new > f_old:  # Early stopping
-                self.converged = True
-                warning('Early stopping criterion triggered.')
-            else:
-                # Save updated values
-                f_old = f_new
-                self.f.append(f_new)
-                self.iterations += 1
+#            if f_new > f_old:  # Early stopping
+#                print f_new, ">", f_old
+#                self.converged = True
+#                warning('Early stopping criterion triggered.')
+#            else:
+            # Save updated values
+            f_old = f_new
+            self.f.append(f_new)
+            self.iterations += 1
 
             beta_old = beta_new
 
@@ -553,7 +554,7 @@ class FISTARegression(ISTARegression):
         f_new = g.f(beta_new) + h.f(beta_new)
         self.f = [f_new]
 
-        self.iterations = 0
+        self.iterations = 1
         while True:
             self.converged = True
 
@@ -604,7 +605,7 @@ class MonotoneFISTARegression(ISTARegression):
         f_new = f_old
         self.f = [f_new]
 
-        self.iterations = 0
+        self.iterations = 1
         while True:
             self.converged = True
 

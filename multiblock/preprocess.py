@@ -216,44 +216,25 @@ class Mask(Preprocess):
 
     def process(self, X):
 
-        # Transposed? Weights vectors are likely transposed.
-        self.transposed = False
-        if X.shape[0] == len(self.mask) and X.shape[1] != len(self.mask):
-            X = X.T
-            self.transposed = True
-
         if X.shape[1] != len(self.mask):
             raise ValueError('The matrix X does not fit the mask!')
 
         mask = np.array(self.mask, dtype=int)
         self.included = mask != 0
         self.excluded = mask == 0
-        self.shape = X.shape
         X = X[:, self.included]
 
-        if self.transposed:
-            X = X.T
+        self.shape = X.shape
 
         return X
 
     def revert(self, X):
 
-        # Transposed? Weights vectors are likely transposed.
-        transposed = False
-        axis = 0
-        if X.shape[0] == len(self.mask) and X.shape[1] != len(self.mask):
-            X = X.T
-            transposed = True
-            axis = 1
-
         if self.included == None:
             raise ValueError('The method "process" must be applied before ' \
                              '"revert" can be applied.')
 
-        X_ = np.zeros((X.shape[axis], len(self.mask)), dtype=X.dtype)
+        X_ = np.zeros((X.shape[0], len(self.mask)), dtype=X.dtype)
         X_[:, self.included] = X
-
-        if transposed:
-            X_ = X_.T
 
         return X_

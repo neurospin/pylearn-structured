@@ -242,6 +242,8 @@ def optimal_shrinkage(*X, **kwargs):
 def delete_sparse_csr_row(mat, i):
     """Delete row i in-place from sparse matrix mat (CSR format).
     """
+    if not isinstance(mat, scipy.sparse.csr_matrix):
+        raise ValueError("works only for CSR format -- use .tocsr() first")
     n = mat.indptr[i + 1] - mat.indptr[i]
     if n > 0:
         mat.data[mat.indptr[i]:-n] = mat.data[mat.indptr[i + 1]:]
