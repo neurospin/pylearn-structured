@@ -29,6 +29,7 @@ import multiblock.start_vectors as start_vectors
 import schemes
 import modes
 import error_functions
+import algorithms
 
 from multiblock.utils import MAX_ITER, TOLERANCE, make_list, zeros, sqrt
 from multiblock.utils import norm, norm1, warning
@@ -723,9 +724,22 @@ class ExcessiveGapRegression(ExcessiveGapMethod):
 
         zero = start_vectors.ZerosStartVector().get_vector(self.X)
 
+        A = np.vstack(self.A())
+        v = algorithms.SparseSVD(max_iter=10).run(A)
+        u = A.dot(v)
+        L2 = np.sum(u ** 2.0)
+        L2 /= 1.0  # g.lambda_min()
+
         beta_hat_0 = self.beta_hat_0_1
 
+        mu = L2 / 1.0
         beta = beta_hat_0(zero)
+        alpha = self.alpha_hat_muk(h, beta, mu)
+        u = [0] * len(alpha)
+        A = h.A()
+        for i in xrange(len(u)):
+            u[i] = np.zeros((A[i].shape[0], 1))
+        alpha = self.V(h, u, beta, L2)
 
         self.iterations = 0
         while True:
@@ -734,12 +748,22 @@ class ExcessiveGapRegression(ExcessiveGapMethod):
             k = self.iterations + 1
             tau = 2.0 / (k + 3.0)
 
-            u = (1.0 - tau) * alpha + tau * alpha_hat_muk(beta)
-            beta_new = (1.0 - tau) * beta_old + tau * beta_hat_0(u)
-            mu_new = (1.0 - tau) * mu_old
-            alpha_new = v(u)
+            alpha_hat = self.alpha_hat_muk(h, beta, mu)
+            for i in xrange(len(alpha_hat)):
+                alpha[i] = self.V(h, u, beta, L2)
+                u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
+            mu = (1.0 - tau) * mu
+            beta = (1.0 - tau) * beta + tau * beta_hat_0(u)
 
-            
+    def V(sefl, h, u, beta, L2):
+        u_new = [0] * len(u)
+        A = h.A()
+        for i in xrange(len(u)):
+            u_new[i] = u[i] + A[i].dot(beta) / L2
+        return h.projection(u_new)
+
+    def alpha_hat_muk(self, h, beta, mu):
+        return h.alpha(beta, mu)
 
     def beta_hat_0_1(self, alpha):
         """ Straight-forward naive Ridge regression.
@@ -748,6 +772,8 @@ class ExcessiveGapRegression(ExcessiveGapMethod):
         self.y = 0
         self.A = 0
         self.l = 0
+
+        alpha = np.vstack(alpha)
 
         XX = np.dot(self.X.T, self.X)
         XXI = XX + (1.0 - self.l) * np.eye(XX.shape[0])
@@ -763,6 +789,8 @@ class ExcessiveGapRegression(ExcessiveGapMethod):
         self.y = 0
         self.A = 0
         self.l = 0
+
+        alpha = np.vstack(alpha)
 
         XX = np.dot(self.X, self.X.T)
         XXI = XX + (1.0 - self.l) * np.eye(XX.shape[0])
@@ -780,6 +808,8 @@ class ExcessiveGapRegression(ExcessiveGapMethod):
         self.y = 0
         self.A = 0
         self.l = 0
+
+        alpha = np.vstack(alpha)
 
         XX = np.dot(self.X, self.X.T)
         XXI = XX + (1.0 - self.l) * np.eye(XX.shape[0])

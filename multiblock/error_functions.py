@@ -77,6 +77,19 @@ class ConvexLossFunction(LossFunction):
         super(ConvexLossFunction, self).__init__(**kwargs)
 
 
+class StronglyConvexLossFunction(LossFunction):
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, **kwargs):
+        super(StronglyConvexLossFunction, self).__init__(**kwargs)
+
+    @abc.abstractmethod
+    def lambda_min(self):
+        raise NotImplementedError('Abstract method "lambda_min" must be ' \
+                                  'specialised!')
+
+
 class ProximalOperator(ConvexLossFunction):
 
     __metaclass__ = abc.ABCMeta
@@ -106,6 +119,21 @@ class NesterovFunction(Differentiable, LipschitzContinuous):
     @abc.abstractmethod
     def precompute(self, *args, **kwargs):
         raise NotImplementedError('Abstract method "precompute" must be ' \
+                                  'specialised!')
+
+    @abc.abstractmethod
+    def alpha(self, beta, mu=None):
+        raise NotImplementedError('Abstract method "alpha" must be ' \
+                                  'specialised!')
+
+    @abc.abstractmethod
+    def A(self):
+        raise NotImplementedError('Abstract method "A" must be ' \
+                                  'specialised!')
+
+    @abc.abstractmethod
+    def projection(self, alpha):
+        raise NotImplementedError('Abstract method "projection" must be ' \
                                   'specialised!')
 
     def get_mus(self):
@@ -181,6 +209,33 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 #            self.a.set_mus(mus)
 #        if hasattr(self.b, 'set_mus'):
 #            self.b.set_mus(mus)
+
+    def alpha(self, beta, mu):
+        if hasattr(self.b, 'alpha'):
+            return self.b.alpha(beta, mu)
+        elif hasattr(self.a, 'alpha'):
+            return self.a.alpha(beta, mu)
+        else:
+            raise ValueError('Both functions cannot be Nesterov when you ' \
+                             'use the alpha like this')
+
+    def A(self):
+        if hasattr(self.b, 'A'):
+            return self.b.A()
+        elif hasattr(self.a, 'A'):
+            return self.a.A()
+        else:
+            raise ValueError('Both functions cannot be Nesterov when you ' \
+                             'use the A like this')
+
+    def projection(self):
+        if hasattr(self.b, 'projection'):
+            return self.b.projection()
+        elif hasattr(self.a, 'projection'):
+            return self.a.projection()
+        else:
+            raise ValueError('Both functions cannot be Nesterov when you ' \
+                             'use the projection like this')
 
     def get_mu(self):
         if hasattr(self.a, 'get_mu') and hasattr(self.b, 'get_mu'):
@@ -398,7 +453,7 @@ class TotalVariation(ConvexLossFunction,
 
         self.precompute()
 
-        A = sparse.vstack((self.Ax, self.Ay, self.Az))
+        A = np.vstack(self.A())
         v = algorithms.SparseSVD(max_iter=10).run(A)
         u = A.dot(v)
         self.lambda_max = np.sum(u ** 2.0)
@@ -421,6 +476,23 @@ class TotalVariation(ConvexLossFunction,
                               np.sum(self.asy ** 2.0) +
                               np.sum(self.asz ** 2.0))
 
+    def alpha(self, beta, mu=None):
+        if self.gamma <= TOLERANCE:
+            return 0
+
+        if (mu == None):
+            mu = self.get_mu()
+
+        if self.beta_id != id(beta) or self.mu_id != id(mu):
+            self.compute_alpha(beta, mu)
+            self.beta_id = id(beta)
+            self.mu_id = id(mu)
+
+        return self.asx, self.asy, self.asz
+
+    def A(self):
+        return self.Ax, self.Ay, self.Az
+
     def grad(self, beta):
 
         if self.gamma <= TOLERANCE:
@@ -432,6 +504,21 @@ class TotalVariation(ConvexLossFunction,
             self.mu_id = id(self.get_mu())
 
         return self.Aalpha
+
+    def projection(self, alpha):
+        asx = alpha[0]
+        asy = alpha[1]
+        asz = alpha[2]
+        asnorm = asx ** 2.0 + asy ** 2.0 + asz ** 2.0  # )**0.5
+#        asnorm = np.sqrt(asnorm)
+        i = asnorm > 1
+
+        asnorm_i = asnorm[i] ** 0.5  # Square root is taken here. Faster.
+        asx[i] = np.divide(asx[i], asnorm_i)
+        asy[i] = np.divide(asy[i], asnorm_i)
+        asz[i] = np.divide(asz[i], asnorm_i)
+
+        return asx, asy, asz
 
     def Lipschitz(self):
 
@@ -449,21 +536,13 @@ class TotalVariation(ConvexLossFunction,
         self.asz = q * self.Az.dot(beta)
 
         # Apply projection
-        asnorm = self.asx ** 2.0 + self.asy ** 2.0 + self.asz ** 2.0  # )**0.5
-#        asnorm = np.sqrt(asnorm)
-        i = asnorm > 1
-
-        asnorm_i = asnorm[i] ** 0.5  # Square root is taken here. Faster.
-        self.asx[i] = np.divide(self.asx[i], asnorm_i)
-        self.asy[i] = np.divide(self.asy[i], asnorm_i)
-        self.asz[i] = np.divide(self.asz[i], asnorm_i)
+        self.asx, self.asy, self.asz = self.projection((self.asx,
+                                                        self.asy,
+                                                        self.asz))
 
 #        self.Aalpha = self.Ax.T.dot(self.asx) + \
 #                      self.Ay.T.dot(self.asy) + \
 #                      self.Az.T.dot(self.asz)
-#        self.Aalpha = np.add(np.add(self.Ax.T.dot(self.asx),
-#                                    self.Ay.T.dot(self.asy), self.buff),
-#                                    self.Az.T.dot(self.asz), self.buff)
         self.Aalpha = np.add(np.add(self.Axt.dot(self.asx),
                                     self.Ayt.dot(self.asy), self.buff),
                                     self.Azt.dot(self.asz), self.buff)
@@ -621,6 +700,16 @@ class GroupLassoOverlap(ConvexLossFunction,
 
         return self.Aalpha
 
+    def projection(self, alpha):
+        for i in xrange(len(alpha)):
+            astar = alpha[i]
+            normas = np.sqrt(np.dot(astar.T, astar))
+            if normas > 1.0:
+                astar /= normas
+            alpha[i] = astar
+
+        return alpha
+
     def Lipschitz(self):
 
         return self.max_col_norm / self.mu
@@ -632,9 +721,7 @@ class GroupLassoOverlap(ConvexLossFunction,
         q = self.gamma / mu
         for g in xrange(len(self.A)):
             astar = q * self.A[g].dot(beta)
-            normas = np.sqrt(np.dot(astar.T, astar))
-            if normas > 1:
-                astar /= normas
+            astar = self.projection([astar])[0]
 
             self.astar[g] = astar
 
