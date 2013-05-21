@@ -692,20 +692,27 @@ class ContinuationRun(BaseMethod):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, method, mus, *args, **kwargs):
+
         super(ContinuationRun, self).__init__(*args, **kwargs)
 
         self.method = method
+        self.mus = mus
+
+    def get_algorithm(self):
+        return self.method.get_algorithm()
+
+    def set_algorithm(self, algorithm):
+        self.method.set_algorithm(algorithm)
 
     def fit(self, *X, **kwargs):
-#    def continuation_run(self, algorithm, err_fnc, *args, **kwargs):
 
-        start_vector = self.method.get_algorithm().start_vector
+        start_vector = self.method.get_start_vector()
         f = []
-        for mu in err_fnc.get_mus():
-            err_fnc.set_mu(mu)
-            algorithm.set_start_vector(start_vector)
-            beta = algorithm.run(*args, **kwargs)
-            print "continuation with mu =", err_fnc.get_mu(), \
+        for mu in self.mus:
+            self.method.set_mu(mu)
+            self.method.set_start_vector(start_vector)
+            beta = self.method.fit(*X, **kwargs)
+            print "continuation with mu =", mu, \
                     ", iterations =", algorithm.iterations
             f = f + algorithm.f
 

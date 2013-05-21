@@ -486,7 +486,8 @@ class ISTARegression(ProximalGradientMethod):
     def __init__(self, **kwargs):
         super(ISTARegression, self).__init__(**kwargs)
 
-    def run(self, X, g=None, h=None, t=None, tscale=0.95, **kwargs):
+    def run(self, X, g=None, h=None, t=None, tscale=0.95,
+            early_stopping_mu=None, **kwargs):
 
         if h == None:
             h = error_functions.ZeroErrorFunction()
@@ -601,7 +602,11 @@ class MonotoneFISTARegression(ISTARegression):
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
 
-        f_old = g.f(beta_old) + h.f(beta_old)
+        if early_stopping_mu != None:
+            f_old = g.f(beta_old, mu=early_stopping_mu) + \
+                    h.f(beta_old, mu=early_stopping_mu)
+        else:
+            f_old = g.f(beta_old) + h.f(beta_old)
         f_new = f_old
         self.f = [f_new]
 
