@@ -745,7 +745,7 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
         del A
         L = L / g.lambda_min()  # Lipschitz constant of phi
 
-        beta_hat_0 = self.beta_hat_0_2
+        beta_hat_0 = self.beta_hat_0_1
 
         # Values for k=0
         mu = L / 1.0

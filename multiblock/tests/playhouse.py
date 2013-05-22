@@ -84,7 +84,7 @@ def test_tv():
 #    beta1D = np.sort(np.abs(betastar), axis=0)
 #    y = np.dot(X, beta1D)
 
-    eps = 0.000001
+    eps = 0.01
     maxit = 500
 
     gamma = 1.0
