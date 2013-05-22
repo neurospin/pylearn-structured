@@ -9,7 +9,7 @@ methods.
 """
 
 __all__ = ['PCA', 'SVD', 'PLSR', 'PLSC', 'O2PLS', 'RGCCA',
-           'LinearRegression', 'LinearRegressionTV',
+           'LinearRegression', 'LinearRegressionTV', 'RidgeRegressionTV',
            'LogisticRegression']
 
 from sklearn.utils import check_arrays
@@ -19,6 +19,7 @@ import warnings
 import numpy as np
 from numpy.linalg import inv, pinv
 from multiblock.utils import direct
+import utils
 
 import algorithms
 import copy
@@ -27,7 +28,6 @@ import schemes
 import modes
 import error_functions
 import start_vectors
-import preprocess
 
 
 class BaseMethod(object):
@@ -128,8 +128,8 @@ class BaseMethod(object):
         self.get_algorithm()._set_prox_op(prox_op)
 
     @abc.abstractmethod
-    def _get_transform(self, index=0):
-        raise NotImplementedError('Abstract method "_get_transform" must be '\
+    def get_transform(self, index=0):
+        raise NotImplementedError('Abstract method "get_transform" must be '\
                                   'specialised!')
 
     def deflate(self, X, w, t, p, index=None):
@@ -233,7 +233,7 @@ class PLSBaseMethod(BaseMethod):
 
         return self
 
-    def _get_transform(self, index=0):
+    def get_transform(self, index=0):
         """ Returns the linear transformation W that generates the score
         matrix T = XW* for matrix with index index.
 
@@ -255,7 +255,7 @@ class PLSBaseMethod(BaseMethod):
         T = []
         for i in xrange(self.n):
             # Apply rotation
-            t = np.dot(X[i], self._get_transform(i))
+            t = np.dot(X[i], self.get_transform(i))
 
             T.append(t)
 
@@ -272,7 +272,7 @@ class PCA(PLSBaseMethod):
 #                                                              pp.Scale()]))
         super(PCA, self).__init__(**kwargs)
 
-    def _get_transform(self, index=0):
+    def get_transform(self, index=0):
         return self.P
 
     def fit(self, *X, **kwargs):
@@ -306,7 +306,7 @@ class SVD(PCA):
 #        PCA.__init__(self, **kwargs)
         super(SVD, self).__init__(**kwargs)
 
-    def _get_transform(self, index=0):
+    def get_transform(self, index=0):
         return self.V
 
     def fit(self, *X, **kwargs):
@@ -337,7 +337,7 @@ class PLSR(PLSBaseMethod):
 
         super(PLSR, self).__init__(algorithm=algorithm, **kwargs)
 
-    def _get_transform(self, index=0):
+    def get_transform(self, index=0):
         if index == 0:
             return self.Ws
         else:
@@ -416,7 +416,7 @@ class PLSC(PLSR):
             algorithm = algorithms.NIPALSAlgorithm()
         super(PLSC, self).__init__(algorithm=algorithm, **kwargs)
 
-    def _get_transform(self, index=0):
+    def get_transform(self, index=0):
         if index == 0:
             return self.Ws
         else:  # index == 1
@@ -689,14 +689,18 @@ class RGCCA(PLSBaseMethod):
 
 class ContinuationRun(BaseMethod):
 
-    __metaclass__ = abc.ABCMeta
+    def __init__(self, method, mus, algorithm=None, *args, **kwargs):
+        if algorithm == None:
+            algorithm = algorithms.ISTARegression()
 
-    def __init__(self, method, mus, *args, **kwargs):
-
-        super(ContinuationRun, self).__init__(*args, **kwargs)
+        super(ContinuationRun, self).__init__(num_comp=1, algorithm=algorithm,
+                                              *args, **kwargs)
 
         self.method = method
         self.mus = mus
+
+    def get_transform(self, index=0):
+        return self.beta
 
     def get_algorithm(self):
         return self.method.get_algorithm()
@@ -704,28 +708,25 @@ class ContinuationRun(BaseMethod):
     def set_algorithm(self, algorithm):
         self.method.set_algorithm(algorithm)
 
-    def fit(self, *X, **kwargs):
+    def fit(self, X, y, **kwargs):
 
         start_vector = self.method.get_start_vector()
         f = []
         for mu in self.mus:
-            self.method.set_mu(mu)
             self.method.set_start_vector(start_vector)
-            beta = self.method.fit(*X, **kwargs)
-            print "continuation with mu =", mu, \
-                    ", iterations =", algorithm.iterations
-            f = f + algorithm.f
+            self.method.fit(X, y, mu=mu, early_stopping_mu=self.mus[-1],
+                            **kwargs)
+            self.beta = self.method.get_transform()
+            utils.debug("continuation with mu =", mu, \
+                    ", iterations =", self.method.get_algorithm().iterations)
+            f = f + self.method.get_algorithm().f
 
-            start_vector = start_vectors.IdentityStartVector(beta)
+            start_vector = start_vectors.IdentityStartVector(self.beta)
 
-        algorithm.f = f
-#        algorithm.fs = fs
-#        algorithm.fl = fl
-        algorithm.iterations = len(f)
-#        algorithm.iterationss = len(fs)
-#        algorithm.iterationsl = len(fl)
+        self.method.get_algorithm().f = f
+        self.method.get_algorithm().iterations = len(f)
 
-        return beta
+        return self
 
 
 class NesterovProximalGradientMethod(BaseMethod):
@@ -734,13 +735,23 @@ class NesterovProximalGradientMethod(BaseMethod):
 
     def __init__(self, g=None, h=None, algorithm=None, **kwargs):
         if algorithm == None:
-            algorithm = algorithms.FISTARegression()
+            algorithm = algorithms.ISTARegression()
 
         super(NesterovProximalGradientMethod, self).__init__(num_comp=1,
                                                            algorithm=algorithm,
                                                            **kwargs)
         self.set_g(g)
         self.set_h(h)
+
+    @abc.abstractmethod
+    def fit(self, X=None, y=None, t=None, mu=None):
+        raise NotImplementedError('Abstract method "fit" must be specialised!')
+
+    def set_mu(self, mu):
+        self.g.set_mu(mu)
+
+    def get_mu(self):
+        return self.g.get_mu()
 
     def get_g(self):
         return self.g
@@ -763,7 +774,7 @@ class LinearRegression(NesterovProximalGradientMethod):
         if X != None and y != None:
             self.get_g(error_functions.LinearRegressionError(X, y))
 
-    def _get_transform(self, index=0):
+    def get_transform(self, index=0):
         return self.beta
 
     def fit(self, X=None, y=None, t=None):
@@ -772,7 +783,7 @@ class LinearRegression(NesterovProximalGradientMethod):
             self.get_g(error_functions.LinearRegressionError(X, y))
 
         if self.get_g() == None:
-            raise ValueError('The function g must be given at either at ' \
+            raise ValueError('The function g must be given either at ' \
                              'construction or when fitting')
 
         self.beta = self.algorithm.run(g=self.get_g(), t=t)
@@ -787,19 +798,13 @@ class LinearRegression(NesterovProximalGradientMethod):
 
 class LinearRegressionTV(NesterovProximalGradientMethod):
 
-    def __init__(self, shape, gamma, mu, mask=None, X=None, y=None, **kwargs):
+    def __init__(self, shape, gamma, mu=None, mask=None, X=None, y=None,
+                 **kwargs):
 
         super(LinearRegressionTV, self).__init__(**kwargs)
 
-        if mask != None:
-            self.mask = preprocess.Mask(mask)
-        else:
-            self.mask = None
-
         self.SSreg = None
         if X != None and y != None:
-            if self.mask != None:
-                X = self.mask.process(X)
             self.SSreg = error_functions.LinearRegressionError(X, y)
 
         self.TV = error_functions.TotalVariation(shape, gamma, mu, mask)
@@ -808,14 +813,12 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
             self.set_g(error_functions.CombinedNesterovLossFunction(self.SSreg,
                                                                     self.TV))
 
-    def _get_transform(self, **kwargs):
+    def get_transform(self, **kwargs):
         return self.beta
 
-    def fit(self, X, y, **kwargs):
+    def fit(self, X=None, y=None, mu=None, **kwargs):
 
         if X != None and y != None:
-            if self.mask != None:
-                X = self.mask.process(X)
             self.SSreg = error_functions.LinearRegressionError(X, y)
 
         if self.SSreg == None:
@@ -824,11 +827,10 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
 
         self.set_g(error_functions.CombinedNesterovLossFunction(self.SSreg,
                                                                 self.TV))
+        if mu != None:
+            self.TV.set_mu(mu)
 
         self.beta = self.algorithm.run(X, g=self.get_g(), **kwargs)
-
-        if self.mask != None:
-            self.beta = self.mask.revert(self.beta.T).T
 
         return self
 
@@ -843,7 +845,7 @@ class LogisticRegression(NesterovProximalGradientMethod):
     def __init__(self, **kwargs):
         super(LogisticRegression, self).__init__(num_comp=1, **kwargs)
 
-    def _get_transform(self, index=0):
+    def get_transform(self, index=0):
         return self.beta
 
     def fit(self, X, y, g=None, h=None, t=None):
@@ -864,6 +866,76 @@ class LogisticRegression(NesterovProximalGradientMethod):
     def predict(self, X, **kwargs):
 
         X = np.asarray(X)
+        yhat = np.dot(X, self.beta)
+
+        return yhat
+
+
+class ExcessiveGapMethod(BaseMethod):
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, g=None, h=None, mu=None, **kwargs):
+        algorithm = algorithms.ExcessiveGapRidgeRegression()
+        super(ExcessiveGapMethod, self).__init__(num_comp=1,
+                                                 algorithm=algorithm,
+                                                 **kwargs)
+        self.set_g(g)
+        self.set_h(h)
+        self.mu = mu
+
+    @abc.abstractmethod
+    def fit(self, X, y, g=None, h=None, mu=None):
+        raise NotImplementedError('Abstract method "fit" must be specialised!')
+
+    def get_g(self):
+        return self.g
+
+    def set_g(self, g):
+        self.g = g
+
+    def get_h(self):
+        return self.h
+
+    def set_h(self, h):
+        self.h = h
+
+
+class RidgeRegressionTV(ExcessiveGapMethod):
+
+    def __init__(self, shape, gamma, mu=None, mask=None,
+                 X=None, y=None, l=None, **kwargs):
+
+        super(RidgeRegressionTV, self).__init__(**kwargs)
+
+        self.X = X
+        self.y = y
+        self.l = l
+        self.mu = mu
+
+        if X != None and y != None and l != None:
+            self.set_g(error_functions.RidgeRegression(X, y, l))
+
+        self.set_h(error_functions.TotalVariation(shape, gamma, mu, mask))
+
+    def get_transform(self, index=0):
+        return self.beta
+
+    def fit(self, X=None, y=None, l=None, mu=None):
+
+        X = self.X if X == None else X
+        y = self.y if y == None else y
+        l = self.l if l == None else l
+        mu = self.mu if mu == None else mu
+
+        if X != None and y != None and l != None:
+            self.set_g(error_functions.RidgeRegression(X, y, l))
+
+        self.beta = self.algorithm.run(X, y, g=self.get_g(), h=self.get_h())
+
+        return self
+
+    def predict(self, X, **kwargs):
         yhat = np.dot(X, self.beta)
 
         return yhat

@@ -13,6 +13,9 @@ __all__ = ['LossFunction', 'LipschitzContinuous', 'Differentiable',
            'ConvexLossFunction',
            'LinearRegressionError', 'LogisticRegressionError',
 
+           'StronglyConvexLossFunction',
+           'RidgeRegression',
+
            'ProximalOperator',
            'ZeroErrorFunction',
            'L1', 'L2', 'ElasticNet',
@@ -109,12 +112,11 @@ class NesterovFunction(Differentiable, LipschitzContinuous):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, mus=None, **kwargs):
+    def __init__(self, mu=None, **kwargs):
         super(NesterovFunction, self).__init__(**kwargs)
 
-        if mus != None:
-            self.mus = mus
-            self.mu = mus[0]
+        if mu != None:
+            self.set_mu(mu)
 
     @abc.abstractmethod
     def precompute(self, *args, **kwargs):
@@ -136,14 +138,14 @@ class NesterovFunction(Differentiable, LipschitzContinuous):
         raise NotImplementedError('Abstract method "projection" must be ' \
                                   'specialised!')
 
-    def get_mus(self):
-        return self.mus
-
-    def set_mus(self, mus):
-        if not isinstance(mus, (tuple, list)):
-            mus = [mus]
-
-        self.mus = mus
+#    def get_mus(self):
+#        return self.mus
+#
+#    def set_mus(self, mus):
+#        if not isinstance(mus, (tuple, list)):
+#            mus = [mus]
+#
+#        self.mus = mus
 
     def get_mu(self):
         return self.mu
@@ -319,6 +321,48 @@ class LogisticRegressionError(ConvexLossFunction,
         return self.t
 
 
+class RidgeRegression(StronglyConvexLossFunction,
+                      Differentiable,
+                      LipschitzContinuous):
+    """Loss function for ridge regression. Represents the function:
+
+        f(b) = norm(y - X*b)² + lambda*norm(b)²
+        #f(b) = (1/2)*norm(y - X*b)² + (lambda/2)*norm(b)²
+    """
+
+    def __init__(self, X, y, l, **kwargs):
+        super(RidgeRegression, self).__init__(**kwargs)
+
+        self.X = X
+        self.y = y
+        self.Xty = np.dot(X.T, y)
+        self.l = l
+
+        _, s, _ = np.linalg.svd(X, full_matrices=False)  # False == faster
+        self.l_max = np.max(s) ** 2.0 + l
+        self.l_min = np.min(s) ** 2.0 + l
+
+    def f(self, beta, **kwargs):
+#        return 0.5 * (np.sum((self.y - np.dot(self.X, beta)) ** 2.0) \
+#                + self.l * np.sum(beta ** 2.0))
+        return (np.sum((self.y - np.dot(self.X, beta)) ** 2.0) \
+                + self.l * np.sum(beta ** 2.0))
+
+    def grad(self, beta, **kwargs):
+#        return (np.dot(self.X.T, np.dot(self.X, beta)) - self.Xty) \
+#                + self.l * beta
+        return 2.0 * ((np.dot(self.X.T, np.dot(self.X, beta)) - self.Xty) \
+                + self.l * beta)
+
+    def Lipschitz(self):
+#        return self.lambda_max
+        return 2.0 * self.l_max
+
+    def lambda_min(self):
+#        return self.lambda_min
+        return 2.0 * self.l_min
+
+
 class ZeroErrorFunction(ProximalOperator, Differentiable, LipschitzContinuous):
 
     def __init__(self, **kwargs):
@@ -425,7 +469,7 @@ class TotalVariation(ConvexLossFunction,
                      NesterovFunction,
                      LipschitzContinuous):
 
-    def __init__(self, shape, gamma, mu, mask=None, **kwargs):
+    def __init__(self, shape, gamma, mu=None, mask=None, **kwargs):
         """Construct a TotalVariation loss function.
 
         Parameters:
@@ -441,11 +485,10 @@ class TotalVariation(ConvexLossFunction,
 
         mask  : A 1-dimensional mask representing the 3D image mask.
         """
-        super(TotalVariation, self).__init__(**kwargs)
+        super(TotalVariation, self).__init__(mu=mu, **kwargs)
 
         self.shape = shape
         self.gamma = gamma
-        self.set_mu(mu)
         self.mask = mask
 
         self.beta_id = None
@@ -453,7 +496,7 @@ class TotalVariation(ConvexLossFunction,
 
         self.precompute()
 
-        A = np.vstack(self.A())
+        A = sparse.vstack(self.A())
         v = algorithms.SparseSVD(max_iter=10).run(A)
         u = A.dot(v)
         self.lambda_max = np.sum(u ** 2.0)
@@ -476,6 +519,18 @@ class TotalVariation(ConvexLossFunction,
                               np.sum(self.asy ** 2.0) +
                               np.sum(self.asz ** 2.0))
 
+    def grad(self, beta):
+
+        if self.gamma <= TOLERANCE:
+            return np.zeros(beta.shape)
+
+        if self.beta_id != id(beta) or self.mu_id != id(self.get_mu()):
+            self.compute_alpha(beta, self.get_mu())
+            self.beta_id = id(beta)
+            self.mu_id = id(self.get_mu())
+
+        return self.Aalpha
+
     def alpha(self, beta, mu=None):
         if self.gamma <= TOLERANCE:
             return 0
@@ -492,18 +547,6 @@ class TotalVariation(ConvexLossFunction,
 
     def A(self):
         return self.Ax, self.Ay, self.Az
-
-    def grad(self, beta):
-
-        if self.gamma <= TOLERANCE:
-            return np.zeros(beta.shape)
-
-        if self.beta_id != id(beta) or self.mu_id != id(self.get_mu()):
-            self.compute_alpha(beta, self.get_mu())
-            self.beta_id = id(beta)
-            self.mu_id = id(self.get_mu())
-
-        return self.Aalpha
 
     def projection(self, alpha):
         asx = alpha[0]
@@ -658,7 +701,7 @@ class GroupLassoOverlap(ConvexLossFunction,
                 group.
         """
 
-        super(GroupLassoOverlap, self).__init__(**kwargs)
+        super(GroupLassoOverlap, self).__init__(mu=mu, **kwargs)
 
         self.num_variables = num_variables
         self.groups = groups

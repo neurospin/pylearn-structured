@@ -3,7 +3,7 @@
 Created on Thu May 16 09:41:13 2013
 
 @author: Tommy Löfstedt
-"""
+'"""
 
 import numpy as np
 import multiblock.utils as utils
@@ -84,32 +84,50 @@ def test_tv():
 #    beta1D = np.sort(np.abs(betastar), axis=0)
 #    y = np.dot(X, beta1D)
 
-    eps = 0.0000001
-    maxit = 1000000
+    eps = 0.000001
+    maxit = 500
 
     gamma = 1.0
     l = 0.1
+    en_lambda = 0.9
 
-#    r = 0
-#    for i in xrange(X.shape[1]):
-#        r = max(r, abs(utils.cov(X[:, [i]], y)))
-#    mus = [r * 0.5 ** i for i in xrange(5)]
-    mu = 1.0
+    num_mus = 5
+    r = 0
+    for i in xrange(X.shape[1]):
+        r = max(r, abs(utils.cov(X[:, [i]], y)))
+    mus = [r * 0.5 ** i for i in xrange(num_mus)]
 
     total_start = time()
     init_start = time()
 
 #    lrtv = methods.LinearRegressionTV((pz, py, px), gamma, mu, mask1D)
     mask1D = mask1D.flatten().astype(int).tolist()
-    lrtv = methods.LinearRegressionTV((pz, py, px), gamma, mu, mask=mask1D,
-                                      algorithm=algorithms.ISTARegression())
-    lrtv.set_max_iter(maxit)
-    lrtv.set_tolerance(eps)
+    preprocess_mask = preprocess.Mask(mask1D)
+    X = preprocess_mask.process(X)
+
+#    lrtv = methods.LinearRegressionTV((pz, py, px), gamma, mu=mus[0],
+#                                      mask=mask1D,
+#                                      algorithm=algorithms.MonotoneFISTARegression())
+#    lrtv.set_max_iter(maxit)
+#    lrtv.set_tolerance(eps)
+#    cr = methods.ContinuationRun(lrtv, mus)
+#    method = cr
+
+    rrtv = RidgeRegressionTV((pz, py, px), gamma, mu=mus[0], mask=mask1D,
+                             X=X, y=y, l=1.0 - en_lambda)
+    rrtv.set_max_iter(maxit)
+    rrtv.set_tolerance(eps)
+    method = rrtv
 
     print "Init time:", (time() - init_start)
 
-    lrtv.fit(X, y)
-    alg = lrtv.get_algorithm()
+    method.fit()
+#    method.fit(X, y)
+#    computed_beta = method.beta
+    computed_beta = preprocess_mask.revert(method.beta.T).T
+
+#    lrtv.fit(X, y)
+    alg = method.get_algorithm()
     print "alg:", alg
 
     print "Total time:", (time() - total_start)
@@ -118,7 +136,7 @@ def test_tv():
     print "Error:", alg.f[-1]
 
     plot.subplot(2, 2, 1)
-    plot.plot(beta1D[:, 0], '-', lrtv.beta[:, 0], '*')
+    plot.plot(beta1D[:, 0], '-', computed_beta[:, 0], '*')
     plot.title("Iterations: " + str(alg.iterations))
 
     plot.subplot(2, 2, 3)
@@ -130,7 +148,7 @@ def test_tv():
                 interpolation='nearest', cmap=cm.gist_rainbow)
 
     plot.subplot(2, 2, 4)
-    plot.imshow(np.reshape(lrtv.beta, (pz, py, px))[0, :, :] + mask,
+    plot.imshow(np.reshape(computed_beta, (pz, py, px))[0, :, :] + mask,
                 # extent=(x.min(), x.max(), y.max(), y.min()),
                 interpolation='nearest', cmap=cm.gist_rainbow)
     plot.show()

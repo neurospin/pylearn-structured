@@ -13,7 +13,9 @@ from .methods import PLSC
 from .methods import O2PLS
 from .methods import RGCCA
 from .methods import LinearRegression
+from .methods import LinearRegressionTV
 from .methods import LogisticRegression
+from .methods import RidgeRegressionTV
 
 import algorithms
 import preprocess
@@ -24,6 +26,7 @@ import error_functions
 import start_vectors
 
 __all__ = ['PCA', 'SVD', 'PLSR', 'PLSC', 'O2PLS', 'RGCCA',
-           'LinearRegression', 'LogisticRegression',
+           'LinearRegression', 'LinearRegressionTV', 'RidgeRegressionTV',
+           'LogisticRegression',
            'prox_ops', 'algorithms', 'preprocess',
            'tests', 'utils', 'error_functions', 'start_vectors']

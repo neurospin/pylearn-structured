@@ -37,14 +37,15 @@ from multiblock.utils import norm, norm1, warning
 import numpy as np
 from numpy import ones, eye
 from numpy.linalg import pinv
-#import scipy.sparse as sparse
+import scipy.sparse as sparse
 
 #import gc
 #from time import time
 
 __all__ = ['BaseAlgorithm', 'SparseSVD', 'NIPALSBaseAlgorithm',
            'NIPALSAlgorithm', 'RGCCAAlgorithm', 'ISTARegression',
-           'FISTARegression', 'MonotoneFISTARegression']
+           'FISTARegression', 'MonotoneFISTARegression',
+           'ExcessiveGapRidgeRegression']
 
 
 class BaseAlgorithm(object):
@@ -499,10 +500,14 @@ class ISTARegression(ProximalGradientMethod):
 
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
-        f_old = g.f(beta_old) + h.f(beta_old)
-        self.f = [f_old]
+        if early_stopping_mu != None:
+            f_old = g.f(beta_old, mu=early_stopping_mu) + \
+                    h.f(beta_old, mu=early_stopping_mu)
+        else:
+            f_old = g.f(beta_old) + h.f(beta_old)
+        self.f = []
 
-        self.iterations = 1
+        self.iterations = 0
         while True:
             self.converged = True
 
@@ -511,16 +516,21 @@ class ISTARegression(ProximalGradientMethod):
             if norm1(beta_old - beta_new) > self.tolerance * t:
                 self.converged = False
 
-            f_new = g.f(beta_new) + h.f(beta_new)
-#            if f_new > f_old:  # Early stopping
+            if early_stopping_mu != None:
+                f_new = g.f(beta_new, mu=early_stopping_mu) + \
+                        h.f(beta_new, mu=early_stopping_mu)
+            else:
+                f_new = g.f(beta_new) + h.f(beta_new)
+
+            if f_new > f_old:  # Early stopping
 #                print f_new, ">", f_old
-#                self.converged = True
-#                warning('Early stopping criterion triggered.')
-#            else:
-            # Save updated values
-            f_old = f_new
-            self.f.append(f_new)
-            self.iterations += 1
+                self.converged = True
+                warning('Early stopping criterion triggered.')
+            else:
+                # Save updated values
+                f_old = f_new
+                self.f.append(f_new)
+                self.iterations += 1
 
             beta_old = beta_new
 
@@ -648,8 +658,7 @@ class MonotoneFISTARegression(ISTARegression):
                         if es_f_new > es_f_old:  # Early stopping
                             self.converged = True
                             stop_early = True
-                            warning('Early stopping criterion triggered. ' \
-                                    'Moving on to smaller mu.')
+                            warning('Early stopping criterion triggered.')
                             break
                         else:
                             f_new = es_f_new
@@ -668,8 +677,7 @@ class MonotoneFISTARegression(ISTARegression):
                 if es_f_new > es_f_old:  # Early stopping
                     self.converged = True
                     stop_early = True
-                    warning('Early stopping criterion triggered. ' \
-                            'Moving on to smaller mu.')
+                    warning('Early stopping criterion triggered.')
                     break
                 else:
                     self.f.append(es_f_new)
@@ -704,7 +712,7 @@ class ExcessiveGapMethod(BaseAlgorithm):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, X, y, **kwargs):
+    def __init__(self, **kwargs):
         super(ExcessiveGapMethod, self).__init__(**kwargs)
 
     @abc.abstractmethod
@@ -713,94 +721,114 @@ class ExcessiveGapMethod(BaseAlgorithm):
                                   'specialised!')
 
 
-class ExcessiveGapRegression(ExcessiveGapMethod):
-    """ The excessive gap method for linear regression.
+class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
+    """ The excessive gap method for ridge regression.
     """
 
     def __init__(self, **kwargs):
 
-        super(ExcessiveGapRegression, self).__init__(**kwargs)
+        super(ExcessiveGapRidgeRegression, self).__init__(**kwargs)
 
-    def run(self, X, y, g=None, h=None, **kwargs):
-        super(ExcessiveGapRegression, self).__init__(**kwargs)
+    def run(self, X, y, g, h, **kwargs):
 
         self.X = X
         self.y = y
+        self.l = g.l
+        self.g = g
+        self.h = h
 
-        zero = start_vectors.ZerosStartVector().get_vector(self.X)
-
-        A = np.vstack(self.A())
+        self.A = h.A()
+        A = sparse.vstack(self.A)
         v = algorithms.SparseSVD(max_iter=10).run(A)
         u = A.dot(v)
-        L2 = np.sum(u ** 2.0)
-        L2 /= 1.0  # g.lambda_min()
+        L = np.sum(u ** 2.0)
+        del A
+        L = L / g.lambda_min()  # Lipschitz constant of phi
 
-        beta_hat_0 = self.beta_hat_0_1
+        beta_hat_0 = self.beta_hat_0_2
 
-        mu = L2 / 1.0
-        beta = beta_hat_0(zero)
-        alpha = self.alpha_hat_muk(h, beta, mu)
-        u = [0] * len(alpha)
-        A = h.A()
-        for i in xrange(len(u)):
-            u[i] = np.zeros((A[i].shape[0], 1))
-        alpha = self.V(h, u, beta, L2)
+        # Values for k=0
+        mu = L / 1.0
+        zero = [0] * len(self.A)
+        for i in xrange(len(self.A)):
+            zero[i] = np.zeros((self.A[i].shape[0], 1))
+        beta_new = beta_hat_0(zero)
+        alpha = self.V(zero, beta_new, L)
+        tau = 2.0 / 3.0
+        alpha_hat = self.alpha_hat_muk(beta_new, mu)
+        u = [0] * len(alpha_hat)
+        for i in xrange(len(alpha_hat)):
+            u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
 
-        self.iterations = 0
+        f_new = g.f(beta_new) + h.f(beta_new)
+        self.f = [f_new]
+        self.iterations = 1
         while True:
             self.converged = True
 
-            k = self.iterations + 1
-            tau = 2.0 / (k + 3.0)
-
-            alpha_hat = self.alpha_hat_muk(h, beta, mu)
-            for i in xrange(len(alpha_hat)):
-                alpha[i] = self.V(h, u, beta, L2)
-                u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
+            # Current iteration (k+1)
             mu = (1.0 - tau) * mu
-            beta = (1.0 - tau) * beta + tau * beta_hat_0(u)
+            beta_old = beta_new
+            beta_new = (1.0 - tau) * beta_old + tau * beta_hat_0(u)
+            alpha = self.V(u, beta_old, L)
 
-    def V(sefl, h, u, beta, L2):
+            if norm1(beta_new - beta_old) > self.tolerance:
+                self.converged = False
+
+            f_new = g.f(beta_new) + h.f(beta_new)
+            self.f.append(f_new)
+            self.iterations += 1
+
+            print self.iterations, "<", self.max_iter
+
+            if self.converged:
+                break
+
+            if self.iterations >= self.max_iter:
+                warning('Maximum number of iterations reached before ' \
+                        'convergence')
+                break
+
+            # Prepare for next iteration (next iteration's k)
+            tau = 2.0 / (float(self.iterations) + 3.0)
+            alpha_hat = self.alpha_hat_muk(beta_new, mu)
+            for i in xrange(len(alpha_hat)):
+                u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
+
+        return beta_new
+
+    def V(self, u, beta, L):
         u_new = [0] * len(u)
-        A = h.A()
         for i in xrange(len(u)):
-            u_new[i] = u[i] + A[i].dot(beta) / L2
-        return h.projection(u_new)
+            u_new[i] = u[i] + self.A[i].dot(beta) / L
+        return list(self.h.projection(u_new))
 
-    def alpha_hat_muk(self, h, beta, mu):
-        return h.alpha(beta, mu)
+    def alpha_hat_muk(self, beta, mu):
+        return self.h.alpha(beta, mu)
 
     def beta_hat_0_1(self, alpha):
         """ Straight-forward naive Ridge regression.
         """
-        self.X = 0
-        self.y = 0
-        self.A = 0
-        self.l = 0
-
-        alpha = np.vstack(alpha)
-
         XX = np.dot(self.X.T, self.X)
-        XXI = XX + (1.0 - self.l) * np.eye(XX.shape[0])
+        XXI = XX + self.l * np.eye(XX.shape[0])
         invXXI = np.linalg.pinv(XXI)
-        v = np.dot(self.X.T, self.y) - np.dot(self.A.T, alpha) / 2.0
+        Aa = 0
+        for i in xrange(len(alpha)):
+            Aa += self.A[i].T.dot(alpha[i])
+        v = np.dot(self.X.T, self.y) - Aa / 2.0
 
         return np.dot(invXXI, v)
 
     def beta_hat_0_2(self, alpha):
         """ Approximation using linear regression for the parts of X'y - A'u/2.
         """
-        self.X = 0
-        self.y = 0
-        self.A = 0
-        self.l = 0
-
-        alpha = np.vstack(alpha)
-
         XX = np.dot(self.X, self.X.T)
-        XXI = XX + (1.0 - self.l) * np.eye(XX.shape[0])
+        XXI = XX + self.l * np.eye(XX.shape[0])
         invXXI = np.linalg.pinv(XXI)
-        w = np.dot(self.X.T, self.y) - np.dot(self.A.T, alpha) / 2.0
+        Aa = 0
+        for i in xrange(len(alpha)):
+            Aa += self.A[i].T.dot(alpha[i])
+        w = np.dot(self.X.T, self.y) - Aa / 2.0
         g = np.dot(np.linalg.pinv(XX), np.dot(self.X, w))
 
         return np.dot(self.X.T, np.dot(invXXI, g))
