@@ -11,9 +11,8 @@ Created on Thu Feb 7 11:50:00 2013
 """
 
 #import abc
-import warnings
 import numpy as np
-from multiblock.utils import TOLERANCE, MAX_ITER, norm, norm1, norm0
+from utils import TOLERANCE, MAX_ITER, norm, norm1, norm0, warning
 
 
 class ProxOp(object):
@@ -45,6 +44,7 @@ class L1(ProxOp):
     def prox(self, x, index=None, allow_empty=False, normaliser=None):
 
         xorig = x.copy()
+#        normorig = norm(xorig)
         if index == None:
             lorig = self.parameter
         else:
@@ -55,27 +55,27 @@ class L1(ProxOp):
 #        else:
 #            normalise = self.normaliser[index]
 
-        warn = False
-        while True:
-            x = xorig  # / normalise(xorig)
+#        warn = False
+#        while True:
+        x = xorig  # / normalise(xorig)
 
-            sign = np.sign(x)
-            x = np.absolute(x)
-            x -= l
-            x[x < 0] = 0
-            x = np.multiply(sign, x)
+        sign = np.sign(x)
+        x = np.absolute(x)
+        x -= l
+        x[x < 0] = 0
+        x = np.multiply(sign, x)
 
-            if norm(x) > TOLERANCE or allow_empty:
-                break
-            else:
-                warn = True
-                # TODO: Improved this!
-                l *= 0.95  # Reduce by 5 % until at least one significant
-
-        if warn:
-            warnings.warn('Soft threshold was too large (all variables ' \
-                          'purged). Threshold reset to %f (was %f)'
-                          % (l, lorig))
+#            if norm(x) > TOLERANCE or allow_empty or normorig < TOLERANCE:
+#                break
+#            else:
+#                warn = True
+#                # TODO: Improved this!
+#                l *= 0.95  # Reduce by 5 % until at least one significant
+#
+#        if warn:
+#            warning('Soft threshold was too large (all variables ' \
+#                    'purged). Threshold reset to %f (was %f)'
+#                    % (l, lorig))
 
         return x
 

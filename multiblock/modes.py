@@ -10,9 +10,10 @@ Created on Fri Mar 29 10:33:37 2013
 __all__ = ['Mode', 'A', 'NewA', 'B']
 
 import abc
-import normalisation
-from numpy.linalg import pinv
 import numpy as np
+from numpy.linalg import pinv
+import normalisation
+from multiblock.utils import TOLERANCE
 
 
 class Mode(object):
@@ -39,8 +40,12 @@ class A(Mode):
         self.norm = normalisation.UnitVarianceScores()
 
     def estimation(self, X, u):
-        # TODO: Ok with division here?
-        return np.dot(X.T, u) / np.dot(u.T, u)
+        ssu = np.sum(u ** 2.0)  # np.dot(u.T, u)
+        if ssu < TOLERANCE:
+            return np.dot(X.T, u)
+        else:
+            # TODO: Ok with division here?
+            return np.dot(X.T, u) / np.dot(u.T, u)
 
 
 class NewA(A):

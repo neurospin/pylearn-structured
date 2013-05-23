@@ -8,14 +8,14 @@ methods.
 @license: BSD Style.
 """
 
-__all__ = ['PCA', 'SVD', 'PLSR', 'PLSC', 'O2PLS', 'RGCCA',
+__all__ = ['PCA', 'SVD', 'PLSR', 'TuckerFactorAnalysis', 'PLSC', 'O2PLS',
+           'RGCCA',
            'LinearRegression', 'LinearRegressionTV', 'RidgeRegressionTV',
            'LogisticRegression']
 
 from sklearn.utils import check_arrays
 
 import abc
-import warnings
 import numpy as np
 from numpy.linalg import inv, pinv
 from multiblock.utils import direct
@@ -207,13 +207,19 @@ class PLSBaseMethod(BaseMethod):
                 # Score vector
                 t = np.dot(X[i], w[i])  # / np.dot(w[i].T, w[i])
 
-                # Test for null variance
-                if np.dot(t.T, t) < self.algorithm.tolerance:
-                    warnings.warn('Scores of block X[%d] are too small at '
-                                  'iteration %d' % (i, a))
+                # Sum of squares of t
+                sst = np.sum(t ** 2.0)  # Faster than np.dot(t.T, t)
 
                 # Loading vector
-                p = np.dot(X[i].T, t) / np.dot(t.T, t)
+                p = np.dot(X[i].T, t)
+
+                # Test for null variance
+                if sst < self.algorithm.tolerance:
+                    utils.warning('Scores of block X[%d] are too small at '
+                                  'iteration %d' % (i, a))
+                else:
+                    # Loading vector
+                    p /= sst
 
                 # If we should make all weights correlate with np.ones((N,1))
                 if self.norm_dir:
@@ -229,7 +235,8 @@ class PLSBaseMethod(BaseMethod):
         # Compute W*, the rotation from input space X to transformed space T
         # such that T = XW* = XW(P'W)^-1
         for i in xrange(self.n):
-            self.Ws[i] = np.dot(self.W[i], inv(np.dot(self.P[i].T, self.W[i])))
+            self.Ws[i] = np.dot(self.W[i],
+                                pinv(np.dot(self.P[i].T, self.W[i])))
 
         return self
 
@@ -395,6 +402,71 @@ class PLSR(PLSBaseMethod):
         return self.fit(X, Y, **kwargs).transform(X, Y)
 
 
+class TuckerFactorAnalysis(PLSR):
+    """ Tucker inner battery factor analysis, or PLS with symmetric deflation
+    using the weights W and C.
+
+    The model of each matrix is:
+        X = T.W',
+        Y = U.C'
+    with the inner relation T = U + H, i.e. with T = U.Dy and U = T.Dx.
+
+    Prediction is therefore performed as:
+        Xhat = Y.C.Dy.W' = Y.By,
+        Yhat = X.W.Dx.Q' = X.Bx.
+    """
+
+    def __init__(self, algorithm=None, **kwargs):
+        if algorithm == None:
+            algorithm = algorithms.NIPALSAlgorithm()
+
+        super(TuckerFactorAnalysis, self).__init__(algorithm=algorithm,
+                                                   **kwargs)
+
+    def get_transform(self, index=0):
+        if index == 0:
+            return self.W
+        else:  # index == 1
+            return self.C
+
+    def deflate(self, X, w, t, p, index=None):
+        return X - np.dot(t, w.T)  # Deflate using their weights
+
+    def fit(self, X, Y=None, **kwargs):
+        Y = kwargs.pop('y', Y)
+
+        super(TuckerFactorAnalysis, self).fit(X, Y, **kwargs)
+
+        self.Dx = np.dot(pinv(self.T), self.U)
+        self.Dy = np.dot(pinv(self.U), self.T)
+
+        # Yhat = X.W.Dx.C' = X.Bx
+        self.Bx = np.dot(self.W, np.dot(self.Dx, self.C.T))
+        # Xhat = Y.C.Dy.W' = Y.By
+        self.By = np.dot(self.C, np.dot(self.Dy, self.W.T))
+
+        del self.B
+        del self.Ws
+        del self.P
+        del self.Q
+
+        return self
+
+    def predict(self, X, Y=None, **kwargs):
+        Y = kwargs.pop('y', Y)
+
+        X = np.asarray(X)
+        Ypred = np.dot(X, self.Bx)
+
+        if Y != None:
+            Y = np.asarray(Y)
+            Xpred = np.dot(Y, self.By)
+
+            return Ypred, Xpred
+
+        return Ypred
+
+
 class PLSC(PLSR):
     """ PLS with canonical deflation (symmetric).
 
@@ -430,13 +502,15 @@ class PLSC(PLSR):
 #        PLSR.fit(self, X, Y, **kwargs)
         super(PLSC, self).fit(X, Y, **kwargs)
 
-        self.Cs = np.dot(self.C, inv(np.dot(self.Q.T, self.C)))
+        self.Cs = np.dot(self.C, pinv(np.dot(self.Q.T, self.C)))
 
         self.Dx = np.dot(pinv(self.T), self.U)
         self.Dy = np.dot(pinv(self.U), self.T)
 
-        self.Bx = np.dot(self.Ws, np.dot(self.Dx, self.Q.T))  # Yhat = XW*DxQ' = XBx
-        self.By = np.dot(self.Cs, np.dot(self.Dy, self.P.T))  # Xhat = YC*DyP' = YBy
+        # Yhat = XW*DxQ' = XBx
+        self.Bx = np.dot(self.Ws, np.dot(self.Dx, self.Q.T))
+        # Xhat = YC*DyP' = YBy
+        self.By = np.dot(self.Cs, np.dot(self.Dy, self.P.T))
 #        self.Bx = np.dot(self.Ws, self.Q.T)               # Yhat = XW*Q' = XBx
 #        self.By = np.dot(self.Cs, self.P.T)               # Xhat = XC*P' = YBy
         del self.B
@@ -507,11 +581,16 @@ class O2PLS(PLSC):
         self.Qo = np.zeros((N2, self.Ay))
 
         alg = copy.deepcopy(self.algorithm)
-        svd = SVD(num_comp=self.A, algorithm=alg, **kwargs)
-        svd.set_prox_op(prox_op)
-        svd.fit(np.dot(X.T, Y))
-        W = svd.U
-        C = svd.V
+#        svd = SVD(num_comp=self.A, algorithm=alg, **kwargs)
+        tfa = TuckerFactorAnalysis(num_comp=self.A, algorithm=alg, **kwargs)
+#        svd.set_prox_op(prox_op)
+        tfa.set_prox_op(prox_op)
+#        svd.fit(np.dot(X.T, Y))
+        tfa.fit(X, Y)
+#        W = svd.U
+#        C = svd.V
+        W = tfa.W
+        C = tfa.C
 
         alg = copy.deepcopy(self.algorithm)
         eigsym = SVD(num_comp=1, algorithm=alg, **kwargs)

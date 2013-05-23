@@ -19,13 +19,14 @@ from numpy.linalg import norm
 from numpy.random import rand
 from numpy import sqrt
 from copy import copy
+import traceback
 
 __all__ = ['norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
            'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy', 'sstot', 'ssvar',
            'sqrt', 'rand', 'zeros', 'direct', '_DEBUG', 'debug', 'warning',
            'optimal_shrinkage', 'delete_sparse_csr_row']
 
-_DEBUG = True
+_DEBUG = False
 
 # Settings
 TOLERANCE = 5e-8
@@ -176,20 +177,21 @@ def direct(W, T=None, P=None, compare=False):
         return W
 
 
-def debug(string="", *args):
+def debug(*args):
     if _DEBUG:
         s = ""
         for a in args:
             s = s + str(a)
-        print string, s
+        print s
 
 
-def warning(string="", *args):
+def warning(*args):
     if _DEBUG:
         s = ""
         for a in args:
             s = s + str(a)
-        print "WARNING:", string, s
+#        traceback.print_stack()
+        print "WARNING:", s
 
 
 def optimal_shrinkage(*X, **kwargs):

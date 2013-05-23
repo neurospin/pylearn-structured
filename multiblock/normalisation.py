@@ -11,7 +11,8 @@ __all__ = ['Normalisation', 'NoNormalisation', 'UnitNormWeights',
            'UnitVarianceScores']
 
 import abc
-from multiblock.utils import norm, sqrt
+import numpy as np
+from multiblock.utils import norm, sqrt, TOLERANCE
 
 
 class Normalisation(object):
@@ -39,7 +40,11 @@ class UnitNormWeights(object):
         super(UnitNormWeights, self).__init__()
 
     def apply(self, w, X=None):
-        return w / norm(w)
+        normw = norm(w)
+        if normw < TOLERANCE:
+            return w
+        else:
+            return w / normw
 
 
 class UnitVarianceScores(object):

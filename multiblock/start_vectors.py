@@ -33,6 +33,7 @@ class BaseStartVector(object):
 
 
 class IdentityStartVector(BaseStartVector):
+
     def __init__(self, vector, **kwargs):
         super(IdentityStartVector, self).__init__(**kwargs)
 
@@ -43,6 +44,7 @@ class IdentityStartVector(BaseStartVector):
 
 
 class RandomStartVector(BaseStartVector):
+
     def __init__(self, normalise=True, **kwargs):
         super(RandomStartVector, self).__init__(normalise=normalise, **kwargs)
 

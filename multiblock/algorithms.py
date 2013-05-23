@@ -23,9 +23,8 @@ Created on Fri Feb  8 17:24:11 2013
 """
 
 import abc
-import warnings
 import prox_ops
-import multiblock.start_vectors as start_vectors
+import start_vectors
 import schemes
 import modes
 import error_functions
@@ -340,8 +339,8 @@ class NIPALSAlgorithm(NIPALSBaseAlgorithm):
                 break
 
             if self.iterations >= self.max_iter:
-                warnings.warn('Maximum number of iterations reached before ' \
-                              'convergence')
+                warning('Maximum number of iterations reached before ' \
+                        'convergence')
                 break
 
         return w
@@ -458,8 +457,8 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
                 break
 
             if self.iterations >= self.max_iter:
-                warnings.warn('Maximum number of iterations reached before ' \
-                              'convergence')
+                warning('Maximum number of iterations reached before ' \
+                        'convergence')
                 break
 
         return a
