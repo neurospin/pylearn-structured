@@ -58,7 +58,7 @@ def test_tv():
     mask1D = mask.reshape((p, 1))
 
 #    u = np.random.randn(p, p)
-    u = np.eye(p,p)
+    u = np.eye(p, p)
     sigma = np.dot(u.T, u)
     mean = np.zeros(p)
 

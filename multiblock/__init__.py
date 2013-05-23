@@ -9,6 +9,7 @@ variable methods for one, two or more blocks of data.
 from .methods import PCA
 from .methods import SVD
 from .methods import PLSR
+from .methods import TuckerFactorAnalysis
 from .methods import PLSC
 from .methods import O2PLS
 from .methods import RGCCA
@@ -22,11 +23,12 @@ import preprocess
 import prox_ops
 import tests
 import utils
-import error_functions
+import loss_functions
 import start_vectors
 
-__all__ = ['PCA', 'SVD', 'PLSR', 'PLSC', 'O2PLS', 'RGCCA',
+__all__ = ['PCA', 'SVD', 'PLSR', 'TuckerFactorAnalysis', 'PLSC', 'O2PLS',
+           'RGCCA',
            'LinearRegression', 'LinearRegressionTV', 'RidgeRegressionTV',
            'LogisticRegression',
            'prox_ops', 'algorithms', 'preprocess',
-           'tests', 'utils', 'error_functions', 'start_vectors']
+           'tests', 'utils', 'loss_functions', 'start_vectors']

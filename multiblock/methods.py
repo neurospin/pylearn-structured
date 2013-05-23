@@ -17,7 +17,7 @@ from sklearn.utils import check_arrays
 
 import abc
 import numpy as np
-from numpy.linalg import inv, pinv
+from numpy.linalg import pinv
 from multiblock.utils import direct
 import utils
 
@@ -26,7 +26,7 @@ import copy
 import prox_ops
 import schemes
 import modes
-import error_functions
+import loss_functions
 import start_vectors
 
 

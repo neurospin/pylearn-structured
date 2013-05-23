@@ -27,7 +27,7 @@ import prox_ops
 import start_vectors
 import schemes
 import modes
-import error_functions
+import loss_functions
 import algorithms
 
 from multiblock.utils import MAX_ITER, TOLERANCE, make_list, zeros, sqrt
@@ -491,7 +491,7 @@ class ISTARegression(ProximalGradientMethod):
             early_stopping_mu=None, **kwargs):
 
         if h == None:
-            h = error_functions.ZeroErrorFunction()
+            h = loss_functions.ZeroErrorFunction()
 
         if t == None:
             t = tscale / g.Lipschitz()
@@ -555,7 +555,7 @@ class FISTARegression(ISTARegression):
     def run(self, X, g=None, h=None, t=None, tscale=0.95, **kwargs):
 
         if h == None:
-            h = error_functions.ZeroErrorFunction()
+            h = loss_functions.ZeroErrorFunction()
 
         if t == None:
             t = tscale / g.Lipschitz()
@@ -604,7 +604,7 @@ class MonotoneFISTARegression(ISTARegression):
             early_stopping_mu=None, **kwargs):
 
         if h == None:
-            h = error_functions.ZeroErrorFunction()
+            h = loss_functions.ZeroErrorFunction()
 
         if t == None:
             t = tscale / g.Lipschitz()

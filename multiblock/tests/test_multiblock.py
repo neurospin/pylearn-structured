@@ -6,14 +6,14 @@ from multiblock.utils.testing import assert_array_almost_equal, orth_matrix
 from multiblock import *
 import multiblock.start_vectors as start_vectors
 import multiblock.schemes as schemes
-import multiblock.error_functions as error_functions
+import multiblock.loss_functions as loss_functions
 from numpy import ones, eye
 from numpy.linalg import eig
 from time import time
 
 # this is a dumb comment 
 # not as dumb as this! ;-)
-# It's only dumb because it has a trailing whitespace! :)
+# It's dumb only because it has a trailing whitespace! :)
 
 
 def test():
@@ -1038,28 +1038,6 @@ def sum_cov(*T, **kwargs):
 #
 
 
-def test_scale():
-
-    pass
-#    d = load_linnerud()
-#    X = d.data
-#    Y = d.target
-#
-#    # causes X[:, -1].std() to be zero
-#    X[:, -1] = 1.0
-
-#    methods = [PLSCanonical(), PLSRegression(), CCA(), PLSSVD(),
-#               pls.PCA(), pls.SVD(), pls.PLSR(), pls.PLSC()]
-#    names   = ["PLSCanonical", "PLSRegression", "CCA", "PLSSVD",
-#               "pls.PCA", "pls.SVD", "pls.PLSR", "pls.PLSC"]
-#    for i in xrange(len(methods)):
-#        clf = methods[i]
-#        print "Testing scale of "+names[i]
-##        clf.set_params(scale=True)
-#        clf.scale = True
-#        clf.fit(X, Y)
-
-
 if __name__ == "__main__":
 
     test()
@@ -1067,38 +1045,3 @@ if __name__ == "__main__":
 #    test_ista()
 #    test_tv()
 #    test_gl()
-
-#    test_regression()
-
-#    np.random.seed(42)
-#    A = sparse.rand(10000, 10000, 0.01, format="lil").tocsr()
-#    B = A.todense()
-#
-#    start = time()
-#    svd = SVD(num_comp=1).fit(B)
-#    u = svd.U
-#    s = svd.S
-#    v = svd.V
-#    print s
-#    print "time:", (time() - start), svd.get_algorithm().iterations
-#    B = None
-#
-#    start = time()
-#    v = algorithms.SparseSVD(max_iter=10).run(A)
-#    u = A.dot(v)
-#    s = np.sqrt(np.sum(u ** 2.0))
-#    print s
-#    print "time:", (time() - start)
-
-#    start = time()
-#    u, s, v = algorithms.SparseSVD(max_iter=50).run(A)
-#    print s
-#    print "time:", (time() - start)
-
-#    import cProfile
-#    import pstats
-#    cProfile.run('test_tv()', 'prof_output')
-#    p = pstats.Stats('prof_output')
-#    p.sort_stats('calls').print_stats(20)
-
-#    test_scale()
