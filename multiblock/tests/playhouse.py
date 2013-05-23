@@ -92,10 +92,16 @@ def test_tv():
     en_lambda = 0.9
 
     num_mus = 5
-    r = 0
-    for i in xrange(X.shape[1]):
-        r = max(r, abs(utils.cov(X[:, [i]], y)))
-    mus = [r * 0.5 ** i for i in xrange(num_mus)]
+    mus = [0] * num_mus
+    mus[0] = 6.62529924719
+    for k in xrange(0, num_mus - 1):
+        tau = 2.0 / (float(k) + 3.0)
+        mus[k + 1] = (1.0 - tau) * mus[k]
+
+#    r = 0
+#    for i in xrange(X.shape[1]):
+#        r = max(r, abs(utils.cov(X[:, [i]], y)))
+#    mus = [r * 0.5 ** i for i in xrange(num_mus)]
 
     total_start = time()
     init_start = time()
@@ -105,15 +111,16 @@ def test_tv():
     preprocess_mask = preprocess.Mask(mask1D)
     X = preprocess_mask.process(X)
 
-#    lrtv = methods.LinearRegressionTV((pz, py, px), gamma, mu=mus[0],
-#                                      mask=mask1D,
-#                                      algorithm=algorithms.MonotoneFISTARegression())
-#    lrtv.set_max_iter(maxit)
-#    lrtv.set_tolerance(eps)
-#    cr = methods.ContinuationRun(lrtv, mus)
-#    method = cr
+    maxit = 1000
+    lrtv = methods.LinearRegressionTV((pz, py, px), gamma, mu=mus[0],
+                              mask=mask1D,
+                              algorithm=algorithms.MonotoneFISTARegression())
+    lrtv.set_max_iter(maxit)
+    lrtv.set_tolerance(eps)
+    cr = methods.ContinuationRun(lrtv, mus)
+    method = cr
 
-    rrtv = RidgeRegressionTV((pz, py, px), gamma, mu=mus[0], mask=mask1D,
+    rrtv = RidgeRegressionTV((pz, py, px), gamma, mask=mask1D,
                              X=X, y=y, l=1.0 - en_lambda)
     rrtv.set_max_iter(maxit)
     rrtv.set_tolerance(eps)

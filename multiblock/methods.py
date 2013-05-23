@@ -851,7 +851,7 @@ class LinearRegression(NesterovProximalGradientMethod):
         super(LinearRegression, self).__init__(**kwargs)
 
         if X != None and y != None:
-            self.get_g(error_functions.LinearRegressionError(X, y))
+            self.get_g(loss_functions.LinearRegressionError(X, y))
 
     def get_transform(self, index=0):
         return self.beta
@@ -859,7 +859,7 @@ class LinearRegression(NesterovProximalGradientMethod):
     def fit(self, X=None, y=None, t=None):
 
         if X != None and y != None:
-            self.get_g(error_functions.LinearRegressionError(X, y))
+            self.get_g(loss_functions.LinearRegressionError(X, y))
 
         if self.get_g() == None:
             raise ValueError('The function g must be given either at ' \
@@ -884,12 +884,12 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
 
         self.SSreg = None
         if X != None and y != None:
-            self.SSreg = error_functions.LinearRegressionError(X, y)
+            self.SSreg = loss_functions.LinearRegressionError(X, y)
 
-        self.TV = error_functions.TotalVariation(shape, gamma, mu, mask)
+        self.TV = loss_functions.TotalVariation(shape, gamma, mu, mask)
 
         if self.SSreg != None:
-            self.set_g(error_functions.CombinedNesterovLossFunction(self.SSreg,
+            self.set_g(loss_functions.CombinedNesterovLossFunction(self.SSreg,
                                                                     self.TV))
 
     def get_transform(self, **kwargs):
@@ -898,13 +898,13 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
     def fit(self, X=None, y=None, mu=None, **kwargs):
 
         if X != None and y != None:
-            self.SSreg = error_functions.LinearRegressionError(X, y)
+            self.SSreg = loss_functions.LinearRegressionError(X, y)
 
         if self.SSreg == None:
             raise ValueError('The matrices X and ymust be given either at ' \
                              'construction or when fitting')
 
-        self.set_g(error_functions.CombinedNesterovLossFunction(self.SSreg,
+        self.set_g(loss_functions.CombinedNesterovLossFunction(self.SSreg,
                                                                 self.TV))
         if mu != None:
             self.TV.set_mu(mu)
@@ -930,11 +930,11 @@ class LogisticRegression(NesterovProximalGradientMethod):
     def fit(self, X, y, g=None, h=None, t=None):
 
         if g == None:
-            g = error_functions.LogisticRegressionError(X, y)
+            g = loss_functions.LogisticRegressionError(X, y)
         if h == None:
-            h = error_functions.ZeroErrorFunction()
+            h = loss_functions.ZeroErrorFunction()
 
-        if isinstance(g, error_functions.NesterovErrorFunction):
+        if isinstance(g, loss_functions.NesterovErrorFunction):
             self.beta = self.continuation_run(self.algorithm, g,
                                               X, y, g=g, h=h, t=t)
         else:
@@ -993,9 +993,9 @@ class RidgeRegressionTV(ExcessiveGapMethod):
         self.mu = mu
 
         if X != None and y != None and l != None:
-            self.set_g(error_functions.RidgeRegression(X, y, l))
+            self.set_g(loss_functions.RidgeRegression(X, y, l))
 
-        self.set_h(error_functions.TotalVariation(shape, gamma, mu, mask))
+        self.set_h(loss_functions.TotalVariation(shape, gamma, mu, mask))
 
     def get_transform(self, index=0):
         return self.beta
@@ -1008,7 +1008,7 @@ class RidgeRegressionTV(ExcessiveGapMethod):
         mu = self.mu if mu == None else mu
 
         if X != None and y != None and l != None:
-            self.set_g(error_functions.RidgeRegression(X, y, l))
+            self.set_g(loss_functions.RidgeRegression(X, y, l))
 
         self.beta = self.algorithm.run(X, y, g=self.get_g(), h=self.get_h())
 

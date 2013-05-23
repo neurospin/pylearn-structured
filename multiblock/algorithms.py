@@ -38,9 +38,6 @@ from numpy import ones, eye
 from numpy.linalg import pinv
 import scipy.sparse as sparse
 
-#import gc
-#from time import time
-
 __all__ = ['BaseAlgorithm', 'SparseSVD', 'NIPALSBaseAlgorithm',
            'NIPALSAlgorithm', 'RGCCAAlgorithm', 'ISTARegression',
            'FISTARegression', 'MonotoneFISTARegression',
@@ -741,8 +738,11 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
         v = algorithms.SparseSVD(max_iter=10).run(A)
         u = A.dot(v)
         L = np.sum(u ** 2.0)
+#        print L
+#        print h.Lipschitz()
         del A
         L = L / g.lambda_min()  # Lipschitz constant of phi
+        print L
 
         beta_hat_0 = self.beta_hat_0_1
 
@@ -759,7 +759,7 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
         for i in xrange(len(alpha_hat)):
             u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
 
-        f_new = g.f(beta_new) + h.f(beta_new)
+        f_new = g.f(beta_new, mu=mu) + h.f(beta_new, mu=mu)
         self.f = [f_new]
         self.iterations = 1
         while True:
@@ -774,7 +774,7 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
             if norm1(beta_new - beta_old) > self.tolerance:
                 self.converged = False
 
-            f_new = g.f(beta_new) + h.f(beta_new)
+            f_new = g.f(beta_new, mu=mu) + h.f(beta_new, mu=mu)
             self.f.append(f_new)
             self.iterations += 1
 
