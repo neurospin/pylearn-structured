@@ -222,6 +222,15 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
             raise ValueError('Both functions cannot be Nesterov when you ' \
                              'use the A like this')
 
+    def At(self):
+        if hasattr(self.b, 'At'):
+            return self.b.At()
+        elif hasattr(self.a, 'At'):
+            return self.a.At()
+        else:
+            raise ValueError('Both functions cannot be Nesterov when you ' \
+                             'use the At like this')
+
     def projection(self):
         if hasattr(self.b, 'projection'):
             return self.b.projection()

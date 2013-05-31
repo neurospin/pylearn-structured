@@ -110,25 +110,23 @@ def test_tv():
     preprocess_mask = preprocess.Mask(mask1D)
     X = preprocess_mask.process(X)
 
-#    maxit = 1000
-#    lrtv = methods.LinearRegressionTV((pz, py, px), gamma, mu=mus[0],
-#                              mask=mask1D,
-#                              algorithm=algorithms.MonotoneFISTARegression())
-#    lrtv.set_max_iter(maxit)
-#    lrtv.set_tolerance(eps)
-#    cr = methods.ContinuationRun(lrtv, mus)
-#    method = cr
+    maxit = 1000
+    lrtv = methods.LinearRegressionTV(gamma, (pz, py, px), mu=mus[0],
+                                      mask=mask1D)
+    lrtv.set_max_iter(maxit)
+    lrtv.set_tolerance(eps)
+    cr = methods.ContinuationRun(lrtv, mus)
+    method = cr
 
-    rrtv = RidgeRegressionTV(gamma, (pz, py, px), mask=mask1D,
-                             X=X, y=y, l=1.0 - en_lambda)
-    rrtv.set_max_iter(maxit)
-    rrtv.set_tolerance(eps)
-    method = rrtv
+#    rrtv = RidgeRegressionTV(1.0 - en_lambda, gamma,
+#                             (pz, py, px), mask=mask1D)
+#    rrtv.set_max_iter(maxit)
+#    rrtv.set_tolerance(eps)
+#    method = rrtv
 
     print "Init time:", (time() - init_start)
 
-    method.fit()
-#    method.fit(X, y)
+    method.fit(X, y)
 #    computed_beta = method.beta
     computed_beta = preprocess_mask.revert(method.beta.T).T
 

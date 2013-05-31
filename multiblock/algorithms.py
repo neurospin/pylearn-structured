@@ -471,6 +471,7 @@ class ProximalGradientMethod(BaseAlgorithm):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, g, h=None, t=None, tscale=0.95, **kwargs):
+
         super(ProximalGradientMethod, self).__init__(**kwargs)
 
         self.g = g
@@ -711,6 +712,9 @@ class ExcessiveGapMethod(BaseAlgorithm):
         super(ExcessiveGapMethod, self).__init__(**kwargs)
 
         self.g = g
+
+        if h == None:
+            h = loss_functions.ZeroErrorFunction()
         self.h = h
 
     @abc.abstractmethod
@@ -723,9 +727,9 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
     """ The excessive gap method for ridge regression.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, g, h, **kwargs):
 
-        super(ExcessiveGapRidgeRegression, self).__init__(**kwargs)
+        super(ExcessiveGapRidgeRegression, self).__init__(g, h, **kwargs)
 
     def run(self, X, y, **kwargs):
 
