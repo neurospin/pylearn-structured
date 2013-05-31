@@ -26,7 +26,7 @@ __all__ = ['norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
            'sqrt', 'rand', 'zeros', 'direct', '_DEBUG', 'debug', 'warning',
            'optimal_shrinkage', 'delete_sparse_csr_row']
 
-_DEBUG = False
+_DEBUG = True
 
 # Settings
 TOLERANCE = 5e-8

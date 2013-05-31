@@ -321,7 +321,7 @@ def test_ista():
     alg = lr.get_algorithm()
     alg.set_max_iter(10000)
     alg.set_tolerance(5e-10)
-    h = error_functions.L1(10)
+    h = loss_functions.L1(10)
     lr.fit(X, y, h=h, t=t)
 
     print norm(lr.beta - betastar)
@@ -373,7 +373,7 @@ def test_tv():
 #    alg = lr.get_algorithm()
 #    alg.set_max_iter(maxit)
 #    alg.set_tolerance(eps)
-#    h = error_functions.L1(1)
+#    h = loss_functions.L1(1)
 #    lr.fit(X, y, t=t)
 #
 #    print norm(lr.beta - betastar)
@@ -401,12 +401,12 @@ def test_tv():
     alg.set_max_iter(maxit)
     alg.set_tolerance(eps)
 
-    g1 = error_functions.SumSqRegressionError(X, y)
+    g1 = loss_functions.SumSqRegressionError(X, y)
     start = time()
-    g2 = error_functions.TotalVariation((pz, py, px), gamma, mus[0])
+    g2 = loss_functions.TotalVariation((pz, py, px), gamma, mus[0])
     print "time TV init:", time() - start
-    g = error_functions.CombinedNesterovErrorFunction(g1, g2, mus)
-    h = error_functions.L1(l)
+    g = loss_functions.CombinedNesterovErrorFunction(g1, g2, mus)
+    h = loss_functions.L1(l)
 
     lr.fit(X, y, g=g, h=h)
     print "Total time:", (time() - total_start)
@@ -439,10 +439,10 @@ def test_tv():
     alg.set_max_iter(maxit)
     alg.set_tolerance(eps)
 
-    g1 = error_functions.SumSqRegressionError(X, y)
-    g2 = error_functions.TotalVariation((pz, py, px), gamma, mu)
-    g = error_functions.CombinedDifferentiableErrorFunction(g1, g2)
-    h = error_functions.L1(l)
+    g1 = loss_functions.SumSqRegressionError(X, y)
+    g2 = loss_functions.TotalVariation((pz, py, px), gamma, mu)
+    g = loss_functions.CombinedDifferentiableErrorFunction(g1, g2)
+    h = loss_functions.L1(l)
 
     lr.fit(X, y, g=g, h=h, t=t)
 
@@ -467,10 +467,10 @@ def test_tv():
     alg.set_max_iter(maxit)
     alg.set_tolerance(eps)
 
-    g1 = error_functions.SumSqRegressionError(X, y)
-    g2 = error_functions.TotalVariation((pz, py, px), gamma, mu)
-    g = error_functions.CombinedDifferentiableErrorFunction(g1, g2)
-    h = error_functions.L1(l)
+    g1 = loss_functions.SumSqRegressionError(X, y)
+    g2 = loss_functions.TotalVariation((pz, py, px), gamma, mu)
+    g = loss_functions.CombinedDifferentiableErrorFunction(g1, g2)
+    h = loss_functions.L1(l)
 
     lr.fit(X, y, g=g, h=h, t=t)
 
@@ -530,12 +530,12 @@ def test_gl():
     alg.set_tolerance(eps)
 
     groups = [range(p / 2), range(p / 2, p)]
-    g1 = error_functions.SumSqRegressionError(X, y)
+    g1 = loss_functions.SumSqRegressionError(X, y)
     start = time()
-    g2 = error_functions.GroupLassoOverlap(p, groups, gamma, mus[0])
+    g2 = loss_functions.GroupLassoOverlap(p, groups, gamma, mus[0])
 
-    g = error_functions.CombinedNesterovErrorFunction(g1, g2, mus)
-    h = error_functions.L1(l)
+    g = loss_functions.CombinedNesterovErrorFunction(g1, g2, mus)
+    h = loss_functions.L1(l)
     lr.fit(X, y, g=g, h=h)
     print "time:", time() - start
 
@@ -582,10 +582,10 @@ def test_regression():
     for i in xrange(X.shape[1]):
         r = max(r, abs(utils.cov(X[:, [i]], y)))
     mus = [r * 0.5 ** i for i in xrange(5)]
-    g1 = error_functions.LogisticRegressionError(X, y)
-    g2 = error_functions.TotalVariation((50, 1, 1), gamma, mus[0])
-    g = error_functions.CombinedNesterovErrorFunction(g1, g2, mus)
-#    h = error_functions.L1(l)
+    g1 = loss_functions.LogisticRegressionError(X, y)
+    g2 = loss_functions.TotalVariation((50, 1, 1), gamma, mus[0])
+    g = loss_functions.CombinedNesterovErrorFunction(g1, g2, mus)
+#    h = loss_functions.L1(l)
 
     lr.fit(X, y, g=g)
 

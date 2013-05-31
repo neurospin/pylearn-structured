@@ -12,7 +12,6 @@ import multiblock.methods as methods
 #import multiblock.start_vectors as start_vectors
 #import multiblock.prox_ops as prox_ops
 #import multiblock.schemes as schemes
-#import multiblock.error_functions as error_functions
 #from sklearn.datasets import load_linnerud
 from time import time
 
@@ -24,8 +23,8 @@ import matplotlib.cm as cm
 def test_tv():
     np.random.seed(42)
 
-    x = np.arange(-10, 10, 1)
-    y = np.arange(-10, 10, 1)
+    x = np.arange(-20, 20, 1)
+    y = np.arange(-20, 20, 1)
     nrows, ncols = len(x), len(y)
     px = ncols
     py = nrows
@@ -84,16 +83,16 @@ def test_tv():
 #    beta1D = np.sort(np.abs(betastar), axis=0)
 #    y = np.dot(X, beta1D)
 
-    eps = 0.01
-    maxit = 500
+    eps = 0.001
+    maxit = 2000
 
-    gamma = 1.0
+    gamma = 100.0
     l = 0.1
-    en_lambda = 0.9
+    en_lambda = 0.95
 
     num_mus = 5
     mus = [0] * num_mus
-    mus[0] = 6.62529924719
+    mus[0] = 8
     for k in xrange(0, num_mus - 1):
         tau = 2.0 / (float(k) + 3.0)
         mus[k + 1] = (1.0 - tau) * mus[k]
@@ -111,16 +110,16 @@ def test_tv():
     preprocess_mask = preprocess.Mask(mask1D)
     X = preprocess_mask.process(X)
 
-    maxit = 1000
-    lrtv = methods.LinearRegressionTV((pz, py, px), gamma, mu=mus[0],
-                              mask=mask1D,
-                              algorithm=algorithms.MonotoneFISTARegression())
-    lrtv.set_max_iter(maxit)
-    lrtv.set_tolerance(eps)
-    cr = methods.ContinuationRun(lrtv, mus)
-    method = cr
+#    maxit = 1000
+#    lrtv = methods.LinearRegressionTV((pz, py, px), gamma, mu=mus[0],
+#                              mask=mask1D,
+#                              algorithm=algorithms.MonotoneFISTARegression())
+#    lrtv.set_max_iter(maxit)
+#    lrtv.set_tolerance(eps)
+#    cr = methods.ContinuationRun(lrtv, mus)
+#    method = cr
 
-    rrtv = RidgeRegressionTV((pz, py, px), gamma, mask=mask1D,
+    rrtv = RidgeRegressionTV(gamma, (pz, py, px), mask=mask1D,
                              X=X, y=y, l=1.0 - en_lambda)
     rrtv.set_max_iter(maxit)
     rrtv.set_tolerance(eps)
@@ -135,11 +134,9 @@ def test_tv():
 
 #    lrtv.fit(X, y)
     alg = method.get_algorithm()
-    print "alg:", alg
-
+    print "Algorithm:", alg
     print "Total time:", (time() - total_start)
-    print "Total iterations:", alg.iterations
-    print "Total iterations:", len(alg.f)
+    print "Total iterations:", alg.iterations, "(%d)" % len(alg.f)
     print "Error:", alg.f[-1]
 
     plot.subplot(2, 2, 1)
