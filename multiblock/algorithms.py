@@ -38,7 +38,7 @@ from numpy import ones, eye
 from numpy.linalg import pinv
 import scipy.sparse as sparse
 
-__all__ = ['BaseAlgorithm', 'SparseSVD', 'NIPALSBaseAlgorithm',
+__all__ = ['BaseAlgorithm', 'SparseSVD', 'FastSVD', 'NIPALSBaseAlgorithm',
            'NIPALSAlgorithm', 'RGCCAAlgorithm', 'ISTARegression',
            'FISTARegression', 'MonotoneFISTARegression',
            'ExcessiveGapRidgeRegression']
@@ -234,6 +234,75 @@ class SparseSVD(NIPALSBaseAlgorithm):
 #        t /= sigma
 
         return p
+
+
+class FastSVD(NIPALSBaseAlgorithm):
+    """A kernel SVD implementation.
+
+    This is always faster than np.linalg.svd. Particularly, this is a lot
+    faster than np.linalg.svd when M << N or M >> N, for an M-by-N matrix.
+    """
+
+    def __init__(self, max_iter=None, start_vector=None, **kwargs):
+        if max_iter == None:
+            max_iter = 100
+        if start_vector == None:
+            start_vector = start_vectors.RandomStartVector()
+        super(FastSVD, self).__init__(max_iter=max_iter,
+                                        start_vector=start_vector, **kwargs)
+
+    def run(self, X, **kwargs):
+        """ Performs SVD of given matrix. This is faster than applying
+        np.linalg.svd.
+
+        Arguments:
+        X         : The matrix to decompose
+
+        Returns:
+        v : The right singular vector.
+        """
+        M, N = X.shape
+        if M < 80 and N < 80:
+            _, _, V = np.linalg.svd(X, full_matrices=True)
+            v = V[[0], :].T
+        elif M < N:
+            Xt = X.T
+            K = np.dot(X, Xt)
+            t = self.start_vector.get_vector(Xt)
+            self.iterations = 0
+            for it in xrange(self.max_iter):
+                t_ = t
+                t = K.dot(t_)
+                t /= np.sqrt(np.sum(t_ ** 2.0))
+
+                self.iterations += 1
+
+                diff = t_ - t
+                if np.sqrt(np.sum(diff ** 2.0)) < TOLERANCE:
+#                    print "broke at", self.iterations
+                    break
+
+            v = np.dot(Xt, t)
+            v /= np.sqrt(np.sum(v ** 2.0))
+
+        else:
+            Xt = X.T
+            K = np.dot(Xt, X)
+            v = self.start_vector.get_vector(X)
+            self.iterations = 0
+            for it in xrange(self.max_iter):
+                v_ = v
+                v = np.dot(K, v_)
+                v /= np.sqrt(np.sum(v ** 2.0))
+
+                self.iterations += 1
+
+                diff = v_ - v
+                if np.sqrt(np.sum(diff ** 2.0)) < TOLERANCE:
+#                    print "broke at", self.iterations
+                    break
+
+        return v
 
 
 class NIPALSAlgorithm(NIPALSBaseAlgorithm):
@@ -470,20 +539,15 @@ class ProximalGradientMethod(BaseAlgorithm):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, g, h=None, t=None, tscale=0.95, **kwargs):
+    def __init__(self, g=None, h=None, **kwargs):
 
         super(ProximalGradientMethod, self).__init__(**kwargs)
 
-        self.g = g
-
         if h == None:
             h = loss_functions.ZeroErrorFunction()
-        self.h = h
 
-        if t == None:
-            self.t = tscale / g.Lipschitz()
-        else:
-            self.t = t * tscale
+        self.g = g
+        self.h = h
 
     @abc.abstractmethod
     def run(self, *X, **kwargs):
@@ -493,11 +557,16 @@ class ProximalGradientMethod(BaseAlgorithm):
 class ISTARegression(ProximalGradientMethod):
     """ The ISTA algorithm for regression settings.
     """
-    def __init__(self, **kwargs):
+    def __init__(self, g=None, h=None, **kwargs):
 
-        super(ISTARegression, self).__init__(**kwargs)
+        super(ISTARegression, self).__init__(g, h, **kwargs)
 
-    def run(self, X, early_stopping_mu=None, **kwargs):
+    def run(self, X, t=None, tscale=0.95, early_stopping_mu=None, **kwargs):
+
+        if t == None:
+            t = tscale / self.g.Lipschitz()
+        else:
+            t *= tscale
 
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
@@ -512,10 +581,9 @@ class ISTARegression(ProximalGradientMethod):
         while True:
             self.converged = True
 
-            beta_new = self.h.prox(beta_old - self.t * self.g.grad(beta_old),
-                                   self.t)
+            beta_new = self.h.prox(beta_old - t * self.g.grad(beta_old), t)
 
-            if norm1(beta_old - beta_new) > self.tolerance * self.t:
+            if norm1(beta_old - beta_new) > self.tolerance * t:
                 self.converged = False
 
             if early_stopping_mu != None:
@@ -524,10 +592,9 @@ class ISTARegression(ProximalGradientMethod):
             else:
                 f_new = self.g.f(beta_new) + self.h.f(beta_new)
 
-            if f_new > f_old:  # Early stopping
-#                print f_new, ">", f_old
+            if early_stopping_mu != None and f_new > f_old:  # Early stopping
                 self.converged = True
-                warning('Early stopping criterion triggered.')
+                warning('Early stopping criterion triggered. Mu too large?')
             else:
                 # Save updated values
                 f_old = f_new
@@ -550,12 +617,16 @@ class ISTARegression(ProximalGradientMethod):
 class FISTARegression(ISTARegression):
     """ The fast ISTA algorithm for regression.
     """
+    def __init__(self, g=None, h=None, **kwargs):
 
-    def __init__(self, **kwargs):
+        super(FISTARegression, self).__init__(g, h, **kwargs)
 
-        super(FISTARegression, self).__init__(**kwargs)
+    def run(self, X, t=None, tscale=0.95, **kwargs):
 
-    def run(self, X, **kwargs):
+        if t == None:
+            t = tscale / self.g.Lipschitz()
+        else:
+            t *= tscale
 
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
@@ -569,9 +640,9 @@ class FISTARegression(ISTARegression):
             k = float(self.iterations + 1.0)
             z = beta_new - ((k - 2.0) / (k + 1.0)) * (beta_new - beta_old)
             beta_old = beta_new
-            beta_new = self.h.prox(z - self.t * self.g.grad(z), self.t)
+            beta_new = self.h.prox(z - t * self.g.grad(z), t)
 
-            if norm1(z - beta_new) > self.tolerance * self.t:  # z - beta_new
+            if norm1(z - beta_new) > self.tolerance * t:  # z - beta_new
                 self.converged = False
 
             f_new = self.g.f(beta_new) + self.h.f(beta_new)
@@ -593,22 +664,27 @@ class MonotoneFISTARegression(ISTARegression):
     """ The fast ISTA algorithm for regression.
     """
 
-    def __init__(self, ista_steps=2, **kwargs):
+    def __init__(self, **kwargs):
 
         super(MonotoneFISTARegression, self).__init__(**kwargs)
 
-        self.ista_steps = ista_steps
+    def run(self, X, g=None, h=None, t=None, tscale=0.95, ista_steps=2,
+            early_stopping_mu=None, **kwargs):
 
-    def run(self, X, early_stopping_mu=None, **kwargs):
+        if h == None:
+            h = loss_functions.ZeroErrorFunction()
+
+        if t == None:
+            t = tscale / g.Lipschitz()
 
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
 
         if early_stopping_mu != None:
-            f_old = self.g.f(beta_old, mu=early_stopping_mu) + \
-                    self.h.f(beta_old, mu=early_stopping_mu)
+            f_old = g.f(beta_old, mu=early_stopping_mu) + \
+                    h.f(beta_old, mu=early_stopping_mu)
         else:
-            f_old = self.g.f(beta_old) + self.h.f(beta_old)
+            f_old = g.f(beta_old) + h.f(beta_old)
         f_new = f_old
         self.f = [f_new]
 
@@ -619,33 +695,31 @@ class MonotoneFISTARegression(ISTARegression):
             k = float(self.iterations + 1.0)
             z = beta_new - ((k - 2.0) / (k + 1.0)) * (beta_new - beta_old)
             beta_old = beta_new
-            beta_new = self.h.prox(z - self.t * self.g.grad(z), self.t)
+            beta_new = h.prox(z - t * g.grad(z), t)
 
-            h_beta_new = self.h.f(beta_new)
+            h_beta_new = h.f(beta_new)
 
             f_old = f_new
-            f_new = self.g.f(beta_new) + self.h_beta_new
+            f_new = g.f(beta_new) + h_beta_new
 
             stop_early = False
             if f_new > f_old:  # FISTA increased the value of f
 #                print ista_steps, "ISTA steps instead of FISTA!!"
 
                 beta_new = beta_old  # Go one step back to old beta
-                for it in xrange(self.ista_steps):
+                for it in xrange(ista_steps):
                     beta_old = beta_new
-                    beta_new = self.h.prox(beta_old \
-                                              - self.t * self.g.grad(beta_old),
-                                           self.t)
+                    beta_new = h.prox(beta_old - t * g.grad(beta_old), t)
 
-                    h_beta_new = self.h.f(beta_new)
+                    h_beta_new = h.f(beta_new)
 
                     f_old = f_new
-                    f_new = self.g.f(beta_new) + h_beta_new
+                    f_new = g.f(beta_new) + h_beta_new
 
                     if early_stopping_mu != None:
-                        es_f_old = self.g.f(beta_old, mu=early_stopping_mu) \
-                                 + self.h.f(beta_old)
-                        es_f_new = self.g.f(beta_new, mu=early_stopping_mu) \
+                        es_f_old = g.f(beta_old, mu=early_stopping_mu) \
+                                 + h.f(beta_old)
+                        es_f_new = g.f(beta_new, mu=early_stopping_mu) \
                                  + h_beta_new
 
                         if es_f_new > es_f_old:  # Early stopping
@@ -660,14 +734,12 @@ class MonotoneFISTARegression(ISTARegression):
                     self.iterations += 1
 
                 if not stop_early \
-                      and norm1(beta_old - beta_new) > self.tolerance * self.t:
+                        and norm1(beta_old - beta_new) > self.tolerance * t:
                     self.converged = False
 
             elif early_stopping_mu != None:
-                es_f_old = self.g.f(beta_old, mu=early_stopping_mu) \
-                         + self.h.f(beta_old)
-                es_f_new = self.g.f(beta_new, mu=early_stopping_mu) \
-                         + h_beta_new
+                es_f_old = g.f(beta_old, mu=early_stopping_mu) + h.f(beta_old)
+                es_f_new = g.f(beta_new, mu=early_stopping_mu) + h_beta_new
 
                 if es_f_new > es_f_old:  # Early stopping
                     self.converged = True
@@ -678,13 +750,13 @@ class MonotoneFISTARegression(ISTARegression):
                     self.f.append(es_f_new)
                     self.iterations += 1
 
-                    if norm1(z - beta_new) > self.tolerance * self.t:
+                    if norm1(z - beta_new) > self.tolerance * t:
                         self.converged = False
             else:
                 self.f.append(f_new)
                 self.iterations += 1
 
-                if norm1(z - beta_new) > self.tolerance * self.t:
+                if norm1(z - beta_new) > self.tolerance * t:
                     self.converged = False
 
             if self.converged:
@@ -704,18 +776,11 @@ class ExcessiveGapMethod(BaseAlgorithm):
     Optimises a function decomposed as f(x) = g(x) + h(x), where g is
     strongly convex and twice differentiable and h is convex and Nesterov.
     """
-
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, g, h, **kwargs):
+    def __init__(self, **kwargs):
 
         super(ExcessiveGapMethod, self).__init__(**kwargs)
-
-        self.g = g
-
-        if h == None:
-            h = loss_functions.ZeroErrorFunction()
-        self.h = h
 
     @abc.abstractmethod
     def run(self, *X, **kwargs):
@@ -727,9 +792,9 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
     """ The excessive gap method for ridge regression.
     """
 
-    def __init__(self, g, h, **kwargs):
+    def __init__(self, **kwargs):
 
-        super(ExcessiveGapRidgeRegression, self).__init__(g, h, **kwargs)
+        super(ExcessiveGapRidgeRegression, self).__init__(**kwargs)
 
     def run(self, X, y, **kwargs):
 
@@ -809,12 +874,14 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
         return beta_new
 
     def V(self, u, beta, L):
+
         u_new = [0] * len(u)
         for i in xrange(len(u)):
             u_new[i] = u[i] + self.A[i].dot(beta) / L
         return list(self.h.projection(u_new))
 
     def alpha_hat_muk(self, beta, mu):
+
         return self.h.alpha(beta, mu)
 
     def beta_hat_0_1(self, alpha):

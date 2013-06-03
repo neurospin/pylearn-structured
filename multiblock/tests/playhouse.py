@@ -23,8 +23,8 @@ import matplotlib.cm as cm
 def test_tv():
     np.random.seed(42)
 
-    x = np.arange(-20, 20, 1)
-    y = np.arange(-20, 20, 1)
+    x = np.arange(-10, 10, 1)
+    y = np.arange(-10, 10, 1)
     nrows, ncols = len(x), len(y)
     px = ncols
     py = nrows
@@ -83,19 +83,23 @@ def test_tv():
 #    beta1D = np.sort(np.abs(betastar), axis=0)
 #    y = np.dot(X, beta1D)
 
-    eps = 0.001
-    maxit = 2000
+    eps = 0.01
+    maxit = 10000
 
-    gamma = 100.0
+    gamma = 10.0
     l = 0.1
     en_lambda = 0.95
 
-    num_mus = 5
+    num_mus = 1
     mus = [0] * num_mus
-    mus[0] = 8
-    for k in xrange(0, num_mus - 1):
-        tau = 2.0 / (float(k) + 3.0)
-        mus[k + 1] = (1.0 - tau) * mus[k]
+    mus[0] = 10.0
+#    mus[1] = 0.1
+#    mus[2] = 0.01
+#    mus[3] = 0.001
+#    mus[4] = 0.0001
+#    for k in xrange(0, num_mus - 1):
+#        tau = 2.0 / (float(k) + 3.0)
+#        mus[k + 1] = (1.0 - tau) * mus[k]
 
 #    r = 0
 #    for i in xrange(X.shape[1]):
@@ -108,18 +112,16 @@ def test_tv():
 #    lrtv = methods.LinearRegressionTV((pz, py, px), gamma, mu, mask1D)
     mask1D = mask1D.flatten().astype(int).tolist()
     preprocess_mask = preprocess.Mask(mask1D)
-    X = preprocess_mask.process(X)
+#    X = preprocess_mask.process(X)
 
-    maxit = 1000
-    lrtv = methods.LinearRegressionTV(gamma, (pz, py, px), mu=mus[0],
-                                      mask=mask1D)
+    lrtv = methods.LinearRegressionTV(gamma, (pz, py, px), mu=mus[0])#,
+                                      #mask=mask1D)
     lrtv.set_max_iter(maxit)
     lrtv.set_tolerance(eps)
-    cr = methods.ContinuationRun(lrtv, mus)
-    method = cr
+#    cr = methods.ContinuationRun(lrtv, mus)
+    method = lrtv
 
-#    rrtv = RidgeRegressionTV(1.0 - en_lambda, gamma,
-#                             (pz, py, px), mask=mask1D)
+#    rrtv = RidgeRegressionTV(1.0 - en_lambda, gamma, (pz, py, px), mask=mask1D)
 #    rrtv.set_max_iter(maxit)
 #    rrtv.set_tolerance(eps)
 #    method = rrtv
@@ -127,8 +129,8 @@ def test_tv():
     print "Init time:", (time() - init_start)
 
     method.fit(X, y)
-#    computed_beta = method.beta
-    computed_beta = preprocess_mask.revert(method.beta.T).T
+    computed_beta = method.beta
+#    computed_beta = preprocess_mask.revert(method.beta.T).T
 
 #    lrtv.fit(X, y)
     alg = method.get_algorithm()

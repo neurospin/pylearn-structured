@@ -9,11 +9,13 @@ TODO: Add Sparse SVD.
 
 import numpy as np
 import preprocess
+import algorithms
 import prox_ops
 import methods
-from utils import direct
+from utils import direct, norm
 from utils.testing import assert_array_almost_equal
 from math import log
+from time import time
 
 
 def test():
@@ -203,6 +205,40 @@ def test():
     assert_array_almost_equal(tfa.C, svd.V, decimal=5, err_msg="Tucker's " \
         "inner-battery factor analysis gives different Y weights when " \
         "compared to SVD")
+
+    # Compare the accuracy and speed of the FastSVD
+    tol = 5e-10
+    miter = 2000
+    X = np.random.rand(100, 1000)
+
+    preproc = preprocess.PreprocessQueue([preprocess.Center(),
+                                          preprocess.Scale()], X)
+    X = preproc.process(X)
+
+    start = time()
+    svd = algorithms.FastSVD()
+    svd.tolerance = tol
+    svd.max_iter = miter
+    p = svd.run(X)
+    time_fast = time() - start
+
+    Xhat_1 = np.dot(np.dot(X, p), p.T)
+
+    start = time()
+    U, S, V = np.linalg.svd(X, full_matrices=True)
+    time_svd = time() - start
+    Xhat_2 = np.dot(U[:, [0]], np.dot(np.diag(S[[0]]), V[[0], :]))
+
+    v, p = direct(V[[0], :].T, p, compare=True)
+
+    assert_array_almost_equal(v, p, decimal=3, err_msg="FastSVD does not "
+            " find the correct loading vector.")
+
+    assert_array_almost_equal(Xhat_1, Xhat_2, decimal=2, err_msg="FastSVD " \
+            "and numpy.linalg.svd implementations lead to different " \
+            "reconstructions")
+
+    assert time_fast < time_svd
 
 
 if __name__ == "__main__":
