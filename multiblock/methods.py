@@ -796,9 +796,9 @@ class ContinuationRun(BaseMethod):
             self.method.fit(X, y, mu=mu, early_stopping_mu=self.mus[-1],
                             **kwargs)
 
-            utils.debug("continuation with mu = ", mu, \
-                    ", es_mu = ", self.mus[-1], \
-                    ", iterations =", self.method.get_algorithm().iterations)
+            utils.debug("Continuation with mu = ", mu, \
+                    ", early_stopping_mu = ", self.mus[-1], \
+                    ", iterations = ", self.method.get_algorithm().iterations)
 
             self.beta = self.method.get_transform()
             f = f + self.method.get_algorithm().f

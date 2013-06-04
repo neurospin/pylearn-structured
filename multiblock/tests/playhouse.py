@@ -21,7 +21,7 @@ import matplotlib.cm as cm
 
 
 def test_tv():
-    np.random.seed(42)
+#    np.random.seed(42)
 
     x = np.arange(-10, 10, 1)
     y = np.arange(-10, 10, 1)
@@ -93,10 +93,10 @@ def test_tv():
     num_mus = 1
     mus = [0] * num_mus
     mus[0] = 10.0
-#    mus[1] = 0.1
-#    mus[2] = 0.01
-#    mus[3] = 0.001
-#    mus[4] = 0.0001
+#    mus[1] = 0.01
+#    mus[2] = 0.0001
+#    mus[3] = 0.000001
+#    mus[4] = 0.00000001
 #    for k in xrange(0, num_mus - 1):
 #        tau = 2.0 / (float(k) + 3.0)
 #        mus[k + 1] = (1.0 - tau) * mus[k]
@@ -118,8 +118,9 @@ def test_tv():
                                       #mask=mask1D)
     lrtv.set_max_iter(maxit)
     lrtv.set_tolerance(eps)
-#    cr = methods.ContinuationRun(lrtv, mus)
     method = lrtv
+#    cr = methods.ContinuationRun(lrtv, mus)
+#    method = cr
 
 #    rrtv = RidgeRegressionTV(1.0 - en_lambda, gamma, (pz, py, px), mask=mask1D)
 #    rrtv.set_max_iter(maxit)
@@ -128,11 +129,23 @@ def test_tv():
 
     print "Init time:", (time() - init_start)
 
-    method.fit(X, y)
+    pz = 1
+    py = 5
+    px = 5
+    X = np.ones((5, pz * py * px))
+    lrtv = methods.LinearRegressionTV(10.0, (pz, py, px), mu=10.0)
+    beta = lrtv.get_start_vector().get_vector(X)
+    print lrtv._tv.grad(beta).T
+    import scipy.sparse as sparse
+    Ax, Ay, Az = lrtv._tv.A()
+    print Ax.todense()
+    return
+
+#    method.fit(X, y)
     computed_beta = method.beta
 #    computed_beta = preprocess_mask.revert(method.beta.T).T
 
-#    lrtv.fit(X, y)
+    lrtv.fit(X, y)#, early_stopping_mu=mus[-1])
     alg = method.get_algorithm()
     print "Algorithm:", alg
     print "Total time:", (time() - total_start)

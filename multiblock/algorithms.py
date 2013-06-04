@@ -69,7 +69,7 @@ class BaseAlgorithm(object):
         if prox_op == None:
             prox_op = prox_ops.ProxOp()
         if start_vector == None:
-            start_vector = start_vectors.OnesStartVector()
+            start_vector = start_vectors.RandomStartVector()
 
         self.prox_op = prox_op
         self.start_vector = start_vector
@@ -575,9 +575,9 @@ class ISTARegression(ProximalGradientMethod):
                     self.h.f(beta_old, mu=early_stopping_mu)
         else:
             f_old = self.g.f(beta_old) + self.h.f(beta_old)
-        self.f = []
+        self.f = [f_old]
 
-        self.iterations = 0
+        self.iterations = 1
         while True:
             self.converged = True
 
@@ -621,7 +621,7 @@ class FISTARegression(ISTARegression):
 
         super(FISTARegression, self).__init__(g, h, **kwargs)
 
-    def run(self, X, t=None, tscale=0.95, **kwargs):
+    def run(self, X, t=None, tscale=0.95, early_stopping_mu=None, **kwargs):
 
         if t == None:
             t = tscale / self.g.Lipschitz()
@@ -630,7 +630,11 @@ class FISTARegression(ISTARegression):
 
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
-        f_new = self.g.f(beta_new) + self.h.f(beta_new)
+        if early_stopping_mu != None:
+            f_new = self.g.f(beta_old, mu=early_stopping_mu) + \
+                    self.h.f(beta_old, mu=early_stopping_mu)
+        else:
+            f_new = self.g.f(beta_new) + self.h.f(beta_new)
         self.f = [f_new]
 
         self.iterations = 1
@@ -642,10 +646,14 @@ class FISTARegression(ISTARegression):
             beta_old = beta_new
             beta_new = self.h.prox(z - t * self.g.grad(z), t)
 
-            if norm1(z - beta_new) > self.tolerance * t:  # z - beta_new
+            if norm1(z - beta_new) > self.tolerance * t:
                 self.converged = False
 
-            f_new = self.g.f(beta_new) + self.h.f(beta_new)
+            if early_stopping_mu != None:
+                f_new = self.g.f(beta_new, mu=early_stopping_mu) + \
+                        self.h.f(beta_new, mu=early_stopping_mu)
+            else:
+                f_new = self.g.f(beta_new) + self.h.f(beta_new)
             self.f.append(f_new)
             self.iterations += 1
 

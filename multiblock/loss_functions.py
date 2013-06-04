@@ -193,18 +193,22 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
         super(CombinedNesterovLossFunction, self).__init__(a=a, b=b)
 
     def grad(self, *args, **kwargs):
+
         return self.a.grad(*args, **kwargs) + self.b.grad(*args, **kwargs)
 
     def Lipschitz(self):
+
         return self.a.Lipschitz() + self.b.Lipschitz()
 
     def precompute(self, *args, **kwargs):
+
         if hasattr(self.a, 'precompute'):
             self.a.precompute(*args, **kwargs)
         if hasattr(self.b, 'precompute'):
             self.b.precompute(*args, **kwargs)
 
     def alpha(self, beta, mu):
+
         if hasattr(self.b, 'alpha'):
             return self.b.alpha(beta, mu)
         elif hasattr(self.a, 'alpha'):
@@ -213,6 +217,7 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
             raise ValueError('At least one loss function must be Nesterov')
 
     def A(self):
+
         if hasattr(self.b, 'A'):
             return self.b.A()
         elif hasattr(self.a, 'A'):
@@ -221,6 +226,7 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
             raise ValueError('At least one loss function must be Nesterov')
 
     def At(self):
+
         if hasattr(self.b, 'At'):
             return self.b.At()
         elif hasattr(self.a, 'At'):
@@ -229,6 +235,7 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
             raise ValueError('At least one loss function must be Nesterov')
 
     def projection(self):
+
         if hasattr(self.b, 'projection'):
             return self.b.projection()
         elif hasattr(self.a, 'projection'):
@@ -237,6 +244,7 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
             raise ValueError('At least one loss function must be Nesterov')
 
     def get_mu(self):
+
         if hasattr(self.a, 'get_mu') and hasattr(self.b, 'get_mu'):
             return min(self.a.get_mu(), self.b.get_mu())
         elif hasattr(self.b, 'get_mu'):
@@ -245,6 +253,7 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
             return self.a.get_mu()
 
     def set_mu(self, mu):
+
         if hasattr(self.a, 'set_mu'):
             self.a.set_mu(mu)
         if hasattr(self.b, 'set_mu'):
@@ -263,9 +272,9 @@ class LinearRegressionError(ConvexLossFunction,
         self.y = y
         self.Xy = np.dot(X.T, y)
 
-        svd = algorithms.FastSVD(max_iter=100)
-        t = np.dot(X, svd.run(X))
-        self.lipschitz = np.sum(t ** 2.0)
+        v = algorithms.FastSVD(max_iter=100).run(X)
+        us = np.dot(X, v)
+        self.lipschitz = 2.0 * np.sum(us ** 2.0)
 #        _, s, _ = np.linalg.svd(X, full_matrices=False)  # False == faster
 #        self.lipschitz = np.max(s) ** 2.0
 
@@ -507,7 +516,7 @@ class TotalVariation(ConvexLossFunction,
         self.precompute()
         self.lambda_max = None
 
-    def f(self, beta, mu=None):
+    def f(self, beta, mu=None, true=False):
 
         if self.gamma <= TOLERANCE:
             return 0
@@ -515,15 +524,21 @@ class TotalVariation(ConvexLossFunction,
         if (mu == None):
             mu = self.get_mu()
 
-        if self.beta_id != id(beta) or self.mu_id != id(mu):
+        if (self.beta_id != id(beta) or self.mu_id != id(mu)) and not true:
             self.compute_alpha(beta, mu)
             self.beta_id = id(beta)
             self.mu_id = id(mu)
 
-        return np.dot(self.Aalpha.T, beta)[0, 0] - \
-                (mu / 2.0) * (np.sum(self.asx ** 2.0) +
-                              np.sum(self.asy ** 2.0) +
-                              np.sum(self.asz ** 2.0))
+        if true:
+            beta_norm2 = self.Ax.dot(beta) ** 2.0 + \
+                         self.Ay.dot(beta) ** 2.0 + \
+                         self.Az.dot(beta) ** 2.0
+            return np.sum(beta_norm2)
+        else:
+            return np.dot(self.Aalpha.T, beta)[0, 0] - \
+                    (mu / 2.0) * (np.sum(self.asx ** 2.0) +
+                                  np.sum(self.asy ** 2.0) +
+                                  np.sum(self.asz ** 2.0))
 
     def grad(self, beta):
 
@@ -575,9 +590,9 @@ class TotalVariation(ConvexLossFunction,
     def _compute_lambda_max(self):
 
         A = sparse.vstack(self.A())
-        v = algorithms.SparseSVD(max_iter=10).run(A)
-        u = A.dot(v)
-        self.lambda_max = np.sum(u ** 2.0)
+        v = algorithms.SparseSVD(max_iter=100).run(A)
+        us = A.dot(v)
+        self.lambda_max = np.sum(us ** 2.0)
 
     def Lipschitz(self):
 
@@ -601,10 +616,18 @@ class TotalVariation(ConvexLossFunction,
         self.asx, self.asy, self.asz = self.projection((self.asx,
                                                         self.asy,
                                                         self.asz))
+#        asnorm = self.asx ** 2.0 + self.asy ** 2.0 + self.asz ** 2.0  # )**0.5
+##        asnorm = np.sqrt(asnorm)
+#        i = asnorm > 1
+#
+#        asnorm_i = asnorm[i] ** 0.5  # Square root is taken here. Faster.
+#        self.asx[i] = np.divide(self.asx[i], asnorm_i)
+#        self.asy[i] = np.divide(self.asy[i], asnorm_i)
+#        self.asz[i] = np.divide(self.asz[i], asnorm_i)
 
-#        self.Aalpha = self.Ax.T.dot(self.asx) + \
-#                      self.Ay.T.dot(self.asy) + \
-#                      self.Az.T.dot(self.asz)
+#        self.Aalpha = self.Axt.dot(self.asx) + \
+#                      self.Ayt.dot(self.asy) + \
+#                      self.Azt.dot(self.asz)
         self.Aalpha = np.add(np.add(self.Axt.dot(self.asx),
                                     self.Ayt.dot(self.asy), self.buff),
                                     self.Azt.dot(self.asz), self.buff)
@@ -676,8 +699,6 @@ class TotalVariation(ConvexLossFunction,
         toremove = list(set(xind).intersection(yind).intersection(zind))
         toremove.sort()
         toremove.reverse()  # Remove from end so that indices are not changed
-#        if len(toremove) > 0:
-#            print "toremove:", toremove
         for i in toremove:
             delete_sparse_csr_row(self.Ax, i)
             delete_sparse_csr_row(self.Ay, i)
