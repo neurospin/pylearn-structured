@@ -856,22 +856,41 @@ class NesterovProximalGradientMethod(BaseMethod):
 
 class LinearRegression(NesterovProximalGradientMethod):
 
-    def __init__(self, X=None, y=None, **kwargs):
+    def __init__(self, **kwargs):
 
         super(LinearRegression, self).__init__(**kwargs)
 
-        if X != None and y != None:
-            self.set_g(loss_functions.LinearRegressionError(X, y))
+        self.set_g(loss_functions.LinearRegressionError())
 
     def fit(self, X, y, **kwargs):
 
-        self.set_g(loss_functions.LinearRegressionError(X, y))
+        self.beta = self.algorithm.run(X, y, **kwargs)
 
-        if self.get_g() == None:
-            raise ValueError('The function g must be given either at ' \
-                             'construction or when fitting')
+        return self
 
-        self.beta = self.algorithm.run(X, **kwargs)
+    def get_transform(self, index=0):
+
+        return self.beta
+
+    def predict(self, X, **kwargs):
+
+        yhat = np.dot(X, self.beta)
+
+        return yhat
+
+
+class LASSO(NesterovProximalGradientMethod):
+
+    def __init__(self, l, **kwargs):
+
+        super(LASSO, self).__init__(**kwargs)
+
+        self.set_g(loss_functions.LinearRegressionError())
+        self.set_h(loss_functions.L1(l))
+
+    def fit(self, X, y, **kwargs):
+
+        self.beta = self.algorithm.run(X, y, **kwargs)
 
         return self
 
@@ -893,19 +912,57 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
         super(LinearRegressionTV, self).__init__(**kwargs)
 
         self._tv = loss_functions.TotalVariation(gamma, shape, mu, mask)
-
-    def fit(self, X, y, mu=None, **kwargs):
-
-        self._reg = loss_functions.LinearRegressionError(X, y)
-        self._combo = loss_functions.CombinedNesterovLossFunction(self._reg,
+        self._lr = loss_functions.LinearRegressionError()
+        self._combo = loss_functions.CombinedNesterovLossFunction(self._lr,
                                                                   self._tv)
         self.set_g(self._combo)
+
+    def fit(self, X, y, mu=None, **kwargs):
 
         if mu != None:
             mu_old = self._tv.get_mu()
             self._tv.set_mu(mu)
 
-        self.beta = self.algorithm.run(X, **kwargs)
+        self.beta = self.algorithm.run(X, y, **kwargs)
+
+        if mu != None:
+            self._tv.set_mu(mu_old)
+
+        return self
+
+    def get_transform(self, **kwargs):
+
+        return self.beta
+
+    def predict(self, X, **kwargs):
+
+        yhat = np.dot(X, self.beta)
+
+        return yhat
+
+
+class LinearRegressionL1TV(NesterovProximalGradientMethod):
+
+    def __init__(self, l, gamma, shape, mu=None, mask=None, **kwargs):
+
+        super(LinearRegressionL1TV, self).__init__(**kwargs)
+
+        self._lr = loss_functions.LinearRegressionError()
+        self._tv = loss_functions.TotalVariation(gamma, shape, mu, mask)
+        self._combo = loss_functions.CombinedNesterovLossFunction(self._lr,
+                                                                  self._tv)
+        self.set_g(self._combo)
+
+        self._l1 = loss_functions.L1(l)
+        self.set_h(self._l1)
+
+    def fit(self, X, y, mu=None, **kwargs):
+
+        if mu != None:
+            mu_old = self._tv.get_mu()
+            self._tv.set_mu(mu)
+
+        self.beta = self.algorithm.run(X, y, **kwargs)
 
         if mu != None:
             self._tv.set_mu(mu_old)

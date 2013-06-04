@@ -46,7 +46,7 @@ class LossFunction(object):
     def f(self, *args, **kwargs):
         raise NotImplementedError('Abstract method "f" must be specialised!')
 
-    def set_data(self, **kwargs):
+    def set_data(self, *args, **kwargs):
         pass
 
 
@@ -200,6 +200,13 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
         return self.a.Lipschitz() + self.b.Lipschitz()
 
+    def set_data(self, *args, **kwargs):
+
+        if hasattr(self.a, 'set_data'):
+            self.a.set_data(*args, **kwargs)
+        if hasattr(self.b, 'set_data'):
+            self.b.set_data(*args, **kwargs)
+
     def precompute(self, *args, **kwargs):
 
         if hasattr(self.a, 'precompute'):
@@ -264,9 +271,11 @@ class LinearRegressionError(ConvexLossFunction,
                             Differentiable,
                             LipschitzContinuous):
 
-    def __init__(self, X, y, **kwargs):
+    def __init__(self, **kwargs):
 
         super(LinearRegressionError, self).__init__(**kwargs)
+
+    def set_data(self, X, y):
 
         self.X = X
         self.y = y

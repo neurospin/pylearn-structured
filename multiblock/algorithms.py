@@ -561,7 +561,9 @@ class ISTARegression(ProximalGradientMethod):
 
         super(ISTARegression, self).__init__(g, h, **kwargs)
 
-    def run(self, X, t=None, tscale=0.95, early_stopping_mu=None, **kwargs):
+    def run(self, X, y, t=None, tscale=0.95, early_stopping_mu=None, **kwargs):
+
+        self.g.set_data(X, y)
 
         if t == None:
             t = tscale / self.g.Lipschitz()

@@ -20,6 +20,83 @@ import matplotlib.cm as cm
 #import pylab
 
 
+def test_lasso():
+
+    np.random.seed(42)
+
+    eps = 0.0001
+    maxit = 500000
+
+    px = 300
+    py = 1
+    pz = 1
+    p = px * py * pz  # Must be even!
+    n = 50
+    X = np.random.randn(n, p)
+    betastar = np.concatenate((np.zeros((p / 2, 1)),
+                               np.random.randn(p / 2, 1)))
+    betastar = np.sort(np.abs(betastar), axis=0)
+    y = np.dot(X, betastar)
+
+
+    gamma = 0.0
+    l = 10.0
+    lrtv = methods.LinearRegressionL1TV(l, gamma, (pz, py, px), mu=0.01)
+    lrtv.set_max_iter(maxit)
+    lrtv.set_tolerance(eps)
+    method = lrtv
+
+#    cr = methods.ContinuationRun(lrtv, mus)
+#    method = cr
+
+#    rrtv = RidgeRegressionTV(1.0 - en_lambda, gamma, (pz, py, px), mask=mask1D)
+#    rrtv.set_max_iter(maxit)
+#    rrtv.set_tolerance(eps)
+#    method = rrtv
+
+#    pz = 1
+#    py = 5
+#    px = 5
+#    X = np.ones((5, pz * py * px))
+#    lrtv = methods.LinearRegressionTV(10.0, (pz, py, px), mu=10.0)
+#    beta = lrtv.get_start_vector().get_vector(X)
+#    print lrtv._tv.grad(beta).T
+#    import scipy.sparse as sparse
+#    Ax, Ay, Az = lrtv._tv.A()
+#    print Ax.todense()
+#    return
+
+    method.fit(X, y)
+    computed_beta = method.beta
+#    computed_beta = preprocess_mask.revert(method.beta.T).T
+
+    alg = method.get_algorithm()
+    print "Algorithm:", alg
+#    print "Total time:", (time() - total_start)
+    print "Total iterations:", alg.iterations, "(%d)" % len(alg.f)
+    print "Error:", alg.f[-1]
+
+    plot.subplot(2, 1, 1)
+    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
+    plot.title("Iterations: " + str(alg.iterations))
+
+    plot.subplot(2, 1, 2)
+    plot.plot(alg.f, '-b')
+    plot.title("f: " + str(alg.f[-1]))
+
+#    plot.subplot(2, 2, 2)
+#    plot.imshow(beta,  # , extent=(x.min(), x.max(), y.max(), y.min()),
+#                interpolation='nearest', cmap=cm.gist_rainbow)
+#
+#    plot.subplot(2, 2, 4)
+#    plot.imshow(np.reshape(computed_beta, (pz, py, px))[0, :, :] + mask,
+#                # extent=(x.min(), x.max(), y.max(), y.min()),
+#                interpolation='nearest', cmap=cm.gist_rainbow)
+    plot.show()
+
+
+
+
 def test_tv():
 #    np.random.seed(42)
 
@@ -129,23 +206,22 @@ def test_tv():
 
     print "Init time:", (time() - init_start)
 
-    pz = 1
-    py = 5
-    px = 5
-    X = np.ones((5, pz * py * px))
-    lrtv = methods.LinearRegressionTV(10.0, (pz, py, px), mu=10.0)
-    beta = lrtv.get_start_vector().get_vector(X)
-    print lrtv._tv.grad(beta).T
-    import scipy.sparse as sparse
-    Ax, Ay, Az = lrtv._tv.A()
-    print Ax.todense()
-    return
+#    pz = 1
+#    py = 5
+#    px = 5
+#    X = np.ones((5, pz * py * px))
+#    lrtv = methods.LinearRegressionTV(10.0, (pz, py, px), mu=10.0)
+#    beta = lrtv.get_start_vector().get_vector(X)
+#    print lrtv._tv.grad(beta).T
+#    import scipy.sparse as sparse
+#    Ax, Ay, Az = lrtv._tv.A()
+#    print Ax.todense()
+#    return
 
-#    method.fit(X, y)
+    method.fit(X, y)
     computed_beta = method.beta
 #    computed_beta = preprocess_mask.revert(method.beta.T).T
 
-    lrtv.fit(X, y)#, early_stopping_mu=mus[-1])
     alg = method.get_algorithm()
     print "Algorithm:", alg
     print "Total time:", (time() - total_start)
@@ -172,4 +248,5 @@ def test_tv():
 
 
 if __name__ == "__main__":
-    test_tv()
+#    test_tv()
+    test_lasso()
