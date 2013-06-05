@@ -254,8 +254,9 @@ def test_tv():
     beta1D = beta.reshape((p, 1))
     mask1D = mask.reshape((p, 1))
 
-    u = np.random.randn(p, p)
-#    u = np.eye(p, p)
+    r = 0.1
+    u = r * np.random.randn(p, p)
+    u += (1.0 - r) * np.eye(p, p)
     sigma = np.dot(u.T, u)
     mean = np.zeros(p)
 
@@ -282,7 +283,7 @@ def test_tv():
 #    y = np.dot(X, beta1D)
 
     eps = 0.1
-    maxit = 10000
+    maxit = 100000
 
     gamma = 10.0
     l = 0.1
@@ -312,7 +313,7 @@ def test_tv():
     preprocess_mask = preprocess.Mask(mask1D)
 #    X = preprocess_mask.process(X)
 
-    lrtv = methods.LinearRegressionTV(gamma, (pz, py, px), mu=mus[0])#,
+    lrtv = methods.LinearRegressionL1TV(l, gamma, (pz, py, px), mu=mus[0])#,
                                       #mask=mask1D)
     lrtv.set_max_iter(maxit)
     lrtv.set_tolerance(eps)
@@ -362,7 +363,7 @@ def test_tv():
                 interpolation='nearest', cmap=cm.gist_rainbow)
 
     plot.subplot(2, 2, 4)
-    plot.imshow(np.reshape(computed_beta, (pz, py, px))[0, :, :] + mask,
+    plot.imshow(np.reshape(computed_beta, (pz, py, px))[0, :, :],# + mask,
                 # extent=(x.min(), x.max(), y.max(), y.min()),
                 interpolation='nearest', cmap=cm.gist_rainbow)
     plot.show()

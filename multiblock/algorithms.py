@@ -561,17 +561,13 @@ class ISTARegression(ProximalGradientMethod):
 
         super(ISTARegression, self).__init__(g, h, **kwargs)
 
-    def run(self, X, y, t=None, tscale=0.95, early_stopping_mu=None, **kwargs):
-
-        self.g.set_data(X, y)
-        self.h.set_data(X, y)
+    def run(self, X, y, t=None, tscale=0.95, early_stopping_mu=None,
+            **kwargs):
 
         if t == None:
             t = tscale / self.g.Lipschitz()
         else:
             t *= tscale
-
-#        t *= 0.01
 
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
@@ -628,9 +624,6 @@ class FISTARegression(ISTARegression):
 
     def run(self, X, y, t=None, tscale=0.95, early_stopping_mu=None, **kwargs):
 
-        self.g.set_data(X, y)
-        self.h.set_data(X, y)
-
         if t == None:
             t = tscale / self.g.Lipschitz()
         else:
@@ -686,9 +679,6 @@ class MonotoneFISTARegression(ISTARegression):
 
     def run(self, X, y, g=None, h=None, t=None, tscale=0.95, ista_steps=2,
             early_stopping_mu=None, **kwargs):
-
-        self.g.set_data(X, y)
-        self.h.set_data(X, y)
 
         if h == None:
             h = loss_functions.ZeroErrorFunction()
@@ -842,17 +832,17 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
         L = L / self.g.lambda_min()  # Lipschitz constant
         print "Lipschitz constant:", L
 
-        beta_hat_0 = self.beta_hat_0_2
+        _beta_hat_0 = self._beta_hat_0_2
 
         # Values for k=0
         mu = L / 1.0
         zero = [0] * len(self.A)
         for i in xrange(len(self.A)):
             zero[i] = np.zeros((self.A[i].shape[0], 1))
-        beta_new = beta_hat_0(zero)
-        alpha = self.V(zero, beta_new, L)
+        beta_new = _beta_hat_0(zero)
+        alpha = self._V(zero, beta_new, L)
         tau = 2.0 / 3.0
-        alpha_hat = self.alpha_hat_muk(beta_new, mu)
+        alpha_hat = self._alpha_hat_muk(beta_new, mu)
         u = [0] * len(alpha_hat)
         for i in xrange(len(alpha_hat)):
             u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
@@ -866,8 +856,8 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
             # Current iteration (compute for k+1)
             mu = (1.0 - tau) * mu
             beta_old = beta_new
-            beta_new = (1.0 - tau) * beta_old + tau * beta_hat_0(u)
-            alpha = self.V(u, beta_old, L)
+            beta_new = (1.0 - tau) * beta_old + tau * _beta_hat_0(u)
+            alpha = self._V(u, beta_old, L)
 
             if norm1(beta_new - beta_old) > self.tolerance:
                 self.converged = False
@@ -886,24 +876,24 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
 
             # Prepare for next iteration (next iteration's k)
             tau = 2.0 / (float(self.iterations) + 3.0)
-            alpha_hat = self.alpha_hat_muk(beta_new, mu)
+            alpha_hat = self._alpha_hat_muk(beta_new, mu)
             for i in xrange(len(alpha_hat)):
                 u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
 
         return beta_new
 
-    def V(self, u, beta, L):
+    def _V(self, u, beta, L):
 
         u_new = [0] * len(u)
         for i in xrange(len(u)):
             u_new[i] = u[i] + self.A[i].dot(beta) / L
         return list(self.h.projection(u_new))
 
-    def alpha_hat_muk(self, beta, mu):
+    def _alpha_hat_muk(self, beta, mu):
 
         return self.h.alpha(beta, mu)
 
-    def beta_hat_0_1(self, alpha):
+    def _beta_hat_0_1(self, alpha):
         """ Straight-forward naive Ridge regression.
         """
         self.Aa *= 0
@@ -913,7 +903,7 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
 
         return np.dot(self.invXXI, v)
 
-    def beta_hat_0_2(self, alpha):
+    def _beta_hat_0_2(self, alpha):
         """ Ridge regression using the Woodbury formula.
         """
         self.Aa *= 0

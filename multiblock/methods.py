@@ -10,8 +10,14 @@ methods.
 
 __all__ = ['PCA', 'SVD', 'PLSR', 'TuckerFactorAnalysis', 'PLSC', 'O2PLS',
            'RGCCA',
-           'LinearRegression', 'LinearRegressionTV', 'RidgeRegressionTV',
-           'LogisticRegression']
+
+           'ContinuationRun',
+
+           'LinearRegression', 'Lasso', 'RidgeRegression', 'ElasticNet',
+           'LinearRegressionTV', 'LinearRegressionL1TV',
+           'LogisticRegression',
+
+           'RidgeRegressionTV']
 
 from sklearn.utils import check_arrays
 
@@ -95,48 +101,61 @@ class BaseMethod(object):
         return X
 
     def get_max_iter(self):
+
         return self.get_algorithm()._get_max_iter()
 
     def set_max_iter(self, max_iter):
+
         self.get_algorithm()._set_max_iter(max_iter)
 
     def get_tolerance(self):
+
         self.get_algorithm()._get_tolerance()
 
     def set_tolerance(self, tolerance):
+
         self.get_algorithm()._set_tolerance(tolerance)
 
     def get_start_vector(self):
+
         return self.get_algorithm()._get_start_vector()
 
     def set_start_vector(self, start_vector):
+
         self.get_algorithm()._set_start_vector(start_vector)
 
     def get_algorithm(self):
+
         return self.algorithm
 
     def set_algorithm(self, algorithm):
+
         if not isinstance(self.algorithm, algorithms.BaseAlgorithm):
             raise ValueError('The algorithm must be an instance of ' \
                              '"BaseAlgorithm"')
         self.algorithm = algorithm
 
     def get_prox_op(self):
+
         return self.get_algorithm()._get_prox_op()
 
     def set_prox_op(self, prox_op):
+
         self.get_algorithm()._set_prox_op(prox_op)
 
     @abc.abstractmethod
     def get_transform(self, index=0):
+
         raise NotImplementedError('Abstract method "get_transform" must be '\
                                   'specialised!')
 
     def deflate(self, X, w, t, p, index=None):
+
         return X - np.dot(t, p.T)
 
     @abc.abstractmethod
     def fit(self, *X, **kwargs):
+
         raise NotImplementedError('Abstract method "fit" must be specialised!')
 
 
@@ -164,21 +183,24 @@ class PLSBaseMethod(BaseMethod):
 #            raise ValueError('Argument "adj_matrix" must be given')
 
     def set_scheme(self, scheme):
+
         self.get_algorithm()._set_scheme(scheme)
 
     def get_scheme(self):
+
         return self.get_algorithm()._get_scheme()
 
     def set_adjacency_matrix(self, adj_matrix):
+
         self.get_algorithm()._set_adjacency_matrix(adj_matrix)
 
     def get_adjacency_matrix(self):
+
         return self.get_algorithm()._set_adjacency_matrix()
 
     def fit(self, *X, **kwargs):
 
         X = list(self._check_arrays(*X))
-#        X = self.preprocess(*X)
 
         # Results matrices
         self.W = []
@@ -244,8 +266,8 @@ class PLSBaseMethod(BaseMethod):
         """ Returns the linear transformation W that generates the score
         matrix T = XW* for matrix with index index.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         X : The matrices to center
 
         Returns
@@ -257,7 +279,6 @@ class PLSBaseMethod(BaseMethod):
     def transform(self, *X, **kwargs):
 
         X = self._check_arrays(*X)
-#        X = self.preprocess(*X)
 
         T = []
         for i in xrange(self.n):
@@ -275,15 +296,15 @@ class PLSBaseMethod(BaseMethod):
 class PCA(PLSBaseMethod):
 
     def __init__(self, **kwargs):
-#        prepro = kwargs.pop("preprocess", pp.PreprocessQueue([pp.Center(),
-#                                                              pp.Scale()]))
+
         super(PCA, self).__init__(**kwargs)
 
     def get_transform(self, index=0):
+
         return self.P
 
     def fit(self, *X, **kwargs):
-#        PLSBaseMethod.fit(self, X[0], **kwargs)
+
         super(PCA, self).fit(X[0], **kwargs)
         self.T = self.T[0]
         self.P = self.W[0]
@@ -293,11 +314,12 @@ class PCA(PLSBaseMethod):
         return self
 
     def transform(self, *X, **kwargs):
-#        T = PLSBaseMethod.transform(self, X[0], **kwargs)
+
         T = super(PCA, self).transform(X[0], **kwargs)
         return T[0]
 
     def fit_transform(self, *X, **fit_params):
+
         return self.fit(X[0], **fit_params).transform(X[0])
 
 
@@ -308,16 +330,16 @@ class SVD(PCA):
 
         np.dot(U, np.dot(S, V.T)) == X
     """
-
     def __init__(self, **kwargs):
-#        PCA.__init__(self, **kwargs)
+
         super(SVD, self).__init__(**kwargs)
 
     def get_transform(self, index=0):
+
         return self.V
 
     def fit(self, *X, **kwargs):
-#        PCA.fit(self, X[0], **kwargs)
+
         super(SVD, self).fit(X[0], **kwargs)
         self.U = self.T
         # Move norms of U to the diagonal matrix S
@@ -334,29 +356,29 @@ class SVD(PCA):
 class PLSR(PLSBaseMethod):
     """Performs PLS regression between two matrices X and Y.
     """
-
     def __init__(self, algorithm=None, **kwargs):
-#        prepro = kwargs.pop("preprocess", pp.PreprocessQueue([pp.Center(),
-#                                                              pp.Scale()]))
-#        PLSBaseMethod.__init__(self, algorithm=algorithm, **kwargs)
+
         if algorithm == None:
             algorithm = algorithms.NIPALSAlgorithm(not_normed=[1])
 
         super(PLSR, self).__init__(algorithm=algorithm, **kwargs)
 
     def get_transform(self, index=0):
+
         if index == 0:
             return self.Ws
         else:
             return self.C
 
     def deflate(self, X, w, t, p, index=None):
+
         if index == 0:
             return X - np.dot(t, p.T)  # Deflate X using its loadings
         else:
             return X  # Do not deflate Y
 
     def fit(self, X, Y=None, **kwargs):
+
         Y = kwargs.pop('y', Y)
         if Y == None:
             raise ValueError('Y is not supplied')
@@ -375,6 +397,7 @@ class PLSR(PLSBaseMethod):
         return self
 
     def predict(self, X):
+
         X = np.asarray(X)
 #        if self.preproc != None and self.preproc[0] != None:
 #            X = self.preproc[0].process(X)
@@ -387,6 +410,7 @@ class PLSR(PLSBaseMethod):
         return Ypred
 
     def transform(self, X, Y=None, **kwargs):
+
         Y = kwargs.pop('y', Y)
         if Y != None:
 #            T = PLSBaseMethod.transform(self, X, Y, **kwargs)
@@ -398,6 +422,7 @@ class PLSR(PLSBaseMethod):
         return T
 
     def fit_transform(self, X, Y=None, **kwargs):
+
         Y = kwargs.pop('y', Y)
         return self.fit(X, Y, **kwargs).transform(X, Y)
 
@@ -471,13 +496,17 @@ class PLSC(PLSR):
     """ PLS with canonical deflation (symmetric).
 
     Note that the model of each matrix is:
+
         X = T.P'
         Y = U.Q'
+
     with the inner relation T = U + H, i.e. with T = U.Dy and U = T.Dx.
 
     The prediction is therefore performed as:
+
         Xhat = Y.C*.Dy.P' = U.(U'.U)^-1.U'.T.P' = Y.By
         Yhat = X.W*.Dx.Q' = T.(T'.T)^-1.T'.U.Q' = X.Bx,
+
     i.e. with least squares estimation of T and U, times P and Q,
     respectively.
     """
@@ -864,6 +893,8 @@ class LinearRegression(NesterovProximalGradientMethod):
 
     def fit(self, X, y, **kwargs):
 
+        self.g.set_data(X, y)
+
         self.beta = self.algorithm.run(X, y, **kwargs)
 
         return self
@@ -879,16 +910,139 @@ class LinearRegression(NesterovProximalGradientMethod):
         return yhat
 
 
-class LASSO(NesterovProximalGradientMethod):
+class Lasso(NesterovProximalGradientMethod):
+    """Lasso (linear regression + L1 constraint).
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + l.||b||_1,
+
+    where ||.||_1 is the L1 norm and ||.||² is the squared L2 norm.
+
+    Parameters
+    ----------
+    l: The Lasso parameter.
+    """
 
     def __init__(self, l, **kwargs):
 
-        super(LASSO, self).__init__(**kwargs)
+        super(Lasso, self).__init__(**kwargs)
 
         self.set_g(loss_functions.LinearRegressionError())
         self.set_h(loss_functions.L1(l))
 
     def fit(self, X, y, **kwargs):
+        """Fit the model to the given data.
+
+        Parameters
+        ----------
+        X : The independent variables.
+        y : The dependent variable.
+
+        Returns
+        -------
+        self: The model object.
+        """
+        self.g.set_data(X, y)
+
+        self.beta = self.algorithm.run(X, y, **kwargs)
+
+        return self
+
+    def get_transform(self, index=0):
+
+        return self.beta
+
+    def predict(self, X, **kwargs):
+
+        yhat = np.dot(X, self.beta)
+
+        return yhat
+
+
+class RidgeRegression(NesterovProximalGradientMethod):
+    """Ridge regression.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + l.||b||²
+
+    Parameters
+    ----------
+    l: The ridge parameter.
+    """
+
+    def __init__(self, l, **kwargs):
+
+        super(RidgeRegression, self).__init__(**kwargs)
+
+        self.set_g(loss_functions.RidgeRegression(l))
+
+    def fit(self, X, y, **kwargs):
+        """Fit the model to the given data.
+
+        Parameters
+        ----------
+        X : The independent variables.
+        y : The dependent variable.
+
+        Returns
+        -------
+        self: The model object.
+        """
+
+        self.g.set_data(X, y)
+
+        self.beta = self.algorithm.run(X, y, **kwargs)
+
+        return self
+
+    def get_transform(self, index=0):
+
+        return self.beta
+
+    def predict(self, X, **kwargs):
+
+        yhat = np.dot(X, self.beta)
+
+        return yhat
+
+
+class ElasticNet(NesterovProximalGradientMethod):
+    """ElasticNet in linear regression.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + l.||b||_1 + (1 - l).1/2.||b||²,
+
+    where ||.||_1 is the L1 norm and ||.||² is the squared L2 norm.
+
+    Parameters
+    ----------
+    l: The L1 and L2 parameter.
+    """
+
+    def __init__(self, l, **kwargs):
+
+        super(ElasticNet, self).__init__(**kwargs)
+
+        self.set_g(loss_functions.LinearRegressionError())
+        self.set_h(loss_functions.ElasticNet(l))
+
+    def fit(self, X, y, **kwargs):
+        """Fit the model to the given data.
+
+        Parameters
+        ----------
+        X : The independent variables.
+        y : The dependent variable.
+
+        Returns
+        -------
+        self: The model object.
+        """
+
+        self.g.set_data(X, y)
 
         self.beta = self.algorithm.run(X, y, **kwargs)
 
@@ -906,6 +1060,28 @@ class LASSO(NesterovProximalGradientMethod):
 
 
 class LinearRegressionTV(NesterovProximalGradientMethod):
+    """Linear regression with total variation constraint.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + gamma.TV(b),
+
+    where ||.||² is the squared L2 norm and TV(.) is the total variation
+    constraint.
+
+    Parameters
+    ----------
+    gamma: The TV regularisation parameter.
+
+    shape: The shape of the 3D image. Must be a 3-tuple. If the image is 2D,
+           let the Z dimension be 1, and if the "image" is 1D, let the Y and
+           Z dimensions be 1. The tuple must be on the form (Z, Y, X).
+
+    mu   : The Nesterov function regularisation parameter.
+
+    mask : A 1-dimensional mask representing the 3D image mask. Must be a
+           list of 1s and 0s.
+    """
 
     def __init__(self, gamma, shape, mu=None, mask=None, **kwargs):
 
@@ -919,6 +1095,19 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
         self.set_g(self._combo)
 
     def fit(self, X, y, mu=None, **kwargs):
+        """Fit the model to the given data.
+
+        Parameters
+        ----------
+        X : The independent variables.
+        y : The dependent variable.
+
+        Returns
+        -------
+        self: The model object.
+        """
+
+        self.g.set_data(X, y)
 
         if mu != None:
             mu_old = self._tv.get_mu()
@@ -943,6 +1132,30 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
 
 
 class LinearRegressionL1TV(NesterovProximalGradientMethod):
+    """Linear regression with total variation and L1 constraints.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + l.||b||_1 + gamma.TV(b),
+
+    where ||.||_1 is the L1 norm, ||.||² is the squared L2 norm and TV(.) is
+    the total variation constraint.
+
+    Parameters
+    ----------
+    l    : The L1 parameter.
+
+    gamma: The TV regularisation parameter.
+
+    shape: The shape of the 3D image. Must be a 3-tuple. If the image is 2D,
+           let the Z dimension be 1, and if the "image" is 1D, let the Y and
+           Z dimensions be 1. The tuple must be on the form (Z, Y, X).
+
+    mu   : The Nesterov function regularisation parameter.
+
+    mask : A 1-dimensional mask representing the 3D image mask. Must be a
+           list of 1s and 0s.
+    """
 
     def __init__(self, l, gamma, shape, mu=None, mask=None, **kwargs):
 
@@ -959,6 +1172,19 @@ class LinearRegressionL1TV(NesterovProximalGradientMethod):
         self.set_h(self._l1)
 
     def fit(self, X, y, mu=None, **kwargs):
+        """Fit the model to the given data.
+
+        Parameters
+        ----------
+        X : The independent variables.
+        y : The dependent variable.
+
+        Returns
+        -------
+        self: The model object.
+        """
+
+        self.g.set_data(X, y)
 
         if mu != None:
             mu_old = self._tv.get_mu()
@@ -991,6 +1217,18 @@ class LogisticRegression(NesterovProximalGradientMethod):
         self.set_g(loss_functions.LogisticRegressionError())
 
     def fit(self, X, y, **kwargs):
+        """Fit the model to the given data.
+
+        Parameters
+        ----------
+        X : The independent variables.
+        y : The dependent variable.
+
+        Returns
+        -------
+        self: The model object.
+        """
+        self.g.set_data(X, y)
 
         self.beta = self.algorithm.run(X, y, **kwargs)
 
@@ -1043,7 +1281,31 @@ class ExcessiveGapMethod(BaseMethod):
 
 
 class RidgeRegressionTV(ExcessiveGapMethod):
+    """Ridge regression with total variation constraint.
 
+    Optimises the function
+
+        f(b) = ||y - X.b||² + l.||b||² + gamma.TV(b),
+
+    where ||.||² is the squared L2 norm and TV(.) is the total variation
+    constraint.
+
+    Parameters
+    ----------
+    l     : The ridge parameter.
+
+    gamma : The TV regularisation parameter.
+
+    shape : The shape of the 3D image. Must be a 3-tuple. If the image is
+            2D, let the Z dimension be 1, and if the "image" is 1D, let the
+            Y and Z dimensions be 1. The tuple must be on the form
+            (Z, Y, X).
+
+    mu    : The Nesterov function regularisation parameter.
+
+    mask  : A 1-dimensional mask representing the 3D image mask. Must be a
+           list of 1s and 0s.
+    """
     def __init__(self, l, gamma, shape, mu=None, mask=None, **kwargs):
 
         super(RidgeRegressionTV, self).__init__(**kwargs)
@@ -1052,6 +1314,18 @@ class RidgeRegressionTV(ExcessiveGapMethod):
         self.set_h(loss_functions.TotalVariation(gamma, shape, mu, mask))
 
     def fit(self, X, y, **kwargs):
+        """Fit the model to the given data.
+
+        Parameters
+        ----------
+        X : The independent variables.
+        y : The dependent variable.
+
+        Returns
+        -------
+        self: The model object.
+        """
+        self.g.set_data(X, y)
 
         self.beta = self.algorithm.run(X, y, **kwargs)
 

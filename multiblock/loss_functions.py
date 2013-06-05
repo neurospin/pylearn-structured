@@ -5,7 +5,6 @@ Created on Mon Apr 22 10:54:29 2013
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
 @license: BSD Style.
-
 """
 
 __all__ = ['LossFunction', 'LipschitzContinuous', 'Differentiable',
@@ -455,7 +454,7 @@ class L1(ProximalOperator):
     def f(self, beta):
         return self.l * norm1(beta)
 
-    def prox(self, x, factor=1, allow_empty=False):
+    def prox(self, x, factor=1.0, allow_empty=False):
 
         l = factor * self.l
         return (np.abs(x) > l) * (x - l * np.sign(x - l))
@@ -503,7 +502,7 @@ class L2(ProximalOperator):
     def f(self, x):
         return self.l * 0.5 * np.sum(x ** 2.0)
 
-    def prox(self, x, factor=1):
+    def prox(self, x, factor=1.0):
 
         l = factor * self.l
         return x / (1.0 + l)
@@ -512,7 +511,7 @@ class L2(ProximalOperator):
 class ElasticNet(ProximalOperator):
     """The proximal operator of the function
 
-    lambda * norm1(x) + (1.0 - lambda) * 0.5 * norm(x) ** 2.
+      P(x) = lambda * norm1(x) + (1.0 - lambda) * 0.5 * norm(x) ** 2.
     """
     def __init__(self, l, **kwargs):
 
@@ -524,7 +523,7 @@ class ElasticNet(ProximalOperator):
     def f(self, x):
         return self.l * norm1(x) + (1.0 - self.l) * 0.5 * np.sum(x ** 2.0)
 
-    def prox(self, x, factor=1, allow_empty=False):
+    def prox(self, x, factor=1.0, allow_empty=False):
 
         l = factor * self.l
         return self.l1.prox(x, factor=factor, allow_empty=allow_empty) \
@@ -538,13 +537,13 @@ class TotalVariation(ConvexLossFunction,
     def __init__(self, gamma, shape, mu=None, mask=None, **kwargs):
         """Construct a TotalVariation loss function.
 
-        Parameters:
-        ---------
+        Parameters
+        ----------
         gamma : The regularisation parameter for the TV penality.
 
         shape : The shape of the 3D image. Must be a 3-tuple. If the image is
                 2D, let the Z dimension be 1, and if the "image" is 1D, let the
-                Y and Z dimensions be 1. The tuple must be of the form
+                Y and Z dimensions be 1. The tuple must be on the form
                 (Z, Y, X).
 
         mu    : The Nesterov function regularisation parameter.
