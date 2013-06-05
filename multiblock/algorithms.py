@@ -564,11 +564,14 @@ class ISTARegression(ProximalGradientMethod):
     def run(self, X, y, t=None, tscale=0.95, early_stopping_mu=None, **kwargs):
 
         self.g.set_data(X, y)
+        self.h.set_data(X, y)
 
         if t == None:
             t = tscale / self.g.Lipschitz()
         else:
             t *= tscale
+
+#        t *= 0.01
 
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
@@ -623,7 +626,10 @@ class FISTARegression(ISTARegression):
 
         super(FISTARegression, self).__init__(g, h, **kwargs)
 
-    def run(self, X, t=None, tscale=0.95, early_stopping_mu=None, **kwargs):
+    def run(self, X, y, t=None, tscale=0.95, early_stopping_mu=None, **kwargs):
+
+        self.g.set_data(X, y)
+        self.h.set_data(X, y)
 
         if t == None:
             t = tscale / self.g.Lipschitz()
@@ -678,8 +684,11 @@ class MonotoneFISTARegression(ISTARegression):
 
         super(MonotoneFISTARegression, self).__init__(**kwargs)
 
-    def run(self, X, g=None, h=None, t=None, tscale=0.95, ista_steps=2,
+    def run(self, X, y, g=None, h=None, t=None, tscale=0.95, ista_steps=2,
             early_stopping_mu=None, **kwargs):
+
+        self.g.set_data(X, y)
+        self.h.set_data(X, y)
 
         if h == None:
             h = loss_functions.ZeroErrorFunction()

@@ -173,7 +173,7 @@ def test():
             "reconstructions")
 
     # Assure TuckerFactorAnalysis gives the same answer as SVD
-    tol = 5e-10
+    tol = 5e-12
     miter = 1500
     X = np.random.rand(50, 100)
     Y = np.random.rand(50, 100)
@@ -197,12 +197,12 @@ def test():
     svd.fit(np.dot(X.T, Y))
 
     tfa.W, svd.U = direct(tfa.W, svd.U, compare=True)
-    assert_array_almost_equal(tfa.W, svd.U, decimal=5, err_msg="Tucker's " \
+    assert_array_almost_equal(tfa.W, svd.U, decimal=4, err_msg="Tucker's " \
         "inner-battery factor analysis gives different X weights when " \
         "compared to SVD")
 
     tfa.C, svd.V = direct(tfa.C, svd.V, compare=True)
-    assert_array_almost_equal(tfa.C, svd.V, decimal=5, err_msg="Tucker's " \
+    assert_array_almost_equal(tfa.C, svd.V, decimal=4, err_msg="Tucker's " \
         "inner-battery factor analysis gives different Y weights when " \
         "compared to SVD")
 

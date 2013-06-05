@@ -913,6 +913,7 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
 
         self._tv = loss_functions.TotalVariation(gamma, shape, mu, mask)
         self._lr = loss_functions.LinearRegressionError()
+
         self._combo = loss_functions.CombinedNesterovLossFunction(self._lr,
                                                                   self._tv)
         self.set_g(self._combo)
@@ -949,6 +950,7 @@ class LinearRegressionL1TV(NesterovProximalGradientMethod):
 
         self._lr = loss_functions.LinearRegressionError()
         self._tv = loss_functions.TotalVariation(gamma, shape, mu, mask)
+
         self._combo = loss_functions.CombinedNesterovLossFunction(self._lr,
                                                                   self._tv)
         self.set_g(self._combo)
@@ -986,11 +988,11 @@ class LogisticRegression(NesterovProximalGradientMethod):
 
         super(LogisticRegression, self).__init__(**kwargs)
 
+        self.set_g(loss_functions.LogisticRegressionError())
+
     def fit(self, X, y, **kwargs):
 
-        self.set_g(loss_functions.LogisticRegressionError(X, y))
-
-        self.beta = self.algorithm.run(X, **kwargs)
+        self.beta = self.algorithm.run(X, y, **kwargs)
 
         return self
 
@@ -1046,12 +1048,10 @@ class RidgeRegressionTV(ExcessiveGapMethod):
 
         super(RidgeRegressionTV, self).__init__(**kwargs)
 
-        self.l = l
+        self.set_g(loss_functions.RidgeRegression(l))
         self.set_h(loss_functions.TotalVariation(gamma, shape, mu, mask))
 
     def fit(self, X, y, **kwargs):
-
-        self.set_g(loss_functions.RidgeRegression(X, y, self.l))
 
         self.beta = self.algorithm.run(X, y, **kwargs)
 

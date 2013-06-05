@@ -254,8 +254,8 @@ def test_tv():
     beta1D = beta.reshape((p, 1))
     mask1D = mask.reshape((p, 1))
 
-#    u = np.random.randn(p, p)
-    u = np.eye(p, p)
+    u = np.random.randn(p, p)
+#    u = np.eye(p, p)
     sigma = np.dot(u.T, u)
     mean = np.zeros(p)
 
@@ -281,7 +281,7 @@ def test_tv():
 #    beta1D = np.sort(np.abs(betastar), axis=0)
 #    y = np.dot(X, beta1D)
 
-    eps = 0.01
+    eps = 0.1
     maxit = 10000
 
     gamma = 10.0
@@ -369,6 +369,18 @@ def test_tv():
 
 
 if __name__ == "__main__":
-#    test_tv()
+    test_tv()
 #    test_lasso()
-    test_lasso_tv()
+#    test_lasso_tv()
+
+#    pz = 1
+#    py = 2
+#    px = 3
+#    p = px * py * pz
+##    beta = np.ones((pz * py * px, 1))
+##    X = np.reshape(xrange(p), (pz, py, px))
+#    X = np.ones((5, pz * py * px))
+#    print X
+#    lrtv = methods.LinearRegressionTV(10.0, (pz, py, px), mu=10.0)
+#    beta = 10.0 * lrtv.get_start_vector().get_vector(X)
+#    print lrtv._tv.grad(beta).T

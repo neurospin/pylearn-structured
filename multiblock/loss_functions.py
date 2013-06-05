@@ -9,6 +9,7 @@ Created on Mon Apr 22 10:54:29 2013
 """
 
 __all__ = ['LossFunction', 'LipschitzContinuous', 'Differentiable',
+           'DataDependent',
 
            'ConvexLossFunction',
            'LinearRegressionError', 'LogisticRegressionError',
@@ -46,9 +47,6 @@ class LossFunction(object):
     def f(self, *args, **kwargs):
         raise NotImplementedError('Abstract method "f" must be specialised!')
 
-    def set_data(self, *args, **kwargs):
-        pass
-
 
 class LipschitzContinuous(object):
 
@@ -75,6 +73,20 @@ class Differentiable(object):
     @abc.abstractmethod
     def grad(self, *args, **kwargs):
         raise NotImplementedError('Abstract method "grad" must be ' \
+                                  'specialised!')
+
+
+class DataDependent(object):
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, **kwargs):
+
+        super(DataDependent, self).__init__(**kwargs)
+
+    @abc.abstractmethod
+    def set_data(self, *X):
+        raise NotImplementedError('Abstract method "set_data" must be ' \
                                   'specialised!')
 
 
@@ -160,17 +172,21 @@ class NesterovFunction(Differentiable, LipschitzContinuous):
         self.mu = mu
 
 
-class CombinedLossFunction(LossFunction):
+class CombinedLossFunction(LossFunction, DataDependent):
 
-    def __init__(self, a=None, b=None, **kwargs):
+    def __init__(self, a, b, **kwargs):
 
         super(CombinedLossFunction, self).__init__(**kwargs)
 
-        if a == None or b == None:
-            raise ValueError('Two loss functions must be given as ' \
-                             'arguments to the constructor')
         self.a = a
         self.b = b
+
+    def set_data(self, *args, **kwargs):
+
+        if hasattr(self.a, 'set_data'):
+            self.a.set_data(*args, **kwargs)
+        if hasattr(self.b, 'set_data'):
+            self.b.set_data(*args, **kwargs)
 
     def f(self, *args, **kwargs):
         return self.a.f(*args, **kwargs) + self.b.f(*args, **kwargs)
@@ -199,13 +215,6 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
     def Lipschitz(self):
 
         return self.a.Lipschitz() + self.b.Lipschitz()
-
-    def set_data(self, *args, **kwargs):
-
-        if hasattr(self.a, 'set_data'):
-            self.a.set_data(*args, **kwargs)
-        if hasattr(self.b, 'set_data'):
-            self.b.set_data(*args, **kwargs)
 
     def precompute(self, *args, **kwargs):
 
@@ -269,7 +278,8 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
 class LinearRegressionError(ConvexLossFunction,
                             Differentiable,
-                            LipschitzContinuous):
+                            LipschitzContinuous,
+                            DataDependent):
 
     def __init__(self, **kwargs):
 
@@ -281,11 +291,7 @@ class LinearRegressionError(ConvexLossFunction,
         self.y = y
         self.Xy = np.dot(X.T, y)
 
-        v = algorithms.FastSVD(max_iter=100).run(X)
-        us = np.dot(X, v)
-        self.lipschitz = 2.0 * np.sum(us ** 2.0)
-#        _, s, _ = np.linalg.svd(X, full_matrices=False)  # False == faster
-#        self.lipschitz = np.max(s) ** 2.0
+        self.lipschitz = None
 
     def f(self, beta, **kwargs):
 #        return norm(self.y - np.dot(self.X, beta)) ** 2
@@ -296,27 +302,31 @@ class LinearRegressionError(ConvexLossFunction,
         return 2.0 * (np.dot(self.X.T, np.dot(self.X, beta)) - self.Xy)
 
     def Lipschitz(self):
+        if self.lipschitz == None:
+            v = algorithms.FastSVD(max_iter=100).run(self.X)
+            us = np.dot(self.X, v)
+            self.lipschitz = 2.0 * np.sum(us ** 2.0)
+#            _, s, _ = np.linalg.svd(self.X, full_matrices=False)
+#            self.lipschitz = np.max(s) ** 2.0
+
         return self.lipschitz
 
 
 class LogisticRegressionError(ConvexLossFunction,
                               Differentiable,
-                              LipschitzContinuous):
+                              LipschitzContinuous,
+                              DataDependent):
 
     def __init__(self, X, y, **kwargs):
 
         super(LogisticRegressionError, self).__init__(**kwargs)
 
+    def set_data(self, X, y):
+
         self.X = X
         self.y = y
 
-        V = 0.5 * np.eye(X.shape[0])  # pi(x) * (1 - pi(x)) <= 0.25 = 0.5 * 0.5
-        VX = np.dot(V, X)
-        svd = algorithms.FastSVD(max_iter=100)
-        t = np.dot(VX, svd.run(VX))
-        self.lipschitz = np.sum(t ** 2.0)
-#        _, s, _ = np.linalg.svd(VX, full_matrices=False)  # False == faster
-#        self.t = np.max(s) ** 2.0
+        self.lipschitz = None
 
     def f(self, beta, **kwargs):
         logit = np.dot(self.X, beta)
@@ -341,30 +351,43 @@ class LogisticRegressionError(ConvexLossFunction,
 #        return XVX
 
     def Lipschitz(self):
+        if self.lipschitz == None:
+            # pi(x) * (1 - pi(x)) <= 0.25 = 0.5 * 0.5
+            V = 0.5 * np.eye(self.X.shape[0])
+            VX = np.dot(V, self.X)
+            svd = algorithms.FastSVD(max_iter=100)
+            t = np.dot(VX, svd.run(VX))
+            self.lipschitz = np.sum(t ** 2.0)
+#            _, s, _ = np.linalg.svd(VX, full_matrices=False)
+#            self.t = np.max(s) ** 2.0
+
         return self.lipschitz
 
 
 class RidgeRegression(StronglyConvexLossFunction,
                       Differentiable,
-                      LipschitzContinuous):
+                      LipschitzContinuous,
+                      DataDependent):
     """Loss function for ridge regression. Represents the function:
 
         f(b) = norm(y - X*b)² + lambda*norm(b)²
         #f(b) = (1/2)*norm(y - X*b)² + (lambda/2)*norm(b)²
     """
 
-    def __init__(self, X, y, l, **kwargs):
+    def __init__(self, l, **kwargs):
 
         super(RidgeRegression, self).__init__(**kwargs)
+
+        self.l = l
+
+    def set_data(self, X, y):
 
         self.X = X
         self.y = y
         self.Xty = np.dot(X.T, y)
-        self.l = l
 
-        _, s, _ = np.linalg.svd(X, full_matrices=False)  # False == faster
-        self.l_max = np.max(s) ** 2.0 + l
-        self.l_min = np.min(s) ** 2.0 + l
+        self.l_max = None
+        self.l_min = None
 
     def f(self, beta, **kwargs):
 #        return 0.5 * (np.sum((self.y - np.dot(self.X, beta)) ** 2.0) \
@@ -379,19 +402,34 @@ class RidgeRegression(StronglyConvexLossFunction,
                 + self.l * beta)
 
     def Lipschitz(self):
-#        return self.lambda_max
+
+        if self.l_max == None:
+            _, s, _ = np.linalg.svd(self.X, full_matrices=False)
+            self.l_max = np.max(s) ** 2.0 + self.l
+            self.l_min = np.min(s) ** 2.0 + self.l
+
+#        return self.l_max
         return 2.0 * self.l_max
 
     def lambda_min(self):
-#        return self.lambda_min
+        if self.l_min == None:
+            _, s, _ = np.linalg.svd(self.X, full_matrices=False)
+            self.l_max = np.max(s) ** 2.0 + self.l
+            self.l_min = np.min(s) ** 2.0 + self.l
+
+#        return self.l_min
         return 2.0 * self.l_min
 
 
-class ZeroErrorFunction(ProximalOperator, Differentiable, LipschitzContinuous):
+class ZeroErrorFunction(ProximalOperator, Differentiable,
+                        LipschitzContinuous, DataDependent):
 
     def __init__(self, **kwargs):
 
         super(ZeroErrorFunction, self).__init__(**kwargs)
+
+    def set_data(self, *args, **kwargs):
+        pass
 
     def f(self, *args, **kwargs):
         return 0
@@ -539,29 +577,29 @@ class TotalVariation(ConvexLossFunction,
             self.mu_id = id(mu)
 
         if true:
-            beta_norm2 = self.Ax.dot(beta) ** 2.0 + \
-                         self.Ay.dot(beta) ** 2.0 + \
-                         self.Az.dot(beta) ** 2.0
-            return np.sum(beta_norm2)
+            return np.sum(self.Ax.dot(beta) ** 2.0 + \
+                          self.Ay.dot(beta) ** 2.0 + \
+                          self.Az.dot(beta) ** 2.0)
         else:
-            return np.dot(self.Aalpha.T, beta)[0, 0] - \
-                    (mu / 2.0) * (np.sum(self.asx ** 2.0) +
-                                  np.sum(self.asy ** 2.0) +
-                                  np.sum(self.asz ** 2.0))
+            return self.gamma * np.dot(self.Aalpha.T, beta)[0, 0] - \
+                                    (mu / 2.0) * (np.sum(self.asx ** 2.0) +
+                                                  np.sum(self.asy ** 2.0) +
+                                                  np.sum(self.asz ** 2.0))
 
     def grad(self, beta):
 
         if self.gamma <= TOLERANCE:
             return np.zeros(beta.shape)
 
-        if self.beta_id != id(beta) or self.mu_id != id(self.get_mu()):
-            self.compute_alpha(beta, self.get_mu())
-            self.beta_id = id(beta)
-            self.mu_id = id(self.get_mu())
+#        if self.beta_id != id(beta) or self.mu_id != id(self.get_mu()):
+        self.compute_alpha(beta, self.get_mu())
+        self.beta_id = id(beta)
+        self.mu_id = id(self.get_mu())
 
-        return self.Aalpha
+        return self.gamma * self.Aalpha
 
     def alpha(self, beta, mu=None):
+
         if self.gamma <= TOLERANCE:
             return 0
 
@@ -576,12 +614,15 @@ class TotalVariation(ConvexLossFunction,
         return self.asx, self.asy, self.asz
 
     def A(self):
+
         return self.Ax, self.Ay, self.Az
 
     def At(self):
+
         return self.Axt, self.Ayt, self.Azt
 
     def projection(self, alpha):
+
         asx = alpha[0]
         asy = alpha[1]
         asz = alpha[2]
@@ -625,14 +666,6 @@ class TotalVariation(ConvexLossFunction,
         self.asx, self.asy, self.asz = self.projection((self.asx,
                                                         self.asy,
                                                         self.asz))
-#        asnorm = self.asx ** 2.0 + self.asy ** 2.0 + self.asz ** 2.0  # )**0.5
-##        asnorm = np.sqrt(asnorm)
-#        i = asnorm > 1
-#
-#        asnorm_i = asnorm[i] ** 0.5  # Square root is taken here. Faster.
-#        self.asx[i] = np.divide(self.asx[i], asnorm_i)
-#        self.asy[i] = np.divide(self.asy[i], asnorm_i)
-#        self.asz[i] = np.divide(self.asz[i], asnorm_i)
 
 #        self.Aalpha = self.Axt.dot(self.asx) + \
 #                      self.Ayt.dot(self.asy) + \
@@ -642,6 +675,7 @@ class TotalVariation(ConvexLossFunction,
                                     self.Azt.dot(self.asz), self.buff)
 
     def _find_mask_ind(self, mask, ind):
+
         xshift = np.concatenate((mask[:, :, 1:], -np.ones((mask.shape[0],
                                                            mask.shape[1],
                                                            1))),
@@ -792,6 +826,7 @@ class GroupLassoOverlap(ConvexLossFunction,
         return self.Aalpha
 
     def alpha(self, beta, mu=None):
+
         if (mu == None):
             mu = self.get_mu()
 
@@ -803,12 +838,15 @@ class GroupLassoOverlap(ConvexLossFunction,
         return self.astar
 
     def A(self):
+
         return self.A
 
     def At(self):
+
         return self.At
 
     def projection(self, alpha):
+
         for i in xrange(len(alpha)):
             astar = alpha[i]
             normas = np.sqrt(np.dot(astar.T, astar))
