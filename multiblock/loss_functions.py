@@ -576,14 +576,14 @@ class TotalVariation(ConvexLossFunction,
             self.mu_id = id(mu)
 
         if true:
-            return np.sum(self.Ax.dot(beta) ** 2.0 + \
-                          self.Ay.dot(beta) ** 2.0 + \
-                          self.Az.dot(beta) ** 2.0)
+            return self.gamma * (np.sum(self.Ax.dot(beta) ** 2.0 + \
+                                        self.Ay.dot(beta) ** 2.0 + \
+                                        self.Az.dot(beta) ** 2.0))
         else:
-            return self.gamma * np.dot(self.Aalpha.T, beta)[0, 0] - \
+            return self.gamma * (np.dot(self.Aalpha.T, beta)[0, 0] - \
                                     (mu / 2.0) * (np.sum(self.asx ** 2.0) +
                                                   np.sum(self.asy ** 2.0) +
-                                                  np.sum(self.asz ** 2.0))
+                                                  np.sum(self.asz ** 2.0)))
 
     def grad(self, beta):
 
@@ -596,6 +596,19 @@ class TotalVariation(ConvexLossFunction,
         self.mu_id = id(self.get_mu())
 
         return self.gamma * self.Aalpha
+
+    def Lipschitz(self):
+
+        if self.gamma < TOLERANCE:
+            return 0
+
+        if self.lambda_max == None:
+            A = sparse.vstack(self.A())
+            v = algorithms.SparseSVD(max_iter=100).run(A)
+            us = A.dot(v)
+            self.lambda_max = np.sum(us ** 2.0)
+
+        return self.lambda_max / self.get_mu()
 
     def alpha(self, beta, mu=None):
 
@@ -636,30 +649,12 @@ class TotalVariation(ConvexLossFunction,
 
         return asx, asy, asz
 
-    def _compute_lambda_max(self):
-
-        A = sparse.vstack(self.A())
-        v = algorithms.SparseSVD(max_iter=100).run(A)
-        us = A.dot(v)
-        self.lambda_max = np.sum(us ** 2.0)
-
-    def Lipschitz(self):
-
-        if self.gamma < TOLERANCE:
-            return 0
-
-        if self.lambda_max == None:
-            self._compute_lambda_max()
-
-        return self.lambda_max / self.get_mu()
-
     def compute_alpha(self, beta, mu):
 
         # Compute a* for each dimension
-        q = self.gamma / mu
-        self.asx = q * self.Ax.dot(beta)
-        self.asy = q * self.Ay.dot(beta)
-        self.asz = q * self.Az.dot(beta)
+        self.asx = self.Ax.dot(beta) / mu
+        self.asy = self.Ay.dot(beta) / mu
+        self.asz = self.Az.dot(beta) / mu
 
         # Apply projection
         self.asx, self.asy, self.asz = self.projection((self.asx,
@@ -801,6 +796,9 @@ class GroupLassoOverlap(ConvexLossFunction,
 
     def f(self, beta, mu=None):
 
+        if self.gamma <= TOLERANCE:
+            return 0
+
         if (mu == None):
             mu = self.get_mu()
 
@@ -813,18 +811,25 @@ class GroupLassoOverlap(ConvexLossFunction,
         for g in xrange(len(self.astar)):
             sumastar += np.sum(self.astar[g] ** 2.0)
 
-        return np.dot(self.Aalpha.T, beta)[0, 0] - (mu / 2.0) * sumastar
+        return self.gamma * (np.dot(self.Aalpha.T, beta)[0, 0] \
+                              - (mu / 2.0) * sumastar)
 
     def grad(self, beta):
+
+        if self.gamma <= TOLERANCE:
+            return np.zeros(beta.shape)
 
         if self.beta_id != id(beta) or self.mu_id != id(self.get_mu()):
             self.compute_alpha(beta, self.get_mu())
             self.beta_id = id(beta)
             self.mu_id = id(self.get_mu())
 
-        return self.Aalpha
+        return self.gamma * self.Aalpha
 
     def alpha(self, beta, mu=None):
+
+        if self.gamma <= TOLERANCE:
+            return 0
 
         if (mu == None):
             mu = self.get_mu()
@@ -863,9 +868,8 @@ class GroupLassoOverlap(ConvexLossFunction,
 
         # Compute a* for each dimension
         self.Aalpha = 0
-        q = self.gamma / mu
         for g in xrange(len(self.A)):
-            astar = q * self.A[g].dot(beta)
+            astar = self.A[g].dot(beta) / mu
             astar = self.projection([astar])[0]
 
             self.astar[g] = astar

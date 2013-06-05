@@ -214,8 +214,8 @@ def test_lasso_tv():
     plot.imshow(np.reshape(computed_beta, (pz, py, px))[0, :, :],
                 interpolation='nearest', cmap=cm.gist_rainbow)
 
-
     plot.show()
+
 
 
 def test_tv():
@@ -254,7 +254,7 @@ def test_tv():
     beta1D = beta.reshape((p, 1))
     mask1D = mask.reshape((p, 1))
 
-    r = 0.1
+    r = 0.0
     u = r * np.random.randn(p, p)
     u += (1.0 - r) * np.eye(p, p)
     sigma = np.dot(u.T, u)
@@ -282,16 +282,16 @@ def test_tv():
 #    beta1D = np.sort(np.abs(betastar), axis=0)
 #    y = np.dot(X, beta1D)
 
-    eps = 0.1
+    eps = 0.001
     maxit = 100000
 
-    gamma = 10.0
+    gamma = 100.0
     l = 0.1
     en_lambda = 0.95
 
     num_mus = 1
     mus = [0] * num_mus
-    mus[0] = 10.0
+    mus[0] = 1.0
 #    mus[1] = 0.01
 #    mus[2] = 0.0001
 #    mus[3] = 0.000001
@@ -313,7 +313,7 @@ def test_tv():
     preprocess_mask = preprocess.Mask(mask1D)
 #    X = preprocess_mask.process(X)
 
-    lrtv = methods.LinearRegressionL1TV(l, gamma, (pz, py, px), mu=mus[0])#,
+    lrtv = methods.LinearRegressionTV(gamma, (pz, py, px), mu=mus[0])#,
                                       #mask=mask1D)
     lrtv.set_max_iter(maxit)
     lrtv.set_tolerance(eps)
@@ -367,6 +367,31 @@ def test_tv():
                 # extent=(x.min(), x.max(), y.max(), y.min()),
                 interpolation='nearest', cmap=cm.gist_rainbow)
     plot.show()
+
+
+def test_logistic_regression():
+
+    import numpy as np
+
+    n = 200
+    p = 50
+    # generate a Gaussian dataset
+    x = np.random.randn(n, p)
+    # generate a beta with "overlapping groups" of coefficients
+    beta1 = beta2 = beta3 = np.zeros((p, 1))
+    beta1[0:20] = np.random.randn(20, 1)
+    beta2[15:35] = np.random.randn(20, 1)
+    beta3[27:50] = np.random.randn(23, 1)
+    beta = beta1 + beta2 + beta3
+
+    # compute X beta
+    combi = np.dot(x, beta)
+
+    # compute the class of each individual
+    proba = 1 / (1 + np.exp(-combi))
+    y = np.zeros((n, 1))
+    for i in xrange(n):
+        y[i] = np.random.binomial(1, proba[i], 1)
 
 
 if __name__ == "__main__":

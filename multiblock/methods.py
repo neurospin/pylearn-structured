@@ -893,7 +893,7 @@ class LinearRegression(NesterovProximalGradientMethod):
 
     def fit(self, X, y, **kwargs):
 
-        self.g.set_data(X, y)
+        self.get_g().set_data(X, y)
 
         self.beta = self.algorithm.run(X, y, **kwargs)
 
@@ -943,7 +943,7 @@ class Lasso(NesterovProximalGradientMethod):
         -------
         self: The model object.
         """
-        self.g.set_data(X, y)
+        self.get_g().set_data(X, y)
 
         self.beta = self.algorithm.run(X, y, **kwargs)
 
@@ -991,7 +991,7 @@ class RidgeRegression(NesterovProximalGradientMethod):
         self: The model object.
         """
 
-        self.g.set_data(X, y)
+        self.get_g().set_data(X, y)
 
         self.beta = self.algorithm.run(X, y, **kwargs)
 
@@ -1042,7 +1042,7 @@ class ElasticNet(NesterovProximalGradientMethod):
         self: The model object.
         """
 
-        self.g.set_data(X, y)
+        self.get_g().set_data(X, y)
 
         self.beta = self.algorithm.run(X, y, **kwargs)
 
@@ -1107,7 +1107,7 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
         self: The model object.
         """
 
-        self.g.set_data(X, y)
+        self.get_g().set_data(X, y)
 
         if mu != None:
             mu_old = self._tv.get_mu()
@@ -1184,7 +1184,7 @@ class LinearRegressionL1TV(NesterovProximalGradientMethod):
         self: The model object.
         """
 
-        self.g.set_data(X, y)
+        self.get_g().set_data(X, y)
 
         if mu != None:
             mu_old = self._tv.get_mu()
@@ -1228,7 +1228,7 @@ class LogisticRegression(NesterovProximalGradientMethod):
         -------
         self: The model object.
         """
-        self.g.set_data(X, y)
+        self.get_g().set_data(X, y)
 
         self.beta = self.algorithm.run(X, y, **kwargs)
 
@@ -1325,7 +1325,7 @@ class RidgeRegressionTV(ExcessiveGapMethod):
         -------
         self: The model object.
         """
-        self.g.set_data(X, y)
+        self.get_g().set_data(X, y)
 
         self.beta = self.algorithm.run(X, y, **kwargs)
 
