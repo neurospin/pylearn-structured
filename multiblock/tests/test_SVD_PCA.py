@@ -11,7 +11,7 @@ import numpy as np
 import preprocess
 import algorithms
 import prox_ops
-import methods
+import models 
 from utils import direct, norm
 from utils.testing import assert_array_almost_equal
 from math import log
@@ -34,7 +34,7 @@ def test():
     Xtr = preproc.process(Xtr)
 
     for st in [0.1, 0.01, 0.001, 0.0001, 0]:
-        svd = methods.SVD(num_comp=num_comp)
+        svd = models.SVD(num_comp=num_comp)
         svd.set_prox_op(prox_ops.L1(st))
         svd.set_tolerance(tol)
         svd.set_max_iter(1000)
@@ -66,7 +66,7 @@ def test():
     Xtr = preproc.process(Xtr)
 
     for st in [0.1, 0.01, 0.001, 0.0001, 0]:
-        pca = methods.PCA(num_comp=num_comp)
+        pca = models.PCA(num_comp=num_comp)
         svd.set_prox_op(prox_ops.L1(st))
         svd.set_tolerance(tol)
         svd.set_max_iter(1000)
@@ -97,7 +97,7 @@ def test():
     Xtr = preproc.process(Xtr)
     Xte = preproc.process(Xte)
 
-    pca = methods.PCA(num_comp=num_comp)
+    pca = models.PCA(num_comp=num_comp)
     pca.set_tolerance(tol)
     pca.set_max_iter(1000)
     pca.fit(Xtr)
@@ -130,7 +130,7 @@ def test():
                                           preprocess.Scale()], X)
     X = preproc.process(X)
 
-    pca = methods.PCA(num_comp=num_comp)
+    pca = models.PCA(num_comp=num_comp)
     pca.set_tolerance(tol)
     pca.set_max_iter(1000)
     pca.fit(X)
@@ -155,7 +155,7 @@ def test():
                                           preprocess.Scale()], X)
     X = preproc.process(X)
 
-    pca = methods.PCA(num_comp=num_comp)
+    pca = models.PCA(num_comp=num_comp)
     pca.set_prox_op(prox_ops.L1(st))
     pca.set_tolerance(tol)
     pca.set_max_iter(1500)
@@ -186,12 +186,12 @@ def test():
     X = preprocX.process(X)
     Y = preprocY.process(Y)
 
-    tfa = methods.TuckerFactorAnalysis(num_comp=num_comp)
+    tfa = models.TuckerFactorAnalysis(num_comp=num_comp)
     tfa.set_max_iter(miter)
     tfa.set_tolerance(tol)
     tfa.fit(X, Y)
 
-    svd = methods.SVD(num_comp=num_comp)
+    svd = models.SVD(num_comp=num_comp)
     svd.set_max_iter(miter)
     svd.set_tolerance(tol)
     svd.fit(np.dot(X.T, Y))

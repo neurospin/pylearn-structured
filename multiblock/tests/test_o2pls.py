@@ -7,7 +7,7 @@ Created on Thu May 23 09:34:47 2013
 
 import numpy as np
 import preprocess
-import methods
+import models
 from utils.testing import assert_array_almost_equal
 from utils import corr, TOLERANCE, direct
 
@@ -38,12 +38,12 @@ def test():
     X = np.dot(t, p.T) + np.dot(to, po.T)
     Y = np.dot(t, q.T) + np.dot(uo, qo.T)
 
-    svd = methods.SVD(num_comp=1)
+    svd = models.SVD(num_comp=1)
     svd.fit(np.dot(X.T, Y))
     t_svd = np.dot(X, svd.U)
     u_svd = np.dot(Y, svd.V)
 
-    o2pls = methods.O2PLS(num_comp=[1, 1, 1])
+    o2pls = models.O2PLS(num_comp=[1, 1, 1])
     o2pls.fit(X, Y)
 
     Xhat = np.dot(o2pls.T, o2pls.P.T) + np.dot(o2pls.To, o2pls.Po.T)
@@ -172,7 +172,7 @@ def test():
 #    print X
 #    print Y
 
-    o2pls = methods.O2PLS(num_comp=[3, 2, 2])
+    o2pls = models.O2PLS(num_comp=[3, 2, 2])
     o2pls.set_tolerance(5e-12)
     o2pls.fit(X, Y)
 
@@ -231,7 +231,7 @@ def test():
     X = preprocX.process(X)
     Y = preprocY.process(Y)
 
-    o2pls = methods.O2PLS(num_comp=[3, 2, 2])
+    o2pls = models.O2PLS(num_comp=[3, 2, 2])
     o2pls.set_tolerance(5e-12)
     o2pls.fit(X, Y)
 

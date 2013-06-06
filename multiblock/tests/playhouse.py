@@ -8,7 +8,7 @@ Created on Thu May 16 09:41:13 2013
 import numpy as np
 import multiblock.utils as utils
 from multiblock import *
-import multiblock.methods as methods
+import multiblock.models as models
 #import multiblock.start_vectors as start_vectors
 #import multiblock.prox_ops as prox_ops
 #import multiblock.schemes as schemes
@@ -40,7 +40,7 @@ def test_lasso():
 
 
     print "LinearRegression"
-    lr = methods.LinearRegression()
+    lr = models.LinearRegression()
     lr.set_max_iter(maxit)
     lr.set_tolerance(eps)
     lr.fit(X, y)
@@ -54,7 +54,7 @@ def test_lasso():
 
     print "LASSO"
     l = 20.0
-    lasso = methods.LASSO(l)
+    lasso = models.LASSO(l)
     lasso.set_max_iter(maxit)
     lasso.set_tolerance(eps)
 
@@ -69,10 +69,10 @@ def test_lasso():
 
     print "LinearRegressionTV"
     gamma = 0.01
-    lrtv = methods.LinearRegressionTV(gamma, (pz, py, px), mu=0.01)
+    lrtv = models.LinearRegressionTV(gamma, (pz, py, px), mu=0.01)
     lrtv.set_max_iter(maxit)
     lrtv.set_tolerance(eps)
-    cr = methods.ContinuationRun(lrtv, [1.0, 0.1, 0.01, 0.001, 0.0001])
+    cr = models.ContinuationRun(lrtv, [1.0, 0.1, 0.01, 0.001, 0.0001])
 
     cr.fit(X, y)
     computed_beta = cr.beta
@@ -86,10 +86,10 @@ def test_lasso():
 #    print "LinearRegressionL1TV"
 #    gamma = 0.01
 #    l = 1.0
-#    lrl1tv = methods.LinearRegressionL1TV(l, gamma, (pz, py, px), mu=0.01)
+#    lrl1tv = models.LinearRegressionL1TV(l, gamma, (pz, py, px), mu=0.01)
 #    lrl1tv.set_max_iter(maxit)
 #    lrl1tv.set_tolerance(eps)
-#    cr = methods.ContinuationRun(lrtv, [1.0, 0.1, 0.01, 0.001, 0.0001])
+#    cr = models.ContinuationRun(lrtv, [1.0, 0.1, 0.01, 0.001, 0.0001])
 #
 #    cr.fit(X, y)
 #    computed_beta = cr.beta
@@ -158,7 +158,7 @@ def test_lasso_tv():
 #    mus[3] = 0.000001
 #    mus[4] = 0.00000001
 
-    lr = methods.LinearRegression()
+    lr = models.LinearRegression()
     lr.set_max_iter(maxit)
     lr.set_tolerance(eps)
     lr.fit(X, y)
@@ -178,7 +178,7 @@ def test_lasso_tv():
 
 
     l = 1.0
-    l1 = methods.LASSO(l)
+    l1 = models.LASSO(l)
     l1.set_max_iter(maxit)
     l1.set_tolerance(eps)
     l1.fit(X, y)
@@ -197,7 +197,7 @@ def test_lasso_tv():
 
 
     gamma = 10.0
-    lrtv = methods.LinearRegressionTV(gamma, (pz, py, px), mu=mus[0])
+    lrtv = models.LinearRegressionTV(gamma, (pz, py, px), mu=mus[0])
     lrtv.set_max_iter(maxit)
     lrtv.set_tolerance(eps)
     lrtv.fit(X, y)
@@ -312,12 +312,12 @@ def test_tv():
     preprocess_mask = preprocess.Mask(mask1D)
 #    X = preprocess_mask.process(X)
 
-    lrtv = methods.LinearRegressionTV(gamma, (pz, py, px), mu=mus[0])#,
+    lrtv = models.LinearRegressionTV(gamma, (pz, py, px), mu=mus[0])#,
                                       #mask=mask1D)
     lrtv.set_max_iter(maxit)
     lrtv.set_tolerance(eps)
     method = lrtv
-#    cr = methods.ContinuationRun(lrtv, mus)
+#    cr = models.ContinuationRun(lrtv, mus)
 #    method = cr
 
 #    rrtv = RidgeRegressionTV(1.0 - en_lambda, gamma, (pz, py, px), mask=mask1D)
@@ -394,6 +394,6 @@ if __name__ == "__main__":
 ##    X = np.reshape(xrange(p), (pz, py, px))
 #    X = np.ones((5, pz * py * px))
 #    print X
-#    lrtv = methods.LinearRegressionTV(10.0, (pz, py, px), mu=10.0)
+#    lrtv = models.LinearRegressionTV(10.0, (pz, py, px), mu=10.0)
 #    beta = 10.0 * lrtv.get_start_vector().get_vector(X)
 #    print lrtv._tv.grad(beta).T

@@ -9,7 +9,7 @@ TODO: Add linear regression and ridge regression.
 
 import numpy as np
 import preprocess
-import methods
+import models
 import utils
 from utils.testing import assert_array_almost_equal
 
@@ -54,7 +54,7 @@ def test():
     # Predict using PLSR
     X = preprocX.process(Xorig)
     Y = preprocY.process(Yorig)
-    pls3 = methods.PLSR(num_comp=num_comp)
+    pls3 = models.PLSR(num_comp=num_comp)
     pls3.set_max_iter(miter)
     pls3.set_tolerance(tol)
 
@@ -84,7 +84,7 @@ def test():
     # Predict using PLSC
     X = preprocX.process(Xorig)
     Y = preprocY.process(Yorig)
-    pls4 = methods.PLSC(num_comp=num_comp)
+    pls4 = models.PLSC(num_comp=num_comp)
     pls4.set_max_iter(miter)
     pls4.set_tolerance(tol)
     pls4.fit(X, Y)
@@ -98,7 +98,7 @@ def test():
     # Predict using TuckerFactorAnalysis
     X = preprocX.process(Xorig)
     Y = preprocY.process(Yorig)
-    plsTFA = methods.TuckerFactorAnalysis(num_comp=num_comp)
+    plsTFA = models.TuckerFactorAnalysis(num_comp=num_comp)
     plsTFA.set_max_iter(miter)
     plsTFA.set_tolerance(tol)
     plsTFA.fit(X, Y)
@@ -112,7 +112,7 @@ def test():
     # Predict using O2PLS
     X = preprocX.process(Xorig)
     Y = preprocY.process(Yorig)
-    pls5 = methods.O2PLS(num_comp=[num_comp, 1, 0])
+    pls5 = models.O2PLS(num_comp=[num_comp, 1, 0])
     pls5.set_max_iter(miter)
     pls5.set_tolerance(tol)
     pls5.fit(X, Y)
@@ -129,7 +129,7 @@ def test():
     # Make sure O2PLS is symmetric!
     X = preprocX.process(Xorig)
     Y = preprocY.process(Yorig)
-    pls6 = methods.O2PLS(num_comp=[num_comp, 0, 1])
+    pls6 = models.O2PLS(num_comp=[num_comp, 0, 1])
     pls6.set_max_iter(miter)
     pls6.set_tolerance(tol)
     pls6.fit(Y, X)

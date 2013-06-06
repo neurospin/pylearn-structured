@@ -11,7 +11,7 @@ with possibly very different constraints put on the weights w_i or on the
 scores t_i = X_iw_i (e.g. unit 2-norm of weights, unit variance of scores,
 L1/LASSO constraint on the weights etc.).
 
-This includes methods such as PCA (f(p) = cov(Xp, Xp)),
+This includes models such as PCA (f(p) = cov(Xp, Xp)),
 PLS-R (f(w, c) = cov(Xw, Yc)), PLS-PM (the criteria above), RGCCA (the
 criteria above), etc.
 

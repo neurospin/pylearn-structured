@@ -11,7 +11,7 @@ import numpy as np
 import start_vectors
 import preprocess
 import prox_ops
-import methods
+import models
 
 import utils
 from utils.testing import assert_array_almost_equal
@@ -51,7 +51,7 @@ def test():
     # Test first with PLSR
     X = preprocX.process(Xorig)
     Y = preprocY.process(Yorig)
-    pls = methods.PLSR(num_comp=num_comp)
+    pls = models.PLSR(num_comp=num_comp)
     pls.set_tolerance(tol)
     pls.set_max_iter(miter)
     pls.fit(X, Y)
@@ -61,8 +61,8 @@ def test():
     R2Yhat = (1.0 - (SSYdiff / SSY))
     utils.debug("PLS : R2Yhat = %.6f" % R2Yhat)
 
-    # Test sPLS methods when keeping all variables
-    spls1 = methods.PLSR(num_comp=num_comp)
+    # Test sPLS models when keeping all variables
+    spls1 = models.PLSR(num_comp=num_comp)
     spls1.set_tolerance(tol)
     spls1.set_max_iter(miter)
     spls1.set_prox_op(prox_ops.L1(0., 0., normaliser=[utils.norm,
@@ -143,7 +143,7 @@ def test():
     utils.debug()
     num_comp = n_sz - 1
     # Analyse with PLSR
-    pls = methods.PLSR(num_comp=num_comp)
+    pls = models.PLSR(num_comp=num_comp)
     pls.set_tolerance(tol)
     pls.set_max_iter(miter)
     pls.fit(X, Y)
@@ -155,7 +155,7 @@ def test():
 
     num_comp = 1
     # Analyse with PLSR
-    pls = methods.PLSR(num_comp=num_comp)
+    pls = models.PLSR(num_comp=num_comp)
     pls.set_tolerance(tol)
     pls.set_max_iter(miter)
     pls.fit(X, Y)
@@ -168,7 +168,7 @@ def test():
     # Analyse with Sparse PLSR (L1)
     nonzero = []
     for l in np.linspace(0, 0.9, 10).tolist():
-        spls1 = methods.PLSR(num_comp=num_comp)
+        spls1 = models.PLSR(num_comp=num_comp)
 #        alg = spls1.get_algorithm()
         spls1.set_tolerance(tol)
         spls1.set_max_iter(miter)
@@ -264,7 +264,7 @@ def test():
 #    assert abs(R2Yhat4 - 1) < TOLERANCE
 
     # Analyse with O2PLS
-    o2pls = methods.O2PLS(num_comp=[num_comp, 8, 0])
+    o2pls = models.O2PLS(num_comp=[num_comp, 8, 0])
     o2pls.set_tolerance(tol)
     o2pls.set_max_iter(miter)
     o2pls.fit(X, Y)
@@ -282,7 +282,7 @@ def test():
     n_cp = 2
     for l in np.linspace(0, 0.9, 19).tolist():
         num_orth = max(n_sz - n_cp, 0)
-        so2pls1 = methods.O2PLS(num_comp=[num_comp, num_orth, 0])
+        so2pls1 = models.O2PLS(num_comp=[num_comp, num_orth, 0])
         so2pls1.set_tolerance(tol)
         so2pls1.set_max_iter(miter)
         so2pls1.set_prox_op(prox_ops.L1([l, l], [0, 0]))
@@ -436,7 +436,7 @@ def test():
         A = utils.zeros(X.shape[1], num)
         B = utils.zeros(Y.shape[1], num)
         for run in xrange(num):
-            spls1 = methods.PLSR(num_comp=num_comp)
+            spls1 = models.PLSR(num_comp=num_comp)
 #            alg = spls1.get_algorithm()
             spls1.set_tolerance(tol)
             spls1.set_max_iter(miter)
@@ -475,7 +475,7 @@ def test():
         Ao = utils.zeros(X.shape[1], num)
         Bo = utils.zeros(Y.shape[1], num)
         for run in xrange(num):
-            so2pls1 = methods.O2PLS(num_comp=[num_comp, 2, 2])
+            so2pls1 = models.O2PLS(num_comp=[num_comp, 2, 2])
             so2pls1.set_tolerance(tol)
             so2pls1.set_max_iter(miter)
             so2pls1.set_prox_op(prox_ops.L1([l, l], [l, l]))

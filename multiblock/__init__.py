@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
 """
 The :mod:`multiblock` module includes several different projection based latent
-variable methods for one, two or more blocks of data.
+variable models for one, two or more blocks of data.
 
 @author: Tommy Löfstedt <tommy.loefstedt@cea.fr>
 """
 
-from .methods import PCA
-from .methods import SVD
-from .methods import PLSR
-from .methods import TuckerFactorAnalysis
-from .methods import PLSC
-from .methods import O2PLS
-from .methods import RGCCA
-from .methods import LinearRegression
-from .methods import LinearRegressionTV
-from .methods import LogisticRegression
-from .methods import RidgeRegressionTV
+from .models import PCA
+from .models import SVD
+from .models import PLSR
+from .models import TuckerFactorAnalysis
+from .models import PLSC
+from .models import O2PLS
+from .models import RGCCA
+from .models import LinearRegression
+from .models import LinearRegressionTV
+from .models import LogisticRegression
+from .models import RidgeRegressionTV
 
 import algorithms
 import preprocess

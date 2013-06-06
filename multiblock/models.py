@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`multiblock.methods` module includes several different multiblock
-methods.
+The :mod:`multiblock.models` module includes several different multiblock
+models.
 
 @author:  Tommy Löfstedt <tommy.loefstedt@cea.fr>
 @email:   tommy.loefstedt@cea.fr
