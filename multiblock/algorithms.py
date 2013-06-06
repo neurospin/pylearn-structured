@@ -569,6 +569,8 @@ class ISTARegression(ProximalGradientMethod):
         else:
             t *= tscale
 
+        t *= 1.0
+
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
         if early_stopping_mu != None:

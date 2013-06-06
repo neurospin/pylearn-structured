@@ -580,10 +580,10 @@ class TotalVariation(ConvexLossFunction,
                                         self.Ay.dot(beta) ** 2.0 + \
                                         self.Az.dot(beta) ** 2.0))
         else:
-            return self.gamma * (np.dot(self.Aalpha.T, beta)[0, 0] - \
-                                    (mu / 2.0) * (np.sum(self.asx ** 2.0) +
-                                                  np.sum(self.asy ** 2.0) +
-                                                  np.sum(self.asz ** 2.0)))
+            return self.gamma * (np.dot(self.Aalpha.T, beta)[0, 0] \
+                                 - (mu / 2.0) * (np.sum(self.asx ** 2.0) +
+                                                 np.sum(self.asy ** 2.0) +
+                                                 np.sum(self.asz ** 2.0)))
 
     def grad(self, beta):
 

@@ -291,7 +291,7 @@ def test_tv():
 
     num_mus = 1
     mus = [0] * num_mus
-    mus[0] = 1.0
+    mus[0] = 0.1
 #    mus[1] = 0.01
 #    mus[2] = 0.0001
 #    mus[3] = 0.000001
@@ -308,7 +308,6 @@ def test_tv():
     total_start = time()
     init_start = time()
 
-#    lrtv = methods.LinearRegressionTV((pz, py, px), gamma, mu, mask1D)
     mask1D = mask1D.flatten().astype(int).tolist()
     preprocess_mask = preprocess.Mask(mask1D)
 #    X = preprocess_mask.process(X)
@@ -327,18 +326,6 @@ def test_tv():
 #    method = rrtv
 
     print "Init time:", (time() - init_start)
-
-#    pz = 1
-#    py = 5
-#    px = 5
-#    X = np.ones((5, pz * py * px))
-#    lrtv = methods.LinearRegressionTV(10.0, (pz, py, px), mu=10.0)
-#    beta = lrtv.get_start_vector().get_vector(X)
-#    print lrtv._tv.grad(beta).T
-#    import scipy.sparse as sparse
-#    Ax, Ay, Az = lrtv._tv.A()
-#    print Ax.todense()
-#    return
 
     method.fit(X, y)
     computed_beta = method.beta
