@@ -12,8 +12,7 @@ __all__ = ['BaseStartVector', 'RandomStartVector', 'OnesStartVector',
 
 import abc
 import numpy as np
-import numpy.linalg as la
-from multiblock.utils import norm
+from utils import norm
 
 
 class BaseStartVector(object):
@@ -122,54 +121,94 @@ class LargestStartVector(BaseStartVector):
 
 
 class GaussianCurveVector(BaseStartVector):
+    """A start vector with the shape of a Gaussian curve.
+
+    The gaussian is computed with respect to the numbers of dimension in a
+    supposed image. The output is thus a reshaped vector corresponsing to a 1-,
+    2-, 3- or higher-dimensional Gaussian curve.
+    """
 
     def __init__(self, normalise=True, **kwargs):
         super(GaussianCurveVector, self).__init__(normalise=normalise,
                                                   **kwargs)
 
-    def get_vector(self, X=None, shape=None, mean=None, cov=None, axis=1):
-        if X == None and shape == None:
-            raise ValueError('A matrix X or a shape must be must be given.')
-        if X != None:
-            shape = (X.shape[axis], 1)
-        if not isinstance(shape, tuple):
-            shape = tuple(shape)
+    def get_vector(self, X=None, shape=None, size=None, mean=None, cov=None,
+                   axis=1, dims=2):
+        """ Computes a Gaussian curve-shaped starting vector.
 
-        n = len(shape)
-        if mean == None:
-            mean = [float(s) / 2.0 for s in shape]
-        if cov == None:
-            S = np.eye(n) / 4.0
-#            S = np.diag([s / 2.0 for s in shape])
-            invS = S
-#            detS = 1
+        Parameters:
+        X     : The matrix for which we need a start vector. Used in
+                conjunction with axis to determine the shape of the start
+                vector.
+
+        shape : The shape of the start vector.
+
+        size  : The size of the supposed image. Must have the form (Z, Y, X).
+
+        mean  : The mean vector of the Gaussian. Default is zero.
+
+        cov   : The covariance matrix of the Gaussian. Default is identity.
+
+        axis  : The axis along X which the shape is taken.
+
+        dims  : The number of dimensions of the output image. Default is 2.
+        """
+        if size != None:
+            p = 1
+            for i in xrange(dims):
+                p *= size[i]
+            if axis == 1:
+                shape = (p, 1)
+            else:
+                shape = (1, p)
         else:
-            S = np.diag(np.diag(cov))
-            invS = la.pinv(S)
-#            detS = la.det(S)
-#            if detS < TOLERANCE:
-#                detS = TOLERANCE
+            if X != None:
+                p = X.shape[axis]
+                shape = (p, 1)
+            else:  # Assumes shape != None
+                p = shape[0] * shape[1]
 
-#        k = 1.0 / math.sqrt(detS * ((2.0 * math.pi) ** n))
+            size = [0] * dims
+            for i in xrange(dims):  # Split in equal-sized hypercube
+                size[i] = round(float(p) ** (1.0 / float(dims)))
 
-        s = []
-        X = 0
-        for i in xrange(n):
-            x = np.arange(shape[i]) - mean[i]
-            X = X + invS[i, i] * (np.reshape(x, [shape[i]] + s) ** 2)
-            s.append(1)
+        if mean == None:
+            mean = [float(s - 1.0) / 2.0 for s in size]
+        if cov == None:
+            S = np.diag([s ** (1.0 / dims) for s in size])
+            invS = np.linalg.pinv(S)
+        else:
+#            S = np.diag(np.diag(cov))
+            S = np.asarray(cov)
+            invS = np.linalg.pinv(S)
+
+        a = np.arange(size[0])
+        ans = np.reshape(a, (a.shape[0], 1)).tolist()
+        for i in xrange(1, dims):
+            b = np.arange(size[i]).tolist()
+            ans = [y + [x] for x in b for y in ans]
+
+        X = np.zeros((size))
+        for x in ans:
+            i = tuple(x)
+            x = np.array([x]) - np.array(mean)
+            v = np.dot(x, np.dot(invS, x.T))
+            X[i] = v[0, 0]
 
         X = np.exp(-0.5 * X)
         X /= np.sum(X)
 
-        print invS
-        print np.max(X)
+#        s = []
+#        X = 0
+#        for i in xrange(dims):
+#            x = np.arange(size[i]) - mean[i]
+#            x = np.reshape(x, [size[i]] + s)
+#            X = X + invS[i, i] * (x ** 2.0)
+#            s.append(1)
 
-        return X
+        w = np.reshape(X, (p, 1))
 
-#        G = np.exp(((x-x0)**2 + (y-y0)**2))
-
-#        if self.normalise:
-#            return w / norm(w)
-#        else:
-#            return w
+        if self.normalise:
+            return w / norm(w)
+        else:
+            return w

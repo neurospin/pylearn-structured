@@ -12,7 +12,7 @@ __all__ = ['Normalisation', 'NoNormalisation', 'UnitNormWeights',
 
 import abc
 import numpy as np
-from multiblock.utils import norm, sqrt, TOLERANCE
+from utils import norm, sqrt, TOLERANCE
 
 
 class Normalisation(object):

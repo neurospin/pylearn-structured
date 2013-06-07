@@ -13,7 +13,7 @@ import abc
 import numpy as np
 from numpy.linalg import pinv
 import normalisation
-from multiblock.utils import TOLERANCE
+from utils import TOLERANCE
 
 
 class Mode(object):

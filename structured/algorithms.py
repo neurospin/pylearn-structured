@@ -30,8 +30,8 @@ import modes
 import loss_functions
 import algorithms
 
-from multiblock.utils import MAX_ITER, TOLERANCE, make_list, zeros, sqrt
-from multiblock.utils import norm, norm1, warning
+from utils import MAX_ITER, TOLERANCE, make_list, zeros, sqrt
+from utils import norm, norm1, warning
 
 import numpy as np
 from numpy import ones, eye
@@ -584,7 +584,10 @@ class ISTARegression(ProximalGradientMethod):
         while True:
             self.converged = True
 
-            beta_new = self.h.prox(beta_old - t * self.g.grad(beta_old), t)
+            if self.iterations > 200:
+                beta_new = self.h.prox(beta_old - t * self.g.grad(beta_old), t)
+            else:
+                beta_new = self.h.prox(beta_old - t * self.g.grad(beta_old), t)
 
             if norm1(beta_old - beta_new) > self.tolerance * t:
                 self.converged = False

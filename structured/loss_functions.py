@@ -2,7 +2,7 @@
 """
 Created on Mon Apr 22 10:54:29 2013
 
-@author:  Tommy Löfstedt
+@author:  Tommy Löfstedt, Vincent Guillemot and Fouad Hadj Selem
 @email:   tommy.loefstedt@cea.fr
 @license: BSD Style.
 """
@@ -249,12 +249,12 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
         else:
             raise ValueError('At least one loss function must be Nesterov')
 
-    def projection(self):
+    def projection(self, alpha):
 
         if hasattr(self.b, 'projection'):
-            return self.b.projection()
+            return self.b.projection(alpha)
         elif hasattr(self.a, 'projection'):
-            return self.a.projection()
+            return self.a.projection(alpha)
         else:
             raise ValueError('At least one loss function must be Nesterov')
 
@@ -576,9 +576,9 @@ class TotalVariation(ConvexLossFunction,
             self.mu_id = id(mu)
 
         if true:
-            return self.gamma * (np.sum(self.Ax.dot(beta) ** 2.0 + \
+            return self.gamma * np.sum((self.Ax.dot(beta) ** 2.0 + \
                                         self.Ay.dot(beta) ** 2.0 + \
-                                        self.Az.dot(beta) ** 2.0))
+                                        self.Az.dot(beta) ** 2.0) ** 0.5)
         else:
             return self.gamma * (np.dot(self.Aalpha.T, beta)[0, 0] \
                                  - (mu / 2.0) * (np.sum(self.asx ** 2.0) +
@@ -590,10 +590,10 @@ class TotalVariation(ConvexLossFunction,
         if self.gamma <= TOLERANCE:
             return np.zeros(beta.shape)
 
-#        if self.beta_id != id(beta) or self.mu_id != id(self.get_mu()):
-        self.compute_alpha(beta, self.get_mu())
-        self.beta_id = id(beta)
-        self.mu_id = id(self.get_mu())
+        if self.beta_id != id(beta) or self.mu_id != id(self.get_mu()):
+            self.compute_alpha(beta, self.get_mu())
+            self.beta_id = id(beta)
+            self.mu_id = id(self.get_mu())
 
         return self.gamma * self.Aalpha
 
@@ -640,7 +640,7 @@ class TotalVariation(ConvexLossFunction,
         asz = alpha[2]
         asnorm = asx ** 2.0 + asy ** 2.0 + asz ** 2.0  # )**0.5
 #        asnorm = np.sqrt(asnorm)
-        i = asnorm > 1
+        i = asnorm > 1.0
 
         asnorm_i = asnorm[i] ** 0.5  # Square root is taken here. Faster.
         asx[i] = np.divide(asx[i], asnorm_i)

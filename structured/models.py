@@ -24,7 +24,7 @@ from sklearn.utils import check_arrays
 import abc
 import numpy as np
 from numpy.linalg import pinv
-from multiblock.utils import direct
+from utils import direct
 import utils
 
 import algorithms

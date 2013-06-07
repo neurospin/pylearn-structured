@@ -10,7 +10,7 @@ Created on Fri Mar 29 08:58:10 2013
 __all__ = ['WeightingScheme', 'Horst', 'Centroid', 'Factorial']
 
 import abc
-from multiblock.utils import sign, cov
+from utils import sign, cov
 
 
 class WeightingScheme(object):

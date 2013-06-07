@@ -6,9 +6,11 @@ Created on Thu May 16 09:41:13 2013
 '"""
 
 import numpy as np
-import multiblock.utils as utils
-from multiblock import *
-import multiblock.models as models
+import structured.utils as utils
+#from structured import *
+import structured.models as models
+import structured.preprocess as preprocess
+import structured.start_vectors as start_vectors
 #import multiblock.start_vectors as start_vectors
 #import multiblock.prox_ops as prox_ops
 #import multiblock.schemes as schemes
@@ -283,15 +285,15 @@ def test_tv():
 #    y = np.dot(X, beta1D)
 
     eps = 0.001
-    maxit = 100000
+    maxit = 10000
 
-    gamma = 100.0
+    gamma = 0.01
     l = 0.1
     en_lambda = 0.95
 
     num_mus = 1
     mus = [0] * num_mus
-    mus[0] = 0.1
+    mus[0] = 100.0
 #    mus[1] = 0.01
 #    mus[2] = 0.0001
 #    mus[3] = 0.000001
@@ -381,12 +383,93 @@ def test_logistic_regression():
         y[i] = np.random.binomial(1, proba[i], 1)
 
 
+def test_data():
+
+    vector = start_vectors.GaussianCurveVector(normalise=False)
+
+    M = 100
+    N = 100
+    n_points = 2
+
+    means = np.random.rand(n_points, 2)
+    while abs(np.linalg.det(means)) < 0.05:
+        means = np.random.rand(n_points, 2)
+    means[means < 0.05] = 0.05
+    means[means > 0.95] = 0.95
+    means[:,0] *= M
+    means[:,1] *= N
+    means = means.tolist()
+#    means = [[0.3 * M, 0.3 * N], [0.7 * M, 0.7 * N]]
+#    covs = [0] * n_points
+#    for i in xrange(n_points):
+#        S = np.eye(2, 2) + np.random.rand(2, 2)
+#        S /= np.max(S)
+#        S = np.dot(S.T, S) / 2.0
+#        S = (((S - 0.5) * 2.0) * 0.8) + 0.2  # [-1,-.2]-[2, 1]
+#        covs[i] = S.tolist()
+#        print S
+    d = min(M, N)
+    covs = [[[1.0*M, 0.2*d], [0.2*d, 1.0*N]],
+            [[1.0*M, -0.2*d], [-0.2*d, 1.0*N]]]
+
+    size=[M, N]
+    dims = 2
+    p = size[0] * size[1]
+#    S = 2.0 * (np.random.rand(dims, dims) - 0.5)
+#    S = np.dot(S.T, S) / 2.0
+#    for i in xrange(dims):
+#        if abs(S[i, i]) < 0.5:
+#            if S[i, i] > 0:
+#                S[i, i] = 0.5
+#            else:
+#                S[i, i] = -0.5
+#    S = (p ** (1.0 / dims)) * S / np.max(S)
+#    X = vector.get_vector(shape=(p, 1), dims=dims)
+    X = np.zeros((p, 1))
+    for i in xrange(n_points):
+        X = X + vector.get_vector(size=size, dims=dims,
+                                  mean=means[i], cov=covs[i])
+
+    X = np.reshape(X, size)
+
+    cmap = cm.hot  # cm.RdBu
+    if dims == 1:
+        plot.plot(X, '-')
+    elif dims == 2:
+        plot.imshow(X, interpolation='nearest', cmap=cmap)
+    elif dims == 3:
+        m = np.max(X)
+        for i in xrange(X.shape[0]):
+            plot.subplot(X.shape[0], 1, i)
+            plot.imshow(X[i, :, :], interpolation='nearest', vmin=0.0, vmax=m,
+                        cmap=cmap)
+#            plot.set_cmap('hot')
+    plot.show()
+
+
 if __name__ == "__main__":
-    test_tv()
+#    test_tv()
 #    test_lasso()
 #    test_lasso_tv()
+    test_data()
 
-#    pz = 1
+#    from pylab import *
+#    from numpy import outer
+#    rc('text', usetex=False)
+#    a=outer(arange(0,1,0.01),ones(10))
+#    figure(figsize=(10,5))
+#    subplots_adjust(top=0.8,bottom=0.05,left=0.01,right=0.99)
+#    maps=[m for m in cm.datad if not m.endswith("_r")]
+#    maps.sort()
+#    l=len(maps)+1
+#    for i, m in enumerate(maps):
+#        subplot(1,l,i+1)
+#        axis("off")
+#        imshow(a,aspect='auto',cmap=get_cmap(m),origin="lower")
+#        title(m,rotation=90,fontsize=10)
+#    show()
+
+#    pz = 2
 #    py = 2
 #    px = 3
 #    p = px * py * pz
@@ -395,5 +478,27 @@ if __name__ == "__main__":
 #    X = np.ones((5, pz * py * px))
 #    print X
 #    lrtv = models.LinearRegressionTV(10.0, (pz, py, px), mu=10.0)
-#    beta = 10.0 * lrtv.get_start_vector().get_vector(X)
-#    print lrtv._tv.grad(beta).T
+#    beta = lrtv.get_start_vector().get_vector(X)
+##    print lrtv._tv.grad(beta).T
+#    Ax, Ay, Az = lrtv.get_g().A()
+#    print Ax.todense()
+#    print Ay.todense()
+#    print Az.todense()
+#
+#    mu = 0.1
+#    asx = Ax.dot(beta) / mu
+#    asy = Ay.dot(beta) / mu
+#    asz = Az.dot(beta) / mu
+#
+#    print asx
+#    print asy
+#    print asz
+#
+#    print "norm: ", np.sqrt(asx ** 2.0 + asy ** 2.0 + asz ** 2.0)
+#
+#    # Apply projection
+#    asx, asy, asz = lrtv.get_g().projection((asx, asy, asz))
+#
+#    print asx
+#    print asy
+#    print asz
