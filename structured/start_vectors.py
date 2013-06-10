@@ -212,3 +212,108 @@ class GaussianCurveVector(BaseStartVector):
             return w / norm(w)
         else:
             return w
+
+
+class GaussianCurveVectors(BaseStartVector):
+    """A start vector with multibple Gaussian curve shapes.
+
+    The gaussians are in an imagined 1D or 2D image. The output is a reshaped
+    vector corresponsing to a 1- or 2-dimensional image.
+    """
+
+    def __init__(self, num_points=3, normalise=True, **kwargs):
+        super(GaussianCurveVectors, self).__init__(normalise=normalise,
+                                                  **kwargs)
+
+        self.num_points = num_points
+
+    def get_vector(self, X=None, axis=1, shape=None, size=None,
+                   mean=None, cov=None, dims=2):
+        """ Computes a starting vector with set of Gaussian curve-shapes.
+
+        Parameters:
+        X     : The matrix for which we need a start vector. Used in
+                conjunction with axis to determine the shape of the start
+                vector.
+
+        axis  : The axis along X which the shape is taken.
+
+        shape : The shape of the start vector, may be passed instead of X.
+
+        size  : The size of the supposed image. Must have the form (Z, Y, X).
+                May be passed instead of X or shape.
+
+        means : The mean vectors of the Gaussians. Default is random.
+
+        covs  : The covariance matrices of the Gaussians. Default is random.
+
+        dims  : The number of dimensions of the output image. Default is 2.
+        """
+        if size != None:
+            p = 1
+            for i in xrange(dims):
+                p *= size[i]
+            if axis == 1:
+                shape = (p, 1)
+            else:
+                shape = (1, p)
+        else:
+            if X != None:
+                p = X.shape[axis]
+                shape = (p, 1)
+            else:  # Assumes shape != None
+                p = shape[0] * shape[1]
+
+            size = [0] * dims
+            for i in xrange(dims):  # Split in equal-sized hypercube
+                size[i] = round(float(p) ** (1.0 / float(dims)))
+
+        means = np.random.rand(1, 2)
+        for i in xrange(1, self.num_points):
+            dist = 0.0
+            p_best = 0
+            for j in xrange(20):
+                p = np.random.rand(1, 2)
+                dist_curr = np.min(np.sqrt(np.sum((means - p) ** 2.0, axis=1)))
+                if dist_curr > dist:
+                    p_best = p
+                    dist = dist_curr
+                if dist_curr > 0.3:
+                    break
+            means = np.vstack((means, p_best))
+
+        means[means < 0.05] = 0.05
+        means[means > 0.95] = 0.95
+        means[:, 0] *= size[0]
+        means[:, 1] *= size[1]
+        means = means.tolist()
+
+        covs = [0] * self.num_points
+        for i in xrange(self.num_points):
+            S1 = np.diag((np.abs(np.diag(np.random.rand(2, 2))) * 0.5) + 0.5)
+
+            S2 = np.random.rand(2, 2)
+            S2 = (((S2 + S2.T) / 2.0) - 0.5) * 0.9  # [0, 0.45]
+            S2 = S2 - np.diag(np.diag(S2))
+
+            S = S1 + S2
+
+            S /= np.max(S)
+
+            S *= float(min(size))
+
+            covs[i] = S.tolist()
+
+        vector = GaussianCurveVector(normalise=False)
+
+        X = np.zeros(shape)
+        for i in xrange(self.num_points):
+            X = X + vector.get_vector(size=size, dims=dims,
+                                      mean=means[i], cov=covs[i])
+
+        w = np.reshape(X, size)
+
+        if self.normalise:
+            return w / norm(w)
+        else:
+            return w

@@ -385,52 +385,100 @@ def test_logistic_regression():
 
 def test_data():
 
-    vector = start_vectors.GaussianCurveVector(normalise=False)
-
-    M = 100
-    N = 100
-    n_points = 2
-
-    means = np.random.rand(n_points, 2)
-    while abs(np.linalg.det(means)) < 0.05:
-        means = np.random.rand(n_points, 2)
-    means[means < 0.05] = 0.05
-    means[means > 0.95] = 0.95
-    means[:,0] *= M
-    means[:,1] *= N
-    means = means.tolist()
-#    means = [[0.3 * M, 0.3 * N], [0.7 * M, 0.7 * N]]
+#    vector = start_vectors.GaussianCurveVector(normalise=False)
+#
+#    M = 100
+#    N = 100
+#    n_points = 5
+#
+#    means = np.random.rand(1, 2)
+#    for i in xrange(1, n_points):
+##        p = np.random.rand(1, 2)
+##        while np.any(np.sqrt(np.sum((means - p) ** 2.0, axis=1)) < max(0.2, (1.0 / n_points))):
+##            p = np.random.rand(1, 2)
+##        print np.sqrt(np.sum((means - p) ** 2.0, axis=1))
+##        means = np.vstack((means, p))
+#
+##        det = 0.0
+##        p_best = 0
+##        for j in xrange(100):
+##            p = np.random.rand(1, 2)
+##            Ap = np.vstack((means, p))
+##            det_curr = abs(np.linalg.det(np.dot(Ap.T, Ap)))
+##            if det_curr > det:
+##                p_best = p
+##                det = det_curr
+##        print det
+##        means = np.vstack((means, p_best))
+#
+##    while abs(np.linalg.det(np.dot(means.T, means))) < 0.15:
+##        means = np.random.rand(n_points, 2)
+#
+#        dist = 0.0
+#        p_best = 0
+#        for j in xrange(20):
+#            p = np.random.rand(1, 2)
+#            dist_curr = np.min(np.sqrt(np.sum((means - p) ** 2.0, axis=1)))
+#            if dist_curr > dist:
+#                p_best = p
+#                dist = dist_curr
+#            if dist_curr > 0.3:
+#                break
+#        means = np.vstack((means, p_best))
+#
+#    means[means < 0.05] = 0.05
+#    means[means > 0.95] = 0.95
+#    means[:, 0] *= M
+#    means[:, 1] *= N
+#    means = means.tolist()
+##    means = [[0.3 * M, 0.3 * N], [0.7 * M, 0.7 * N]]
+#
 #    covs = [0] * n_points
 #    for i in xrange(n_points):
-#        S = np.eye(2, 2) + np.random.rand(2, 2)
+#        S1 = np.diag((np.abs(np.diag(np.random.rand(2, 2))) * 0.5) + 0.5)
+#
+#        S2 = np.random.rand(2, 2)
+#        S2 = (((S2 + S2.T) / 2.0) - 0.5) * 0.9  # [0, 0.45]
+#        S2 = S2 - np.diag(np.diag(S2))
+#
+#        S = S1 + S2
+#
 #        S /= np.max(S)
-#        S = np.dot(S.T, S) / 2.0
-#        S = (((S - 0.5) * 2.0) * 0.8) + 0.2  # [-1,-.2]-[2, 1]
+#
+#        S *= float(min(M, N))
+#
 #        covs[i] = S.tolist()
-#        print S
-    d = min(M, N)
-    covs = [[[1.0*M, 0.2*d], [0.2*d, 1.0*N]],
-            [[1.0*M, -0.2*d], [-0.2*d, 1.0*N]]]
+#
+##    d = min(M, N)
+##    covs = [[[1.0*M, 0.2*d], [0.2*d, 1.0*N]],
+##            [[1.0*M, -0.2*d], [-0.2*d, 1.0*N]]]
+#
+#    size=[M, N]
+#    dims = 2
+#    p = size[0] * size[1]
+##    S = 2.0 * (np.random.rand(dims, dims) - 0.5)
+##    S = np.dot(S.T, S) / 2.0
+##    for i in xrange(dims):
+##        if abs(S[i, i]) < 0.5:
+##            if S[i, i] > 0:
+##                S[i, i] = 0.5
+##            else:
+##                S[i, i] = -0.5
+##    S = (p ** (1.0 / dims)) * S / np.max(S)
+##    X = vector.get_vector(shape=(p, 1), dims=dims)
+#    X = np.zeros((p, 1))
+#    for i in xrange(n_points):
+#        X = X + vector.get_vector(size=size, dims=dims,
+#                                  mean=means[i], cov=covs[i])
+#
+#    X = np.reshape(X, size)
 
-    size=[M, N]
     dims = 2
-    p = size[0] * size[1]
-#    S = 2.0 * (np.random.rand(dims, dims) - 0.5)
-#    S = np.dot(S.T, S) / 2.0
-#    for i in xrange(dims):
-#        if abs(S[i, i]) < 0.5:
-#            if S[i, i] > 0:
-#                S[i, i] = 0.5
-#            else:
-#                S[i, i] = -0.5
-#    S = (p ** (1.0 / dims)) * S / np.max(S)
-#    X = vector.get_vector(shape=(p, 1), dims=dims)
-    X = np.zeros((p, 1))
-    for i in xrange(n_points):
-        X = X + vector.get_vector(size=size, dims=dims,
-                                  mean=means[i], cov=covs[i])
+    size = [100, 100]
+    vector = start_vectors.GaussianCurveVectors(num_points=3, normalise=False)
 
-    X = np.reshape(X, size)
+    w = vector.get_vector(size=size, dims=dims)
+    X = np.reshape(w, size)
 
     cmap = cm.hot  # cm.RdBu
     if dims == 1:
