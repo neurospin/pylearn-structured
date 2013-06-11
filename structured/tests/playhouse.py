@@ -219,8 +219,8 @@ def test_lasso_tv():
     plot.show()
 
 
-
 def test_tv():
+
     np.random.seed(42)
 
     x = np.arange(-10, 10, 1)
@@ -284,16 +284,16 @@ def test_tv():
 #    beta1D = np.sort(np.abs(betastar), axis=0)
 #    y = np.dot(X, beta1D)
 
-    eps = 0.001
-    maxit = 10000
+    eps = 0.01
+    maxit = 50000
 
-    gamma = 0.01
+    gamma = 100.0
     l = 0.1
     en_lambda = 0.95
 
     num_mus = 1
     mus = [0] * num_mus
-    mus[0] = 100.0
+    mus[0] = 0.1  # 2.0 * eps / (p - 1.0)
 #    mus[1] = 0.01
 #    mus[2] = 0.0001
 #    mus[3] = 0.000001
@@ -314,7 +314,7 @@ def test_tv():
     preprocess_mask = preprocess.Mask(mask1D)
 #    X = preprocess_mask.process(X)
 
-    lrtv = models.LinearRegressionTV(gamma, (pz, py, px), mu=mus[0])#,
+    lrtv = models.LinearRegressionL1TV(0.0001, gamma, (pz, py, px), mu=mus[0])#,
                                       #mask=mask1D)
     lrtv.set_max_iter(maxit)
     lrtv.set_tolerance(eps)
@@ -496,10 +496,10 @@ def test_data():
 
 
 if __name__ == "__main__":
-#    test_tv()
+    test_tv()
 #    test_lasso()
 #    test_lasso_tv()
-    test_data()
+#    test_data()
 
 #    from pylab import *
 #    from numpy import outer

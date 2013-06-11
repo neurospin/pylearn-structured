@@ -576,11 +576,11 @@ class TotalVariation(ConvexLossFunction,
             self.mu_id = id(mu)
 
         if true:
-            return self.gamma * np.sum((self.Ax.dot(beta) ** 2.0 + \
+            return np.sum((self.Ax.dot(beta) ** 2.0 + \
                                         self.Ay.dot(beta) ** 2.0 + \
                                         self.Az.dot(beta) ** 2.0) ** 0.5)
         else:
-            return self.gamma * (np.dot(self.Aalpha.T, beta)[0, 0] \
+            return (np.dot(self.Aalpha.T, beta)[0, 0] \
                                  - (mu / 2.0) * (np.sum(self.asx ** 2.0) +
                                                  np.sum(self.asy ** 2.0) +
                                                  np.sum(self.asz ** 2.0)))
@@ -595,7 +595,7 @@ class TotalVariation(ConvexLossFunction,
             self.beta_id = id(beta)
             self.mu_id = id(self.get_mu())
 
-        return self.gamma * self.Aalpha
+        return self.Aalpha
 
     def Lipschitz(self):
 
@@ -758,6 +758,14 @@ class TotalVariation(ConvexLossFunction,
             self.Axt = self.Ax.T
             self.Ayt = self.Ay.T
             self.Azt = self.Az.T
+
+        self.Ax = self.gamma * self.Ax
+        self.Ay = self.gamma * self.Ay
+        self.Az = self.gamma * self.Az
+
+        self.Axt = self.gamma * self.Axt
+        self.Ayt = self.gamma * self.Ayt
+        self.Azt = self.gamma * self.Azt
 
         self.buff = np.zeros((self.Ax.shape[1], 1))
 

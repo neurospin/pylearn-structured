@@ -569,7 +569,7 @@ class ISTARegression(ProximalGradientMethod):
         else:
             t *= tscale
 
-        t *= 1.0
+        print "t: ", t
 
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
@@ -584,10 +584,12 @@ class ISTARegression(ProximalGradientMethod):
         while True:
             self.converged = True
 
-            if self.iterations > 200:
-                beta_new = self.h.prox(beta_old - t * self.g.grad(beta_old), t)
-            else:
-                beta_new = self.h.prox(beta_old - t * self.g.grad(beta_old), t)
+#            if self.iterations > 200:
+#                beta_new = self.h.prox(beta_old - t * self.g.grad(beta_old), t)
+#            else:
+            if self.iterations % 100 == 0:
+                print "it: ", self.iterations, " t: ", t, ", max: ", np.min(np.abs(self.g.grad(beta_old))), ", l: ", self.h.l, ", mu: ", self.g.get_mu()
+            beta_new = self.h.prox(beta_old - t * self.g.grad(beta_old), t)
 
             if norm1(beta_old - beta_new) > self.tolerance * t:
                 self.converged = False
