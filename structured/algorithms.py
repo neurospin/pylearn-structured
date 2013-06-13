@@ -569,8 +569,6 @@ class ISTARegression(ProximalGradientMethod):
         else:
             t *= tscale
 
-        print "t: ", t
-
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
         if early_stopping_mu != None:
@@ -584,11 +582,23 @@ class ISTARegression(ProximalGradientMethod):
         while True:
             self.converged = True
 
-#            if self.iterations > 200:
-#                beta_new = self.h.prox(beta_old - t * self.g.grad(beta_old), t)
-#            else:
-            if self.iterations % 100 == 0:
-                print "it: ", self.iterations, " t: ", t, ", max: ", np.min(np.abs(self.g.grad(beta_old))), ", l: ", self.h.l, ", mu: ", self.g.get_mu()
+#            if self.iterations % 100 == 0:
+#                grad = self.g.grad(beta_old)
+#                print "it: ", self.iterations, " t: ", t, ", max: ", np.max(np.abs(grad)), ", min: ", np.min(np.abs(grad)), ", l: ", self.h.l, ", mu: ", self.g.get_mu()
+#            grad = t * self.g.grad(beta_old)
+#            e = 5e-12
+#            big = np.abs(grad) >= e
+#            small = np.abs(grad) < e
+#            nbig = np.sum(big)
+#            nsmall = np.sum(small)
+#            normbig = norm1(grad[big])
+#            normsmall = norm1(grad[small])
+#            if normsmall > normbig:
+#            if self.iterations > 20000:
+#                print "Problem! it: ", self.iterations, " and we have ", normsmall, "(", nsmall, ")", " > ", normbig, "(", nbig, ") tot =", (nbig + nsmall)
+#                print grad[big].T
+#                print grad[small].T
+#                break
             beta_new = self.h.prox(beta_old - t * self.g.grad(beta_old), t)
 
             if norm1(beta_old - beta_new) > self.tolerance * t:

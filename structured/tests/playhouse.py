@@ -284,10 +284,10 @@ def test_tv():
 #    beta1D = np.sort(np.abs(betastar), axis=0)
 #    y = np.dot(X, beta1D)
 
-    eps = 0.01
-    maxit = 50000
+    eps = 0.001
+    maxit = 100000
 
-    gamma = 100.0
+    gamma = 5.0
     l = 0.1
     en_lambda = 0.95
 
@@ -314,8 +314,8 @@ def test_tv():
     preprocess_mask = preprocess.Mask(mask1D)
 #    X = preprocess_mask.process(X)
 
-    lrtv = models.LinearRegressionL1TV(0.0001, gamma, (pz, py, px), mu=mus[0])#,
-                                      #mask=mask1D)
+    lrtv = models.LinearRegressionTV(gamma, (pz, py, px), mu=mus[0])#,
+                                     #mask=mask1D)
     lrtv.set_max_iter(maxit)
     lrtv.set_tolerance(eps)
     method = lrtv
@@ -338,6 +338,78 @@ def test_tv():
     print "Total time:", (time() - total_start)
     print "Total iterations:", alg.iterations, "(%d)" % len(alg.f)
     print "Error:", alg.f[-1]
+
+#    from scipy import fftpack
+#    ft = fftpack.fft(alg.f)
+#    n = ft.shape[0]
+#    k = 20000
+#    if n % 2 != 0:
+#        n += 1  # Must be even
+#    test = np.array(ft)
+#    test[k:n / 2] = 0
+#    test[n / 2:-k] = 0
+#    ift = fftpack.ifft(test).real
+#    from scipy.interpolate import UnivariateSpline
+#    x = range(len(alg.f))
+#    y = np.log10(alg.f)
+#    spline = UnivariateSpline(x, y, s=1)
+#    smooth = spline(x)
+
+#    y = (alg.f[30000:])
+#    n = len(y)
+
+#    k = 10
+#    if n % k != 0:
+#        n -= n % k
+#    y = y[:n]
+#    x = range(n)
+#    print "len: ", n
+#
+#    from scipy.interpolate import UnivariateSpline
+#    spline = UnivariateSpline(x, y, s=5e-16, k=1)
+#    smooth = spline(x)
+
+#    smooth = [0] * n
+#    for i in xrange(0, n, k):
+#        X = np.reshape(np.array(x[i:i + k]), (k, 1))
+#        X = np.hstack((np.ones((k, 1)), X))
+#        b = np.dot(np.linalg.pinv(X), y[i:i + k])
+#        smooth[i:i + k] = np.dot(X, b)
+
+#    for i in xrange(n):
+#        left = max(0, i - k)
+#        right = min(i + k, n - 1) + 1
+#        smooth[i] = sum(y[left:right]) / (right - left)
+#        print "i:", i
+#        print "left:", left
+#        print "right:", right
+#        print "values:", y[left:right]
+#        print "sum:", sum(y[left:right])
+#        print "denom:", (right - left)
+#        print
+#    F = np.array(y)
+#    S = np.array(smooth)
+#    d = np.min(F)
+#    F /= d
+#    S /= d
+#    y = F.tolist()
+#    smooth = S.tolist()
+#
+#    print "alg.f[i]:", y[-1]
+#    i = len(y) - 1
+#    while y[i] == y[-1]:
+#        i -= 1
+#    print "alg.f[i]:", y[i]
+#    print "diff:", (y[i] - y[-1])
+#
+#    fig = plot.figure()
+#    ax = fig.add_subplot(1, 1, 1)
+#    ax.plot(x, y, '-b', x, smooth, '-r')
+##    ax.plot(x, y, '-b')
+#    plot.title("f: " + str(alg.f[-1]))
+#    plot.show()
+
+#    return
 
     plot.subplot(2, 2, 1)
     plot.plot(beta1D[:, 0], '-', computed_beta[:, 0], '*')

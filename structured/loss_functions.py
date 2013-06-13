@@ -10,7 +10,7 @@ Created on Mon Apr 22 10:54:29 2013
 __all__ = ['LossFunction', 'LipschitzContinuous', 'Differentiable',
            'DataDependent',
 
-           'ConvexLossFunction',
+           'Convex',
            'LinearRegressionError', 'LogisticRegressionError',
 
            'StronglyConvexLossFunction',
@@ -89,22 +89,22 @@ class DataDependent(object):
                                   'specialised!')
 
 
-class ConvexLossFunction(LossFunction):
+class Convex(object):
 
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, **kwargs):
 
-        super(ConvexLossFunction, self).__init__(**kwargs)
+        super(Convex, self).__init__(**kwargs)
 
 
-class StronglyConvexLossFunction(LossFunction):
+class StronglyConvex(object):
 
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, **kwargs):
 
-        super(StronglyConvexLossFunction, self).__init__(**kwargs)
+        super(StronglyConvex, self).__init__(**kwargs)
 
     @abc.abstractmethod
     def lambda_min(self):
@@ -112,7 +112,7 @@ class StronglyConvexLossFunction(LossFunction):
                                   'specialised!')
 
 
-class ProximalOperator(ConvexLossFunction):
+class ProximalOperator(LossFunction, Convex):
 
     __metaclass__ = abc.ABCMeta
 
@@ -126,7 +126,10 @@ class ProximalOperator(ConvexLossFunction):
                                   'specialised!')
 
 
-class NesterovFunction(Differentiable, LipschitzContinuous):
+class NesterovFunction(LossFunction,
+                       Convex,
+                       Differentiable,
+                       LipschitzContinuous):
     """A loss function approximated using the Nesterov technique.
     """
 
@@ -160,7 +163,7 @@ class NesterovFunction(Differentiable, LipschitzContinuous):
                                   'specialised!')
 
     @abc.abstractmethod
-    def projection(self, alpha):
+    def projection(self, *alpha):
         raise NotImplementedError('Abstract method "projection" must be ' \
                                   'specialised!')
 
@@ -191,7 +194,7 @@ class CombinedLossFunction(LossFunction, DataDependent):
         return self.a.f(*args, **kwargs) + self.b.f(*args, **kwargs)
 
 
-class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
+class CombinedNesterovLossFunction(NesterovFunction, CombinedLossFunction):
     """A loss function contructed as the sum of two loss functions, where
     at least one of them is a Nesterov function, i.e. a loss function computed
     using the Nestrov technique.
@@ -200,7 +203,7 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
         g = g1 + g2,
 
-    where at least one of g1 or g2 are Nesterov functions.
+    where at least one of g1 or g2 is a Nesterov functions.
     """
 
     def __init__(self, a, b):
@@ -249,12 +252,12 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
         else:
             raise ValueError('At least one loss function must be Nesterov')
 
-    def projection(self, alpha):
+    def projection(self, *alpha):
 
         if hasattr(self.b, 'projection'):
-            return self.b.projection(alpha)
+            return self.b.projection(*alpha)
         elif hasattr(self.a, 'projection'):
-            return self.a.projection(alpha)
+            return self.a.projection(*alpha)
         else:
             raise ValueError('At least one loss function must be Nesterov')
 
@@ -275,7 +278,8 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
             self.b.set_mu(mu)
 
 
-class LinearRegressionError(ConvexLossFunction,
+class LinearRegressionError(LossFunction,
+                            Convex,
                             Differentiable,
                             LipschitzContinuous,
                             DataDependent):
@@ -311,7 +315,8 @@ class LinearRegressionError(ConvexLossFunction,
         return self.lipschitz
 
 
-class LogisticRegressionError(ConvexLossFunction,
+class LogisticRegressionError(LossFunction,
+                              Convex,
                               Differentiable,
                               LipschitzContinuous,
                               DataDependent):
@@ -363,7 +368,8 @@ class LogisticRegressionError(ConvexLossFunction,
         return self.lipschitz
 
 
-class RidgeRegression(StronglyConvexLossFunction,
+class RidgeRegression(LossFunction,
+                      StronglyConvex,
                       Differentiable,
                       LipschitzContinuous,
                       DataDependent):
@@ -530,8 +536,7 @@ class ElasticNet(ProximalOperator):
                 / (2.0 - l)
 
 
-class TotalVariation(ConvexLossFunction,
-                     NesterovFunction,
+class TotalVariation(NesterovFunction,
                      LipschitzContinuous):
 
     def __init__(self, gamma, shape, mu=None, mask=None, **kwargs):
@@ -633,7 +638,7 @@ class TotalVariation(ConvexLossFunction,
 
         return self.Axt, self.Ayt, self.Azt
 
-    def projection(self, alpha):
+    def projection(self, *alpha):
 
         asx = alpha[0]
         asy = alpha[1]
@@ -657,9 +662,9 @@ class TotalVariation(ConvexLossFunction,
         self.asz = self.Az.dot(beta) / mu
 
         # Apply projection
-        self.asx, self.asy, self.asz = self.projection((self.asx,
-                                                        self.asy,
-                                                        self.asz))
+        self.asx, self.asy, self.asz = self.projection(self.asx,
+                                                       self.asy,
+                                                       self.asz)
 
 #        self.Aalpha = self.Axt.dot(self.asx) + \
 #                      self.Ayt.dot(self.asy) + \
@@ -699,12 +704,12 @@ class TotalVariation(ConvexLossFunction,
         p = X * Y * Z
 
         smtype = 'csr'
-        self.Ax = sparse.eye(p, p, 1, format=smtype) \
-                - sparse.eye(p, p)
-        self.Ay = sparse.eye(p, p, X, format=smtype) \
-                - sparse.eye(p, p)
-        self.Az = sparse.eye(p, p, X * Y, format=smtype) \
-                - sparse.eye(p, p)
+        self.Ax = self.gamma * (sparse.eye(p, p, 1, format=smtype) \
+                              - sparse.eye(p, p))
+        self.Ay = self.gamma * (sparse.eye(p, p, X, format=smtype) \
+                              - sparse.eye(p, p))
+        self.Az = self.gamma * (sparse.eye(p, p, X * Y, format=smtype) \
+                              - sparse.eye(p, p))
 
         ind = np.reshape(xrange(p), (Z, Y, X))
         if self.mask != None:
@@ -759,19 +764,134 @@ class TotalVariation(ConvexLossFunction,
             self.Ayt = self.Ay.T
             self.Azt = self.Az.T
 
-        self.Ax = self.gamma * self.Ax
-        self.Ay = self.gamma * self.Ay
-        self.Az = self.gamma * self.Az
-
-        self.Axt = self.gamma * self.Axt
-        self.Ayt = self.gamma * self.Ayt
-        self.Azt = self.gamma * self.Azt
-
         self.buff = np.zeros((self.Ax.shape[1], 1))
 
 
-class GroupLassoOverlap(ConvexLossFunction,
-                        NesterovFunction,
+class SmoothL1(NesterovFunction,
+               LipschitzContinuous):
+
+    def __init__(self, l, p, mu=None, mask=None, **kwargs):
+        """Construct an L1 loss function, smoothed using the Nesterov
+        technique.
+
+        Parameters
+        ----------
+        l     : The regularisation parameter for the L1 penality.
+
+        p     : The numbers of variables.
+
+        mu    : The Nesterov function regularisation parameter.
+
+        mask  : A 1-dimensional mask representing the 3D image mask.
+        """
+        super(SmoothL1, self).__init__(mu=mu, **kwargs)
+
+        self.l = l
+        self.p = p
+        self.mask = mask
+
+        self.precompute()
+        self.lambda_max = None
+
+    def f(self, beta, mu=None, true=False):
+
+        if self.l <= TOLERANCE:
+            return 0
+
+        if (mu == None):
+            mu = self.get_mu()
+
+        self.compute_alpha(beta, mu)
+
+        if true:
+            return np.sum((self.A1.dot(beta) ** 2.0) ** 0.5)
+        else:
+            return np.dot(self.Aalpha.T, beta)[0, 0] \
+                          - (mu / 2.0) * np.sum(self.a ** 2.0)
+
+    def grad(self, beta):
+
+        if self.l <= TOLERANCE:
+            return np.zeros(beta.shape)
+
+        self.compute_alpha(beta, self.get_mu())
+
+        return self.Aalpha
+
+    def Lipschitz(self):
+
+        if self.l < TOLERANCE:
+            return 0
+
+        if self.lambda_max == None:
+#            A = sparse.vstack(self.A())
+#            v = algorithms.SparseSVD(max_iter=100).run(A)
+#            us = A.dot(v)
+#            self.lambda_max = np.sum(us ** 2.0)
+            self.lambda_max = self.l ** 2.0
+
+        return self.lambda_max / self.get_mu()
+
+    def alpha(self, beta, mu=None):
+
+        if self.l <= TOLERANCE:
+            return 0
+
+        if (mu == None):
+            mu = self.get_mu()
+
+        self.compute_alpha(beta, mu)
+
+        return (self.a,)
+
+    def A(self):
+
+        return (self.A1,)
+
+    def At(self):
+
+        return (self.A1t,)
+
+    def projection(self, *alpha):
+
+        a = alpha[0]
+        anorm = np.abs(a)
+        i = anorm > 1.0
+        asnorm_i = anorm[i]
+
+        a[i] = np.divide(a[i], asnorm_i)
+
+        return (a,)
+
+    def compute_alpha(self, beta, mu):
+
+        # Compute a*
+#        self.a = self.A1.dot(beta) / mu
+        self.a = (float(self.l) / float(mu)) * beta
+
+        # Apply projection
+        self.a = self.projection(self.a)[0]
+
+#        self.Aalpha = self.A1t.dot(self.a)
+        self.Aalpha = float(self.l) * self.a
+
+    def precompute(self):
+
+        self.A1 = self.l * sparse.eye(self.p, self.p, format='csr')
+
+        # Find indices in the mask to remove
+        if self.mask != None:
+            self.A1t = self.A1.T.tocsr()
+            for i in reversed(xrange(self.p)):
+                if self.mask[i] == 0:
+                    delete_sparse_csr_row(self.A1t, i)
+
+            self.A1 = self.At1.T
+        else:
+            self.A1t = self.A1.T
+
+
+class GroupLassoOverlap(NesterovFunction,
                         LipschitzContinuous):
 
     def __init__(self, num_variables, groups, gamma, mu, weights=None,
@@ -857,7 +977,7 @@ class GroupLassoOverlap(ConvexLossFunction,
 
         return self.At
 
-    def projection(self, alpha):
+    def projection(self, *alpha):
 
         for i in xrange(len(alpha)):
             astar = alpha[i]
@@ -878,7 +998,7 @@ class GroupLassoOverlap(ConvexLossFunction,
         self.Aalpha = 0
         for g in xrange(len(self.A)):
             astar = self.A[g].dot(beta) / mu
-            astar = self.projection([astar])[0]
+            astar = self.projection(astar)[0]
 
             self.astar[g] = astar
 
