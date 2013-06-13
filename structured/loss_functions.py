@@ -227,10 +227,12 @@ class CombinedNesterovLossFunction(NesterovFunction, CombinedLossFunction):
 
     def alpha(self, beta, mu):
 
-        if hasattr(self.b, 'alpha'):
-            return self.b.alpha(beta, mu)
+        if self.a.alpha(beta, mu) and hasattr(self.b, 'alpha'):
+            return self.a.alpha(beta, mu) + self.b.alpha(beta, mu)  # Merge
         elif hasattr(self.a, 'alpha'):
             return self.a.alpha(beta, mu)
+        elif hasattr(self.b, 'alpha'):
+            return self.b.alpha(beta, mu)
         else:
             raise ValueError('At least one loss function must be Nesterov')
 

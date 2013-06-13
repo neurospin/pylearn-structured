@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`multiblock` module includes several different projection based latent
-variable models for one, two or more blocks of data.
+The :mod:`structured` module includes several different structured machine
+learning models for one, two or more blocks of data.
 
 @author: Tommy Löfstedt <tommy.loefstedt@cea.fr>
 """
@@ -25,6 +25,8 @@ import tests
 import utils
 import loss_functions
 import start_vectors
+
+__version__ = '0.0.9'
 
 __all__ = ['PCA', 'SVD', 'PLSR', 'TuckerFactorAnalysis', 'PLSC', 'O2PLS',
            'RGCCA',
