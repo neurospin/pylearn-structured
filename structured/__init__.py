@@ -17,6 +17,7 @@ from .models import LinearRegression
 from .models import LinearRegressionTV
 from .models import LogisticRegression
 from .models import RidgeRegressionTV
+from .models import LinearRegressionElasticNetTV
 
 import algorithms
 import preprocess
@@ -30,7 +31,7 @@ __version__ = '0.0.9'
 
 __all__ = ['PCA', 'SVD', 'PLSR', 'TuckerFactorAnalysis', 'PLSC', 'O2PLS',
            'RGCCA',
-           'LinearRegression', 'LinearRegressionTV', 'RidgeRegressionTV',
-           'LogisticRegression',
+           'LinearRegression', 'LinearRegressionTV', 'LogisticRegression',
+           'RidgeRegressionTV', 'LinearRegressionElasticNetTV',
            'prox_ops', 'algorithms', 'preprocess',
            'tests', 'utils', 'loss_functions', 'start_vectors']

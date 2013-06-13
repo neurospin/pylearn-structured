@@ -17,7 +17,7 @@ __all__ = ['PCA', 'SVD', 'PLSR', 'TuckerFactorAnalysis', 'PLSC', 'O2PLS',
            'LinearRegressionTV', 'LinearRegressionL1TV',
            'LogisticRegression',
 
-           'RidgeRegressionTV']
+           'RidgeRegressionTV', 'LinearRegressionElasticNetTV']
 
 from sklearn.utils import check_arrays
 
@@ -1312,6 +1312,70 @@ class RidgeRegressionTV(ExcessiveGapMethod):
 
         self.set_g(loss_functions.RidgeRegression(l))
         self.set_h(loss_functions.TotalVariation(gamma, shape, mu, mask))
+
+    def fit(self, X, y, **kwargs):
+        """Fit the model to the given data.
+
+        Parameters
+        ----------
+        X : The independent variables.
+        y : The dependent variable.
+
+        Returns
+        -------
+        self: The model object.
+        """
+        self.get_g().set_data(X, y)
+
+        self.beta = self.algorithm.run(X, y, **kwargs)
+
+        return self
+
+    def get_transform(self, index=0):
+
+        return self.beta
+
+    def predict(self, X, **kwargs):
+
+        yhat = np.dot(X, self.beta)
+
+        return yhat
+
+
+class LinearRegressionElasticNetTV(ExcessiveGapMethod):
+    """Linear regression with elastic net and total variation constraints.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + l.||b||_1 + (1 - l).1/2.||b||² + gamma.TV(b),
+
+    where ||.||_1 is the L1 norm, ||.||² is the squared L2 norm and TV(.) is
+    the total variation constraint.
+
+    Parameters
+    ----------
+    l     : The ridge regularisation parameter.
+
+    gamma : The TV regularisation parameter.
+
+    shape : The shape of the 3D image. Must be a 3-tuple. If the image is
+            2D, let the Z dimension be 1, and if the "image" is 1D, let the
+            Y and Z dimensions be 1. The tuple must be on the form
+            (Z, Y, X).
+
+    mu    : The Nesterov function regularisation parameter.
+
+    mask  : A 1-dimensional mask representing the 3D image mask. Must be a
+           list of 1s and 0s.
+    """
+    def __init__(self, l, gamma, shape, mu=None, mask=None, **kwargs):
+
+        super(LinearRegressionElasticNetTV, self).__init__(**kwargs)
+
+        self.set_g(loss_functions.RidgeRegression(l))
+        a = loss_functions.SmoothL1(l, np.prod(shape), mu, mask)
+        b = loss_functions.TotalVariation(gamma, shape, mu, mask)
+        self.set_h(loss_functions.CombinedNesterovLossFunction(a, b))
 
     def fit(self, X, y, **kwargs):
         """Fit the model to the given data.
