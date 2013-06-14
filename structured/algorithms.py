@@ -210,8 +210,12 @@ class SparseSVD(NIPALSBaseAlgorithm):
                     break
 
             p = Xt.dot(t)
-            p /= np.sqrt(np.sum(p ** 2.0))
-#            t = X.dot(p)
+            normp = np.sqrt(np.sum(p ** 2.0))
+            # Is the solution significantly different from zero (TOLERANCE)?
+            if normp > TOLERANCE:
+                p /= normp
+            else:
+                p = np.ones(p.shape) / np.sqrt(p.shape[0])
 
         else:
             K = Xt.dot(X)
@@ -219,7 +223,11 @@ class SparseSVD(NIPALSBaseAlgorithm):
             for it in xrange(self.max_iter):
                 p_ = p
                 p = K.dot(p_)
-                p /= np.sqrt(np.sum(p ** 2.0))
+                normp = np.sqrt(np.sum(p ** 2.0))
+                if normp > TOLERANCE:
+                    p /= normp
+                else:
+                    p = np.ones(p.shape) / np.sqrt(p.shape[0])
 
                 self.iterations += 1
 
@@ -228,7 +236,7 @@ class SparseSVD(NIPALSBaseAlgorithm):
 #                    print "broke at", self.iterations
                     break
 
-#            t = X.dot(p)
+#        t = X.dot(p)
 
 #        sigma = numpy.sqrt(numpy.sum(t ** 2.0))
 #        t /= sigma
@@ -845,6 +853,7 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
         v = algorithms.SparseSVD(max_iter=10).run(A)
         u = A.dot(v)
         L = np.sum(u ** 2.0)
+        print "L: ", L
         del A
         L = L / self.g.lambda_min()  # Lipschitz constant
         print "Lipschitz constant:", L
@@ -902,9 +911,13 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
     def _V(self, u, beta, L):
 
         u_new = [0] * len(u)
-        for i in xrange(len(u)):
-            u_new[i] = u[i] + self.A[i].dot(beta) / L
-        return list(self.h.projection(u_new))
+        if L > TOLERANCE:
+            for i in xrange(len(u)):
+                u_new[i] = u[i] + self.A[i].dot(beta) / L
+        else:
+            for i in xrange(len(u)):
+                u_new[i] = np.ones(u[i].shape) * 1000000.0  # Large number <tm>
+        return list(self.h.projection(*u_new))
 
     def _alpha_hat_muk(self, beta, mu):
 

@@ -498,7 +498,9 @@ class L1(ProximalOperator):
 
 
 class L2(ProximalOperator):
-    """The proximal operator for the function lambda*0.5*norm(x)**2.
+    """The proximal operator of the function
+
+        f(x) = (lambda / 2.0) * norm(x) ** 2.0.
     """
 
     def __init__(self, l, **kwargs):
@@ -508,7 +510,7 @@ class L2(ProximalOperator):
         self.l = l
 
     def f(self, x):
-        return self.l * 0.5 * np.sum(x ** 2.0)
+        return (self.l / 2.0) * np.sum(x ** 2.0)
 
     def prox(self, x, factor=1.0):
 
@@ -516,26 +518,48 @@ class L2(ProximalOperator):
         return x / (1.0 + l)
 
 
-class ElasticNet(ProximalOperator):
+class L1L2(ProximalOperator):
     """The proximal operator of the function
 
-      P(x) = lambda * norm1(x) + (1.0 - lambda) * 0.5 * norm(x) ** 2.
+        f(x) = lambda * norm1(x) + (kappa / 2.0) * norm(x) ** 2.
     """
-    def __init__(self, l, **kwargs):
+    def __init__(self, l, k, **kwargs):
 
-        super(ElasticNet, self).__init__(**kwargs)
+        super(L1L2, self).__init__(**kwargs)
 
         self.l = l
-        self.l1 = L1(l)
+        self.k = k
 
     def f(self, x):
-        return self.l * norm1(x) + (1.0 - self.l) * 0.5 * np.sum(x ** 2.0)
+        return self.l * norm1(x) + (self.k / 2.0) * np.sum(x ** 2.0)
 
     def prox(self, x, factor=1.0, allow_empty=False):
 
         l = factor * self.l
-        return self.l1.prox(x, factor=factor, allow_empty=allow_empty) \
-                / (2.0 - l)
+        k = factor * self.k
+        l1 = L1(l)
+
+        return l1.prox(x, factor=factor, allow_empty=allow_empty) \
+                / (1.0 + k)
+
+
+class ElasticNet(L1L2):
+    """The proximal operator of the function
+
+      f(x) = lambda * norm1(x) + ((1.0 - lambda) / 2.0) * norm(x) ** 2.
+    """
+    def __init__(self, l, **kwargs):
+
+        super(ElasticNet, self).__init__(l, 1.0 - l, **kwargs)
+
+#    def f(self, x):
+#        return self.l * norm1(x) + (1.0 - self.l) * 0.5 * np.sum(x ** 2.0)
+#
+#    def prox(self, x, factor=1.0, allow_empty=False):
+#
+#        l = factor * self.l
+#        return self.l1.prox(x, factor=factor, allow_empty=allow_empty) \
+#                / (2.0 - l)
 
 
 class TotalVariation(NesterovFunction,
@@ -571,7 +595,7 @@ class TotalVariation(NesterovFunction,
 
     def f(self, beta, mu=None, true=False):
 
-        if self.gamma <= TOLERANCE:
+        if self.gamma < TOLERANCE:
             return 0
 
         if (mu == None):
@@ -594,7 +618,7 @@ class TotalVariation(NesterovFunction,
 
     def grad(self, beta):
 
-        if self.gamma <= TOLERANCE:
+        if self.gamma < TOLERANCE:
             return np.zeros(beta.shape)
 
         if self.beta_id != id(beta) or self.mu_id != id(self.get_mu()):
@@ -619,8 +643,8 @@ class TotalVariation(NesterovFunction,
 
     def alpha(self, beta, mu=None):
 
-        if self.gamma <= TOLERANCE:
-            return 0
+        if self.gamma < TOLERANCE:
+            return 0, 0, 0
 
         if (mu == None):
             mu = self.get_mu()
@@ -784,7 +808,8 @@ class SmoothL1(NesterovFunction,
 
         mu    : The Nesterov function regularisation parameter.
 
-        mask  : A 1-dimensional mask representing the 3D image mask.
+        mask  : A 1-dimensional mask representing the 3D image mask. Must be a
+                list of 1s and 0s.
         """
         super(SmoothL1, self).__init__(mu=mu, **kwargs)
 
@@ -797,7 +822,7 @@ class SmoothL1(NesterovFunction,
 
     def f(self, beta, mu=None, true=False):
 
-        if self.l <= TOLERANCE:
+        if self.l < TOLERANCE:
             return 0
 
         if (mu == None):
@@ -813,7 +838,7 @@ class SmoothL1(NesterovFunction,
 
     def grad(self, beta):
 
-        if self.l <= TOLERANCE:
+        if self.l < TOLERANCE:
             return np.zeros(beta.shape)
 
         self.compute_alpha(beta, self.get_mu())
@@ -836,8 +861,8 @@ class SmoothL1(NesterovFunction,
 
     def alpha(self, beta, mu=None):
 
-        if self.l <= TOLERANCE:
-            return 0
+        if self.l < TOLERANCE:
+            return (0,)
 
         if (mu == None):
             mu = self.get_mu()
@@ -926,7 +951,7 @@ class GroupLassoOverlap(NesterovFunction,
 
     def f(self, beta, mu=None):
 
-        if self.gamma <= TOLERANCE:
+        if self.gamma < TOLERANCE:
             return 0
 
         if (mu == None):
@@ -946,7 +971,7 @@ class GroupLassoOverlap(NesterovFunction,
 
     def grad(self, beta):
 
-        if self.gamma <= TOLERANCE:
+        if self.gamma < TOLERANCE:
             return np.zeros(beta.shape)
 
         if self.beta_id != id(beta) or self.mu_id != id(self.get_mu()):
@@ -958,8 +983,8 @@ class GroupLassoOverlap(NesterovFunction,
 
     def alpha(self, beta, mu=None):
 
-        if self.gamma <= TOLERANCE:
-            return 0
+        if self.gamma < TOLERANCE:
+            return tuple([0] * len(self.astar))
 
         if (mu == None):
             mu = self.get_mu()

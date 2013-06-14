@@ -12,6 +12,7 @@ import test_predictions
 import test_o2pls
 import test_regularisation
 import test_multiblock
+import test_structure
 
 
 def test():
@@ -20,6 +21,7 @@ def test():
     test_o2pls.test()
     test_regularisation.test()
     test_multiblock.test()
+    test_structure.test()
 
 
 if __name__ == "__main__":

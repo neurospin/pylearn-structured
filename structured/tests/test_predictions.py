@@ -8,10 +8,11 @@ TODO: Add linear regression and ridge regression.
 """
 
 import numpy as np
-import preprocess
-import models
-import utils
-from utils.testing import assert_array_almost_equal
+
+import structured.preprocess as preprocess
+import structured.models as models
+import structured.utils as utils
+from structured.utils.testing import assert_array_almost_equal
 
 from sklearn.datasets import load_linnerud
 from sklearn.pls import PLSRegression

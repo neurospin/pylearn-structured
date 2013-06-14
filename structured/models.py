@@ -1059,6 +1059,58 @@ class ElasticNet(NesterovProximalGradientMethod):
         return yhat
 
 
+class LinearRegressionL1L2(NesterovProximalGradientMethod):
+    """Linear regression with L1 and L2 regularisation.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + l.||b||_1 + (k / 2).||b||²,
+
+    where ||.||_1 is the L1 norm and ||.||² is the squared L2 norm.
+
+    Parameters
+    ----------
+    l: The L1 parameter.
+    k: The L2 parameter.
+    """
+
+    def __init__(self, l, k, **kwargs):
+
+        super(ElasticNet, self).__init__(**kwargs)
+
+        self.set_g(loss_functions.LinearRegressionError())
+        self.set_h(loss_functions.L1L2(l, k))
+
+    def fit(self, X, y, **kwargs):
+        """Fit the model to the given data.
+
+        Parameters
+        ----------
+        X : The independent variables.
+        y : The dependent variable.
+
+        Returns
+        -------
+        self: The model object.
+        """
+
+        self.get_g().set_data(X, y)
+
+        self.beta = self.algorithm.run(X, y, **kwargs)
+
+        return self
+
+    def get_transform(self, index=0):
+
+        return self.beta
+
+    def predict(self, X, **kwargs):
+
+        yhat = np.dot(X, self.beta)
+
+        return yhat
+
+
 class LinearRegressionTV(NesterovProximalGradientMethod):
     """Linear regression with total variation constraint.
 
@@ -1280,6 +1332,66 @@ class ExcessiveGapMethod(BaseMethod):
         self.algorithm.h = h
 
 
+class EGMLinearRegressionL1L2(ExcessiveGapMethod):
+    """Linear Regression with L1 and L2 regularisation. Uses the excessive gap
+    method.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + l.||b||_1 + (k / 2).||b||²,
+
+    where ||.||_1 is the L1 norm and ||.||² is the squared L2 norm.
+
+    Parameters
+    ----------
+    l     : The L1 parameter.
+
+    k     : The L2 parameter.
+
+    p     : The numbers of variables.
+
+    mu    : The Nesterov function regularisation parameter.
+
+    mask  : A 1-dimensional mask representing the 3D image mask. Must be a
+            list of 1s and 0s.
+    """
+    def __init__(self, l, k, p, mu=None, mask=None, **kwargs):
+
+        super(EGMLinearRegressionL1L2, self).__init__(**kwargs)
+
+        self.set_g(loss_functions.RidgeRegression(l))
+        self.set_h(loss_functions.SmoothL1(k, p, mu, mask))
+
+    def fit(self, X, y, **kwargs):
+        """Fit the model to the given data.
+
+        Parameters
+        ----------
+        X : The independent variables.
+
+        y : The dependent variable.
+
+        Returns
+        -------
+        self: The model object.
+        """
+        self.get_g().set_data(X, y)
+
+        self.beta = self.algorithm.run(X, y, **kwargs)
+
+        return self
+
+    def get_transform(self, index=0):
+
+        return self.beta
+
+    def predict(self, X, **kwargs):
+
+        yhat = np.dot(X, self.beta)
+
+        return yhat
+
+
 class RidgeRegressionTV(ExcessiveGapMethod):
     """Ridge regression with total variation constraint.
 
@@ -1354,7 +1466,7 @@ class LinearRegressionElasticNetTV(ExcessiveGapMethod):
 
     Parameters
     ----------
-    l     : The ridge regularisation parameter.
+    l     : The ridge regularisation parameter. Must be in the interval [0,1].
 
     gamma : The TV regularisation parameter.
 
@@ -1372,7 +1484,8 @@ class LinearRegressionElasticNetTV(ExcessiveGapMethod):
 
         super(LinearRegressionElasticNetTV, self).__init__(**kwargs)
 
-        self.set_g(loss_functions.RidgeRegression(l))
+        l = max(0, min(l, 1))
+        self.set_g(loss_functions.RidgeRegression(1.0 - l))
         a = loss_functions.SmoothL1(l, np.prod(shape), mu, mask)
         b = loss_functions.TotalVariation(gamma, shape, mu, mask)
         self.set_h(loss_functions.CombinedNesterovLossFunction(a, b))

@@ -8,14 +8,14 @@ TODO: Fix the proximal operators. Normalisation?
 """
 
 import numpy as np
-import start_vectors
-import preprocess
-import prox_ops
-import models
 
-import utils
-from utils.testing import assert_array_almost_equal
-from utils.testing import orth_matrix, fleiss_kappa
+import structured.start_vectors as start_vectors
+import structured.preprocess as preprocess
+import structured.prox_ops as prox_ops
+import structured.models as models
+import structured.utils as utils
+from structured.utils.testing import assert_array_almost_equal
+from structured.utils.testing import orth_matrix, fleiss_kappa
 
 from sklearn.datasets import load_linnerud
 

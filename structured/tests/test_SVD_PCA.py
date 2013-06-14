@@ -8,12 +8,14 @@ TODO: Add Sparse SVD.
 """
 
 import numpy as np
-import preprocess
-import algorithms
-import prox_ops
-import models 
-from utils import direct, norm
-from utils.testing import assert_array_almost_equal
+
+import structured.preprocess as preprocess
+import structured.algorithms as algorithms
+import structured.prox_ops as prox_ops
+import structured.models as models
+from structured.utils import direct, norm
+from structured.utils.testing import assert_array_almost_equal
+
 from math import log
 from time import time
 
