@@ -1,5 +1,5 @@
-Sstructured and sparse machine learning in python
-=================================================
+Structured and sparse machine learning in python
+================================================
 
 
 Structured learning package for Python 2.7.
