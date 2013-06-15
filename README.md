@@ -1,7 +1,11 @@
-multiblock
-==========
+Sstructured and sparse machine learning in python
+=================================================
+
 
 Structured learning package for Python 2.7.
+
+- **structured**: provides structured and sparse machine learning
+- **mulm**: Fast implementations for Mass-Univariate Linear Models
 
 Dependencies
 ------------
