@@ -4,7 +4,7 @@ Created on Thu Mar 28 14:43:21 2013
 
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
-@license: BSD Style
+@license: TBD
 """
 
 __all__ = ['Preprocess', 'Center', 'Scale', 'Mask']
