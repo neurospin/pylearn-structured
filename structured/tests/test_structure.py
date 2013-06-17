@@ -79,34 +79,34 @@ def test():
 #    mus[4] = 0.00000001
 
     # Linear regression
-    lr = models.LinearRegression()
-    lr.set_max_iter(maxit)
-    lr.set_tolerance(eps)
-    lr.fit(X, y)
-    computed_beta = lr.beta
-
-    plot.subplot(4, 4, 1)
-    plot.plot(beta1D[:, 0], '-', computed_beta[:, 0], '*')
-    plot.title("Linear regression")
-
-    plot.subplot(4, 4, 2)
-    plot.imshow(np.reshape(computed_beta, (pz, py, px))[0, :, :],
-                interpolation='nearest', cmap=cm.gist_rainbow)
-
-    lr = models.RidgeRegressionTV(utils.TOLERANCE, 0.0, (pz, py, px),
-                                  mu=mus[0])
-    lr.set_max_iter(maxit)
-    lr.set_tolerance(eps)
-    lr.fit(X, y)
-    computed_beta = lr.beta
-
-    plot.subplot(4, 4, 3)
-    plot.plot(beta1D[:, 0], '-', computed_beta[:, 0], '*')
-    plot.title("Linear regression")
-
-    plot.subplot(4, 4, 4)
-    plot.imshow(np.reshape(computed_beta, (pz, py, px))[0, :, :],
-                interpolation='nearest', cmap=cm.gist_rainbow)
+#    lr = models.LinearRegression()
+#    lr.set_max_iter(maxit)
+#    lr.set_tolerance(eps)
+#    lr.fit(X, y)
+#    computed_beta = lr.beta
+#
+#    plot.subplot(4, 4, 1)
+#    plot.plot(beta1D[:, 0], '-', computed_beta[:, 0], '*')
+#    plot.title("Linear regression")
+#
+#    plot.subplot(4, 4, 2)
+#    plot.imshow(np.reshape(computed_beta, (pz, py, px))[0, :, :],
+#                interpolation='nearest', cmap=cm.gist_rainbow)
+#
+#    lr = models.RidgeRegressionTV(utils.TOLERANCE, 0.0, (pz, py, px),
+#                                  mu=mus[0])
+#    lr.set_max_iter(maxit)
+#    lr.set_tolerance(eps)
+#    lr.fit(X, y)
+#    computed_beta = lr.beta
+#
+#    plot.subplot(4, 4, 3)
+#    plot.plot(beta1D[:, 0], '-', computed_beta[:, 0], '*')
+#    plot.title("Linear regression")
+#
+#    plot.subplot(4, 4, 4)
+#    plot.imshow(np.reshape(computed_beta, (pz, py, px))[0, :, :],
+#                interpolation='nearest', cmap=cm.gist_rainbow)
 
     # LASSO (Linear regression + L1 penalty)
     l = 1.0
@@ -115,6 +115,7 @@ def test():
     l1.set_tolerance(eps)
     l1.fit(X, y)
     computed_beta = l1.beta
+    print "ss: ", np.sum(l1.beta[:300] ** 2.0)
 
     plot.subplot(4, 4, 5)
     plot.plot(beta1D[:, 0], '-', computed_beta[:, 0], '*')
@@ -124,11 +125,12 @@ def test():
     plot.imshow(np.reshape(computed_beta, (pz, py, px))[0, :, :],
                 interpolation='nearest', cmap=cm.gist_rainbow)
 
-    l1 = models.EGMLinearRegressionL1L2(l, utils.TOLERANCE, p, mu=mus[0])
+    l1 = models.EGMLinearRegressionL1L2(l, 0.00002, p, mu=mus[0])
     l1.set_max_iter(maxit)
     l1.set_tolerance(eps)
     l1.fit(X, y)
     computed_beta = l1.beta
+    print "ss: ", np.sum(l1.beta[:300] ** 2.0)
 
     plot.subplot(4, 4, 7)
     plot.plot(beta1D[:, 0], '-', computed_beta[:, 0], '*')

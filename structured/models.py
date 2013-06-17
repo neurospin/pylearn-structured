@@ -1338,7 +1338,7 @@ class EGMLinearRegressionL1L2(ExcessiveGapMethod):
 
     Optimises the function
 
-        f(b) = ||y - X.b||² + l.||b||_1 + (k / 2).||b||²,
+        f(b) = ||y - X.b||² + l.||b||_1 + (k / 2.0).||b||²,
 
     where ||.||_1 is the L1 norm and ||.||² is the squared L2 norm.
 
@@ -1359,8 +1359,9 @@ class EGMLinearRegressionL1L2(ExcessiveGapMethod):
 
         super(EGMLinearRegressionL1L2, self).__init__(**kwargs)
 
-        self.set_g(loss_functions.RidgeRegression(l))
-        self.set_h(loss_functions.SmoothL1(k, p, mu, mask))
+        self.set_g(loss_functions.RidgeRegression(k))
+        self.set_h(loss_functions.SmoothL1(l, p, mu, mask))
+#        self.set_h(loss_functions.TotalVariation(l, p, mu, mask))
 
     def fit(self, X, y, **kwargs):
         """Fit the model to the given data.
