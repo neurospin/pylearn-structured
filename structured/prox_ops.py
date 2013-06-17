@@ -7,7 +7,7 @@ Created on Thu Feb 7 11:50:00 2013
 
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
-@license: BSD Style
+@license: TBD
 """
 
 #import abc

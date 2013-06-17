@@ -5,7 +5,7 @@ models.
 
 @author:  Tommy Löfstedt <tommy.loefstedt@cea.fr>
 @email:   tommy.loefstedt@cea.fr
-@license: BSD Style.
+@license: TBD
 """
 
 __all__ = ['PCA', 'SVD', 'PLSR', 'TuckerFactorAnalysis', 'PLSC', 'O2PLS',
@@ -17,7 +17,8 @@ __all__ = ['PCA', 'SVD', 'PLSR', 'TuckerFactorAnalysis', 'PLSC', 'O2PLS',
            'LinearRegressionTV', 'LinearRegressionL1TV',
            'LogisticRegression',
 
-           'RidgeRegressionTV', 'LinearRegressionElasticNetTV']
+           'EGMRidgeRegression', 'EGMLinearRegressionL1L2',
+           'EGMRidgeRegressionTV', 'EGMLinearRegressionL1L2TV']
 
 from sklearn.utils import check_arrays
 
@@ -1310,10 +1311,34 @@ class ExcessiveGapMethod(BaseMethod):
                                                  algorithm=algorithm,
                                                  **kwargs)
 
-    @abc.abstractmethod
     def fit(self, X, y, **kwargs):
+        """Fit the model to the given data.
 
-        raise NotImplementedError('Abstract method "fit" must be specialised!')
+        Parameters
+        ----------
+        X : The independent variables.
+
+        y : The dependent variable.
+
+        Returns
+        -------
+        self: The model object.
+        """
+        self.get_g().set_data(X, y)
+
+        self.beta = self.algorithm.run(X, y, **kwargs)
+
+        return self
+
+    def get_transform(self, index=0):
+
+        return self.beta
+
+    def predict(self, X, **kwargs):
+
+        yhat = np.dot(X, self.get_transform(**kwargs))
+
+        return yhat
 
     def get_g(self):
 
@@ -1330,6 +1355,27 @@ class ExcessiveGapMethod(BaseMethod):
     def set_h(self, h):
 
         self.algorithm.h = h
+
+
+class EGMRidgeRegression(ExcessiveGapMethod):
+    """Linear regression with L2 regularisation. Uses the excessive gap method.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + (k / 2.0).||b||²,
+
+    where ||.||² is the squared L2 norm.
+
+    Parameters
+    ----------
+    l : The L2 parameter.
+    """
+    def __init__(self, l, **kwargs):
+
+        super(EGMRidgeRegression, self).__init__(**kwargs)
+
+        self.set_g(loss_functions.RidgeRegression(l))
+        self.set_h(loss_functions.SmoothL1(0.0, 1, 0.0))  # We're cheating! ;-)
 
 
 class EGMLinearRegressionL1L2(ExcessiveGapMethod):
@@ -1361,39 +1407,9 @@ class EGMLinearRegressionL1L2(ExcessiveGapMethod):
 
         self.set_g(loss_functions.RidgeRegression(k))
         self.set_h(loss_functions.SmoothL1(l, p, mu, mask))
-#        self.set_h(loss_functions.TotalVariation(l, p, mu, mask))
-
-    def fit(self, X, y, **kwargs):
-        """Fit the model to the given data.
-
-        Parameters
-        ----------
-        X : The independent variables.
-
-        y : The dependent variable.
-
-        Returns
-        -------
-        self: The model object.
-        """
-        self.get_g().set_data(X, y)
-
-        self.beta = self.algorithm.run(X, y, **kwargs)
-
-        return self
-
-    def get_transform(self, index=0):
-
-        return self.beta
-
-    def predict(self, X, **kwargs):
-
-        yhat = np.dot(X, self.beta)
-
-        return yhat
 
 
-class RidgeRegressionTV(ExcessiveGapMethod):
+class EGMRidgeRegressionTV(ExcessiveGapMethod):
     """Ridge regression with total variation constraint.
 
     Optimises the function
@@ -1421,46 +1437,18 @@ class RidgeRegressionTV(ExcessiveGapMethod):
     """
     def __init__(self, l, gamma, shape, mu=None, mask=None, **kwargs):
 
-        super(RidgeRegressionTV, self).__init__(**kwargs)
+        super(EGMRidgeRegressionTV, self).__init__(**kwargs)
 
         self.set_g(loss_functions.RidgeRegression(l))
         self.set_h(loss_functions.TotalVariation(gamma, shape, mu, mask))
 
-    def fit(self, X, y, **kwargs):
-        """Fit the model to the given data.
 
-        Parameters
-        ----------
-        X : The independent variables.
-        y : The dependent variable.
-
-        Returns
-        -------
-        self: The model object.
-        """
-        self.get_g().set_data(X, y)
-
-        self.beta = self.algorithm.run(X, y, **kwargs)
-
-        return self
-
-    def get_transform(self, index=0):
-
-        return self.beta
-
-    def predict(self, X, **kwargs):
-
-        yhat = np.dot(X, self.beta)
-
-        return yhat
-
-
-class LinearRegressionElasticNetTV(ExcessiveGapMethod):
+class EGMLinearRegressionL1L2TV(ExcessiveGapMethod):
     """Linear regression with elastic net and total variation constraints.
 
     Optimises the function
 
-        f(b) = ||y - X.b||² + l.||b||_1 + (1 - l).1/2.||b||² + gamma.TV(b),
+        f(b) = ||y - X.b||² + l.||b||_1 + (k / 2.0).||b||² + gamma.TV(b),
 
     where ||.||_1 is the L1 norm, ||.||² is the squared L2 norm and TV(.) is
     the total variation constraint.
@@ -1481,40 +1469,12 @@ class LinearRegressionElasticNetTV(ExcessiveGapMethod):
     mask  : A 1-dimensional mask representing the 3D image mask. Must be a
            list of 1s and 0s.
     """
-    def __init__(self, l, gamma, shape, mu=None, mask=None, **kwargs):
+    def __init__(self, l, k, gamma, shape, mu=None, mask=None, **kwargs):
 
-        super(LinearRegressionElasticNetTV, self).__init__(**kwargs)
+        super(EGMLinearRegressionL1L2TV, self).__init__(**kwargs)
 
-        l = max(0, min(l, 1))
-        self.set_g(loss_functions.RidgeRegression(1.0 - l))
+        self.set_g(loss_functions.RidgeRegression(k))
         a = loss_functions.SmoothL1(l, np.prod(shape), mu, mask)
-        b = loss_functions.TotalVariation(gamma, shape, mu, mask)
+        b = loss_functions.TotalVariation(gamma, shape, mu, mask,
+                                          compress=False)
         self.set_h(loss_functions.CombinedNesterovLossFunction(a, b))
-
-    def fit(self, X, y, **kwargs):
-        """Fit the model to the given data.
-
-        Parameters
-        ----------
-        X : The independent variables.
-        y : The dependent variable.
-
-        Returns
-        -------
-        self: The model object.
-        """
-        self.get_g().set_data(X, y)
-
-        self.beta = self.algorithm.run(X, y, **kwargs)
-
-        return self
-
-    def get_transform(self, index=0):
-
-        return self.beta
-
-    def predict(self, X, **kwargs):
-
-        yhat = np.dot(X, self.beta)
-
-        return yhat

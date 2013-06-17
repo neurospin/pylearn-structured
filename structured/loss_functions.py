@@ -4,7 +4,7 @@ Created on Mon Apr 22 10:54:29 2013
 
 @author:  Tommy Löfstedt, Vincent Guillemot and Fouad Hadj Selem
 @email:   tommy.loefstedt@cea.fr
-@license: BSD Style.
+@license: TBD.
 """
 
 __all__ = ['LossFunction', 'LipschitzContinuous', 'Differentiable',
@@ -13,7 +13,7 @@ __all__ = ['LossFunction', 'LipschitzContinuous', 'Differentiable',
            'Convex',
            'LinearRegressionError', 'LogisticRegressionError',
 
-           'StronglyConvexLossFunction',
+           'StronglyConvex',
            'RidgeRegression',
 
            'ProximalOperator',
@@ -163,6 +163,11 @@ class NesterovFunction(LossFunction,
                                   'specialised!')
 
     @abc.abstractmethod
+    def num_groups(self):
+        raise NotImplementedError('Abstract method "projection" must be ' \
+                                  'specialised!')
+
+    @abc.abstractmethod
     def projection(self, *alpha):
         raise NotImplementedError('Abstract method "projection" must be ' \
                                   'specialised!')
@@ -227,7 +232,7 @@ class CombinedNesterovLossFunction(NesterovFunction, CombinedLossFunction):
 
     def alpha(self, beta, mu):
 
-        if self.a.alpha(beta, mu) and hasattr(self.b, 'alpha'):
+        if hasattr(self.a, 'alpha') and hasattr(self.b, 'alpha'):
             return self.a.alpha(beta, mu) + self.b.alpha(beta, mu)  # Merge
         elif hasattr(self.a, 'alpha'):
             return self.a.alpha(beta, mu)
@@ -238,28 +243,43 @@ class CombinedNesterovLossFunction(NesterovFunction, CombinedLossFunction):
 
     def A(self):
 
-        if hasattr(self.b, 'A'):
-            return self.b.A()
+        if hasattr(self.a, 'A') and hasattr(self.b, 'A'):
+            return self.a.A() + self.b.A()
         elif hasattr(self.a, 'A'):
             return self.a.A()
+        elif hasattr(self.b, 'A'):
+            return self.b.A()
         else:
             raise ValueError('At least one loss function must be Nesterov')
 
     def At(self):
 
-        if hasattr(self.b, 'At'):
-            return self.b.At()
+        if hasattr(self.a, 'At') and hasattr(self.b, 'At'):
+            return self.a.At() + self.b.At()
         elif hasattr(self.a, 'At'):
             return self.a.At()
+        elif hasattr(self.b, 'At'):
+            return self.b.At()
         else:
             raise ValueError('At least one loss function must be Nesterov')
 
+    def num_groups(self):
+
+        return self.a.num_groups() + self.b.num_groups()
+
     def projection(self, *alpha):
 
-        if hasattr(self.b, 'projection'):
-            return self.b.projection(*alpha)
+        if hasattr(self.a, 'projection') and hasattr(self.b, 'projection'):
+
+            groups_a = self.a.num_groups()
+
+            return self.a.projection(*alpha[0:groups_a]) \
+                 + self.b.projection(*alpha[groups_a:])
+
         elif hasattr(self.a, 'projection'):
             return self.a.projection(*alpha)
+        elif hasattr(self.b, 'projection'):
+            return self.b.projection(*alpha)
         else:
             raise ValueError('At least one loss function must be Nesterov')
 
@@ -278,6 +298,29 @@ class CombinedNesterovLossFunction(NesterovFunction, CombinedLossFunction):
             self.a.set_mu(mu)
         if hasattr(self.b, 'set_mu'):
             self.b.set_mu(mu)
+
+
+class ZeroErrorFunction(Differentiable, LipschitzContinuous, DataDependent,
+                        ProximalOperator):
+
+    def __init__(self, **kwargs):
+
+        super(ZeroErrorFunction, self).__init__(**kwargs)
+
+    def f(self, *args, **kwargs):
+        return 0
+
+    def grad(self, *args, **kwargs):
+        return 0
+
+    def Lipschitz(self):
+        return 0
+
+    def set_data(self, *args, **kwargs):
+        pass
+
+    def prox(self, beta, *args, **kwargs):
+        return beta
 
 
 class LinearRegressionError(LossFunction,
@@ -428,29 +471,6 @@ class RidgeRegression(LossFunction,
         return 2.0 * self.l_min
 
 
-class ZeroErrorFunction(ProximalOperator, Differentiable,
-                        LipschitzContinuous, DataDependent):
-
-    def __init__(self, **kwargs):
-
-        super(ZeroErrorFunction, self).__init__(**kwargs)
-
-    def set_data(self, *args, **kwargs):
-        pass
-
-    def f(self, *args, **kwargs):
-        return 0
-
-    def grad(self, *args, **kwargs):
-        return 0
-
-    def prox(self, beta, *args, **kwargs):
-        return beta
-
-    def Lipschitz(self):
-        return 0
-
-
 class L1(ProximalOperator):
 
     def __init__(self, l, **kwargs):
@@ -565,27 +585,36 @@ class ElasticNet(L1L2):
 class TotalVariation(NesterovFunction,
                      LipschitzContinuous):
 
-    def __init__(self, gamma, shape, mu=None, mask=None, **kwargs):
+    def __init__(self, gamma, shape, mu=None, mask=None, compress=True,
+                 **kwargs):
         """Construct a TotalVariation loss function.
 
         Parameters
         ----------
-        gamma : The regularisation parameter for the TV penality.
+        gamma   : The regularisation parameter for the TV penality.
 
-        shape : The shape of the 3D image. Must be a 3-tuple. If the image is
-                2D, let the Z dimension be 1, and if the "image" is 1D, let the
-                Y and Z dimensions be 1. The tuple must be on the form
-                (Z, Y, X).
+        shape   : The shape of the 3D image. Must be a 3-tuple. If the image is
+                  2D, let the Z dimension be 1, and if the "image" is 1D, let
+                  the Y and Z dimensions be 1. The tuple must be on the form
+                  (Z, Y, X).
 
-        mu    : The Nesterov function regularisation parameter.
+        mu      : The Nesterov function regularisation parameter.
 
-        mask  : A 1-dimensional mask representing the 3D image mask.
+        mask    : A 1-dimensional mask representing the 3D image mask.
+
+        compress: The matrix A and the dual alpha is automatically pruned to
+                  speed-up computations. This is not compatible with all
+                  smoothed functions (really, only compatible with
+                  image-related functions), and may therefore be turned off.
+                  Default is True, set to False to keep all rows of A and
+                  alpha.
         """
         super(TotalVariation, self).__init__(mu=mu, **kwargs)
 
         self.gamma = gamma
         self.shape = shape
         self.mask = mask
+        self.compress = compress
 
         self.beta_id = None
         self.mu_id = None
@@ -663,6 +692,10 @@ class TotalVariation(NesterovFunction,
     def At(self):
 
         return self.Axt, self.Ayt, self.Azt
+
+    def num_groups(self):
+
+        return 3
 
     def projection(self, *alpha):
 
@@ -764,14 +797,17 @@ class TotalVariation(NesterovFunction,
         self.Az.eliminate_zeros()
 
         # Remove rows corresponding to indices excluded in all dimensions
-        toremove = list(set(xind).intersection(yind).intersection(zind))
-        toremove.sort()
-        toremove.reverse()  # Remove from end so that indices are not changed
-        for i in toremove:
-            delete_sparse_csr_row(self.Ax, i)
-            delete_sparse_csr_row(self.Ay, i)
-            delete_sparse_csr_row(self.Az, i)
+        if self.compress:
+            toremove = list(set(xind).intersection(yind).intersection(zind))
+            toremove.sort()
+            # Remove from the end so that indices are not changed
+            toremove.reverse()
+            for i in toremove:
+                delete_sparse_csr_row(self.Ax, i)
+                delete_sparse_csr_row(self.Ay, i)
+                delete_sparse_csr_row(self.Az, i)
 
+        # Remove columns of A corresponding to masked-out variables
         if self.mask != None:
             self.Axt = self.Ax.T.tocsr()
             self.Ayt = self.Ay.T.tocsr()
@@ -878,6 +914,10 @@ class SmoothL1(NesterovFunction,
     def At(self):
 
         return (self.A1t,)
+
+    def num_groups(self):
+
+        return 1
 
     def projection(self, *alpha):
 
@@ -1003,6 +1043,10 @@ class GroupLassoOverlap(NesterovFunction,
     def At(self):
 
         return self.At
+
+    def num_groups(self):
+
+        return len(self.groups)
 
     def projection(self, *alpha):
 

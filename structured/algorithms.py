@@ -19,7 +19,7 @@ Created on Fri Feb  8 17:24:11 2013
 
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
-@license: BSD Style
+@license: TBD
 """
 
 import abc
@@ -853,7 +853,6 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
         v = algorithms.SparseSVD(max_iter=10).run(A)
         u = A.dot(v)
         L = np.sum(u ** 2.0)
-        print "L: ", L
         del A
         L = L / self.g.lambda_min()  # Lipschitz constant
         print "Lipschitz constant:", L
