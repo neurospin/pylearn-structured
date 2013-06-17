@@ -61,7 +61,6 @@ def test():
     u = r * np.random.randn(p, p)
     u += (1.0 - r) * np.eye(p, p)
     sigma = np.dot(u.T, u)
-    sigma = np.dot(u.T, u)
     mean = np.zeros(p)
 
     X = np.random.multivariate_normal(mean, sigma, n)
@@ -217,10 +216,63 @@ def test():
 #    utils.debug("R2 EGM:",
 #        1.0 - np.sum((y - np.dot(X, egm.beta)) ** 2.0) / np.sum(y ** 2.0))
 
-    # Lasso + Total variation penalty (Linear regression + L1 + TV)
+    # Elastic Net + Total variation penalty (Linear regression + EN + TV)
     l = 1.0
     gamma = 1.0
     pgm = models.LinearRegressionL1TV(l, gamma, (pz, py, px), mu=mus[0])
+    pgm.set_max_iter(maxit)
+    pgm.set_tolerance(eps)
+    pgm.fit(X, y)
+    f = pgm.get_algorithm().f
+    print "SS: ", np.sum(pgm.beta ** 2.0)
+
+#    plot.subplot(4, 4, 13)
+#    plot.plot(beta1D[:, 0], '-', pgm.beta[:, 0], '*')
+#    plot.title("Linear regression + L1 + TV (%f, %f)" % (len(f), f[-1]))
+#
+#    plot.subplot(4, 4, 14)
+#    plot.imshow(np.reshape(pgm.beta, (pz, py, px))[0, :, :],
+#                interpolation='nearest', cmap=cm.gist_rainbow)
+
+    egm = models.EGMLinearRegressionL1L2TV(l, 0.01, gamma, (pz, py, px),
+                                           mu=mus[0])
+    egm.set_max_iter(maxit)
+    egm.set_tolerance(eps)
+    egm.fit(X, y)
+    f = egm.get_algorithm().f
+    print "SS: ", np.sum(egm.beta ** 2.0)
+
+#    plot.subplot(4, 4, 15)
+#    plot.plot(beta1D[:, 0], '-', egm.beta[:, 0], '*')
+#    plot.title("Linear regression + L1 + TV (%f, %f)" % (len(f), f[-1]))
+#
+#    plot.subplot(4, 4, 16)
+#    plot.imshow(np.reshape(egm.beta, (pz, py, px))[0, :, :],
+#                interpolation='nearest', cmap=cm.gist_rainbow)
+
+    utils.debug("True difference PGM:",
+        1.0 - np.sum((beta1D - pgm.beta) ** 2.0) / np.sum(beta1D ** 2.0))
+    utils.debug("True difference EGM:",
+        1.0 - np.sum((beta1D - egm.beta) ** 2.0) / np.sum(beta1D ** 2.0))
+    utils.debug("Difference to OLS EGM:",
+        1.0 - np.sum((betaOLS - pgm.beta) ** 2.0) / np.sum(betaOLS ** 2.0))
+    utils.debug("Difference to OLS PGM:",
+        1.0 - np.sum((betaOLS - egm.beta) ** 2.0) / np.sum(betaOLS ** 2.0))
+    utils.debug("Difference EGM -- PGM:",
+        1.0 - np.sum((pgm.beta - egm.beta) ** 2.0) / np.sum(pgm.beta ** 2.0))
+    utils.debug("Difference PGM -- EGM:",
+        1.0 - np.sum((pgm.beta - egm.beta) ** 2.0) / np.sum(egm.beta ** 2.0))
+    utils.debug("R2 PGM:",
+        1.0 - np.sum((y - np.dot(X, pgm.beta)) ** 2.0) / np.sum(y ** 2.0))
+    utils.debug("R2 EGM:",
+        1.0 - np.sum((y - np.dot(X, egm.beta)) ** 2.0) / np.sum(y ** 2.0))
+
+    # Elastic Net + Total variation penalty (Linear regression + EN + TV)
+    l = 0.8
+    gamma = 1.0
+#    pgm = models.LinearRegressionL1TV(l, gamma, (pz, py, px), mu=mus[0])
+    pgm = models.LinearRegressionElasticNetTV(l, gamma, (pz, py, px),
+                                              mu=mus[0])
     pgm.set_max_iter(maxit)
     pgm.set_tolerance(eps)
     pgm.fit(X, y)
@@ -235,7 +287,7 @@ def test():
     plot.imshow(np.reshape(pgm.beta, (pz, py, px))[0, :, :],
                 interpolation='nearest', cmap=cm.gist_rainbow)
 
-    egm = models.EGMLinearRegressionL1L2TV(l, 0.01, gamma, (pz, py, px),
+    egm = models.EGMLinearRegressionL1L2TV(l, 1.0 - l, gamma, (pz, py, px),
                                             mu=mus[0])
     egm.set_max_iter(maxit)
     egm.set_tolerance(eps)
