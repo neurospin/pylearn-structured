@@ -15,11 +15,13 @@ __all__ = ['PCA', 'SVD', 'PLSR', 'TuckerFactorAnalysis', 'PLSC', 'O2PLS',
 
            'LinearRegression', 'Lasso', 'RidgeRegression', 'ElasticNet',
            'LinearRegressionTV', 'LinearRegressionL1TV',
-           'LinearRegressionElasticNetTV',
+
            'LogisticRegression',
 
-           'EGMRidgeRegression', 'EGMLinearRegressionL1L2',
-           'EGMRidgeRegressionTV', 'EGMLinearRegressionL1L2TV']
+           'EGMRidgeRegression', 'EGMLinearRegressionL1L2', 'EGMElasticNet',
+           'EGMRidgeRegressionTV', 'EGMLinearRegressionL1L2TV',
+           'EGMElasticNetTV'
+          ]
 
 from sklearn.utils import check_arrays
 
@@ -1121,7 +1123,7 @@ class LinearRegressionL1TV(NesterovProximalGradientMethod):
 #        return self
 
 
-class LinearRegressionElasticNetTV(NesterovProximalGradientMethod):
+class ElasticNetTV(NesterovProximalGradientMethod):
     """Linear regression with total variation and Elastic Net constraints.
 
     Optimises the function
@@ -1149,7 +1151,7 @@ class LinearRegressionElasticNetTV(NesterovProximalGradientMethod):
 
     def __init__(self, l, gamma, shape, mu=None, mask=None, **kwargs):
 
-        super(LinearRegressionElasticNetTV, self).__init__(**kwargs)
+        super(ElasticNetTV, self).__init__(**kwargs)
 
         lr = loss_functions.LinearRegressionError()
         tv = loss_functions.TotalVariation(gamma, shape, mu, mask)
@@ -1274,8 +1276,8 @@ class EGMRidgeRegression(ExcessiveGapMethod):
 
 
 class EGMLinearRegressionL1L2(ExcessiveGapMethod):
-    """Linear Regression with L1 and L2 regularisation. Uses the excessive gap
-    method.
+    """Linear Regression with L1 and L2 regularisation. Uses the excessive
+    gap method.
 
     Optimises the function
 
@@ -1302,6 +1304,32 @@ class EGMLinearRegressionL1L2(ExcessiveGapMethod):
 
         self.set_g(loss_functions.RidgeRegression(k))
         self.set_h(loss_functions.SmoothL1(l, p, mu, mask))
+
+
+class EGMElasticNet(EGMLinearRegressionL1L2):
+    """Linear regression with the elastic net constraint.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + l.||b||_1 + ((1.0 - l) / 2.0).||b||²,
+
+    where ||.||_1 is the L1 norm and ||.||² is the squared L2 norm.
+
+    Parameters
+    ----------
+    l : The regularisation parameter. Must be in the interval [0,1].
+
+    p     : The numbers of variables.
+
+    mu    : The Nesterov function regularisation parameter.
+
+    mask  : A 1-dimensional mask representing the 3D image mask. Must be a
+            list of 1s and 0s.
+    """
+    def __init__(self, l, p, mu=None, mask=None, **kwargs):
+
+        super(EGMElasticNet, self).__init__(l, 1.0 - l, p, mu, mask,
+                                            **kwargs)
 
 
 class EGMRidgeRegressionTV(ExcessiveGapMethod):
@@ -1339,18 +1367,58 @@ class EGMRidgeRegressionTV(ExcessiveGapMethod):
 
 
 class EGMLinearRegressionL1L2TV(ExcessiveGapMethod):
+    """Linear regression with L1, L2 and total variation constraints.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + l.||b||_1 + (k / 2.0).||b||² + gamma.TV(b),
+
+    where ||.||_1 is the L1 norm, ||.||² is the squared L2 norm and TV(.) is
+    the total variation constraint.
+
+    Parameters
+    ----------
+    l     : The ridge regularisation parameter. Must be in the interval [0,1].
+
+    k     : The L2 parameter.
+
+    gamma : The TV regularisation parameter.
+
+    shape : The shape of the 3D image. Must be a 3-tuple. If the image is
+            2D, let the Z dimension be 1, and if the "image" is 1D, let the
+            Y and Z dimensions be 1. The tuple must be on the form
+            (Z, Y, X).
+
+    mu    : The Nesterov function regularisation parameter.
+
+    mask  : A 1-dimensional mask representing the 3D image mask. Must be a
+           list of 1s and 0s.
+    """
+    def __init__(self, l, k, gamma, shape, mu=None, mask=None, **kwargs):
+
+        super(EGMLinearRegressionL1L2TV, self).__init__(**kwargs)
+
+        self.set_g(loss_functions.RidgeRegression(k))
+        a = loss_functions.SmoothL1(l, np.prod(shape), mu, mask)
+        b = loss_functions.TotalVariation(gamma, shape, mu, mask,
+                                          compress=False)
+        self.set_h(loss_functions.CombinedNesterovLossFunction(a, b))
+
+
+class EGMElasticNetTV(EGMLinearRegressionL1L2TV):
     """Linear regression with elastic net and total variation constraints.
 
     Optimises the function
 
-        f(b) = ||y - X.b||² + l.||b||_1 + (k / 2.0).||b||² + gamma.TV(b),
+        f(b) = ||y - X.b||² + l.||b||_1 + ((1-l) / 2).||b||² + gamma.TV(b),
 
     where ||.||_1 is the L1 norm, ||.||² is the squared L2 norm and TV(.) is
     the total variation constraint.
 
     Parameters
     ----------
-    l     : The ridge regularisation parameter. Must be in the interval [0,1].
+    l     : The Elastic Net regularisation parameter. Must be in the
+            interval [0,1].
 
     gamma : The TV regularisation parameter.
 
@@ -1364,49 +1432,7 @@ class EGMLinearRegressionL1L2TV(ExcessiveGapMethod):
     mask  : A 1-dimensional mask representing the 3D image mask. Must be a
            list of 1s and 0s.
     """
-    def __init__(self, l, k, gamma, shape, mu=None, mask=None, **kwargs):
+    def __init__(self, l, gamma, shape, mu=None, mask=None, **kwargs):
 
-        super(EGMLinearRegressionL1L2TV, self).__init__(**kwargs)
-
-        self.set_g(loss_functions.RidgeRegression(k))
-        a = loss_functions.SmoothL1(l, np.prod(shape), mu, mask)
-        b = loss_functions.TotalVariation(gamma, shape, mu, mask,
-                                          compress=False)
-        self.set_h(loss_functions.CombinedNesterovLossFunction(a, b))
-
-
-class EGMElasticNet(ExcessiveGapMethod):
-    """Linear regression with elastic net constraints.
-
-    Optimises the function
-
-        f(b) = ||y - X.b||² + l.||b||_1 + (k / 2.0).||b||² + gamma.TV(b),
-
-    where ||.||_1 is the L1 norm, ||.||² is the squared L2 norm and TV(.) is
-    the total variation constraint.
-
-    Parameters
-    ----------
-    l     : The ridge regularisation parameter. Must be in the interval [0,1].
-
-    gamma : The TV regularisation parameter.
-
-    shape : The shape of the 3D image. Must be a 3-tuple. If the image is
-            2D, let the Z dimension be 1, and if the "image" is 1D, let the
-            Y and Z dimensions be 1. The tuple must be on the form
-            (Z, Y, X).
-
-    mu    : The Nesterov function regularisation parameter.
-
-    mask  : A 1-dimensional mask representing the 3D image mask. Must be a
-           list of 1s and 0s.
-    """
-    def __init__(self, l, k, gamma, shape, mu=None, mask=None, **kwargs):
-
-        super(EGMLinearRegressionL1L2TV, self).__init__(**kwargs)
-
-        self.set_g(loss_functions.RidgeRegression(k))
-        a = loss_functions.SmoothL1(l, np.prod(shape), mu, mask)
-        b = loss_functions.TotalVariation(gamma, shape, mu, mask,
-                                          compress=False)
-        self.set_h(loss_functions.CombinedNesterovLossFunction(a, b))
+        super(EGMElasticNetTV, self).__init__(l, 1.0 - l, gamma, shape, mu,
+                                              mask, **kwargs)

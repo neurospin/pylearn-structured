@@ -25,8 +25,10 @@ from .models import LogisticRegression
 
 from .models import EGMRidgeRegression
 from .models import EGMLinearRegressionL1L2
+from .models import EGMElasticNet
 from .models import EGMRidgeRegressionTV
 from .models import EGMLinearRegressionL1L2TV
+from .models import EGMElasticNetTV
 
 import algorithms
 import preprocess
@@ -45,8 +47,9 @@ __all__ = ['PCA', 'SVD', 'PLSR', 'TuckerFactorAnalysis', 'PLSC', 'O2PLS',
            'LinearRegressionTV', 'LinearRegressionL1TV',
            'LinearRegressionElasticNetTV', 'LogisticRegression',
 
-           'EGMRidgeRegression', 'EGMLinearRegressionL1L2',
+           'EGMRidgeRegression', 'EGMLinearRegressionL1L2', 'EGMElasticNet',
            'EGMRidgeRegressionTV', 'EGMLinearRegressionL1L2TV',
+           'EGMElasticNetTV',
 
            'prox_ops', 'algorithms', 'preprocess',
            'tests', 'utils', 'loss_functions', 'start_vectors']
