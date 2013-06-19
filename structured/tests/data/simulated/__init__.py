@@ -6,6 +6,7 @@ Created on Mon Jun 18 09:26:14 2013
 @email: tommy.loefstedt@cea.fr
 """
 
-import Regression
+import regression
+import correlation_matrices
 
-__all__ = ['Regression']
+__all__ = ['regression', 'correlation_matrices']

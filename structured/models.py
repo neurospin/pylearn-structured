@@ -864,6 +864,7 @@ class NesterovProximalGradientMethod(BaseMethod):
         Parameters
         ----------
         X : The independent variables.
+
         y : The dependent variable.
 
         Returns
