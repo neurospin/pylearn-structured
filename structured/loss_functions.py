@@ -641,15 +641,15 @@ class TotalVariation(NesterovFunction,
             self.beta_id = id(beta)
             self.mu_id = id(mu)
 
-        if true:
-            return np.sum((self.Ax.dot(beta) ** 2.0 + \
-                                        self.Ay.dot(beta) ** 2.0 + \
-                                        self.Az.dot(beta) ** 2.0) ** 0.5)
-        else:
-            return (np.dot(self.Aalpha.T, beta)[0, 0] \
-                                 - (mu / 2.0) * (np.sum(self.asx ** 2.0) +
-                                                 np.sum(self.asy ** 2.0) +
-                                                 np.sum(self.asz ** 2.0)))
+#        if true:
+#            return np.sum((self.Ax.dot(beta) ** 2.0 + \
+#                           self.Ay.dot(beta) ** 2.0 + \
+#                           self.Az.dot(beta) ** 2.0) ** 0.5)
+#        else:
+        return (np.dot(self.Aalpha.T, beta)[0, 0] \
+                - (mu / 2.0) * (np.sum(self.asx ** 2.0) +
+                                np.sum(self.asy ** 2.0) +
+                                np.sum(self.asz ** 2.0)))
 
     def grad(self, beta):
 
@@ -994,6 +994,11 @@ class GroupLassoOverlap(NesterovFunction,
         self.mu_id = None
 
         self.precompute()
+        self.lambda_max = None
+
+        D = self.num_compacts()
+        normA = np.sqrt(self.Lipschitz() * self.get_mu())
+        
 
     def f(self, beta, mu=None):
 
@@ -1044,11 +1049,15 @@ class GroupLassoOverlap(NesterovFunction,
 
     def A(self):
 
-        return self.A
+        return self.Agl
 
     def At(self):
 
-        return self.At
+        return self.Aglt
+
+    def num_compacts(self):
+
+        return self.num_groups()
 
     def num_groups(self):
 
@@ -1060,7 +1069,7 @@ class GroupLassoOverlap(NesterovFunction,
 
         for i in xrange(len(alpha)):
             astar = alpha[i]
-            normas = np.sqrt(np.dot(astar.T, astar))
+            normas = np.sqrt(np.sum(astar ** 2.0))
             if normas > 1.0:
                 astar /= normas
             alpha[i] = astar
@@ -1069,25 +1078,34 @@ class GroupLassoOverlap(NesterovFunction,
 
     def Lipschitz(self):
 
+        if self.gamma < TOLERANCE:
+            return 0
+
+#        if self.lambda_max == None:
+#            A = sparse.vstack(self.A())
+#            v = algorithms.SparseSVD(max_iter=100).run(A)
+#            us = A.dot(v)
+#            self.lambda_max = np.sum(us ** 2.0)
+#
+#        return self.lambda_max / self.get_mu()
         return self.max_col_norm / self.mu
 
     def compute_alpha(self, beta, mu):
 
         # Compute a* for each dimension
         self.Aalpha = 0
-        for g in xrange(len(self.A)):
-            astar = self.A[g].dot(beta) / mu
+        for g in xrange(len(self.Agl)):
+            astar = self.Agl[g].dot(beta) / mu
             astar = self.projection(astar)[0]
 
             self.astar[g] = astar
 
-#            self.Aalpha += self.A[g].T.dot(astar)
-            self.Aalpha += self.At[g].dot(astar)
+            self.Aalpha += self.Aglt[g].dot(astar)
 
     def precompute(self):
 
-        self.A = list()
-        self.At = list()
+        self.Agl = list()
+        self.Aglt = list()
 
         powers = np.zeros(self.num_variables)
         for g in xrange(len(self.groups)):
@@ -1100,9 +1118,8 @@ class GroupLassoOverlap(NesterovFunction,
                 powers[Gi[i]] += w ** 2.0
 
             # Matrix operations are a lot faster when the sparse matrix is csr
-            self.A.append(self.gamma * Ag.tocsr())
-            self.At.append(self.A[-1].T)
+            self.Agl.append(self.gamma * Ag.tocsr())
+            self.Aglt.append(self.Agl[-1].T)
 
-        self.max_col_norm = np.sqrt(np.max(powers))
-
+        self.max_col_norm = np.max(powers)
         self.astar = [0] * len(self.groups)

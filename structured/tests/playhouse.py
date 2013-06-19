@@ -624,31 +624,72 @@ if __name__ == "__main__":
 #    print asz
 
 
-    import pickle
-    O = pickle.load(open("/home/tl236864/objs.pickle"))
-    y = O[0]
-    X = O[1]
-    groups = O[2]
+#    import pickle
+#    O = pickle.load(open("/home/tl236864/objs.pickle"))
+#    y = O[0]
+#    X = O[1]
+#    groups = O[2]
+#
+#    for i in xrange(len(groups) - 1, -1, -1):
+#        if len(groups[i]) == 0:
+#            del groups[i]
+#            print "group %d deleted!" % (i,)
+#
+#    gamma = 1.0
+#    mu = 0.01
+#    weights = [1.0] * len(groups)
+#
+#    lr = loss_functions.LogisticRegressionError()
+#    gl = loss_functions.GroupLassoOverlap(gamma, X.shape[1], groups, mu,
+#                                          weights)
+#    combo = loss_functions.CombinedNesterovLossFunction(lr, gl)
+#
+#    algorithm = algorithms.ISTARegression(combo)
+#    algorithm._set_tolerance(0.01)
+#    algorithm._set_max_iter(1000)
+#    lr.set_data(X, y)
+#    beta = algorithm.run(X, y)
 
-    for i in xrange(len(groups) - 1, -1, -1):
-        if len(groups[i]) == 0:
-            del groups[i]
-            print "group %d deleted!" % (i,)
+    betastar = [0., 0., 0., 0., 0., .5, .7, 1., .6, .7, 0., 0., 0., 0., 0.]
+    groups = [[5, 6, 7, 8, 9]]
 
+    p = len(betastar)
+    n = 10
+
+    r = 0.0
+    u = r * np.random.randn(p, p)
+    u += (1.0 - r) * np.eye(p, p)
+    sigma = np.dot(u.T, u)
+    mean = np.zeros(p)
+
+    X = np.random.multivariate_normal(mean, sigma, n)
+    y = np.reshape(np.dot(X, betastar), (n, 1))
+
+    eps = 0.001
     gamma = 1.0
-    mu = 0.01
-    weights = [1.0] * len(groups)
+    mu = eps / (2 * 1)
+#    weights = [1.0] * len(groups)
 
-    lr = loss_functions.LogisticRegressionError()
-    gl = loss_functions.GroupLassoOverlap(gamma, X.shape[1], groups, mu,
-                                          weights)
+    lr = loss_functions.LinearRegressionError()
+    gl = loss_functions.GroupLassoOverlap(gamma, p, groups, mu)
     combo = loss_functions.CombinedNesterovLossFunction(lr, gl)
 
-    algorithm = algorithms.ISTARegression(combo)
-    algorithm._set_tolerance(0.01)
-    algorithm._set_max_iter(1000)
-    lr.set_data(X, y)
-    beta = algorithm.run(X, y)
+    import scipy
+    print scipy.sparse.vstack(gl.A()).todense()
 
-#    lrgl = models.LogisticRegressionGL()
-#    lrgl.fit(X, y)
+    alg = algorithms.ISTARegression(combo)
+    alg._set_tolerance(eps)
+    alg._set_max_iter(50000)
+    lr.set_data(X, y)
+    beta = alg.run(X, y)
+
+    print beta
+
+    plot.subplot(2, 1, 1)
+    plot.plot(betastar, '-g', beta, '*r')
+
+    plot.subplot(2, 1, 2)
+    plot.plot(alg.f)
+    plot.title("Iterations: " + str(alg.iterations))
+
+    plot.show()
