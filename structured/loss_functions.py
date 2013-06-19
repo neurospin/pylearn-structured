@@ -366,7 +366,7 @@ class LogisticRegressionError(LossFunction,
                               LipschitzContinuous,
                               DataDependent):
 
-    def __init__(self, X, y, **kwargs):
+    def __init__(self, **kwargs):
 
         super(LogisticRegressionError, self).__init__(**kwargs)
 
@@ -542,6 +542,12 @@ class L1L2(ProximalOperator):
     """The proximal operator of the function
 
         f(x) = lambda * norm1(x) + (kappa / 2.0) * norm(x) ** 2.
+
+    Parameters
+    ----------
+    l    : The L1 regularisation parameter.
+
+    k    : The L2 regularisation parameter.
     """
     def __init__(self, l, k, **kwargs):
 
@@ -961,7 +967,7 @@ class SmoothL1(NesterovFunction,
 class GroupLassoOverlap(NesterovFunction,
                         LipschitzContinuous):
 
-    def __init__(self, num_variables, groups, gamma, mu, weights=None,
+    def __init__(self, gamma, num_variables, groups, mu, weights=None,
                  **kwargs):
         """
         Parameters:
@@ -974,13 +980,13 @@ class GroupLassoOverlap(NesterovFunction,
         """
         super(GroupLassoOverlap, self).__init__(mu=mu, **kwargs)
 
-        self.num_variables = num_variables
         self.groups = groups
+        self.num_variables = num_variables
         self.gamma = gamma
         self.set_mu(mu)
 
         if weights == None:
-            self.weights = [1] * len(groups)
+            self.weights = [1.0] * len(groups)
         else:
             self.weights = weights
 
@@ -1006,8 +1012,8 @@ class GroupLassoOverlap(NesterovFunction,
         for g in xrange(len(self.astar)):
             sumastar += np.sum(self.astar[g] ** 2.0)
 
-        return self.gamma * (np.dot(self.Aalpha.T, beta)[0, 0] \
-                              - (mu / 2.0) * sumastar)
+        return np.dot(self.Aalpha.T, beta)[0, 0] \
+                      - (mu / 2.0) * sumastar
 
     def grad(self, beta):
 
@@ -1019,7 +1025,7 @@ class GroupLassoOverlap(NesterovFunction,
             self.beta_id = id(beta)
             self.mu_id = id(self.get_mu())
 
-        return self.gamma * self.Aalpha
+        return self.Aalpha
 
     def alpha(self, beta, mu=None):
 
@@ -1050,6 +1056,8 @@ class GroupLassoOverlap(NesterovFunction,
 
     def projection(self, *alpha):
 
+        alpha = list(alpha)
+
         for i in xrange(len(alpha)):
             astar = alpha[i]
             normas = np.sqrt(np.dot(astar.T, astar))
@@ -1057,7 +1065,7 @@ class GroupLassoOverlap(NesterovFunction,
                 astar /= normas
             alpha[i] = astar
 
-        return alpha
+        return tuple(alpha)
 
     def Lipschitz(self):
 
@@ -1092,7 +1100,7 @@ class GroupLassoOverlap(NesterovFunction,
                 powers[Gi[i]] += w ** 2.0
 
             # Matrix operations are a lot faster when the sparse matrix is csr
-            self.A.append(Ag.tocsr())
+            self.A.append(self.gamma * Ag.tocsr())
             self.At.append(self.A[-1].T)
 
         self.max_col_norm = np.sqrt(np.max(powers))

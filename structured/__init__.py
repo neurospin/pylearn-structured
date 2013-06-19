@@ -18,9 +18,12 @@ from .models import LinearRegression
 from .models import Lasso
 from .models import RidgeRegression
 from .models import ElasticNet
+from .models import LinearRegressionL1L2
 from .models import LinearRegressionTV
 from .models import LinearRegressionL1TV
-from .models import LinearRegressionElasticNetTV
+from .models import LinearRegressionL1L2TV
+from .models import ElasticNetTV
+
 from .models import LogisticRegression
 
 from .models import EGMRidgeRegression
@@ -44,8 +47,10 @@ __all__ = ['PCA', 'SVD', 'PLSR', 'TuckerFactorAnalysis', 'PLSC', 'O2PLS',
            'RGCCA',
 
            'LinearRegression', 'Lasso', 'RidgeRegression', 'ElasticNet',
-           'LinearRegressionTV', 'LinearRegressionL1TV',
-           'LinearRegressionElasticNetTV', 'LogisticRegression',
+           'LinearRegressionL1L2', 'LinearRegressionTV',
+           'LinearRegressionL1TV', 'LinearRegressionL1L2TV', 'ElasticNetTV',
+
+           'LogisticRegression',
 
            'EGMRidgeRegression', 'EGMLinearRegressionL1L2', 'EGMElasticNet',
            'EGMRidgeRegressionTV', 'EGMLinearRegressionL1L2TV',

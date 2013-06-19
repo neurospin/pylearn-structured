@@ -30,7 +30,7 @@ _DEBUG = True
 
 # Settings
 TOLERANCE = 5e-8
-MAX_ITER = 500
+MAX_ITER = 1000
 
 
 def norm1(x):

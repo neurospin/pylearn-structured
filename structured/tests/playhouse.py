@@ -11,6 +11,8 @@ import structured.utils as utils
 import structured.models as models
 import structured.preprocess as preprocess
 import structured.start_vectors as start_vectors
+import structured.loss_functions as loss_functions
+import structured.algorithms as algorithms
 #import multiblock.start_vectors as start_vectors
 #import multiblock.prox_ops as prox_ops
 #import multiblock.schemes as schemes
@@ -566,7 +568,7 @@ def test_data():
 
 
 if __name__ == "__main__":
-    test_tv()
+#    test_tv()
 #    test_lasso()
 #    test_lasso_tv()
 #    test_data()
@@ -620,3 +622,33 @@ if __name__ == "__main__":
 #    print asx
 #    print asy
 #    print asz
+
+
+    import pickle
+    O = pickle.load(open("/home/tl236864/objs.pickle"))
+    y = O[0]
+    X = O[1]
+    groups = O[2]
+
+    for i in xrange(len(groups) - 1, -1, -1):
+        if len(groups[i]) == 0:
+            del groups[i]
+            print "group %d deleted!" % (i,)
+
+    gamma = 1.0
+    mu = 0.01
+    weights = [1.0] * len(groups)
+
+    lr = loss_functions.LogisticRegressionError()
+    gl = loss_functions.GroupLassoOverlap(gamma, X.shape[1], groups, mu,
+                                          weights)
+    combo = loss_functions.CombinedNesterovLossFunction(lr, gl)
+
+    algorithm = algorithms.ISTARegression(combo)
+    algorithm._set_tolerance(0.01)
+    algorithm._set_max_iter(1000)
+    lr.set_data(X, y)
+    beta = algorithm.run(X, y)
+
+#    lrgl = models.LogisticRegressionGL()
+#    lrgl.fit(X, y)

@@ -319,8 +319,7 @@ def test():
     # Elastic Net + Total variation penalty (Linear regression + EN + TV)
     l = 0.8
     gamma = 1.0
-    pgm = models.LinearRegressionElasticNetTV(l, gamma, (pz, py, px),
-                                              mu=mus[0])
+    pgm = models.ElasticNetTV(l, gamma, (pz, py, px), mu=mus[0])
     pgm.set_max_iter(maxit)
     pgm.set_tolerance(eps)
     pgm.fit(X, y)

@@ -14,7 +14,8 @@ __all__ = ['PCA', 'SVD', 'PLSR', 'TuckerFactorAnalysis', 'PLSC', 'O2PLS',
            'ContinuationRun',
 
            'LinearRegression', 'Lasso', 'RidgeRegression', 'ElasticNet',
-           'LinearRegressionTV', 'LinearRegressionL1TV',
+           'LinearRegressionL1L2', 'LinearRegressionTV',
+           'LinearRegressionL1TV', 'LinearRegressionL1L2TV', 'ElasticNetTV',
 
            'LogisticRegression',
 
@@ -960,6 +961,30 @@ class RidgeRegression(NesterovProximalGradientMethod):
         self.set_g(loss_functions.RidgeRegression(l))
 
 
+class LinearRegressionL1L2(NesterovProximalGradientMethod):
+    """Linear regression with L1 and L2 regularisation.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + l.||b||_1 + (k / 2).||b||²,
+
+    where ||.||_1 is the L1 norm and ||.||² is the squared L2 norm.
+
+    Parameters
+    ----------
+    l: The L1 parameter.
+
+    k: The L2 parameter.
+    """
+
+    def __init__(self, l, k, **kwargs):
+
+        super(ElasticNet, self).__init__(**kwargs)
+
+        self.set_g(loss_functions.LinearRegressionError())
+        self.set_h(loss_functions.L1L2(l, k))
+
+
 class ElasticNet(NesterovProximalGradientMethod):
     """ElasticNet in linear regression.
 
@@ -980,29 +1005,6 @@ class ElasticNet(NesterovProximalGradientMethod):
 
         self.set_g(loss_functions.LinearRegressionError())
         self.set_h(loss_functions.ElasticNet(l))
-
-
-class LinearRegressionL1L2(NesterovProximalGradientMethod):
-    """Linear regression with L1 and L2 regularisation.
-
-    Optimises the function
-
-        f(b) = ||y - X.b||² + l.||b||_1 + (k / 2).||b||²,
-
-    where ||.||_1 is the L1 norm and ||.||² is the squared L2 norm.
-
-    Parameters
-    ----------
-    l: The L1 parameter.
-    k: The L2 parameter.
-    """
-
-    def __init__(self, l, k, **kwargs):
-
-        super(ElasticNet, self).__init__(**kwargs)
-
-        self.set_g(loss_functions.LinearRegressionError())
-        self.set_h(loss_functions.L1L2(l, k))
 
 
 class LinearRegressionTV(NesterovProximalGradientMethod):
@@ -1121,6 +1123,45 @@ class LinearRegressionL1TV(NesterovProximalGradientMethod):
 #            self._tv.set_mu(mu_old)
 #
 #        return self
+
+
+class LinearRegressionL1L2TV(NesterovProximalGradientMethod):
+    """Linear regression with L1, L2 and total variation constraints.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + l.||b||_1 + (k / 2.0).||b||² + gamma.TV(b),
+
+    where ||.||_1 is the L1 norm, ||.||² is the squared L2 norm and TV(.) is
+    the total variation constraint.
+
+    Parameters
+    ----------
+    l    : The L1 regularisation parameter.
+
+    k    : The L2 regularisation parameter.
+
+    gamma: The TV regularisation parameter.
+
+    shape: The shape of the 3D image. Must be a 3-tuple. If the image is 2D,
+           let the Z dimension be 1, and if the "image" is 1D, let the Y and
+           Z dimensions be 1. The tuple must be on the form (Z, Y, X).
+
+    mu   : The Nesterov function regularisation parameter.
+
+    mask : A 1-dimensional mask representing the 3D image mask. Must be a
+           list of 1s and 0s.
+    """
+
+    def __init__(self, l, k, gamma, shape, mu=None, mask=None, **kwargs):
+
+        super(ElasticNetTV, self).__init__(**kwargs)
+
+        lr = loss_functions.LinearRegressionError()
+        tv = loss_functions.TotalVariation(gamma, shape, mu, mask)
+        self.set_g(loss_functions.CombinedNesterovLossFunction(lr, tv))
+
+        self.set_h(loss_functions.L1L2(l, k))
 
 
 class ElasticNetTV(NesterovProximalGradientMethod):
