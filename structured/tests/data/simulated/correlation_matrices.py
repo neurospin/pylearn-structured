@@ -15,7 +15,7 @@ __all__ = ['ConstantCorrelation', 'ToeplitzCorrelation']
 import numpy as np
 
 
-def ConstantCorrelation(p=[100], rho=[0.05], delta=0.10, eps=0.01):
+def ConstantCorrelation(p=[100], rho=[0.05], delta=0.10, eps=0.5):
     """ Returns a positive definite matrix, S, corresponding to a block
     covariance matrix. Each block has the structure:
 
@@ -44,7 +44,20 @@ def ConstantCorrelation(p=[100], rho=[0.05], delta=0.10, eps=0.01):
     delta: Baseline noise between groups. (Percent of rho.) Only used if the
            number of groups is greater than one.
 
-    eps  : Maximum entry-wise random noise. (Pecent of 1.0 - rho.)
+    eps  : Maximum entry-wise random noise. This parameter determines the
+           distribution of the noise. The noise is approximately normally
+           distributed with mean
+
+               delta * rho_min
+
+           and variance
+
+               (eps * (1 - max(rho))) ** 2.0 / 10.
+
+           You can thus control the noise by this parameter, but note that you
+           must have
+
+               0 <= eps < 1.
 
     Returns
     -------
@@ -66,10 +79,9 @@ def ConstantCorrelation(p=[100], rho=[0.05], delta=0.10, eps=0.01):
     for k in xrange(K):
         N += p[k]
 
-#    u = (np.random.rand(M, N) - 0.5) * 2.0  # ~U(-1, 1)
-    u = np.random.randn(M, N)  # ~N(0, 1)
+    u = np.random.randn(M, N)
     u /= np.sqrt(np.sum(u ** 2.0, axis=0))  # Normailse
-    uu = np.dot(u.T, u)
+    uu = np.dot(u.T, u)  # ~N(0, 1 / M)
 
     S = delta + eps * uu
 
@@ -91,7 +103,7 @@ def ConstantCorrelation(p=[100], rho=[0.05], delta=0.10, eps=0.01):
     return S
 
 
-def ToeplitzCorrelation(p=[100], rho=[0.05], eps=0.01):
+def ToeplitzCorrelation(p=[100], rho=[0.05], eps=0.5):
     """ Returns a positive definite matrix, S, corresponding to a block
     covariance matrix. Each block has the structure:
 
@@ -119,7 +131,16 @@ def ToeplitzCorrelation(p=[100], rho=[0.05], eps=0.01):
     rho  : A scalar or a list of the average correlation between off-diagonal
            elements of S.
 
-    eps  : Maximum entry-wise random noise. (Pecent of 1.0 - rho.)
+    eps  : Maximum entry-wise random noise. This parameter determines the
+           distribution of the noise. The noise is approximately normally
+           distributed with zero mean and variance
+
+               (eps * (1.0 - max(rho)) / (1.0 + max(rho))) ** 2.0 / 10.
+
+           You can thus control the noise by this parameter, but note that you
+           must have
+
+               0 <= eps < 1.
 
     Returns
     -------
@@ -136,10 +157,9 @@ def ToeplitzCorrelation(p=[100], rho=[0.05], eps=0.01):
     rho_max = max(rho)
     eps = eps * (1.0 - rho_max) / (1.0 + rho_max)
 
-#    u = (np.random.rand(M, N) - 0.5) * 2.0  # ~U(-1, 1)
-    u = np.random.randn(M, N)  # ~N(0, 1)
+    u = np.random.randn(M, N)
     u /= np.sqrt(np.sum(u ** 2.0, axis=0))  # Normailse
-    uu = np.dot(u.T, u)
+    uu = np.dot(u.T, u)  # ~N(0, 1 / M)
 
     S = np.zeros((N, N))
     Nk = 0
