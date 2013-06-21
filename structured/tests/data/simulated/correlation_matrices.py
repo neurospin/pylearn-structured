@@ -41,12 +41,16 @@ def ConstantCorrelation(p=[100], rho=[0.05], delta=0.10, eps=0.5):
     rho  : A scalar or a list of the average correlation between off-diagonal
            elements of S.
 
-    delta: Baseline noise between groups. (Percent of rho.) Only used if the
-           number of groups is greater than one.
+    delta: Baseline noise between groups. Only used if the number of groups is
+           greater than one. The baseline noise is computed as
 
-    eps  : Maximum entry-wise random noise. This parameter determines the
-           distribution of the noise. The noise is approximately normally
-           distributed with mean
+               delta * rho_min,
+
+           and you must prvide a delta such that 0 <= delta < 1.
+
+    eps  : Entry-wise random noise. This parameter determines the distribution
+           of the noise. The noise is approximately normally distributed with
+           mean
 
                delta * rho_min
 

@@ -14,9 +14,75 @@ import numpy as np
 import random
 
 
-def load(size=[100, 100], rho=0.05, delta=0.1, eps=None, sparsity=0.5,
+def load(size=[[100, 100]], rho=[0.05], delta=0.1, eps=None, sparsity=0.5,
          snr=100.0, locally_smooth=False):
+    """ Generates random data for regression purposes. Builds data with a
+    regression model on the form
 
+        y = X.b + e.
+
+    Parameters
+    ----------
+    size : A list or a list of lists. The shapes of the block matrices to
+            generate. The numbers of rows must be the same.
+
+    rho : A scalar or a list of the average correlation between off-diagonal
+            elements of S.
+
+    delta : Baseline noise between groups. Only used if the number of groups is
+            greater than one and locally_smooth=False. The baseline noise is
+            computed as
+
+                delta * rho_min,
+
+            and you must prvide a delta such that 0 <= delta < 1.
+
+    eps : Maximum entry-wise random noise. This parameter determines the
+            distribution of the noise. The noise is approximately normally
+            distributed. If locally_smooth=False the mean is
+
+                delta * rho_min
+
+            and the variance is
+
+                (eps * (1 - max(rho))) ** 2.0 / 10.
+
+            If locally_smooth=True, the mean is zero and the variance is
+
+                (eps * (1.0 - max(rho)) / (1.0 + max(rho))) ** 2.0 / 10.
+
+            You can thus control the noise by this parameter, but note that you
+            must have
+
+                0 <= eps < 1.
+
+    sparsity : Determines how much of the regression vector is set to zero. If
+            sparsity=1.0, the regression vector is dense and if sparsity=0.0
+            would mean a zero vector. However, note that you should let
+
+                sparsity * n >= 1,
+
+            where n is the number of rows in size.
+
+    snr : The signal to noise ratio. The dependent variable is computed as
+
+                y = X.b + e
+
+            and Var(e) = (||X.b||² / (n - 1)) / snr.
+
+    locally_smooth : If True, uses ToeplitzCorrelation (with "local
+            smoothing"); if False, uses ConstantCorrelation.
+
+    Returns
+    -------
+    X : The matrix of independent variables.
+
+    y : The dependent variable.
+
+    b : The regression vector.
+
+    e : The noise/residual vector.
+    """
     if not isinstance(rho, (list, tuple)):
         size = [size]
         rho = [rho]
@@ -40,13 +106,20 @@ def load(size=[100, 100], rho=0.05, delta=0.1, eps=None, sparsity=0.5,
     else:
         S = correlation_matrices.ConstantCorrelation(p, rho, delta, eps)
 
+##    print "Var(S) =", np.var(S), ", S.shape = ", S.shape
+#    print "Var(S) =", np.var(S[1:, 0]), ", S.shape = ", S.shape
+
     p = sum(p)
 
     # Create X matrix using the generated correlation matrix
     mean = np.zeros(p)
     X = np.random.multivariate_normal(mean, S, n)
 
-    # Enforce sparsity
+##    print "Var(XX) =", np.var(np.dot(X.T, X) / float(n - 1)), ", n = ", n, ", X.shape =", X.shape
+#    XX = np.dot(X.T, X) / float(n - 1)
+#    print "Var(XX) =", np.var(XX[1:, 0]), ", n = ", n, ", X.shape =", X.shape
+
+    # Apply sparsity
     b = (np.random.rand(p, 1) - 0.5) * 2.0
     ind = range(p)
     random.shuffle(ind)
@@ -58,9 +131,8 @@ def load(size=[100, 100], rho=0.05, delta=0.1, eps=None, sparsity=0.5,
 
     # Add noise from N(0, (1/snr)*||Xb||² / (n-1))
     var = (np.sum(y ** 2.0) / float(n - 1)) / float(snr)
-    e = np.random.randn(p, 1)
+    e = np.random.randn(n, 1)
     e *= np.sqrt(var)
-
     y += e
 
     return X, y, b, e
