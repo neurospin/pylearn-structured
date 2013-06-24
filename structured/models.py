@@ -887,6 +887,38 @@ class NesterovProximalGradientMethod(BaseMethod):
 
         return self.beta
 
+    def _compute_eps(self, mu):
+        D = self.g.num_groups()
+
+        def f(eps):
+            return 
+
+        bm = algorithms.BisectionMethod(utils.Struct(f=f))
+
+    def _compute_mu(self, eps):
+        D = self.g.num_groups()
+
+        def f(mu):
+            return -(eps - mu * D) / self.g.Lipschitz(mu)
+
+        gs = algorithms.GoldenSectionSearch(utils.Struct(f=f))
+        gs.run(self.get_tolerance(), 10.0)
+        ts = algorithms.GoldenSectionSearch(utils.Struct(f=f))
+        ts.run(self.get_tolerance(), 10.0)
+        print "gs.iterations: ", gs.iterations
+        print "ts.iterations: ", ts.iterations
+
+        return gs.beta
+
+    def set_eps(self, eps):
+        self.eps = _compute_eps(mu)
+
+        self.g.set_eps(eps)
+
+    def get_eps(self):
+
+        return self.g.get_eps()
+
     def set_mu(self, mu):
 
         self.g.set_mu(mu)

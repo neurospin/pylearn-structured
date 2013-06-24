@@ -135,11 +135,13 @@ class NesterovFunction(LossFunction,
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, mu=None, **kwargs):
+    def __init__(self, eps=None, mu=None, **kwargs):
 
         super(NesterovFunction, self).__init__(**kwargs)
 
-        if mu != None:
+        if eps != None:
+            self.set_eps(eps)
+        elif mu != None:
             self.set_mu(mu)
 
     @abc.abstractmethod
@@ -219,9 +221,9 @@ class CombinedNesterovLossFunction(NesterovFunction, CombinedLossFunction):
 
         return self.a.grad(*args, **kwargs) + self.b.grad(*args, **kwargs)
 
-    def Lipschitz(self):
+    def Lipschitz(self, mu=None):
 
-        return self.a.Lipschitz() + self.b.Lipschitz()
+        return self.a.Lipschitz(mu=mu) + self.b.Lipschitz(mu=mu)
 
     def precompute(self, *args, **kwargs):
 
@@ -591,8 +593,8 @@ class ElasticNet(L1L2):
 class TotalVariation(NesterovFunction,
                      LipschitzContinuous):
 
-    def __init__(self, gamma, shape, mu=None, mask=None, compress=True,
-                 **kwargs):
+    def __init__(self, gamma, shape, mu=None, eps=None, mask=None,
+                 compress=True, **kwargs):
         """Construct a TotalVariation loss function.
 
         Parameters
@@ -604,7 +606,11 @@ class TotalVariation(NesterovFunction,
                   the Y and Z dimensions be 1. The tuple must be on the form
                   (Z, Y, X).
 
-        mu      : The Nesterov function regularisation parameter.
+        eps     : The Nesterov function stopping criterion. Either eps or mu
+                  must be given, but not both.
+
+        mu      : The Nesterov function regularisation parameter. Either mu or
+                  eps must be given, but not both.
 
         mask    : A 1-dimensional mask representing the 3D image mask.
 
@@ -615,37 +621,29 @@ class TotalVariation(NesterovFunction,
                   Default is True, set to False to keep all rows of A and
                   alpha.
         """
-        super(TotalVariation, self).__init__(mu=mu, **kwargs)
+        super(TotalVariation, self).__init__(eps=eps, mu=mu, **kwargs)
 
         self.gamma = gamma
         self.shape = shape
         self.mask = mask
         self.compress = compress
 
-        self.beta_id = None
-        self.mu_id = None
-
         self.precompute()
         self.lambda_max = None
 
-    def f(self, beta, mu=None, true=False):
+    def f(self, beta, true=False):
 
         if self.gamma < TOLERANCE:
             return 0
 
-        if (mu == None):
-            mu = self.get_mu()
-
-        if (self.beta_id != id(beta) or self.mu_id != id(mu)) and not true:
-            self.compute_alpha(beta, mu)
-            self.beta_id = id(beta)
-            self.mu_id = id(mu)
+        self.compute_alpha(beta)
 
 #        if true:
 #            return np.sum((self.Ax.dot(beta) ** 2.0 + \
 #                           self.Ay.dot(beta) ** 2.0 + \
 #                           self.Az.dot(beta) ** 2.0) ** 0.5)
 #        else:
+        mu = self.get_mu()
         return (np.dot(self.Aalpha.T, beta)[0, 0] \
                 - (mu / 2.0) * (np.sum(self.asx ** 2.0) +
                                 np.sum(self.asy ** 2.0) +
@@ -656,14 +654,11 @@ class TotalVariation(NesterovFunction,
         if self.gamma < TOLERANCE:
             return np.zeros(beta.shape)
 
-        if self.beta_id != id(beta) or self.mu_id != id(self.get_mu()):
-            self.compute_alpha(beta, self.get_mu())
-            self.beta_id = id(beta)
-            self.mu_id = id(self.get_mu())
+        self.compute_alpha(beta)
 
         return self.Aalpha
 
-    def Lipschitz(self):
+    def Lipschitz(self, mu=None):
 
         if self.gamma < TOLERANCE:
             return 0
@@ -674,20 +669,17 @@ class TotalVariation(NesterovFunction,
             us = A.dot(v)
             self.lambda_max = np.sum(us ** 2.0)
 
-        return self.lambda_max / self.get_mu()
+        if mu != None:
+            return self.lambda_max / mu
+        else:
+            return self.lambda_max / self.get_mu()
 
-    def alpha(self, beta, mu=None):
+    def alpha(self, beta):
 
         if self.gamma < TOLERANCE:
             return 0, 0, 0
 
-        if (mu == None):
-            mu = self.get_mu()
-
-        if self.beta_id != id(beta) or self.mu_id != id(mu):
-            self.compute_alpha(beta, mu)
-            self.beta_id = id(beta)
-            self.mu_id = id(mu)
+        self.compute_alpha(beta)
 
         return self.asx, self.asy, self.asz
 
@@ -708,8 +700,7 @@ class TotalVariation(NesterovFunction,
         asx = alpha[0]
         asy = alpha[1]
         asz = alpha[2]
-        asnorm = asx ** 2.0 + asy ** 2.0 + asz ** 2.0  # )**0.5
-#        asnorm = np.sqrt(asnorm)
+        asnorm = asx ** 2.0 + asy ** 2.0 + asz ** 2.0
         i = asnorm > 1.0
 
         asnorm_i = asnorm[i] ** 0.5  # Square root is taken here. Faster.
@@ -719,7 +710,9 @@ class TotalVariation(NesterovFunction,
 
         return asx, asy, asz
 
-    def compute_alpha(self, beta, mu):
+    def compute_alpha(self, beta):
+
+        mu = self.get_mu()
 
         # Compute a* for each dimension
         self.asx = self.Ax.dot(beta) / mu
@@ -887,7 +880,7 @@ class SmoothL1(NesterovFunction,
 
         return self.Aalpha
 
-    def Lipschitz(self):
+    def Lipschitz(self, use_mu=True):
 
         if self.l < TOLERANCE:
             return 0
@@ -899,7 +892,10 @@ class SmoothL1(NesterovFunction,
 #            self.lambda_max = np.sum(us ** 2.0)
             self.lambda_max = self.l ** 2.0
 
-        return self.lambda_max / self.get_mu()
+        if use_mu:
+            return self.lambda_max / self.get_mu()
+        else:
+            return self.lambda_max
 
     def alpha(self, beta, mu=None):
 
@@ -1076,7 +1072,7 @@ class GroupLassoOverlap(NesterovFunction,
 
         return tuple(alpha)
 
-    def Lipschitz(self):
+    def Lipschitz(self, use_mu=True):
 
         if self.gamma < TOLERANCE:
             return 0
@@ -1088,7 +1084,10 @@ class GroupLassoOverlap(NesterovFunction,
 #            self.lambda_max = np.sum(us ** 2.0)
 #
 #        return self.lambda_max / self.get_mu()
-        return self.max_col_norm / self.mu
+        if use_mu:
+            return self.max_col_norm / self.mu
+        else:
+            return self.max_col_norm
 
     def compute_alpha(self, beta, mu):
 

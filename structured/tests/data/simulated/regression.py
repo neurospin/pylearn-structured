@@ -106,18 +106,11 @@ def load(size=[[100, 100]], rho=[0.05], delta=0.1, eps=None, sparsity=0.5,
     else:
         S = correlation_matrices.ConstantCorrelation(p, rho, delta, eps)
 
-##    print "Var(S) =", np.var(S), ", S.shape = ", S.shape
-#    print "Var(S) =", np.var(S[1:, 0]), ", S.shape = ", S.shape
-
     p = sum(p)
 
     # Create X matrix using the generated correlation matrix
     mean = np.zeros(p)
     X = np.random.multivariate_normal(mean, S, n)
-
-##    print "Var(XX) =", np.var(np.dot(X.T, X) / float(n - 1)), ", n = ", n, ", X.shape =", X.shape
-#    XX = np.dot(X.T, X) / float(n - 1)
-#    print "Var(XX) =", np.var(XX[1:, 0]), ", n = ", n, ", X.shape =", X.shape
 
     # Apply sparsity
     b = (np.random.rand(p, 1) - 0.5) * 2.0
