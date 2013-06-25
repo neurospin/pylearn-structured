@@ -81,6 +81,9 @@ class BaseAlgorithm(object):
     def _set_max_iter(self, max_iter):
         self.max_iter = max_iter
 
+    def _get_tolerance(self):
+        return self.tolerance
+
     def _set_tolerance(self, tolerance):
         self.tolerance = tolerance
 

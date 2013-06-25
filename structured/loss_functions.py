@@ -223,7 +223,15 @@ class CombinedNesterovLossFunction(NesterovFunction, CombinedLossFunction):
 
     def Lipschitz(self, mu=None):
 
-        return self.a.Lipschitz(mu=mu) + self.b.Lipschitz(mu=mu)
+        if isinstance(self.a, NesterovFunction) \
+            and isinstance(self.b, NesterovFunction):
+                return self.a.Lipschitz(mu=mu) + self.b.Lipschitz(mu=mu)
+        elif isinstance(self.a, NesterovFunction):
+            return self.a.Lipschitz(mu=mu) + self.b.Lipschitz()
+        elif isinstance(self.b, NesterovFunction):
+            return self.a.Lipschitz() + self.b.Lipschitz(mu=mu)
+        else:
+            raise ValueError('At least one loss function must be Nesterov')
 
     def precompute(self, *args, **kwargs):
 
@@ -267,7 +275,15 @@ class CombinedNesterovLossFunction(NesterovFunction, CombinedLossFunction):
 
     def num_groups(self):
 
-        return self.a.num_groups() + self.b.num_groups()
+        # TODO: Is this true when both are nesterov?
+        if hasattr(self.a, 'num_groups') and hasattr(self.b, 'num_groups'):
+            return self.a.num_groups() + self.b.num_groups()
+        elif hasattr(self.a, 'num_groups'):
+            return self.a.num_groups()
+        elif hasattr(self.b, 'num_groups'):
+            return self.b.num_groups()
+        else:
+            raise ValueError('At least one loss function must be Nesterov')
 
     def projection(self, *alpha):
 

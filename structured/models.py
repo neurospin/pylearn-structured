@@ -115,7 +115,7 @@ class BaseMethod(object):
 
     def get_tolerance(self):
 
-        self.get_algorithm()._get_tolerance()
+        return self.get_algorithm()._get_tolerance()
 
     def set_tolerance(self, tolerance):
 
@@ -888,18 +888,19 @@ class NesterovProximalGradientMethod(BaseMethod):
         return self.beta
 
     def _compute_eps(self, mu):
-        D = self.g.num_groups()
 
         def f(eps):
-            return 
+            return self._compute_mu(eps) - mu
 
         bm = algorithms.BisectionMethod(utils.Struct(f=f))
 
+        return bm.beta
+
     def _compute_mu(self, eps):
-        D = self.g.num_groups()
+        D = self.get_g().num_groups()
 
         def f(mu):
-            return -(eps - mu * D) / self.g.Lipschitz(mu)
+            return -(eps - mu * D) / self.get_g().Lipschitz(mu)
 
         gs = algorithms.GoldenSectionSearch(utils.Struct(f=f))
         gs.run(self.get_tolerance(), 10.0)

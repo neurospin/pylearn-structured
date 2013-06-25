@@ -650,46 +650,77 @@ if __name__ == "__main__":
 #    lr.set_data(X, y)
 #    beta = algorithm.run(X, y)
 
-    betastar = [0., 0., 0., 0., 0., .5, .7, 1., .6, .7, 0., 0., 0., 0., 0.]
-    groups = [[5, 6, 7, 8, 9]]
+#    # Test group lasso!!
+#    betastar = [0., 0., 0., 0., 0., .5, .7, 1., .6, .7, 0., 0., 0., 0., 0.]
+#    groups = [[5, 6, 7, 8, 9]]
+#
+#    p = len(betastar)
+#    n = 10
+#
+#    r = 0.0
+#    u = r * np.random.randn(p, p)
+#    u += (1.0 - r) * np.eye(p, p)
+#    sigma = np.dot(u.T, u)
+#    mean = np.zeros(p)
+#
+#    X = np.random.multivariate_normal(mean, sigma, n)
+#    y = np.reshape(np.dot(X, betastar), (n, 1))
+#
+#    eps = 0.001
+#    gamma = 1.0
+#    mu = eps / (2 * 1)
+##    weights = [1.0] * len(groups)
+#
+#    lr = loss_functions.LinearRegressionError()
+#    gl = loss_functions.GroupLassoOverlap(gamma, p, groups, mu)
+#    combo = loss_functions.CombinedNesterovLossFunction(lr, gl)
+#
+#    import scipy
+#    print scipy.sparse.vstack(gl.A()).todense()
+#
+#    alg = algorithms.ISTARegression(combo)
+#    alg._set_tolerance(eps)
+#    alg._set_max_iter(50000)
+#    lr.set_data(X, y)
+#    beta = alg.run(X, y)
+#
+#    print beta
+#
+#    plot.subplot(2, 1, 1)
+#    plot.plot(betastar, '-g', beta, '*r')
+#
+#    plot.subplot(2, 1, 2)
+#    plot.plot(alg.f)
+#    plot.title("Iterations: " + str(alg.iterations))
+#
+#    plot.show()
 
-    p = len(betastar)
-    n = 10
+    np.random.seed(42)
 
-    r = 0.0
-    u = r * np.random.randn(p, p)
-    u += (1.0 - r) * np.eye(p, p)
-    sigma = np.dot(u.T, u)
-    mean = np.zeros(p)
+    eps = 0.01
+    maxit = 10000
 
-    X = np.random.multivariate_normal(mean, sigma, n)
-    y = np.reshape(np.dot(X, betastar), (n, 1))
+    px = 100
+    py = 1
+    pz = 1
+    p = px * py * pz  # Must be even!
+    n = 60
+    X = np.random.randn(n, p)
+    betastar = np.concatenate((np.zeros((p / 2, 1)),
+                               np.random.randn(p / 2, 1)))
+    betastar = np.sort(np.abs(betastar), axis=0)
+    y = np.dot(X, betastar)
 
-    eps = 0.001
+    m = models.NesterovProximalGradientMethod()
+
     gamma = 1.0
-    mu = eps / (2 * 1)
-#    weights = [1.0] * len(groups)
-
+    shape = [1, 2, 2]
+    mu = 0.001
+    tv = loss_functions.TotalVariation(gamma, shape)
     lr = loss_functions.LinearRegressionError()
-    gl = loss_functions.GroupLassoOverlap(gamma, p, groups, mu)
-    combo = loss_functions.CombinedNesterovLossFunction(lr, gl)
 
-    import scipy
-    print scipy.sparse.vstack(gl.A()).todense()
+    combo = loss_functions.CombinedNesterovLossFunction(lr, tv)
+    m.set_g(combo)
+    combo.set_data(X, y)
 
-    alg = algorithms.ISTARegression(combo)
-    alg._set_tolerance(eps)
-    alg._set_max_iter(50000)
-    lr.set_data(X, y)
-    beta = alg.run(X, y)
-
-    print beta
-
-    plot.subplot(2, 1, 1)
-    plot.plot(betastar, '-g', beta, '*r')
-
-    plot.subplot(2, 1, 2)
-    plot.plot(alg.f)
-    plot.title("Iterations: " + str(alg.iterations))
-
-    plot.show()
+    print m._compute_mu(0.01)

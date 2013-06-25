@@ -73,7 +73,7 @@ def ConstantCorrelation(p=[100], rho=[0.05], delta=0.10, eps=0.5):
 
     K = len(rho)
 
-    M = 10  # Dim. of noise space. Converges to the normal pdf as M increases?
+    M = 10  # Dim. of noise space. uu approx ~N(0, 1 / M)
     N = 0
     rho_min = min(rho)
     rho_max = max(rho)
@@ -156,7 +156,7 @@ def ToeplitzCorrelation(p=[100], rho=[0.05], eps=0.5):
 
     K = len(rho)
 
-    M = 10  # Dim. of noise space. Converges to the normal pdf as M increases?
+    M = 10  # Dim. of noise space. uu approx ~N(0, 1 / M)
     N = sum(p)
     rho_max = max(rho)
     eps = eps * (1.0 - rho_max) / (1.0 + rho_max)
