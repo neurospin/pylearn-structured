@@ -866,18 +866,19 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
 
         # Values for k=0
         mu = L / 1.0
+        self.h.set_mu(mu)
         zero = [0] * len(self.A)
         for i in xrange(len(self.A)):
             zero[i] = np.zeros((self.A[i].shape[0], 1))
         beta_new = _beta_hat_0(zero)
         alpha = self._V(zero, beta_new, L)
         tau = 2.0 / 3.0
-        alpha_hat = self._alpha_hat_muk(beta_new, mu)
+        alpha_hat = self._alpha_hat_muk(beta_new)
         u = [0] * len(alpha_hat)
         for i in xrange(len(alpha_hat)):
             u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
 
-        f_new = self.g.f(beta_new, mu=mu) + self.h.f(beta_new, mu=mu)
+        f_new = self.g.f(beta_new) + self.h.f(beta_new)
         self.f = [f_new]
         self.iterations = 1
         while True:
@@ -885,6 +886,7 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
 
             # Current iteration (compute for k+1)
             mu = (1.0 - tau) * mu
+            self.h.set_mu(mu)
             beta_old = beta_new
             beta_new = (1.0 - tau) * beta_old + tau * _beta_hat_0(u)
             alpha = self._V(u, beta_old, L)
@@ -892,7 +894,7 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
             if norm1(beta_new - beta_old) > self.tolerance:
                 self.converged = False
 
-            f_new = self.g.f(beta_new, mu=mu) + self.h.f(beta_new, mu=mu)
+            f_new = self.g.f(beta_new) + self.h.f(beta_new)
             self.f.append(f_new)
             self.iterations += 1
 
@@ -906,7 +908,7 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
 
             # Prepare for next iteration (next iteration's k)
             tau = 2.0 / (float(self.iterations) + 3.0)
-            alpha_hat = self._alpha_hat_muk(beta_new, mu)
+            alpha_hat = self._alpha_hat_muk(beta_new)
             for i in xrange(len(alpha_hat)):
                 u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
 
@@ -923,9 +925,9 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
                 u_new[i] = np.ones(u[i].shape) * 1000000.0  # Large number <tm>
         return list(self.h.projection(*u_new))
 
-    def _alpha_hat_muk(self, beta, mu):
+    def _alpha_hat_muk(self, beta):
 
-        return self.h.alpha(beta, mu)
+        return self.h.alpha(beta)
 
     def _beta_hat_0_1(self, alpha):
         """ Straight-forward naive Ridge regression.
@@ -970,11 +972,10 @@ class BisectionMethod(BaseAlgorithm):
                 give more acurate results, but will take longer time to
                 compute. The default tolerance is utils.TOLERANCE.
         """
-        super(BisectionMethod, self).__init__()
+        super(BisectionMethod, self).__init__(max_iter=max_iter,
+                                              tolerance=tolerance)
 
         self.function = function
-        self.max_iter = max_iter
-        self.tolerance = tolerance
 
     def run(self, b_0, b_1):
         """
@@ -989,13 +990,10 @@ class BisectionMethod(BaseAlgorithm):
         while True:
             self.beta = (b_1 + b_0) / 2.0
             f = self.function.f(self.beta)
-            print "beta: %d, f: %f" % (self.beta, f)
             if f < 0:
                 b_0 = self.beta
             if f > 0:
                 b_1 = self.beta
-
-#            print "[%f, %f]" % (b_0, b_1)
 
             if norm(b_1 - b_0) < self.tolerance:
                 break
@@ -1032,11 +1030,10 @@ class TernarySearch(BaseAlgorithm):
                 will give more acurate results, but will take a longer time to
                 compute. The default tolerance is utils.TOLERANCE.
         """
-        super(TernarySearch, self).__init__()
+        super(TernarySearch, self).__init__(max_iter=max_iter,
+                                            tolerance=tolerance)
 
         self.function = function
-        self.max_iter = max_iter
-        self.tolerance = tolerance
 
     def run(self, b_0, b_1):
         """
@@ -1060,6 +1057,9 @@ class TernarySearch(BaseAlgorithm):
 
         # Left and right are the current bounds; the maximum is between them
         if (right - left) < self.tolerance:
+            return (left + right) / 2.0, it
+
+        if it >= self.max_iter:
             return (left + right) / 2.0, it
 
         leftThird = (2.0 * left + right) / 3.0
@@ -1091,11 +1091,10 @@ class GoldenSectionSearch(BaseAlgorithm):
                 will give more acurate results, but will take a longer time to
                 compute. The default tolerance is utils.TOLERANCE.
         """
-        super(GoldenSectionSearch, self).__init__()
+        super(GoldenSectionSearch, self).__init__(max_iter=max_iter,
+                                                  tolerance=tolerance)
 
         self.function = function
-        self.max_iter = max_iter
-        self.tolerance = tolerance
 
         self.phi = (1.0 + np.sqrt(5)) / 2.0
         self.resphi = 2.0 - self.phi
@@ -1127,11 +1126,14 @@ class GoldenSectionSearch(BaseAlgorithm):
             x = b - self.resphi * (b - a)
 
         if abs(c - a) < tau * (abs(b) + abs(x)):
-            print "First condition"
+#            print "First condition"
             return (c + a) / 2.0, it
 
         if abs(c - a) < tau ** 2.0:
-            print "Second condition"
+#            print "Second condition"
+            return (c + a) / 2.0, it
+
+        if it >= self.max_iter:
             return (c + a) / 2.0, it
 
         if self.function.f(x) < self.function.f(b):

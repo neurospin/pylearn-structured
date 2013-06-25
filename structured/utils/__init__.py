@@ -22,7 +22,7 @@ from .utils import warning
 from .utils import _DEBUG
 from .utils import optimal_shrinkage
 from .utils import delete_sparse_csr_row
-from .utils import Struct
+from .utils import AnonymousClass
 
 import testing
 
@@ -30,4 +30,4 @@ __all__ = ['norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
            'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy',
            'sstot', 'ssvar', 'sqrt', 'rand', 'zeros',
            'testing', 'direct', 'debug', 'warning', '_DEBUG',
-           'optimal_shrinkage', 'delete_sparse_csr_row', 'Struct']
+           'optimal_shrinkage', 'delete_sparse_csr_row', 'AnonymousClass']
