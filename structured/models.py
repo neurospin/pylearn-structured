@@ -14,8 +14,12 @@ __all__ = ['PCA', 'SVD', 'PLSR', 'TuckerFactorAnalysis', 'PLSC', 'O2PLS',
            'ContinuationRun',
 
            'LinearRegression', 'Lasso', 'RidgeRegression', 'ElasticNet',
-           'LinearRegressionL1L2', 'LinearRegressionTV',
-           'LinearRegressionL1TV', 'LinearRegressionL1L2TV', 'ElasticNetTV',
+           'LinearRegressionL1L2',
+
+           'LinearRegressionTV', 'LinearRegressionL1TV',
+           'LinearRegressionL1L2TV', 'ElasticNetTV',
+
+           'LinearRegressionGL',
 
            'LogisticRegression',
 
@@ -39,6 +43,8 @@ import schemes
 import modes
 import loss_functions
 import start_vectors
+
+from time import time
 
 
 class BaseMethod(object):
@@ -802,7 +808,9 @@ class RGCCA(PLSBaseMethod):
 
 class ContinuationRun(BaseMethod):
 
-    def __init__(self, method, mus, algorithm=None, *args, **kwargs):
+    def __init__(self, method, tolerance=None, mus=None, algorithm=None,
+                 *args, **kwargs):
+
         if algorithm == None:
             algorithm = algorithms.ISTARegression()
 
@@ -810,15 +818,19 @@ class ContinuationRun(BaseMethod):
                                               *args, **kwargs)
 
         self.method = method
+        self.tolerance = tolerance
         self.mus = mus
 
     def get_transform(self, index=0):
+
         return self.beta
 
     def get_algorithm(self):
+
         return self.method.get_algorithm()
 
     def set_algorithm(self, algorithm):
+
         self.method.set_algorithm(algorithm)
 
     def fit(self, X, y, **kwargs):
@@ -871,7 +883,7 @@ class NesterovProximalGradientMethod(BaseMethod):
         -------
         self: The model object.
         """
-        self.get_g().set_data(X, y)
+        self.set_data(X, y)
 
         self.beta = self.algorithm.run(X, y, **kwargs)
 
@@ -887,46 +899,38 @@ class NesterovProximalGradientMethod(BaseMethod):
 
         return self.beta
 
-    def _compute_eps(self, mu):
+    def compute_tolerance(self, mu):
 
         def f(eps):
-            return self._compute_mu(eps) - mu
+            return self.compute_mu(eps) - mu
 
-        bm = algorithms.BisectionMethod(utils.Struct(f=f))
+        bm = algorithms.BisectionMethod(utils.AnonymousClass(f=f))
+        bm.run(utils.TOLERANCE, 10.0)
 
         return bm.beta
 
-    def _compute_mu(self, eps):
-        D = self.get_g().num_groups()
+    def compute_mu(self, eps):
+        D = self.get_g().num_compacts()
 
         def f(mu):
             return -(eps - mu * D) / self.get_g().Lipschitz(mu)
 
-        gs = algorithms.GoldenSectionSearch(utils.Struct(f=f))
-        gs.run(self.get_tolerance(), 10.0)
-        ts = algorithms.GoldenSectionSearch(utils.Struct(f=f))
-        ts.run(self.get_tolerance(), 10.0)
-        print "gs.iterations: ", gs.iterations
-        print "ts.iterations: ", ts.iterations
+        gs = algorithms.GoldenSectionSearch(utils.AnonymousClass(f=f))
+        gs.run(utils.TOLERANCE, 10.0)
+#        ts = algorithms.GoldenSectionSearch(utils.Struct(f=f))
+#        ts.run(utils.TOLERANCE, 10.0)
+#        print "gs.iterations: ", gs.iterations
+#        print "ts.iterations: ", ts.iterations
 
         return gs.beta
 
-    def set_eps(self, eps):
-        self.eps = _compute_eps(mu)
-
-        self.g.set_eps(eps)
-
-    def get_eps(self):
-
-        return self.g.get_eps()
-
     def set_mu(self, mu):
 
-        self.g.set_mu(mu)
+        self.get_g().set_mu(mu)
 
     def get_mu(self):
 
-        return self.g.get_mu()
+        return self.get_g().get_mu()
 
     def get_g(self):
 
@@ -943,6 +947,10 @@ class NesterovProximalGradientMethod(BaseMethod):
     def set_h(self, h):
 
         self.algorithm.h = h
+
+    def set_data(self, X, y):
+
+        self.get_g().set_data(X, y)
 
 
 class LinearRegression(NesterovProximalGradientMethod):
@@ -1069,27 +1077,12 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
 
         super(LinearRegressionTV, self).__init__(**kwargs)
 
-        self._tv = loss_functions.TotalVariation(gamma, shape, mu, mask)
-        self._lr = loss_functions.LinearRegressionError()
+        tv = loss_functions.TotalVariation(gamma, shape, mu, mask)
+        lr = loss_functions.LinearRegressionError()
 
-        self._combo = loss_functions.CombinedNesterovLossFunction(self._lr,
-                                                                  self._tv)
-        self.set_g(self._combo)
+        combo = loss_functions.CombinedNesterovLossFunction(lr, tv)
 
-#    def fit(self, X, y, mu=None, **kwargs):
-#
-#        if mu != None:
-#            mu_old = self._tv.get_mu()
-#            self._tv.set_mu(mu)
-#
-#        super(LinearRegressionTV, self).fit(X, y)
-#
-#        self.beta = self.algorithm.run(X, y, **kwargs)
-#
-#        if mu != None:
-#            self._tv.set_mu(mu_old)
-#
-#        return self
+        self.set_g(combo)
 
 
 class LinearRegressionL1TV(NesterovProximalGradientMethod):
@@ -1234,31 +1227,44 @@ class ElasticNetTV(NesterovProximalGradientMethod):
 
         self.set_h(loss_functions.ElasticNet(l))
 
-#    def fit(self, X, y, mu=None, **kwargs):
-#        """Fit the model to the given data.
-#
-#        Parameters
-#        ----------
-#        X : The independent variables.
-#        y : The dependent variable.
-#
-#        Returns
-#        -------
-#        self: The model object.
-#        """
-#
-#        self.get_g().set_data(X, y)
-#
-#        if mu != None:
-#            mu_old = self._tv.get_mu()
-#            self._tv.set_mu(mu)
-#
-#        self.beta = self.algorithm.run(X, y, **kwargs)
-#
-#        if mu != None:
-#            self._tv.set_mu(mu_old)
-#
-#        return self
+
+class LinearRegressionGL(NesterovProximalGradientMethod):
+    """Linear regression with group lasso constraint.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + gamma.GL(b),
+
+    where ||.||² is the squared L2 norm and GL(.) is the group lasso
+    constraint.
+
+    Parameters
+    ----------
+    gamma : The GL regularisation parameter.
+
+    num_variables : The number of variable being regularised.
+
+    groups : A list of lists, with the outer list being the groups and the
+            inner lists the variables in the groups. E.g. [[1,2],[2,3]]
+            contains two groups ([1,2] and [2,3]) with variable 1 and 2 in the
+            first group and variables 2 and 3 in the second group.
+
+    mu : The Nesterov function regularisation parameter.
+
+    weights : Weights put on the groups. Default is weight 1 for each group.
+    """
+    def __init__(self, gamma, num_variables, groups, mu=None, weights=None,
+                 **kwargs):
+
+        super(LinearRegressionGL, self).__init__(**kwargs)
+
+        gl = loss_functions.GroupLassoOverlap(gamma, num_variables, groups, mu,
+                                              weights)
+        lr = loss_functions.LinearRegressionError()
+
+        combo = loss_functions.CombinedNesterovLossFunction(lr, gl)
+
+        self.set_g(combo)
 
 
 class LogisticRegression(NesterovProximalGradientMethod):
