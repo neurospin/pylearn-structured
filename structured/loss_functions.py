@@ -650,7 +650,7 @@ class TotalVariation(NesterovFunction,
         self.precompute()
         self.lambda_max = None
 
-    def f(self, beta):
+    def f(self, beta, mu=None):
 
         if self.gamma < TOLERANCE:
             return 0
@@ -667,7 +667,8 @@ class TotalVariation(NesterovFunction,
         for a in alpha:
             alpha_sqsum += np.sum(a ** 2.0)
 
-        mu = self.get_mu()
+        if mu == None:
+            mu = self.get_mu()
         return np.dot(self.Aalpha.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum
 
     def grad(self, beta):
@@ -880,14 +881,15 @@ class SmoothL1(NesterovFunction,
         self.precompute()
         self.lambda_max = None
 
-    def f(self, beta):
+    def f(self, beta, mu=None):
 
         if self.l < TOLERANCE:
             return 0
 
         self.compute_alpha(beta)
 
-        mu = self.get_mu()
+        if mu == None:
+            mu = self.get_mu()
         return np.dot(self.Aalpha.T, beta)[0, 0] \
                       - (mu / 2.0) * np.sum(self.a ** 2.0)
 
@@ -1020,7 +1022,7 @@ class GroupLassoOverlap(NesterovFunction,
         self.precompute()
         self.lambda_max = None
 
-    def f(self, beta):
+    def f(self, beta, mu=None):
 
         if self.gamma < TOLERANCE:
             return 0
@@ -1030,7 +1032,8 @@ class GroupLassoOverlap(NesterovFunction,
         for a in alpha:
             alpha_sqsum += np.sum(a ** 2.0)
 
-        mu = self.get_mu()
+        if mu == None:
+            mu = self.get_mu()
         return np.dot(self.Aalpha.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum
 
     def grad(self, beta):

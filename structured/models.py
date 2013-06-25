@@ -808,18 +808,42 @@ class RGCCA(PLSBaseMethod):
 
 class ContinuationRun(BaseMethod):
 
-    def __init__(self, method, tolerance=None, mus=None, algorithm=None,
+    def __init__(self, model, tolerances=None, mus=None, algorithm=None,
                  *args, **kwargs):
+        """Performs continuation for the given method. I.e. runs the method
+        with sucessively smaller values of mu and uses the output from the use
+        of one mu as start vector in the run with the next smaller mu.
 
+        Parameters
+        ----------
+        model : The NesterovProximalGradient model to perform continuation on.
+
+        tolerances : A list of successively smaller tolerance values. The
+                tolerances are used as terminating condition for the algorithm.
+                Mu is computed from this list of tolerances. Note that only one
+                of tolerances and mus can be given.
+
+        mus : A list of successively smaller values of mu, the regularisation
+                parameter in the Nesterov smoothing. The tolerances are
+                computed from this list of mus. Note that only one of mus
+                and tolerances can be given.
+
+        algorithm : The particular algorithm to use.
+        """
         if algorithm == None:
             algorithm = algorithms.ISTARegression()
 
         super(ContinuationRun, self).__init__(num_comp=1, algorithm=algorithm,
                                               *args, **kwargs)
 
-        self.method = method
-        self.tolerance = tolerance
+        self.model = model
+        self.tolerances = tolerances
         self.mus = mus
+
+        if mus != None:
+            self.mu_min = mus[-1]
+        else:
+            self.mu_min = None
 
     def get_transform(self, index=0):
 
@@ -827,32 +851,49 @@ class ContinuationRun(BaseMethod):
 
     def get_algorithm(self):
 
-        return self.method.get_algorithm()
+        return self.model.get_algorithm()
 
     def set_algorithm(self, algorithm):
 
-        self.method.set_algorithm(algorithm)
+        self.model.set_algorithm(algorithm)
 
     def fit(self, X, y, **kwargs):
 
-        start_vector = self.method.get_start_vector()
+        start_vector = self.model.get_start_vector()
         f = []
-        for mu in self.mus:
-            self.method.set_start_vector(start_vector)
-            self.method.fit(X, y, mu=mu, early_stopping_mu=self.mus[-1],
-                            **kwargs)
+        self.model.set_data(X, y)
 
-            utils.debug("Continuation with mu = ", mu, \
-                    ", early_stopping_mu = ", self.mus[-1], \
-                    ", iterations = ", self.method.get_algorithm().iterations)
+        if self.mus != None:
+            lst = self.mus
+        else:
+            lst = self.tolerances
 
-            self.beta = self.method.get_transform()
-            f = f + self.method.get_algorithm().f
+        if self.mu_min == None:
+            self.mu_min = self.model.compute_mu(self.tolerances[-1])
+
+        for item in lst:
+            if self.mus != None:
+                self.model.set_mu(item)
+                self.model.set_tolerance(self.model.compute_tolerance(item))
+            else:
+                self.model.set_tolerance(item)
+                self.model.set_mu(self.model.compute_mu(item))
+
+            self.model.set_start_vector(start_vector)
+            self.model.fit(X, y, early_stopping_mu=self.mu_min, **kwargs)
+
+            utils.debug("Continuation with mu = ", self.model.get_mu(), \
+                    ", tolerance = ", self.model.get_tolerance(), \
+                    ", early_stopping_mu = ", self.mu_min, \
+                    ", iterations = ", self.model.get_algorithm().iterations)
+
+            self.beta = self.model.get_transform()
+            f = f + self.model.get_algorithm().f[1:]  # Skip the first, same
 
             start_vector = start_vectors.IdentityStartVector(self.beta)
 
-        self.method.get_algorithm().f = f
-        self.method.get_algorithm().iterations = len(f)
+        self.model.get_algorithm().f = f
+        self.model.get_algorithm().iterations = len(f)
 
         return self
 
@@ -993,7 +1034,7 @@ class RidgeRegression(NesterovProximalGradientMethod):
 
     Parameters
     ----------
-    l: The ridge parameter.
+    l : The ridge parameter.
     """
 
     def __init__(self, l, **kwargs):
@@ -1014,9 +1055,9 @@ class LinearRegressionL1L2(NesterovProximalGradientMethod):
 
     Parameters
     ----------
-    l: The L1 parameter.
+    l : The L1 parameter.
 
-    k: The L2 parameter.
+    k : The L2 parameter.
     """
 
     def __init__(self, l, k, **kwargs):
@@ -1038,7 +1079,7 @@ class ElasticNet(NesterovProximalGradientMethod):
 
     Parameters
     ----------
-    l: The L1 and L2 parameter.
+    l : The L1 and L2 parameter.
     """
 
     def __init__(self, l, **kwargs):

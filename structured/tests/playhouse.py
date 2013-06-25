@@ -674,18 +674,20 @@ if __name__ == "__main__":
 #    weights = [1.0] * len(groups)
 
     lrgl = models.LinearRegressionGL(gamma, p, groups, mu=None, weights=None)
-    lrgl.set_tolerance(eps)
-    lrgl.set_max_iter(100000)
-    lrgl.set_data(X, y)
-    lrgl.set_mu(lrgl.compute_mu(eps))
-    lrgl.fit(X, y)
+    cont = models.ContinuationRun(lrgl,
+                                  mus=[1.0, 0.1, 0.01, 0.001, 0.0001, 0.00001])
+#    lrgl.set_tolerance(eps)
+    cont.set_max_iter(10000)
+#    lrgl.set_data(X, y)
+#    lrgl.set_mu(lrgl.compute_mu(eps))
+    cont.fit(X, y)
 
-    alg = lrgl.get_algorithm()
-    print lrgl.beta
+    alg = cont.get_algorithm()
+    print cont.get_transform()
     print alg.iterations
 
     plot.subplot(2, 1, 1)
-    plot.plot(betastar, '-g', lrgl.beta, '*r')
+    plot.plot(betastar, '-g', cont.beta, '*r')
 
     plot.subplot(2, 1, 2)
     plot.plot(alg.f)
