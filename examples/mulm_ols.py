@@ -16,6 +16,5 @@ Y[:, 0] += np.dot(X, betas)
 Y[:, 1] += np.dot(X, betas)
 
 betas, ss_errors = mulm.ols(X, Y)
-p, t = mulm.ols_stats_tcon(X, betas, ss_errors, contrast=[1, 0, 0, 0, 0], pval=True)
-p, f = mulm.ols_stats_fcon(X, betas, ss_errors, contrast=[1, 0, 0, 0, 0], pval=True)
-
+t, p = mulm.ols_stats_tcon(X, betas, ss_errors, contrast=[1, 0, 0, 0, 0], pval=True)
+f, p = mulm.ols_stats_fcon(X, betas, ss_errors, contrast=[1, 0, 0, 0, 0], pval=True)

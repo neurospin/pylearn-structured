@@ -64,7 +64,7 @@ def ols_stats_tcon(X, betas, ss_errors, contrast, pval=False):
     std_cbeta = np.sqrt(var_errors * np.dot(cXpinv, cXpinv.T))
     t_stats = np.dot(c, betas) / std_cbeta
     if not pval:
-        return t_stats
+        return (t_stats, None)
     else:
         p_vals = stats.t.sf(t_stats, df)
         return t_stats, p_vals
@@ -96,7 +96,7 @@ def ols_stats_fcon(X, betas, ss_errors, contrast, pval=False):
     ## Broadcast over ss_errors of Y
     f_stats = (SS * df_res) / (ss_errors * df_c1)
     if not pval:
-        return f_stats
+        return (f_stats, None)
     else:
         p_vals = stats.f.sf(f_stats, df_c1, df_res)
         return f_stats, p_vals
