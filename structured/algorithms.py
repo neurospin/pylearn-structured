@@ -574,8 +574,7 @@ class ISTARegression(ProximalGradientMethod):
 
         super(ISTARegression, self).__init__(g, h, **kwargs)
 
-    def run(self, X, y, t=None, tscale=0.95, early_stopping_mu=None,
-            **kwargs):
+    def run(self, X, y, t=None, tscale=0.95, early_stopping_mu=None, **kwargs):
 
         if t == None:
             t = tscale / self.g.Lipschitz()
@@ -595,23 +594,6 @@ class ISTARegression(ProximalGradientMethod):
         while True:
             self.converged = True
 
-#            if self.iterations % 100 == 0:
-#                grad = self.g.grad(beta_old)
-#                print "it: ", self.iterations, " t: ", t, ", max: ", np.max(np.abs(grad)), ", min: ", np.min(np.abs(grad)), ", l: ", self.h.l, ", mu: ", self.g.get_mu()
-#            grad = t * self.g.grad(beta_old)
-#            e = 5e-12
-#            big = np.abs(grad) >= e
-#            small = np.abs(grad) < e
-#            nbig = np.sum(big)
-#            nsmall = np.sum(small)
-#            normbig = norm1(grad[big])
-#            normsmall = norm1(grad[small])
-#            if normsmall > normbig:
-#            if self.iterations > 20000:
-#                print "Problem! it: ", self.iterations, " and we have ", normsmall, "(", nsmall, ")", " > ", normbig, "(", nbig, ") tot =", (nbig + nsmall)
-#                print grad[big].T
-#                print grad[small].T
-#                break
             beta_new = self.h.prox(beta_old - t * self.g.grad(beta_old), t)
 
             if norm1(beta_old - beta_new) > self.tolerance * t:
@@ -661,6 +643,7 @@ class FISTARegression(ISTARegression):
 
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
+
         if early_stopping_mu != None:
             f_new = self.g.f(beta_old, mu=early_stopping_mu) + \
                     self.h.f(beta_old, mu=early_stopping_mu)
@@ -672,12 +655,13 @@ class FISTARegression(ISTARegression):
         while True:
             self.converged = True
 
-            k = float(self.iterations + 1.0)
+            k = float(self.iterations)
             z = beta_new - ((k - 2.0) / (k + 1.0)) * (beta_new - beta_old)
             beta_old = beta_new
             beta_new = self.h.prox(z - t * self.g.grad(z), t)
 
-            if norm1(z - beta_new) > self.tolerance * t:
+#            if norm1(z - beta_new) > self.tolerance * t:
+            if norm1(beta_old - beta_new) > self.tolerance * t:
                 self.converged = False
 
             if early_stopping_mu != None:
@@ -707,23 +691,22 @@ class MonotoneFISTARegression(ISTARegression):
 
         super(MonotoneFISTARegression, self).__init__(**kwargs)
 
-    def run(self, X, y, g=None, h=None, t=None, tscale=0.95, ista_steps=2,
+    def run(self, X, y, t=None, tscale=0.95, ista_steps=2,
             early_stopping_mu=None, **kwargs):
 
-        if h == None:
-            h = loss_functions.ZeroErrorFunction()
-
         if t == None:
-            t = tscale / g.Lipschitz()
+            t = tscale / self.g.Lipschitz()
+        else:
+            t *= tscale
 
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
 
         if early_stopping_mu != None:
-            f_old = g.f(beta_old, mu=early_stopping_mu) + \
-                    h.f(beta_old, mu=early_stopping_mu)
+            f_old = self.g.f(beta_old, mu=early_stopping_mu) + \
+                    self.h.f(beta_old, mu=early_stopping_mu)
         else:
-            f_old = g.f(beta_old) + h.f(beta_old)
+            f_old = self.g.f(beta_old) + self.h.f(beta_old)
         f_new = f_old
         self.f = [f_new]
 
@@ -731,15 +714,15 @@ class MonotoneFISTARegression(ISTARegression):
         while True:
             self.converged = True
 
-            k = float(self.iterations + 1.0)
+            k = float(self.iterations)
             z = beta_new - ((k - 2.0) / (k + 1.0)) * (beta_new - beta_old)
             beta_old = beta_new
-            beta_new = h.prox(z - t * g.grad(z), t)
+            beta_new = self.h.prox(z - t * self.g.grad(z), t)
 
-            h_beta_new = h.f(beta_new)
+            h_beta_new = self.h.f(beta_new)
 
             f_old = f_new
-            f_new = g.f(beta_new) + h_beta_new
+            f_new = self.g.f(beta_new) + h_beta_new
 
             stop_early = False
             if f_new > f_old:  # FISTA increased the value of f
@@ -748,23 +731,25 @@ class MonotoneFISTARegression(ISTARegression):
                 beta_new = beta_old  # Go one step back to old beta
                 for it in xrange(ista_steps):
                     beta_old = beta_new
-                    beta_new = h.prox(beta_old - t * g.grad(beta_old), t)
+                    beta_new = self.h.prox(beta_old \
+                                - t * self.g.grad(beta_old), t)
 
-                    h_beta_new = h.f(beta_new)
+                    h_beta_new = self.h.f(beta_new)
 
                     f_old = f_new
-                    f_new = g.f(beta_new) + h_beta_new
+                    f_new = self.g.f(beta_new) + h_beta_new
 
                     if early_stopping_mu != None:
-                        es_f_old = g.f(beta_old, mu=early_stopping_mu) \
-                                 + h.f(beta_old)
-                        es_f_new = g.f(beta_new, mu=early_stopping_mu) \
+                        es_f_old = self.g.f(beta_old, mu=early_stopping_mu) \
+                                 + self.h.f(beta_old)
+                        es_f_new = self.g.f(beta_new, mu=early_stopping_mu) \
                                  + h_beta_new
 
                         if es_f_new > es_f_old:  # Early stopping
                             self.converged = True
                             stop_early = True
-                            warning('Early stopping criterion triggered.')
+                            warning('Early stopping criterion triggered. ' \
+                                    'Mu too large?')
                             break
                         else:
                             f_new = es_f_new
@@ -777,8 +762,10 @@ class MonotoneFISTARegression(ISTARegression):
                     self.converged = False
 
             elif early_stopping_mu != None:
-                es_f_old = g.f(beta_old, mu=early_stopping_mu) + h.f(beta_old)
-                es_f_new = g.f(beta_new, mu=early_stopping_mu) + h_beta_new
+                es_f_old = self.g.f(beta_old, mu=early_stopping_mu) \
+                            + self.h.f(beta_old)
+                es_f_new = self.g.f(beta_new, mu=early_stopping_mu) \
+                            + h_beta_new
 
                 if es_f_new > es_f_old:  # Early stopping
                     self.converged = True
@@ -789,13 +776,15 @@ class MonotoneFISTARegression(ISTARegression):
                     self.f.append(es_f_new)
                     self.iterations += 1
 
-                    if norm1(z - beta_new) > self.tolerance * t:
+#                    if norm1(z - beta_new) > self.tolerance * t:
+                    if norm1(beta_old - beta_new) > self.tolerance * t:
                         self.converged = False
             else:
                 self.f.append(f_new)
                 self.iterations += 1
 
-                if norm1(z - beta_new) > self.tolerance * t:
+#                if norm1(z - beta_new) > self.tolerance * t:
+                if norm1(beta_old - beta_new) > self.tolerance * t:
                     self.converged = False
 
             if self.converged:
@@ -848,7 +837,7 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
 
         # USed by Woodbury
         invXXtlI = np.linalg.inv(np.dot(self.X, self.X.T) \
-                                 + self.l * np.eye(self.X.shape[0]))
+                                    + self.l * np.eye(self.X.shape[0]))
         self.XtinvXXtlI = np.dot(self.X.T, invXXtlI)
         self.Aa = np.zeros((self.X.shape[1], 1))
 
@@ -935,7 +924,7 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
         self.Aa *= 0
         for i in xrange(len(alpha)):
             self.Aa += self.At[i].dot(alpha[i])
-        v = self.Xty - self.Aa / 2.0
+        v = self.Xty - self.Aa  # / 2.0
 
         return np.dot(self.invXXI, v)
 
@@ -945,7 +934,8 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
         self.Aa *= 0
         for i in xrange(len(alpha)):
             self.Aa += self.At[i].dot(alpha[i])
-        wk = (self.Xty - self.Aa / 2.0) / self.l
+#        wk = (self.Xty - self.Aa / 2.0) / self.l
+        wk = (self.Xty - self.Aa) / self.l
 
         return wk - np.dot(self.XtinvXXtlI, np.dot(self.X, wk))
 

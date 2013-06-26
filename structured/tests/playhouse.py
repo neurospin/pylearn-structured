@@ -654,6 +654,8 @@ if __name__ == "__main__":
     # Test group lasso!!
     import scipy
 
+    np.random.seed(42)
+
     betastar = [0., 0., 0., 0., 0., .5, .7, 1., .6, .7, 0., 0., 0., 0., 0.]
     groups = [[5, 6, 7, 8, 9]]
 
@@ -669,13 +671,13 @@ if __name__ == "__main__":
     X = np.random.multivariate_normal(mean, sigma, n)
     y = np.reshape(np.dot(X, betastar), (n, 1))
 
-    eps = 0.0001
+#    eps = 0.0001
     gamma = 0.001
 #    weights = [1.0] * len(groups)
 
     lrgl = models.LinearRegressionGL(gamma, p, groups, mu=None, weights=None)
     cont = models.ContinuationRun(lrgl,
-                                  mus=[1.0, 0.1, 0.01, 0.001, 0.0001, 0.00001])
+                                  tolerances=[10, 1.0, 0.1, 0.01, 0.001, 0.0001])
 #    lrgl.set_tolerance(eps)
     cont.set_max_iter(10000)
 #    lrgl.set_data(X, y)

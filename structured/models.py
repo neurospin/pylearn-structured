@@ -831,7 +831,9 @@ class ContinuationRun(BaseMethod):
         algorithm : The particular algorithm to use.
         """
         if algorithm == None:
-            algorithm = algorithms.ISTARegression()
+            algorithm = model.get_algorithm()
+        else:
+            model.set_algorithm(algorithm)
 
         super(ContinuationRun, self).__init__(num_comp=1, algorithm=algorithm,
                                               *args, **kwargs)
@@ -880,6 +882,7 @@ class ContinuationRun(BaseMethod):
                 self.model.set_mu(self.model.compute_mu(item))
 
             self.model.set_start_vector(start_vector)
+            print self.model.get_algorithm()
             self.model.fit(X, y, early_stopping_mu=self.mu_min, **kwargs)
 
             utils.debug("Continuation with mu = ", self.model.get_mu(), \
@@ -906,6 +909,8 @@ class NesterovProximalGradientMethod(BaseMethod):
 
         if algorithm == None:
             algorithm = algorithms.ISTARegression()
+#            algorithm = algorithms.FISTARegression()
+#            algorithm = algorithms.MonotoneFISTARegression()
 
         super(NesterovProximalGradientMethod, self).__init__(num_comp=1,
                                                            algorithm=algorithm,
@@ -1030,7 +1035,7 @@ class RidgeRegression(NesterovProximalGradientMethod):
 
     Optimises the function
 
-        f(b) = ||y - X.b||² + l.||b||²
+        f(b) = (1.0 / 2.0).||y - X.b||² + (l / 2.0).||b||²
 
     Parameters
     ----------
@@ -1480,12 +1485,12 @@ class EGMRidgeRegressionTV(ExcessiveGapMethod):
     mask  : A 1-dimensional mask representing the 3D image mask. Must be a
            list of 1s and 0s.
     """
-    def __init__(self, l, gamma, shape, mu=None, mask=None, **kwargs):
+    def __init__(self, l, gamma, shape, mask=None, **kwargs):
 
         super(EGMRidgeRegressionTV, self).__init__(**kwargs)
 
         self.set_g(loss_functions.RidgeRegression(l))
-        self.set_h(loss_functions.TotalVariation(gamma, shape, mu, mask))
+        self.set_h(loss_functions.TotalVariation(gamma, shape, mask=mask))
 
 
 class EGMLinearRegressionL1L2TV(ExcessiveGapMethod):
@@ -1516,13 +1521,13 @@ class EGMLinearRegressionL1L2TV(ExcessiveGapMethod):
     mask  : A 1-dimensional mask representing the 3D image mask. Must be a
            list of 1s and 0s.
     """
-    def __init__(self, l, k, gamma, shape, mu=None, mask=None, **kwargs):
+    def __init__(self, l, k, gamma, shape, mask=None, **kwargs):
 
         super(EGMLinearRegressionL1L2TV, self).__init__(**kwargs)
 
         self.set_g(loss_functions.RidgeRegression(k))
-        a = loss_functions.SmoothL1(l, np.prod(shape), mu, mask)
-        b = loss_functions.TotalVariation(gamma, shape, mu, mask,
+        a = loss_functions.SmoothL1(l, np.prod(shape), mask=mask)
+        b = loss_functions.TotalVariation(gamma, shape, mask=mask,
                                           compress=False)
         self.set_h(loss_functions.CombinedNesterovLossFunction(a, b))
 

@@ -142,6 +142,11 @@ class NesterovFunction(LossFunction,
         if mu != None:
             self.set_mu(mu)
 
+#    @abc.abstractmethod
+#    def from_A(self, gamma, A, mu=None):
+#        raise NotImplementedError('Abstract method "from_A" must be ' \
+#                                  'specialised!')
+
     @abc.abstractmethod
     def precompute(self, *args, **kwargs):
         raise NotImplementedError('Abstract method "precompute" must be ' \
@@ -362,7 +367,10 @@ class LinearRegressionError(LossFunction,
                             Differentiable,
                             LipschitzContinuous,
                             DataDependent):
+    """Loss function for linear regression. Represents the function:
 
+        f(b) = (1.0 / 2.0) * norm(y - X*b)²
+    """
     def __init__(self, **kwargs):
 
         super(LinearRegressionError, self).__init__(**kwargs)
@@ -376,20 +384,24 @@ class LinearRegressionError(LossFunction,
         self.lipschitz = None
 
     def f(self, beta, **kwargs):
+
 #        return norm(self.y - np.dot(self.X, beta)) ** 2
-        return np.sum((self.y - np.dot(self.X, beta)) ** 2.0)
+#        return np.sum((self.y - np.dot(self.X, beta)) ** 2.0)
+        return 0.5 * np.sum((self.y - np.dot(self.X, beta)) ** 2.0)
 
     def grad(self, beta, **kwargs):
+
 #        return 2.0 * np.dot(self.X.T, np.dot(self.X, beta) - self.y)
-        return 2.0 * (np.dot(self.X.T, np.dot(self.X, beta)) - self.Xy)
+#        return 2.0 * (np.dot(self.X.T, np.dot(self.X, beta)) - self.Xy)
+        return np.dot(self.X.T, np.dot(self.X, beta)) - self.Xy
 
     def Lipschitz(self, *args, **kwargs):
+
         if self.lipschitz == None:
             v = algorithms.FastSVD(max_iter=100).run(self.X)
             us = np.dot(self.X, v)
-            self.lipschitz = 2.0 * np.sum(us ** 2.0)
-#            _, s, _ = np.linalg.svd(self.X, full_matrices=False)
-#            self.lipschitz = np.max(s) ** 2.0
+#            self.lipschitz = 2.0 * np.sum(us ** 2.0)
+            self.lipschitz = np.sum(us ** 2.0)
 
         return self.lipschitz
 
@@ -454,10 +466,9 @@ class RidgeRegression(LossFunction,
                       DataDependent):
     """Loss function for ridge regression. Represents the function:
 
-        f(b) = norm(y - X*b)² + lambda*norm(b)²
-        #f(b) = (1/2)*norm(y - X*b)² + (lambda/2)*norm(b)²
+        #f(b) = norm(y - X*b)² + lambda*norm(b)²
+        f(b) = (1.0 / 2.0) * norm(y - X*b)² + (lambda / 2.0) * norm(b)²
     """
-
     def __init__(self, l, **kwargs):
 
         super(RidgeRegression, self).__init__(**kwargs)
@@ -474,16 +485,18 @@ class RidgeRegression(LossFunction,
         self.l_min = None
 
     def f(self, beta, **kwargs):
-#        return 0.5 * (np.sum((self.y - np.dot(self.X, beta)) ** 2.0) \
-#                + self.l * np.sum(beta ** 2.0))
-        return (np.sum((self.y - np.dot(self.X, beta)) ** 2.0) \
+
+        return 0.5 * (np.sum((self.y - np.dot(self.X, beta)) ** 2.0) \
                 + self.l * np.sum(beta ** 2.0))
+#        return (np.sum((self.y - np.dot(self.X, beta)) ** 2.0) \
+#                + self.l * np.sum(beta ** 2.0))
 
     def grad(self, beta, **kwargs):
-#        return (np.dot(self.X.T, np.dot(self.X, beta)) - self.Xty) \
-#                + self.l * beta
-        return 2.0 * ((np.dot(self.X.T, np.dot(self.X, beta)) - self.Xty) \
-                + self.l * beta)
+
+        return (np.dot(self.X.T, np.dot(self.X, beta)) - self.Xty) \
+                + self.l * beta
+#        return 2.0 * ((np.dot(self.X.T, np.dot(self.X, beta)) - self.Xty) \
+#                + self.l * beta)
 
     def Lipschitz(self, *args, **kwargs):
 
@@ -492,17 +505,18 @@ class RidgeRegression(LossFunction,
             self.l_max = np.max(s) ** 2.0 + self.l
             self.l_min = np.min(s) ** 2.0 + self.l
 
-#        return self.l_max
-        return 2.0 * self.l_max
+        return self.l_max
+#        return 2.0 * self.l_max
 
     def lambda_min(self):
+
         if self.l_min == None:
             _, s, _ = np.linalg.svd(self.X, full_matrices=False)
             self.l_max = np.max(s) ** 2.0 + self.l
             self.l_min = np.min(s) ** 2.0 + self.l
 
-#        return self.l_min
-        return 2.0 * self.l_min
+        return self.l_min
+#        return 2.0 * self.l_min
 
 
 class L1(ProximalOperator):
@@ -514,6 +528,7 @@ class L1(ProximalOperator):
         self.l = l
 
     def f(self, beta):
+
         return self.l * norm1(beta)
 
     def prox(self, x, factor=1.0, allow_empty=False):
@@ -564,6 +579,7 @@ class L2(ProximalOperator):
         self.l = l
 
     def f(self, x):
+
         return (self.l / 2.0) * np.sum(x ** 2.0)
 
     def prox(self, x, factor=1.0):
@@ -599,7 +615,7 @@ class L1L2(ProximalOperator):
         k = factor * self.k
         l1 = L1(l)
 
-        return l1.prox(x, factor=factor, allow_empty=allow_empty) \
+        return l1.prox(x, factor=1.0, allow_empty=allow_empty) \
                 / (1.0 + k)
 
 
@@ -607,9 +623,14 @@ class ElasticNet(L1L2):
     """The proximal operator of the function
 
       f(x) = lambda * norm1(x) + ((1.0 - lambda) / 2.0) * norm(x) ** 2.
+
+    Parameters
+    ----------
+    l : The regularisation parameter. Must be in the interval [0, 1].
     """
     def __init__(self, l, **kwargs):
 
+        l = max(0.0, min(l, 1.0))
         super(ElasticNet, self).__init__(l, 1.0 - l, **kwargs)
 
 
@@ -622,23 +643,23 @@ class TotalVariation(NesterovFunction,
 
         Parameters
         ----------
-        gamma   : The regularisation parameter for the TV penality.
+        gamma : The regularisation parameter for the TV penality.
 
-        shape   : The shape of the 3D image. Must be a 3-tuple. If the image is
-                  2D, let the Z dimension be 1, and if the "image" is 1D, let
-                  the Y and Z dimensions be 1. The tuple must be on the form
-                  (Z, Y, X).
+        shape : The shape of the 3D image. Must be a 3-tuple. If the image is
+                2D, let the Z dimension be 1, and if the "image" is 1D, let the
+                Y and Z dimensions be 1. The tuple must be on the form
+                (Z, Y, X).
 
-        mu      : The Nesterov function regularisation parameter.
+        mu : The Nesterov function regularisation parameter. Must be provided
+                unless you are using ContinuationRun.
 
-        mask    : A 1-dimensional mask representing the 3D image mask.
+        mask : A 1-dimensional mask representing the 3D image mask.
 
         compress: The matrix A and the dual alpha is automatically pruned to
-                  speed-up computations. This is not compatible with all
-                  smoothed functions (really, only compatible with
-                  image-related functions), and may therefore be turned off.
-                  Default is True, set to False to keep all rows of A and
-                  alpha.
+                speed-up computations. This is not compatible with all smoothed
+                functions (really, only compatible with image-related
+                functions), and may therefore be turned off. Default is True,
+                set to False to keep all rows of A and alpha.
         """
         super(TotalVariation, self).__init__(mu=mu, **kwargs)
 
@@ -649,6 +670,13 @@ class TotalVariation(NesterovFunction,
 
         self.precompute()
         self.lambda_max = None
+
+#    def from_A(self, gamma, shape, A, mu=None, compress=True):
+#
+#        obj = self(gamma, [1, 1, 1], mu, compress)
+#        obj.A = A
+#
+#        return obj
 
     def f(self, beta, mu=None):
 
@@ -863,13 +891,13 @@ class SmoothL1(NesterovFunction,
 
         Parameters
         ----------
-        l     : The regularisation parameter for the L1 penality.
+        l : The regularisation parameter for the L1 penality.
 
-        p     : The numbers of variables.
+        p : The numbers of variables.
 
-        mu    : The Nesterov function regularisation parameter.
+        mu : The Nesterov function regularisation parameter.
 
-        mask  : A 1-dimensional mask representing the 3D image mask. Must be a
+        mask : A 1-dimensional mask representing the 3D image mask. Must be a
                 list of 1s and 0s.
         """
         super(SmoothL1, self).__init__(mu=mu, **kwargs)
@@ -905,14 +933,14 @@ class SmoothL1(NesterovFunction,
     def Lipschitz(self, mu=None):
 
         if self.l < TOLERANCE:
-            return 0
+            return 0.0
 
         if self.lambda_max == None:
-#            A = sparse.vstack(self.A())
-#            v = algorithms.SparseSVD(max_iter=100).run(A)
-#            us = A.dot(v)
-#            self.lambda_max = np.sum(us ** 2.0)
-            self.lambda_max = self.l ** 2.0
+            A = sparse.vstack(self.A())
+            v = algorithms.SparseSVD(max_iter=100).run(A)
+            us = A.dot(v)
+            self.lambda_max = np.sum(us ** 2.0)
+#            self.lambda_max = self.l ** 2.0
 
         if mu != None:
             return self.lambda_max / mu
@@ -922,7 +950,7 @@ class SmoothL1(NesterovFunction,
     def alpha(self, beta):
 
         if self.l < TOLERANCE:
-            return (0,)
+            return (0.0,)
 
         self.compute_alpha(beta)
 
@@ -960,14 +988,14 @@ class SmoothL1(NesterovFunction,
         mu = self.get_mu()
 
         # Compute a*
-#        self.a = self.A1.dot(beta) / mu
-        self.a = (float(self.l) / float(mu)) * beta
+        self.a = self.A1.dot(beta) / mu
+#        self.a = (float(self.l) / float(mu)) * beta
 
         # Apply projection
         self.a = self.projection(self.a)[0]
 
-#        self.Aalpha = self.A1t.dot(self.a)
-        self.Aalpha = float(self.l) * self.a
+        self.Aalpha = self.A1t.dot(self.a)
+#        self.Aalpha = float(self.l) * self.a
 
     def precompute(self):
 
