@@ -21,7 +21,7 @@ __all__ = ['PCA', 'SVD', 'PLSR', 'TuckerFactorAnalysis', 'PLSC', 'O2PLS',
 
            'LinearRegressionGL',
 
-           'LogisticRegression',
+           'LogisticRegression', 'LogisticRegressionGL',
 
            'EGMRidgeRegression', 'EGMLinearRegressionL1L2', 'EGMElasticNet',
            'EGMRidgeRegressionTV', 'EGMLinearRegressionL1L2TV',
@@ -1273,6 +1273,25 @@ class ElasticNetTV(NesterovProximalGradientMethod):
 
         self.set_h(loss_functions.ElasticNet(l))
 
+
+class LogisticRegressionGL(NesterovProximalGradientMethod):
+
+    """Logistic regression with group lasso constraint.
+    
+    """
+    def __init__(self, gamma, num_variables, groups, mu=None, weights=None,
+                 **kwargs):
+
+        super(LogisticRegressionGL, self).__init__(**kwargs)
+
+        gl = loss_functions.GroupLassoOverlap(gamma, num_variables, groups, mu,
+                                              weights)
+        lr = loss_functions.LogisticRegressionError()
+
+        combo = loss_functions.CombinedNesterovLossFunction(lr, gl)
+
+        self.set_g(combo)
+    
 
 class LinearRegressionGL(NesterovProximalGradientMethod):
     """Linear regression with group lasso constraint.
