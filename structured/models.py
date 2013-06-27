@@ -1322,6 +1322,25 @@ class LogisticRegression(NesterovProximalGradientMethod):
         self.set_g(loss_functions.LogisticRegressionError())
 
 
+class LogisticRegressionL1TV(NesterovProximalGradientMethod):
+
+    def __init__(self, l, gamma, shape, mu=None, mask=None, **kwargs):
+
+        super(LogisticRegressionL1TV, self).__init__(**kwargs)
+
+        self._lr = loss_functions.LogisticRegressionError()
+        self._tv = loss_functions.TotalVariation(gamma, shape, mu, mask)
+
+        self._combo = loss_functions.CombinedNesterovLossFunction(self._lr,
+                                                                  self._tv)
+        self.set_g(self._combo)
+
+        self._l1 = loss_functions.L1(l)
+        self.set_h(self._l1)
+
+
+
+
 class ExcessiveGapMethod(BaseMethod):
 
     __metaclass__ = abc.ABCMeta
