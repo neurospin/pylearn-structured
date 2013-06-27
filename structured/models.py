@@ -882,7 +882,7 @@ class ContinuationRun(BaseMethod):
                 self.model.set_mu(self.model.compute_mu(item))
 
             self.model.set_start_vector(start_vector)
-            print self.model.get_algorithm()
+#            print self.model.get_algorithm()
             self.model.fit(X, y, early_stopping_mu=self.mu_min, **kwargs)
 
             utils.debug("Continuation with mu = ", self.model.get_mu(), \
@@ -1420,17 +1420,15 @@ class EGMLinearRegressionL1L2(ExcessiveGapMethod):
 
     p     : The numbers of variables.
 
-    mu    : The Nesterov function regularisation parameter.
-
     mask  : A 1-dimensional mask representing the 3D image mask. Must be a
             list of 1s and 0s.
     """
-    def __init__(self, l, k, p, mu=None, mask=None, **kwargs):
+    def __init__(self, l, k, p, mask=None, **kwargs):
 
         super(EGMLinearRegressionL1L2, self).__init__(**kwargs)
 
         self.set_g(loss_functions.RidgeRegression(k))
-        self.set_h(loss_functions.SmoothL1(l, p, mu, mask))
+        self.set_h(loss_functions.SmoothL1(l, p, mask=mask))
 
 
 class EGMElasticNet(EGMLinearRegressionL1L2):
@@ -1448,15 +1446,12 @@ class EGMElasticNet(EGMLinearRegressionL1L2):
 
     p     : The numbers of variables.
 
-    mu    : The Nesterov function regularisation parameter.
-
     mask  : A 1-dimensional mask representing the 3D image mask. Must be a
             list of 1s and 0s.
     """
-    def __init__(self, l, p, mu=None, mask=None, **kwargs):
+    def __init__(self, l, p, mask=None, **kwargs):
 
-        super(EGMElasticNet, self).__init__(l, 1.0 - l, p, mu, mask,
-                                            **kwargs)
+        super(EGMElasticNet, self).__init__(l, 1.0 - l, p, mask=mask, **kwargs)
 
 
 class EGMRidgeRegressionTV(ExcessiveGapMethod):
@@ -1479,8 +1474,6 @@ class EGMRidgeRegressionTV(ExcessiveGapMethod):
             2D, let the Z dimension be 1, and if the "image" is 1D, let the
             Y and Z dimensions be 1. The tuple must be on the form
             (Z, Y, X).
-
-    mu    : The Nesterov function regularisation parameter.
 
     mask  : A 1-dimensional mask representing the 3D image mask. Must be a
            list of 1s and 0s.
@@ -1515,8 +1508,6 @@ class EGMLinearRegressionL1L2TV(ExcessiveGapMethod):
             2D, let the Z dimension be 1, and if the "image" is 1D, let the
             Y and Z dimensions be 1. The tuple must be on the form
             (Z, Y, X).
-
-    mu    : The Nesterov function regularisation parameter.
 
     mask  : A 1-dimensional mask representing the 3D image mask. Must be a
            list of 1s and 0s.
@@ -1554,12 +1545,10 @@ class EGMElasticNetTV(EGMLinearRegressionL1L2TV):
             Y and Z dimensions be 1. The tuple must be on the form
             (Z, Y, X).
 
-    mu    : The Nesterov function regularisation parameter.
-
     mask  : A 1-dimensional mask representing the 3D image mask. Must be a
            list of 1s and 0s.
     """
-    def __init__(self, l, gamma, shape, mu=None, mask=None, **kwargs):
+    def __init__(self, l, gamma, shape, mask=None, **kwargs):
 
-        super(EGMElasticNetTV, self).__init__(l, 1.0 - l, gamma, shape, mu,
-                                              mask, **kwargs)
+        super(EGMElasticNetTV, self).__init__(l, 1.0 - l, gamma, shape,
+                                              mask=mask, **kwargs)

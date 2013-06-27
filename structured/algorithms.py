@@ -585,7 +585,7 @@ class ISTARegression(ProximalGradientMethod):
         beta_new = beta_old
         if early_stopping_mu != None:
             f_old = self.g.f(beta_old, mu=early_stopping_mu) + \
-                    self.h.f(beta_old, mu=early_stopping_mu)
+                    self.h.f(beta_old)
         else:
             f_old = self.g.f(beta_old) + self.h.f(beta_old)
         self.f = [f_old]
@@ -601,7 +601,7 @@ class ISTARegression(ProximalGradientMethod):
 
             if early_stopping_mu != None:
                 f_new = self.g.f(beta_new, mu=early_stopping_mu) + \
-                        self.h.f(beta_new, mu=early_stopping_mu)
+                        self.h.f(beta_new)
             else:
                 f_new = self.g.f(beta_new) + self.h.f(beta_new)
 
@@ -646,7 +646,7 @@ class FISTARegression(ISTARegression):
 
         if early_stopping_mu != None:
             f_new = self.g.f(beta_old, mu=early_stopping_mu) + \
-                    self.h.f(beta_old, mu=early_stopping_mu)
+                    self.h.f(beta_old)
         else:
             f_new = self.g.f(beta_new) + self.h.f(beta_new)
         self.f = [f_new]
@@ -666,7 +666,7 @@ class FISTARegression(ISTARegression):
 
             if early_stopping_mu != None:
                 f_new = self.g.f(beta_new, mu=early_stopping_mu) + \
-                        self.h.f(beta_new, mu=early_stopping_mu)
+                        self.h.f(beta_new)
             else:
                 f_new = self.g.f(beta_new) + self.h.f(beta_new)
             self.f.append(f_new)
@@ -704,7 +704,7 @@ class MonotoneFISTARegression(ISTARegression):
 
         if early_stopping_mu != None:
             f_old = self.g.f(beta_old, mu=early_stopping_mu) + \
-                    self.h.f(beta_old, mu=early_stopping_mu)
+                    self.h.f(beta_old)
         else:
             f_old = self.g.f(beta_old) + self.h.f(beta_old)
         f_new = f_old
