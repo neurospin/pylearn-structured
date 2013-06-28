@@ -1126,9 +1126,7 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
         tv = loss_functions.TotalVariation(gamma, shape, mu, mask)
         lr = loss_functions.LinearRegressionError()
 
-        combo = loss_functions.CombinedNesterovLossFunction(lr, tv)
-
-        self.set_g(combo)
+        self.set_g(loss_functions.CombinedNesterovLossFunction(lr, tv))
 
 
 class LinearRegressionL1TV(NesterovProximalGradientMethod):
@@ -1161,15 +1159,11 @@ class LinearRegressionL1TV(NesterovProximalGradientMethod):
 
         super(LinearRegressionL1TV, self).__init__(**kwargs)
 
-        self._lr = loss_functions.LinearRegressionError()
-        self._tv = loss_functions.TotalVariation(gamma, shape, mu, mask)
+        lr = loss_functions.LinearRegressionError()
+        tv = loss_functions.TotalVariation(gamma, shape, mu, mask)
 
-        self._combo = loss_functions.CombinedNesterovLossFunction(self._lr,
-                                                                  self._tv)
-        self.set_g(self._combo)
-
-        self._l1 = loss_functions.L1(l)
-        self.set_h(self._l1)
+        self.set_g(loss_functions.CombinedNesterovLossFunction(lr, tv))
+        self.set_h(loss_functions.L1(l))
 
 #    def fit(self, X, y, mu=None, **kwargs):
 #        """Fit the model to the given data.
@@ -1232,8 +1226,8 @@ class LinearRegressionL1L2TV(NesterovProximalGradientMethod):
 
         lr = loss_functions.LinearRegressionError()
         tv = loss_functions.TotalVariation(gamma, shape, mu, mask)
-        self.set_g(loss_functions.CombinedNesterovLossFunction(lr, tv))
 
+        self.set_g(loss_functions.CombinedNesterovLossFunction(lr, tv))
         self.set_h(loss_functions.L1L2(l, k))
 
 
@@ -1269,8 +1263,8 @@ class ElasticNetTV(NesterovProximalGradientMethod):
 
         lr = loss_functions.LinearRegressionError()
         tv = loss_functions.TotalVariation(gamma, shape, mu, mask)
-        self.set_g(loss_functions.CombinedNesterovLossFunction(lr, tv))
 
+        self.set_g(loss_functions.CombinedNesterovLossFunction(lr, tv))
         self.set_h(loss_functions.ElasticNet(l))
 
 
@@ -1308,9 +1302,7 @@ class LinearRegressionGL(NesterovProximalGradientMethod):
                                               weights)
         lr = loss_functions.LinearRegressionError()
 
-        combo = loss_functions.CombinedNesterovLossFunction(lr, gl)
-
-        self.set_g(combo)
+        self.set_g(loss_functions.CombinedNesterovLossFunction(lr, gl))
 
 
 class LogisticRegression(NesterovProximalGradientMethod):
@@ -1328,17 +1320,11 @@ class LogisticRegressionL1TV(NesterovProximalGradientMethod):
 
         super(LogisticRegressionL1TV, self).__init__(**kwargs)
 
-        self._lr = loss_functions.LogisticRegressionError()
-        self._tv = loss_functions.TotalVariation(gamma, shape, mu, mask)
+        lr = loss_functions.LogisticRegressionError()
+        tv = loss_functions.TotalVariation(gamma, shape, mu, mask)
 
-        self._combo = loss_functions.CombinedNesterovLossFunction(self._lr,
-                                                                  self._tv)
-        self.set_g(self._combo)
-
-        self._l1 = loss_functions.L1(l)
-        self.set_h(self._l1)
-
-
+        self.set_g(loss_functions.CombinedNesterovLossFunction(lr, tv))
+        self.set_h(loss_functions.L1(l))
 
 
 class ExcessiveGapMethod(BaseMethod):
