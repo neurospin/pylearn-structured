@@ -19,7 +19,7 @@ Created on Fri Feb  8 17:24:11 2013
 
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
-@license: BSD Style
+@license: TBD
 """
 
 import abc
@@ -41,7 +41,9 @@ import scipy.sparse as sparse
 __all__ = ['BaseAlgorithm', 'SparseSVD', 'FastSVD', 'NIPALSBaseAlgorithm',
            'NIPALSAlgorithm', 'RGCCAAlgorithm', 'ISTARegression',
            'FISTARegression', 'MonotoneFISTARegression',
-           'ExcessiveGapRidgeRegression']
+           'ExcessiveGapRidgeRegression',
+
+           'BisectionMethod', 'TernarySearch', 'GoldenSectionSearch']
 
 
 class BaseAlgorithm(object):
@@ -78,6 +80,9 @@ class BaseAlgorithm(object):
 
     def _set_max_iter(self, max_iter):
         self.max_iter = max_iter
+
+    def _get_tolerance(self):
+        return self.tolerance
 
     def _set_tolerance(self, tolerance):
         self.tolerance = tolerance
@@ -210,8 +215,12 @@ class SparseSVD(NIPALSBaseAlgorithm):
                     break
 
             p = Xt.dot(t)
-            p /= np.sqrt(np.sum(p ** 2.0))
-#            t = X.dot(p)
+            normp = np.sqrt(np.sum(p ** 2.0))
+            # Is the solution significantly different from zero (TOLERANCE)?
+            if normp > TOLERANCE:
+                p /= normp
+            else:
+                p = np.ones(p.shape) / np.sqrt(p.shape[0])
 
         else:
             K = Xt.dot(X)
@@ -219,7 +228,11 @@ class SparseSVD(NIPALSBaseAlgorithm):
             for it in xrange(self.max_iter):
                 p_ = p
                 p = K.dot(p_)
-                p /= np.sqrt(np.sum(p ** 2.0))
+                normp = np.sqrt(np.sum(p ** 2.0))
+                if normp > TOLERANCE:
+                    p /= normp
+                else:
+                    p = np.ones(p.shape) / np.sqrt(p.shape[0])
 
                 self.iterations += 1
 
@@ -228,7 +241,7 @@ class SparseSVD(NIPALSBaseAlgorithm):
 #                    print "broke at", self.iterations
                     break
 
-#            t = X.dot(p)
+#        t = X.dot(p)
 
 #        sigma = numpy.sqrt(numpy.sum(t ** 2.0))
 #        t /= sigma
@@ -561,8 +574,7 @@ class ISTARegression(ProximalGradientMethod):
 
         super(ISTARegression, self).__init__(g, h, **kwargs)
 
-    def run(self, X, y, t=None, tscale=0.95, early_stopping_mu=None,
-            **kwargs):
+    def run(self, X, y, t=None, tscale=0.95, early_stopping_mu=None, **kwargs):
 
         if t == None:
             t = tscale / self.g.Lipschitz()
@@ -573,7 +585,7 @@ class ISTARegression(ProximalGradientMethod):
         beta_new = beta_old
         if early_stopping_mu != None:
             f_old = self.g.f(beta_old, mu=early_stopping_mu) + \
-                    self.h.f(beta_old, mu=early_stopping_mu)
+                    self.h.f(beta_old)
         else:
             f_old = self.g.f(beta_old) + self.h.f(beta_old)
         self.f = [f_old]
@@ -582,23 +594,6 @@ class ISTARegression(ProximalGradientMethod):
         while True:
             self.converged = True
 
-#            if self.iterations % 100 == 0:
-#                grad = self.g.grad(beta_old)
-#                print "it: ", self.iterations, " t: ", t, ", max: ", np.max(np.abs(grad)), ", min: ", np.min(np.abs(grad)), ", l: ", self.h.l, ", mu: ", self.g.get_mu()
-#            grad = t * self.g.grad(beta_old)
-#            e = 5e-12
-#            big = np.abs(grad) >= e
-#            small = np.abs(grad) < e
-#            nbig = np.sum(big)
-#            nsmall = np.sum(small)
-#            normbig = norm1(grad[big])
-#            normsmall = norm1(grad[small])
-#            if normsmall > normbig:
-#            if self.iterations > 20000:
-#                print "Problem! it: ", self.iterations, " and we have ", normsmall, "(", nsmall, ")", " > ", normbig, "(", nbig, ") tot =", (nbig + nsmall)
-#                print grad[big].T
-#                print grad[small].T
-#                break
             beta_new = self.h.prox(beta_old - t * self.g.grad(beta_old), t)
 
             if norm1(beta_old - beta_new) > self.tolerance * t:
@@ -606,7 +601,7 @@ class ISTARegression(ProximalGradientMethod):
 
             if early_stopping_mu != None:
                 f_new = self.g.f(beta_new, mu=early_stopping_mu) + \
-                        self.h.f(beta_new, mu=early_stopping_mu)
+                        self.h.f(beta_new)
             else:
                 f_new = self.g.f(beta_new) + self.h.f(beta_new)
 
@@ -648,9 +643,10 @@ class FISTARegression(ISTARegression):
 
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
+
         if early_stopping_mu != None:
             f_new = self.g.f(beta_old, mu=early_stopping_mu) + \
-                    self.h.f(beta_old, mu=early_stopping_mu)
+                    self.h.f(beta_old)
         else:
             f_new = self.g.f(beta_new) + self.h.f(beta_new)
         self.f = [f_new]
@@ -659,17 +655,18 @@ class FISTARegression(ISTARegression):
         while True:
             self.converged = True
 
-            k = float(self.iterations + 1.0)
+            k = float(self.iterations)
             z = beta_new - ((k - 2.0) / (k + 1.0)) * (beta_new - beta_old)
             beta_old = beta_new
             beta_new = self.h.prox(z - t * self.g.grad(z), t)
 
-            if norm1(z - beta_new) > self.tolerance * t:
+#            if norm1(z - beta_new) > self.tolerance * t:
+            if norm1(beta_old - beta_new) > self.tolerance * t:
                 self.converged = False
 
             if early_stopping_mu != None:
                 f_new = self.g.f(beta_new, mu=early_stopping_mu) + \
-                        self.h.f(beta_new, mu=early_stopping_mu)
+                        self.h.f(beta_new)
             else:
                 f_new = self.g.f(beta_new) + self.h.f(beta_new)
             self.f.append(f_new)
@@ -694,23 +691,22 @@ class MonotoneFISTARegression(ISTARegression):
 
         super(MonotoneFISTARegression, self).__init__(**kwargs)
 
-    def run(self, X, y, g=None, h=None, t=None, tscale=0.95, ista_steps=2,
+    def run(self, X, y, t=None, tscale=0.95, ista_steps=2,
             early_stopping_mu=None, **kwargs):
 
-        if h == None:
-            h = loss_functions.ZeroErrorFunction()
-
         if t == None:
-            t = tscale / g.Lipschitz()
+            t = tscale / self.g.Lipschitz()
+        else:
+            t *= tscale
 
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
 
         if early_stopping_mu != None:
-            f_old = g.f(beta_old, mu=early_stopping_mu) + \
-                    h.f(beta_old, mu=early_stopping_mu)
+            f_old = self.g.f(beta_old, mu=early_stopping_mu) + \
+                    self.h.f(beta_old)
         else:
-            f_old = g.f(beta_old) + h.f(beta_old)
+            f_old = self.g.f(beta_old) + self.h.f(beta_old)
         f_new = f_old
         self.f = [f_new]
 
@@ -718,15 +714,15 @@ class MonotoneFISTARegression(ISTARegression):
         while True:
             self.converged = True
 
-            k = float(self.iterations + 1.0)
+            k = float(self.iterations)
             z = beta_new - ((k - 2.0) / (k + 1.0)) * (beta_new - beta_old)
             beta_old = beta_new
-            beta_new = h.prox(z - t * g.grad(z), t)
+            beta_new = self.h.prox(z - t * self.g.grad(z), t)
 
-            h_beta_new = h.f(beta_new)
+            h_beta_new = self.h.f(beta_new)
 
             f_old = f_new
-            f_new = g.f(beta_new) + h_beta_new
+            f_new = self.g.f(beta_new) + h_beta_new
 
             stop_early = False
             if f_new > f_old:  # FISTA increased the value of f
@@ -735,23 +731,25 @@ class MonotoneFISTARegression(ISTARegression):
                 beta_new = beta_old  # Go one step back to old beta
                 for it in xrange(ista_steps):
                     beta_old = beta_new
-                    beta_new = h.prox(beta_old - t * g.grad(beta_old), t)
+                    beta_new = self.h.prox(beta_old \
+                                - t * self.g.grad(beta_old), t)
 
-                    h_beta_new = h.f(beta_new)
+                    h_beta_new = self.h.f(beta_new)
 
                     f_old = f_new
-                    f_new = g.f(beta_new) + h_beta_new
+                    f_new = self.g.f(beta_new) + h_beta_new
 
                     if early_stopping_mu != None:
-                        es_f_old = g.f(beta_old, mu=early_stopping_mu) \
-                                 + h.f(beta_old)
-                        es_f_new = g.f(beta_new, mu=early_stopping_mu) \
+                        es_f_old = self.g.f(beta_old, mu=early_stopping_mu) \
+                                 + self.h.f(beta_old)
+                        es_f_new = self.g.f(beta_new, mu=early_stopping_mu) \
                                  + h_beta_new
 
                         if es_f_new > es_f_old:  # Early stopping
                             self.converged = True
                             stop_early = True
-                            warning('Early stopping criterion triggered.')
+                            warning('Early stopping criterion triggered. ' \
+                                    'Mu too large?')
                             break
                         else:
                             f_new = es_f_new
@@ -764,8 +762,10 @@ class MonotoneFISTARegression(ISTARegression):
                     self.converged = False
 
             elif early_stopping_mu != None:
-                es_f_old = g.f(beta_old, mu=early_stopping_mu) + h.f(beta_old)
-                es_f_new = g.f(beta_new, mu=early_stopping_mu) + h_beta_new
+                es_f_old = self.g.f(beta_old, mu=early_stopping_mu) \
+                            + self.h.f(beta_old)
+                es_f_new = self.g.f(beta_new, mu=early_stopping_mu) \
+                            + h_beta_new
 
                 if es_f_new > es_f_old:  # Early stopping
                     self.converged = True
@@ -776,13 +776,15 @@ class MonotoneFISTARegression(ISTARegression):
                     self.f.append(es_f_new)
                     self.iterations += 1
 
-                    if norm1(z - beta_new) > self.tolerance * t:
+#                    if norm1(z - beta_new) > self.tolerance * t:
+                    if norm1(beta_old - beta_new) > self.tolerance * t:
                         self.converged = False
             else:
                 self.f.append(f_new)
                 self.iterations += 1
 
-                if norm1(z - beta_new) > self.tolerance * t:
+#                if norm1(z - beta_new) > self.tolerance * t:
+                if norm1(beta_old - beta_new) > self.tolerance * t:
                     self.converged = False
 
             if self.converged:
@@ -835,7 +837,7 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
 
         # USed by Woodbury
         invXXtlI = np.linalg.inv(np.dot(self.X, self.X.T) \
-                                 + self.l * np.eye(self.X.shape[0]))
+                                    + self.l * np.eye(self.X.shape[0]))
         self.XtinvXXtlI = np.dot(self.X.T, invXXtlI)
         self.Aa = np.zeros((self.X.shape[1], 1))
 
@@ -853,18 +855,19 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
 
         # Values for k=0
         mu = L / 1.0
+        self.h.set_mu(mu)
         zero = [0] * len(self.A)
         for i in xrange(len(self.A)):
             zero[i] = np.zeros((self.A[i].shape[0], 1))
         beta_new = _beta_hat_0(zero)
         alpha = self._V(zero, beta_new, L)
         tau = 2.0 / 3.0
-        alpha_hat = self._alpha_hat_muk(beta_new, mu)
+        alpha_hat = self._alpha_hat_muk(beta_new)
         u = [0] * len(alpha_hat)
         for i in xrange(len(alpha_hat)):
             u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
 
-        f_new = self.g.f(beta_new, mu=mu) + self.h.f(beta_new, mu=mu)
+        f_new = self.g.f(beta_new) + self.h.f(beta_new)
         self.f = [f_new]
         self.iterations = 1
         while True:
@@ -872,6 +875,7 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
 
             # Current iteration (compute for k+1)
             mu = (1.0 - tau) * mu
+            self.h.set_mu(mu)
             beta_old = beta_new
             beta_new = (1.0 - tau) * beta_old + tau * _beta_hat_0(u)
             alpha = self._V(u, beta_old, L)
@@ -879,7 +883,7 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
             if norm1(beta_new - beta_old) > self.tolerance:
                 self.converged = False
 
-            f_new = self.g.f(beta_new, mu=mu) + self.h.f(beta_new, mu=mu)
+            f_new = self.g.f(beta_new) + self.h.f(beta_new)
             self.f.append(f_new)
             self.iterations += 1
 
@@ -893,7 +897,7 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
 
             # Prepare for next iteration (next iteration's k)
             tau = 2.0 / (float(self.iterations) + 3.0)
-            alpha_hat = self._alpha_hat_muk(beta_new, mu)
+            alpha_hat = self._alpha_hat_muk(beta_new)
             for i in xrange(len(alpha_hat)):
                 u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
 
@@ -902,13 +906,17 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
     def _V(self, u, beta, L):
 
         u_new = [0] * len(u)
-        for i in xrange(len(u)):
-            u_new[i] = u[i] + self.A[i].dot(beta) / L
-        return list(self.h.projection(u_new))
+        if L > TOLERANCE:
+            for i in xrange(len(u)):
+                u_new[i] = u[i] + self.A[i].dot(beta) / L
+        else:
+            for i in xrange(len(u)):
+                u_new[i] = np.ones(u[i].shape) * 1000000.0  # Large number <tm>
+        return list(self.h.projection(*u_new))
 
-    def _alpha_hat_muk(self, beta, mu):
+    def _alpha_hat_muk(self, beta):
 
-        return self.h.alpha(beta, mu)
+        return self.h.alpha(beta)
 
     def _beta_hat_0_1(self, alpha):
         """ Straight-forward naive Ridge regression.
@@ -916,7 +924,7 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
         self.Aa *= 0
         for i in xrange(len(alpha)):
             self.Aa += self.At[i].dot(alpha[i])
-        v = self.Xty - self.Aa / 2.0
+        v = self.Xty - self.Aa  # / 2.0
 
         return np.dot(self.invXXI, v)
 
@@ -926,6 +934,205 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
         self.Aa *= 0
         for i in xrange(len(alpha)):
             self.Aa += self.At[i].dot(alpha[i])
-        wk = (self.Xty - self.Aa / 2.0) / self.l
+#        wk = (self.Xty - self.Aa / 2.0) / self.l
+        wk = (self.Xty - self.Aa) / self.l
 
         return wk - np.dot(self.XtinvXXtlI, np.dot(self.X, wk))
+
+
+class BisectionMethod(BaseAlgorithm):
+    """Finds the root of a function f: R^n -> R lying on the line between
+    b_0 and b_1.
+
+    I.e. returns a b such that f(b) = 0.
+
+    If no root exist on the line between b_0 and b_1, the result is undefined.
+    """
+    def __init__(self, function, max_iter=100, tolerance=TOLERANCE, **kwargs):
+        """
+        Parameters:
+        ----------
+        function : The loss function for which the roots are found.
+
+        max_iter : The number of iteration before the algorithm is forced to
+                stop. The default number of iterations is 100.
+
+        tolerance : The level below which we treat numbers as zero. This is
+                used as stop criterion in the algorithm. Smaller value will
+                give more acurate results, but will take longer time to
+                compute. The default tolerance is utils.TOLERANCE.
+        """
+        super(BisectionMethod, self).__init__(max_iter=max_iter,
+                                              tolerance=tolerance)
+
+        self.function = function
+
+    def run(self, b_0, b_1):
+        """
+        Parameters:
+        ----------
+        b_0 : A variable for which f(b_0) < 0.
+
+        b_1 : A variable for which f(b_0) > 0.
+        """
+        self.f = []
+        self.iterations = 1
+        while True:
+            self.beta = (b_1 + b_0) / 2.0
+            f = self.function.f(self.beta)
+            if f < 0:
+                b_0 = self.beta
+            if f > 0:
+                b_1 = self.beta
+
+            if norm(b_1 - b_0) < self.tolerance:
+                break
+
+            if self.iterations >= self.max_iter:
+                break
+
+            self.iterations += 1
+            self.f.append(f)
+
+        self.beta = (b_1 + b_0) / 2.0
+        self.f.append(self.function.f(self.beta))
+
+        return self.beta
+
+
+class TernarySearch(BaseAlgorithm):
+    """Finds the minimum of a unimodal function f: R -> R using the Ternary
+    search method.
+
+    Implementation from: https://en.wikipedia.org/wiki/Ternary_search
+    """
+    def __init__(self, function, max_iter=100, tolerance=TOLERANCE, **kwargs):
+        """
+        Parameters:
+        ----------
+        function : The loss function to minimise.
+
+        max_iter : The number of iteration before the algorithm is forced to
+                stop. The default number of iterations is 100.
+
+        tolerance : The level below which we treat numbers as zero. This is
+                used as stopping criterion in the algorithm. A smaller value
+                will give more acurate results, but will take a longer time to
+                compute. The default tolerance is utils.TOLERANCE.
+        """
+        super(TernarySearch, self).__init__(max_iter=max_iter,
+                                            tolerance=tolerance)
+
+        self.function = function
+
+    def run(self, b_0, b_1):
+        """
+        Parameters:
+        ----------
+        b_0 : A variable for which f(b_0) > f(b), where b is the optimum. Note
+              that we must have b_0 < b_1.
+
+        b_1 : A variable for which f(b_1) > f(b), where b is the optimum. Note
+              that we must have b_0 < b_1.
+        """
+
+        b, it = self.ternary_search(b_0, b_1, 1)
+
+        self.beta = b
+        self.iterations = it
+
+        return self.beta
+
+    def ternary_search(self, left, right, it):
+
+        # Left and right are the current bounds; the maximum is between them
+        if (right - left) < self.tolerance:
+            return (left + right) / 2.0, it
+
+        if it >= self.max_iter:
+            return (left + right) / 2.0, it
+
+        leftThird = (2.0 * left + right) / 3.0
+        rightThird = (left + 2.0 * right) / 3.0
+
+        if self.function.f(leftThird) > self.function.f(rightThird):
+            return self.ternary_search(leftThird, right, it + 1)
+        else:
+            return self.ternary_search(left, rightThird, it + 1)
+
+
+class GoldenSectionSearch(BaseAlgorithm):
+    """Finds the minimum of a unimodal function f: R -> R using the Golden
+    section search method.
+
+    Implementation from: https://en.wikipedia.org/wiki/Golden_section_search
+    """
+    def __init__(self, function, max_iter=100, tolerance=TOLERANCE, **kwargs):
+        """
+        Parameters:
+        ----------
+        function : The loss function to minimise.
+
+        max_iter : The number of iteration before the algorithm is forced to
+                stop. The default number of iterations is 100.
+
+        tolerance : The level below which we treat numbers as zero. This is
+                used as stopping criterion in the algorithm. A smaller value
+                will give more acurate results, but will take a longer time to
+                compute. The default tolerance is utils.TOLERANCE.
+        """
+        super(GoldenSectionSearch, self).__init__(max_iter=max_iter,
+                                                  tolerance=tolerance)
+
+        self.function = function
+
+        self.phi = (1.0 + np.sqrt(5)) / 2.0
+        self.resphi = 2.0 - self.phi
+
+    def run(self, b_0, b_1):
+        """
+        Parameters:
+        ----------
+        b_0 : A variable for which f(b_0) > f(b), where b is the optimum. Note
+              that we must have b_0 < b_1.
+
+        b_1 : A variable for which f(b_1) > f(b), where b is the optimum. Note
+              that we must have b_0 < b_1.
+        """
+
+        b, it = self.golden_section_search(b_0, (b_0 + b_1) / 2.0, b_1,
+                                           np.sqrt(self.tolerance), 1)
+
+        self.beta = b
+        self.iterations = it
+
+        return self.beta
+
+    def golden_section_search(self, a, b, c, tau, it):
+
+        if c - b > b - a:
+            x = b + self.resphi * (c - b)
+        else:
+            x = b - self.resphi * (b - a)
+
+        if abs(c - a) < tau * (abs(b) + abs(x)):
+#            print "First condition"
+            return (c + a) / 2.0, it
+
+        if abs(c - a) < tau ** 2.0:
+#            print "Second condition"
+            return (c + a) / 2.0, it
+
+        if it >= self.max_iter:
+            return (c + a) / 2.0, it
+
+        if self.function.f(x) < self.function.f(b):
+            if c - b > b - a:
+                return self.golden_section_search(b, x, c, tau, it + 1)
+            else:
+                return self.golden_section_search(a, x, b, tau, it + 1)
+        else:
+            if c - b > b - a:
+                return self.golden_section_search(a, b, x, tau, it + 1)
+            else:
+                return self.golden_section_search(x, b, c, tau, it + 1)

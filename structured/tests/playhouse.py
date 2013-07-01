@@ -11,6 +11,8 @@ import structured.utils as utils
 import structured.models as models
 import structured.preprocess as preprocess
 import structured.start_vectors as start_vectors
+import structured.loss_functions as loss_functions
+import structured.algorithms as algorithms
 #import multiblock.start_vectors as start_vectors
 #import multiblock.prox_ops as prox_ops
 #import multiblock.schemes as schemes
@@ -101,8 +103,6 @@ def test_lasso():
 #    plot.title("Linear regression + TV + L1")
 
     plot.show()
-
-
 
 
 def test_lasso_tv():
@@ -567,8 +567,48 @@ def test_data():
     plot.show()
 
 
+def create_data(
+        grp_desc =[range(100), range(100,200), range(200,300), range(300,400),range(400,1000)],
+        grp_cors = [0.8, 0, 0.8, 0, 0],
+        grp_assoc = [0.5, 0.5, 0.3, 0.3, 0],
+        grp_firstonly = [True, False, True, False, False],
+        n = 100,
+        labelswapprob = 0,
+        basehaz = 0.2,
+        intercept = 0):
+    """
+    create data with X : n x p observations with groups of variables 
+    with intra-group correlation (grp_cors) and effect on the outcome(betas).
+     the outcome is logistic and potentially noisy (intercept, labelswapprob)
+    """
+    p = sum([len(i) for i in grp_desc])
+    X = np.zeros( (n, p) ) 
+    y = np.zeros( n )
+    sigma = np.zeros( (p,p) )
+    betas = np.zeros( p )
+
+    for b,c,a,o in zip(grp_desc, grp_cors, grp_assoc, grp_firstonly):
+       #print b[0]
+       sigma[b[0]:(b[-1]+1), b[0]:(b[-1]+1)] = c
+       sigma[b[0]:(b[-1]+1), b[0]:(b[-1]+1)] += (1.0 - c) * np.eye(len(b),len(b))
+       #print sigma
+       center = np.zeros(len(b))
+       X[:,b] = np.random.multivariate_normal(center, sigma[b[0]:(b[-1]+1), b[0]:(b[-1]+1)], n)
+       if o:
+           betas[b[0]] = a
+       else:
+           betas[b[0]:(b[-1]+1)] = a
+
+    predlin = np.dot(X, betas)
+
+    p = 1./(1. + np.exp(-(predlin + intercept)))
+    for i in xrange(n):
+        y[i] = np.random.binomial(1, p[i], 1)
+
+    return X, y, betas, grp_desc, sigma
+
 if __name__ == "__main__":
-    test_tv()
+#    test_tv()
 #    test_lasso()
 #    test_lasso_tv()
 #    test_data()
@@ -622,3 +662,195 @@ if __name__ == "__main__":
 #    print asx
 #    print asy
 #    print asz
+
+
+#    import pickle
+#    O = pickle.load(open("/home/tl236864/objs.pickle"))
+#    y = O[0]
+#    X = O[1]
+#    groups = O[2]
+#
+#    for i in xrange(len(groups) - 1, -1, -1):
+#        if len(groups[i]) == 0:
+#            del groups[i]
+#            print "group %d deleted!" % (i,)
+#
+#    gamma = 1.0
+#    mu = 0.01
+#    weights = [1.0] * len(groups)
+#
+#    lr = loss_functions.LogisticRegressionError()
+#    gl = loss_functions.GroupLassoOverlap(gamma, X.shape[1], groups, mu,
+#                                          weights)
+#    combo = loss_functions.CombinedNesterovLossFunction(lr, gl)
+#
+#    algorithm = algorithms.ISTARegression(combo)
+#    algorithm._set_tolerance(0.01)
+#    algorithm._set_max_iter(1000)
+#    lr.set_data(X, y)
+#    beta = algorithm.run(X, y)
+
+
+    #  Test Logistic Group Lasso ==========
+    X, y, betas, groups, sigma = create_data()
+    #    eps = 0.0001
+    gamma = 10.
+    #    weights = [1.0] * len(groups)
+    p = len(betas)
+    lrgl = models.LogisticRegressionGL(gamma,p, groups, mu=None, weights=None)
+    cont = models.ContinuationRun(lrgl,
+                                 tolerances=[ 0.1, 0.01, 0.001, 0.0001])
+    #    lrgl.set_tolerance(eps)        
+    cont.set_max_iter(1000)
+    #    lrgl.set_data(X, y)
+    #    lrgl.set_mu(lrgl.compute_mu(eps))
+    cont.fit(X, y)
+   
+    alg = cont.get_algorithm()
+    print cont.get_transform()
+    print alg.iterations
+
+    plot.subplot(2, 1, 1)
+    plot.plot(betas, '-g', cont.beta, '*r')
+
+    plot.subplot(2, 1, 2)
+    plot.plot(alg.f)
+    plot.title("Iterations: " + str(alg.iterations))
+
+    plot.show()
+
+    # Test group lasso!!
+    import scipy
+
+    np.random.seed(42)
+
+    betastar = [0., 0., 0., 0., 0., .5, .7, 1., .6, .7, 0., 0., 0., 0., 0.]
+    groups = [[5, 6, 7, 8, 9]]
+
+    p = len(betastar)
+    n = 10
+
+    r = 0.0
+    u = r * np.random.randn(p, p)
+    u += (1.0 - r) * np.eye(p, p)
+    sigma = np.dot(u.T, u)
+    mean = np.zeros(p)
+
+    X = np.random.multivariate_normal(mean, sigma, n)
+    y = np.reshape(np.dot(X, betastar), (n, 1))
+
+#    eps = 0.0001
+    gamma = 0.001
+#    weights = [1.0] * len(groups)
+
+    lrgl = models.LinearRegressionGL(gamma, p, groups, mu=None, weights=None)
+    cont = models.ContinuationRun(lrgl,
+                                  tolerances=[10, 1.0, 0.1, 0.01, 0.001, 0.0001])
+#    lrgl.set_tolerance(eps)
+    cont.set_max_iter(10000)
+#    lrgl.set_data(X, y)
+#    lrgl.set_mu(lrgl.compute_mu(eps))
+    cont.fit(X, y)
+
+    alg = cont.get_algorithm()
+    print cont.get_transform()
+    print alg.iterations
+
+    plot.subplot(2, 1, 1)
+    plot.plot(betastar, '-g', cont.beta, '*r')
+
+    plot.subplot(2, 1, 2)
+    plot.plot(alg.f)
+    plot.title("Iterations: " + str(alg.iterations))
+
+    plot.show()
+
+
+
+#    np.random.seed(42)
+#
+#    maxit = 10000
+#
+#    px = 100
+#    py = 1
+#    pz = 1
+#    p = px * py * pz  # Must be even!
+#    n = 60
+#    X = np.random.randn(n, p)
+#    betastar = np.concatenate((np.zeros((p / 2, 1)),
+#                               np.random.randn(p / 2, 1)))
+#    betastar = np.sort(np.abs(betastar), axis=0)
+#    y = np.dot(X, betastar)
+#
+#    m = models.NesterovProximalGradientMethod()
+#
+#    gamma = 1.0
+#    shape = [pz, py, px]
+#    mu = 0.01
+#    tv = loss_functions.TotalVariation(gamma, shape, mu)
+#    lr = loss_functions.LinearRegressionError()
+#
+#    combo = loss_functions.CombinedNesterovLossFunction(lr, tv)
+#    m.set_g(combo)
+#    combo.set_data(X, y)
+#
+#    D = tv.num_groups()
+#    A = tv.Lipschitz(mu) * mu
+#    l = lr.Lipschitz()
+#
+#    def mu_plus(eps):
+#        return (-D * A + np.sqrt((D * A) ** 2.0 + D * l * eps * A)) / (D * l)
+#
+#    def eps_plus(mu):
+#        return ((mu * D * l + D * A) ** 2.0 - (D * A) ** 2.0) / (D * l * A)
+#
+#    m.algorithm._set_tolerance(m.compute_tolerance(mu))
+#    beta = m.algorithm.run(X, y)
+#
+#    eps = 0.01
+#    mu = mu_plus(eps)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+#    print
+#
+#    eps = 0.3
+#    mu = mu_plus(eps)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+#    print
+#
+#    eps = 1.0
+#    mu = mu_plus(eps)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+#    print
+#
+#    mu = 0.00149
+#    eps = eps_plus(mu)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+#    print
+#
+#    mu = 0.01949
+#    eps = eps_plus(mu)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+#    print
+#
+#    mu = 0.03975
+#    eps = eps_plus(mu)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+#    print

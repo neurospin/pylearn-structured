@@ -24,13 +24,13 @@ import traceback
 __all__ = ['norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
            'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy', 'sstot', 'ssvar',
            'sqrt', 'rand', 'zeros', 'direct', '_DEBUG', 'debug', 'warning',
-           'optimal_shrinkage', 'delete_sparse_csr_row']
+           'optimal_shrinkage', 'delete_sparse_csr_row', 'AnonymousClass']
 
 _DEBUG = True
 
 # Settings
 TOLERANCE = 5e-8
-MAX_ITER = 500
+MAX_ITER = 1000
 
 
 def norm1(x):
@@ -256,6 +256,21 @@ def delete_sparse_csr_row(mat, i):
     mat.indptr[i:] -= n
     mat.indptr = mat.indptr[:-1]
     mat._shape = (mat._shape[0] - 1, mat._shape[1])
+
+
+class AnonymousClass:
+    """Used to create anonymous classes.
+
+    Usage: anonymous_class = AnonymousClass(field=value, method=function)
+    """
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __neq__(self, other):
+        return self.__dict__ != other.__dict__
 
 
 #class Enum(object):

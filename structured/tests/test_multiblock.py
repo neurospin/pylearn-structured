@@ -1,12 +1,16 @@
 import numpy as np
-import multiblock.utils as utils
-from multiblock.utils import direct, TOLERANCE, MAX_ITER, corr, cov
-from multiblock.utils import optimal_shrinkage
-from multiblock.utils.testing import assert_array_almost_equal, orth_matrix
-from multiblock import *
-import multiblock.start_vectors as start_vectors
-import multiblock.schemes as schemes
-import multiblock.loss_functions as loss_functions
+
+import structured.algorithms as algorithms
+import structured.preprocess as preprocess
+import structured.models as models
+import structured.utils as utils
+from structured.utils import direct, TOLERANCE, MAX_ITER, corr, cov, norm
+from structured.utils import optimal_shrinkage
+from structured.utils.testing import assert_array_almost_equal, orth_matrix
+#from multiblock import *
+import structured.start_vectors as start_vectors
+import structured.schemes as schemes
+import structured.loss_functions as loss_functions
 from numpy import ones, eye
 from numpy.linalg import eig
 from time import time
@@ -29,7 +33,7 @@ def test_rgcca():
     X, Y = orth_matrix(10)
     Z = np.random.rand(10, 10)
 
-    import tests.data.Russett as Russett
+    import structured.tests.data.Russett as Russett
     X, Y, Z = Russett.load()
 
     preprocX = preprocess.PreprocessQueue([preprocess.Center(),
@@ -42,8 +46,8 @@ def test_rgcca():
     Y = preprocY.process(Y)
     Z = preprocZ.process(Z)
 
-    tau=optimal_shrinkage(X, Y, Z)
-    rgcca = RGCCA(num_comp=1, tau=tau)
+    tau = optimal_shrinkage(X, Y, Z)
+    rgcca = models.RGCCA(num_comp=1, tau=tau)
     rgcca.set_start_vector(start_vectors.OnesStartVector())
     rgcca.set_scheme(schemes.Factorial())
     rgcca.set_max_iter(10000)
@@ -128,7 +132,7 @@ def test_rgcca():
                 err_msg="RGCCA does not give the correct weights")
 
     tau = [1.0, 0.0, 1.0]
-    rgcca = RGCCA(num_comp=1, tau=tau)
+    rgcca = models.RGCCA(num_comp=1, tau=tau)
     rgcca.set_start_vector(start_vectors.OnesStartVector())
     rgcca.set_scheme(schemes.Horst())
     rgcca.set_max_iter(10000)
@@ -214,7 +218,7 @@ def test_rgcca():
                 err_msg="RGCCA does not give the correct weights")
 
     tau = [0.5, 1.0, 0.5]
-    rgcca = RGCCA(num_comp=1, tau=tau)
+    rgcca = models.RGCCA(num_comp=1, tau=tau)
     rgcca.set_start_vector(start_vectors.OnesStartVector())
     rgcca.set_scheme(schemes.Centroid())
     rgcca.set_max_iter(10000)
@@ -307,7 +311,7 @@ def test_ista():
     D, V = eig(np.dot(X.T, X))
     t = 0.95 / np.max(D.real)
 
-    lr = LinearRegression()
+    lr = models.LinearRegression()
     alg = lr.get_algorithm()
     alg.set_max_iter(10000)
     alg.set_tolerance(5e-10)
@@ -317,7 +321,7 @@ def test_ista():
     print norm(lr.beta - betastar)
     print alg.iterations
 
-    lr = LinearRegression()
+    lr = models.LinearRegression()
     alg = lr.get_algorithm()
     alg.set_max_iter(10000)
     alg.set_tolerance(5e-10)
@@ -396,7 +400,7 @@ def test_tv():
 
     total_start = time()
     # Linear regression with total variation regularisation
-    lr = LinearRegression(algorithm=algorithms.ISTARegression())
+    lr = models.LinearRegression(algorithm=algorithms.ISTARegression())
     alg = lr.get_algorithm()
     alg.set_max_iter(maxit)
     alg.set_tolerance(eps)
@@ -434,7 +438,7 @@ def test_tv():
     return
 
     # Linear regression with total variation regularisation
-    lr = LinearRegression(algorithm=algorithms.FISTARegression())
+    lr = models.LinearRegression(algorithm=algorithms.FISTARegression())
     alg = lr.get_algorithm()
     alg.set_max_iter(maxit)
     alg.set_tolerance(eps)
@@ -462,7 +466,7 @@ def test_tv():
 
 
     # Linear regression with total variation regularisation
-    lr = LinearRegression(algorithm=algorithms.MonotoneFISTARegression())
+    lr = models.LinearRegression(algorithm=algorithms.MonotoneFISTARegression())
     alg = lr.get_algorithm()
     alg.set_max_iter(maxit)
     alg.set_tolerance(eps)
@@ -524,7 +528,7 @@ def test_gl():
     mus = [r * 0.5 ** i for i in xrange(5)]
 
     # Linear regression with total variation regularisation
-    lr = LinearRegression(algorithm=algorithms.MonotoneFISTARegression())
+    lr = models.LinearRegression(algorithm=algorithms.MonotoneFISTARegression())
     alg = lr.get_algorithm()
     alg.set_max_iter(maxit)
     alg.set_tolerance(eps)
@@ -572,7 +576,7 @@ def test_regression():
     eps = 0.0001
     maxit = 50000
 
-    lr = LogisticRegression()
+    lr = models.LogisticRegression()
     alg = lr.get_algorithm()
     alg.set_max_iter(maxit)
     alg.set_tolerance(eps)

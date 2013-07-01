@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`multiblock` module includes several different projection based latent
-variable models for one, two or more blocks of data.
+The :mod:`structured` module includes several different structured machine
+learning models for one, two or more blocks of data.
 
 @author: Tommy Löfstedt <tommy.loefstedt@cea.fr>
 """
@@ -13,10 +13,29 @@ from .models import TuckerFactorAnalysis
 from .models import PLSC
 from .models import O2PLS
 from .models import RGCCA
+
 from .models import LinearRegression
+from .models import Lasso
+from .models import RidgeRegression
+from .models import ElasticNet
+from .models import LinearRegressionL1L2
+
 from .models import LinearRegressionTV
+from .models import LinearRegressionL1TV
+from .models import LinearRegressionL1L2TV
+from .models import ElasticNetTV
+
+from .models import LinearRegressionGL
+
 from .models import LogisticRegression
-from .models import RidgeRegressionTV
+from .models import LogisticRegressionL1TV
+
+from .models import EGMRidgeRegression
+from .models import EGMLinearRegressionL1L2
+from .models import EGMElasticNet
+from .models import EGMRidgeRegressionTV
+from .models import EGMLinearRegressionL1L2TV
+from .models import EGMElasticNetTV
 
 import algorithms
 import preprocess
@@ -26,9 +45,24 @@ import utils
 import loss_functions
 import start_vectors
 
+__version__ = '0.0.9'
+
 __all__ = ['PCA', 'SVD', 'PLSR', 'TuckerFactorAnalysis', 'PLSC', 'O2PLS',
            'RGCCA',
-           'LinearRegression', 'LinearRegressionTV', 'RidgeRegressionTV',
-           'LogisticRegression',
+
+           'LinearRegression', 'Lasso', 'RidgeRegression', 'ElasticNet',
+           'LinearRegressionL1L2',
+
+           'LinearRegressionTV', 'LinearRegressionL1TV',
+           'LinearRegressionL1L2TV', 'ElasticNetTV',
+
+           'LinearRegressionGL',
+
+           'LogisticRegression', 'LogisticRegressionL1TV',
+
+           'EGMRidgeRegression', 'EGMLinearRegressionL1L2', 'EGMElasticNet',
+           'EGMRidgeRegressionTV', 'EGMLinearRegressionL1L2TV',
+           'EGMElasticNetTV',
+
            'prox_ops', 'algorithms', 'preprocess',
            'tests', 'utils', 'loss_functions', 'start_vectors']

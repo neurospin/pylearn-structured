@@ -4,7 +4,7 @@ Created on Thu Mar 28 14:43:21 2013
 
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
-@license: BSD Style
+@license: TBD
 """
 
 __all__ = ['Preprocess', 'Center', 'Scale', 'Mask']
@@ -25,7 +25,6 @@ class PreprocessQueue(object):
 
         X  : An optional matrix to use for initialising the preprocessing.
         """
-
         super(PreprocessQueue, self).__init__()
 
         if pq == None:
@@ -82,6 +81,7 @@ class Preprocess(object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, **kwargs):
+
         super(Preprocess, self).__init__()
 
         self.params = kwargs
@@ -100,7 +100,7 @@ class Preprocess(object):
 class Center(Preprocess):
 
     def __init__(self, **kwargs):
-#        Preprocess.__init__(self, **kwargs)
+
         super(Center, self).__init__(**kwargs)
 
         self.means = None
@@ -134,7 +134,6 @@ class Center(Preprocess):
         -------
         Un-centered X
         """
-
         if self.means == None:
             raise ValueError('The method "process" must be applied before ' \
                              '"revert" can be applied.')
@@ -146,7 +145,7 @@ class Center(Preprocess):
 class Scale(Preprocess):
 
     def __init__(self, **kwargs):
-#        Preprocess.__init__(self, **kwargs)
+
         super(Scale, self).__init__(**kwargs)
 
         self.centered = kwargs.pop('centered', True)
@@ -163,7 +162,6 @@ class Scale(Preprocess):
         -------
         Scaled X
         """
-
         if self.stds == None:
             ddof = 1 if self.centered else 0
             self.stds = X.std(axis=0, ddof=ddof)
@@ -185,7 +183,6 @@ class Scale(Preprocess):
         -------
         Un-scaled X
         """
-
         if self.stds == None:
             raise ValueError('The method "process" must be applied before ' \
                              '"revert" can be applied.')

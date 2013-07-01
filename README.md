@@ -1,11 +1,11 @@
-multiblock
-==========
+Structured and sparse machine learning in python
+================================================
+
 
 Structured learning package for Python 2.7.
 
-The python packages and modules should be compliant with scikit-learn, in a way
-such that stable and generic code could be pushed to the scikit-learn
-repository.
+- **structured**: provides structured and sparse machine learning
+- **mulm**: Fast implementations for Mass-Univariate Linear Models
 
 Dependencies
 ------------

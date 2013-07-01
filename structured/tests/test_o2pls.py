@@ -6,10 +6,12 @@ Created on Thu May 23 09:34:47 2013
 """
 
 import numpy as np
-import preprocess
-import models
-from utils.testing import assert_array_almost_equal
-from utils import corr, TOLERANCE, direct
+
+import structured.preprocess as preprocess
+import structured.models as models
+
+from structured.utils.testing import assert_array_almost_equal
+from structured.utils import corr, TOLERANCE, direct
 
 
 def test():

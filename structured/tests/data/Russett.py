@@ -2,7 +2,8 @@
 """
 Created on Mon Apr 22 11:13:02 2013
 
-@author: tl236864
+@author: Tommy Löfstedt
+@email: tommy.loefstedt@cea.fr
 """
 
 __all__ = ['load', 'labels']

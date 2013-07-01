@@ -4,7 +4,7 @@ Created on Fri Mar 29 09:05:21 2013
 
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
-@license: BSD Style
+@license: TBD
 """
 
 __all__ = ['Normalisation', 'NoNormalisation', 'UnitNormWeights',
