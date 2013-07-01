@@ -844,9 +844,13 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
         self.A = self.h.A()
         self.At = self.h.At()
         A = sparse.vstack(self.A)
-        v = algorithms.SparseSVD(max_iter=10).run(A)
+        v = algorithms.SparseSVD(max_iter=100).run(A)
         u = A.dot(v)
         L = np.sum(u ** 2.0)
+
+#        L = self.h.Lipschitz(1.0)
+#        print "L:", L, ", _L:", _L
+
         del A
         L = L / self.g.lambda_min()  # Lipschitz constant
         print "Lipschitz constant:", L

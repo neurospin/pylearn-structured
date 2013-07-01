@@ -395,8 +395,8 @@ def test():
     tv_diff_pgm_egm = np.sum((pgm.beta - egm.beta) ** 2.0) \
                         / np.sum(egm.beta ** 2.0)
     utils.debug("Difference PGM -- EGM:", tv_diff_pgm_egm)
-    assert tv_diff_egm_pgm < 0.14
-    assert tv_diff_pgm_egm < 0.11
+    assert tv_diff_egm_pgm < 0.15
+    assert tv_diff_pgm_egm < 0.12
     assert tv_diff_egm_pgm > lr_diff_egm_pgm
     assert tv_diff_pgm_egm > lr_diff_pgm_egm
     assert tv_diff_egm_pgm > lasso_diff_egm_pgm
@@ -484,7 +484,7 @@ def test():
                         / np.sum(betaOLS ** 2.0)
     utils.debug("Difference to OLS PGM:", lassotv_ols_diff_egm)
     assert lassotv_ols_diff_pgm < 0.10
-    assert lassotv_ols_diff_egm < 0.32
+    assert lassotv_ols_diff_egm < 0.35
     assert lassotv_ols_diff_pgm > lr_ols_diff_pgm
     assert lassotv_ols_diff_egm > lr_ols_diff_pgm
 
@@ -495,7 +495,7 @@ def test():
                         / np.sum(egm.beta ** 2.0)
     utils.debug("Difference PGM -- EGM:", lassotv_diff_pgm_egm)
     assert lassotv_diff_egm_pgm < 0.09
-    assert lassotv_diff_pgm_egm < 0.07
+    assert lassotv_diff_pgm_egm < 0.08
     assert lassotv_diff_egm_pgm > lr_diff_egm_pgm
     assert lassotv_diff_pgm_egm > lr_diff_pgm_egm
     assert lassotv_diff_egm_pgm > lasso_diff_egm_pgm
