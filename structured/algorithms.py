@@ -656,12 +656,12 @@ class FISTARegression(ISTARegression):
             self.converged = True
 
             k = float(self.iterations)
-            z = beta_new - ((k - 2.0) / (k + 1.0)) * (beta_new - beta_old)
+            z = beta_new + ((k - 2.0) / (k + 1.0)) * (beta_new - beta_old)
             beta_old = beta_new
             beta_new = self.h.prox(z - t * self.g.grad(z), t)
 
-#            if norm1(z - beta_new) > self.tolerance * t:
-            if norm1(beta_old - beta_new) > self.tolerance * t:
+            if norm1(z - beta_new) > self.tolerance * t:
+#            if norm1(beta_old - beta_new) > self.tolerance * t:
                 self.converged = False
 
             if early_stopping_mu != None:
@@ -669,6 +669,7 @@ class FISTARegression(ISTARegression):
                         self.h.f(beta_new)
             else:
                 f_new = self.g.f(beta_new) + self.h.f(beta_new)
+
             self.f.append(f_new)
             self.iterations += 1
 
@@ -715,7 +716,7 @@ class MonotoneFISTARegression(ISTARegression):
             self.converged = True
 
             k = float(self.iterations)
-            z = beta_new - ((k - 2.0) / (k + 1.0)) * (beta_new - beta_old)
+            z = beta_new + ((k - 2.0) / (k + 1.0)) * (beta_new - beta_old)
             beta_old = beta_new
             beta_new = self.h.prox(z - t * self.g.grad(z), t)
 
@@ -776,15 +777,15 @@ class MonotoneFISTARegression(ISTARegression):
                     self.f.append(es_f_new)
                     self.iterations += 1
 
-#                    if norm1(z - beta_new) > self.tolerance * t:
-                    if norm1(beta_old - beta_new) > self.tolerance * t:
+                    if norm1(z - beta_new) > self.tolerance * t:
+#                    if norm1(beta_old - beta_new) > self.tolerance * t:
                         self.converged = False
             else:
                 self.f.append(f_new)
                 self.iterations += 1
 
-#                if norm1(z - beta_new) > self.tolerance * t:
-                if norm1(beta_old - beta_new) > self.tolerance * t:
+                if norm1(z - beta_new) > self.tolerance * t:
+#                if norm1(beta_old - beta_new) > self.tolerance * t:
                     self.converged = False
 
             if self.converged:

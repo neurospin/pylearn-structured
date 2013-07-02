@@ -656,11 +656,16 @@ if __name__ == "__main__":
 
     np.random.seed(42)
 
-    betastar = [0., 0., 0., 0., 0., .5, .7, 1., .6, .7, 0., 0., 0., 0., 0.]
-    groups = [[5, 6, 7, 8, 9]]
+    p = 40
+    betastar = np.zeros((p, 1)).ravel()
+#    betastar = [0., 0., 0., 0., 0., .5, .7, 1., .6, .7, 0., 0., 0., 0., 0.]
+#    groups = [[5, 6, 7, 8, 9]]
+#    groups = [range(p / 3), range(p / 3, 2 * p / 3), range(2 * p / 3, p)]
+    groups = [range(p / 3, 2 * p / 3), range(p)]
+    betastar[groups[0]] = 1
 
     p = len(betastar)
-    n = 10
+    n = 20
 
     r = 0.0
     u = r * np.random.randn(p, p)
@@ -672,13 +677,14 @@ if __name__ == "__main__":
     y = np.reshape(np.dot(X, betastar), (n, 1))
 
 #    eps = 0.0001
-    gamma = 0.001
+    gamma = 1.0
 #    weights = [1.0] * len(groups)
 
-    lrgl = models.LinearRegressionGL(gamma, p, groups, mu=None, weights=None)
+#    lrgl = models.LinearRegressionGL(gamma, p, groups)
+    lrgl = models.LinearRegressionTV(gamma, (1, 1, p))
     cont = models.ContinuationRun(lrgl,
-                                  tolerances=[10, 1.0, 0.1, 0.01, 0.001, 0.0001])
-#    lrgl.set_tolerance(eps)
+                                  mus=[10, 1.0, 0.1, 0.01, 0.001, 0.0001])
+    cont.set_tolerance(0.00001)
     cont.set_max_iter(10000)
 #    lrgl.set_data(X, y)
 #    lrgl.set_mu(lrgl.compute_mu(eps))

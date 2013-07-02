@@ -211,7 +211,10 @@ class NesterovFunction(LossFunction,
 
     @abc.abstractmethod
     def num_compacts(self):
+        """The smoothness gap between f and f_mu is mu * num_compacts().
 
+        Note that the constant D = num_compacts() / 2.
+        """
         raise NotImplementedError('Abstract method "num_compacts" must be ' \
                                   'specialised!')
 
@@ -329,7 +332,6 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
     def num_compacts(self):
 
-        # TODO: Is this true when both are nesterov?
         if hasattr(self.a, 'num_compacts') and hasattr(self.b, 'num_compacts'):
             return self.a.num_compacts() + self.b.num_compacts()
         elif hasattr(self.a, 'num_compacts'):
@@ -341,7 +343,6 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
     def num_groups(self):
 
-        # TODO: Is this true when both are nesterov?
         if hasattr(self.a, 'num_groups') and hasattr(self.b, 'num_groups'):
             return self.a.num_groups() + self.b.num_groups()
         elif hasattr(self.a, 'num_groups'):
@@ -725,7 +726,7 @@ class TotalVariation(NesterovFunction):
         if self.gamma < TOLERANCE:
             return 0.0
 
-        alpha = self.alpha(beta)  # _compute_alpha_grad is called within here
+        alpha = self.alpha(beta, mu)  # _compute_alpha_grad is called here
         alpha_sqsum = 0.0
         for a in alpha:
             alpha_sqsum += np.sum(a ** 2.0)
@@ -735,21 +736,21 @@ class TotalVariation(NesterovFunction):
 
         return np.dot(self._grad.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum
 
-    def grad(self, beta):
+    def grad(self, beta, mu=None):
 
         if self.gamma < TOLERANCE:
             return np.zeros(beta.shape)
 
-        self._compute_alpha_grad(beta)
+        self._compute_alpha_grad(beta, mu)
 
         return self._grad
 
-    def alpha(self, beta):
+    def alpha(self, beta, mu=None):
 
         if self.gamma < TOLERANCE:
             return [0.0, 0.0, 0.0]
 
-        self._compute_alpha_grad(beta)
+        self._compute_alpha_grad(beta, mu)
 
         return self._alpha
 
@@ -772,9 +773,10 @@ class TotalVariation(NesterovFunction):
 
         return [asx, asy, asz]
 
-    def _compute_alpha_grad(self, beta):
+    def _compute_alpha_grad(self, beta, mu=None):
 
-        mu = self.get_mu()
+        if mu == None:
+            mu = self.get_mu()
 
         # Compute a* for each dimension
 #        self._alpha[0] = self._A[0].dot(beta) / mu
@@ -923,19 +925,19 @@ class SmoothL1(NesterovFunction):
         if self.gamma < TOLERANCE:
             return 0.0
 
-        self._compute_alpha_grad(beta)
+        self._compute_alpha_grad(beta, mu)
 
         if mu == None:
             mu = self.get_mu()
         return np.dot(self._grad.T, beta)[0, 0] \
                        - (mu / 2.0) * np.sum(self._alpha[0] ** 2.0)
 
-    def grad(self, beta):
+    def grad(self, beta, mu=None):
 
         if self.gamma < TOLERANCE:
             return np.zeros(beta.shape)
 
-        self._compute_alpha_grad(beta)
+        self._compute_alpha_grad(beta, mu)
 
         return self._grad
 
@@ -959,12 +961,12 @@ class SmoothL1(NesterovFunction):
         else:
             return self.lambda_max / self.get_mu()
 
-    def alpha(self, beta):
+    def alpha(self, beta, mu=None):
 
         if self.gamma < TOLERANCE:
             return [0.0]
 
-        self._compute_alpha_grad(beta)
+        self._compute_alpha_grad(beta, mu)
 
         return self._alpha
 
@@ -983,9 +985,10 @@ class SmoothL1(NesterovFunction):
 
         return [a]
 
-    def _compute_alpha_grad(self, beta):
+    def _compute_alpha_grad(self, beta, mu=None):
 
-        mu = self.get_mu()
+        if mu == None:
+            mu = self.get_mu()
 
         # Compute a*
 #        self._alpha[0] = self._A[0].dot(beta) / mu
@@ -1056,7 +1059,7 @@ class GroupLassoOverlap(NesterovFunction):
         if self.gamma < TOLERANCE:
             return 0.0
 
-        alpha = self.alpha(beta)  # _compute_alpha_grad is called within here
+        alpha = self.alpha(beta, mu)  # _compute_alpha_grad is called within here
         alpha_sqsum = 0.0
         for a in alpha:
             alpha_sqsum += np.sum(a ** 2.0)
@@ -1066,12 +1069,12 @@ class GroupLassoOverlap(NesterovFunction):
 
         return np.dot(self._grad.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum
 
-    def grad(self, beta):
+    def grad(self, beta, mu=None):
 
         if self.gamma < TOLERANCE:
             return np.zeros(beta.shape)
 
-        self._compute_alpha_grad(beta)
+        self._compute_alpha_grad(beta, mu)
 
         return self._grad
 
@@ -1096,12 +1099,12 @@ class GroupLassoOverlap(NesterovFunction):
 #            print "max col sum: ", (self.max_col_norm / self.get_mu())
             return self.max_col_norm / self.get_mu()
 
-    def alpha(self, beta):
+    def alpha(self, beta, mu=None):
 
         if self.gamma < TOLERANCE:
             return tuple([0.0] * len(self._alpha))
 
-        self._compute_alpha_grad(beta)
+        self._compute_alpha_grad(beta, mu)
 
         return self._alpha
 
@@ -1122,9 +1125,10 @@ class GroupLassoOverlap(NesterovFunction):
 
         return alpha
 
-    def _compute_alpha_grad(self, beta):
+    def _compute_alpha_grad(self, beta, mu=None):
 
-        mu = self.get_mu()
+        if mu == None:
+            mu = self.get_mu()
 
         # Compute a* for each dimension
         self._grad = 0

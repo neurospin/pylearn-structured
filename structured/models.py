@@ -808,25 +808,26 @@ class RGCCA(PLSBaseMethod):
 
 class ContinuationRun(BaseMethod):
 
-    def __init__(self, model, tolerances=None, mus=None, algorithm=None,
+    def __init__(self, model, eps=None, mus=None, algorithm=None,
                  *args, **kwargs):
         """Performs continuation for the given method. I.e. runs the method
-        with sucessively smaller values of mu and uses the output from the use
-        of one mu as start vector in the run with the next smaller mu.
+        with sucessively smaller values of mu and uses the output from the
+        use of one mu as start vector in the run with the next smaller mu.
 
         Parameters
         ----------
-        model : The NesterovProximalGradient model to perform continuation on.
+        model : The NesterovProximalGradient model to perform continuation
+                on.
 
-        tolerances : A list of successively smaller tolerance values. The
-                tolerances are used as terminating condition for the algorithm.
-                Mu is computed from this list of tolerances. Note that only one
-                of tolerances and mus can be given.
+        eps : A list of successively smaller eps values. The eps are used as
+                terminating condition for the continuation run. Mu is
+                computed from this list of eps. Note that only one of eps
+                and mus can be given.
 
         mus : A list of successively smaller values of mu, the regularisation
-                parameter in the Nesterov smoothing. The tolerances are
-                computed from this list of mus. Note that only one of mus
-                and tolerances can be given.
+                parameter in the Nesterov smoothing. The eps are computed
+                from this list of mus. Note that only one of mus and eps can
+                be given.
 
         algorithm : The particular algorithm to use.
         """
@@ -839,7 +840,7 @@ class ContinuationRun(BaseMethod):
                                               *args, **kwargs)
 
         self.model = model
-        self.tolerances = tolerances
+        self.eps = eps
         self.mus = mus
 
         if mus != None:
@@ -868,21 +869,22 @@ class ContinuationRun(BaseMethod):
         if self.mus != None:
             lst = self.mus
         else:
-            lst = self.tolerances
+            lst = self.eps
 
         if self.mu_min == None:
-            self.mu_min = self.model.compute_mu(self.tolerances[-1])
+            self.mu_min = self.model.compute_mu(self.eps[-1])
 
         for item in lst:
             if self.mus != None:
                 self.model.set_mu(item)
-                self.model.set_tolerance(self.model.compute_tolerance(item))
+#                self.model.set_tolerance(self.model.compute_tolerance(item))
             else:
-                self.model.set_tolerance(item)
+#                self.model.set_tolerance(item)
                 self.model.set_mu(self.model.compute_mu(item))
 
             self.model.set_start_vector(start_vector)
 #            print self.model.get_algorithm()
+            print "tol: ", self.model.get_tolerance()
             self.model.fit(X, y, early_stopping_mu=self.mu_min, **kwargs)
 
             utils.debug("Continuation with mu = ", self.model.get_mu(), \
@@ -956,8 +958,7 @@ class NesterovProximalGradientMethod(BaseMethod):
         return bm.beta
 
     def compute_mu(self, eps):
-        D = self.get_g().num_compacts()
-
+        D = self.get_g().num_compacts() / 2.0
         def f(mu):
             return -(eps - mu * D) / self.get_g().Lipschitz(mu)
 
@@ -1298,9 +1299,9 @@ class LinearRegressionGL(NesterovProximalGradientMethod):
 
         super(LinearRegressionGL, self).__init__(**kwargs)
 
-        gl = loss_functions.GroupLassoOverlap(gamma, num_variables, groups, mu,
-                                              weights)
         lr = loss_functions.LinearRegressionError()
+        gl = loss_functions.GroupLassoOverlap(gamma, num_variables, groups,
+                                              mu, weights)
 
         self.set_g(loss_functions.CombinedNesterovLossFunction(lr, gl))
 
