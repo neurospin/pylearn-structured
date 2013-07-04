@@ -567,6 +567,47 @@ def test_data():
     plot.show()
 
 
+def create_data(
+        grp_desc =[range(100), range(100,200), range(200,300), range(300,400),range(400,1000)],
+        grp_cors = [0.8, 0, 0.8, 0, 0],
+        grp_assoc = [0.5, 0.5, 0.3, 0.3, 0],
+        grp_firstonly = [True, False, True, False, False],
+        n = 100,
+        labelswapprob = 0,
+        basehaz = 0.2,
+        intercept = 0):
+    """
+    create data with X : n x p observations with groups of variables 
+    with intra-group correlation (grp_cors) and effect on the outcome(betas).
+     the outcome is logistic and potentially noisy (intercept, labelswapprob)
+    """
+    p = sum([len(i) for i in grp_desc])
+    X = np.zeros( (n, p) ) 
+    y = np.zeros( n )
+    sigma = np.zeros( (p,p) )
+    betas = np.zeros( p )
+
+    for b,c,a,o in zip(grp_desc, grp_cors, grp_assoc, grp_firstonly):
+       #print b[0]
+       sigma[b[0]:(b[-1]+1), b[0]:(b[-1]+1)] = c
+       sigma[b[0]:(b[-1]+1), b[0]:(b[-1]+1)] += (1.0 - c) * np.eye(len(b),len(b))
+       #print sigma
+       center = np.zeros(len(b))
+       X[:,b] = np.random.multivariate_normal(center, sigma[b[0]:(b[-1]+1), b[0]:(b[-1]+1)], n)
+       if o:
+           betas[b[0]] = a
+       else:
+           betas[b[0]:(b[-1]+1)] = a
+
+    predlin = np.dot(X, betas)
+
+    p = 1./(1. + np.exp(-(predlin + intercept)))
+    for i in xrange(n):
+        y[i] = np.random.binomial(1, p[i], 1)
+
+    return X, y, betas, grp_desc, sigma
+
+
 if __name__ == "__main__":
 #    test_tv()
 #    test_lasso()
@@ -650,7 +691,6 @@ if __name__ == "__main__":
 #    lr.set_data(X, y)
 #    beta = algorithm.run(X, y)
 
-
 #    # Test group lasso!!
 #    import scipy
 #
@@ -704,6 +744,41 @@ if __name__ == "__main__":
 #    plot.show()
 
 
+    #  Test Logistic Group Lasso ==========
+    np.random.seed(42)
+    X, y, betas, groups, sigma = create_data()
+    #    eps = 0.0001
+    gamma = 10.
+    #    weights = [1.0] * len(groups)
+    p = len(betas)
+    lrgl = models.LogisticRegressionGL(gamma,p, groups, mu=None, weights=None)
+    cont = models.ContinuationRun(lrgl,
+                                 tolerances=[ 0.1, 0.01, 0.001, 0.0001])
+    #    lrgl.set_tolerance(eps)        
+    cont.set_max_iter(1000)
+    #    lrgl.set_data(X, y)
+    #    lrgl.set_mu(lrgl.compute_mu(eps))
+    cont.fit(X, y)
+   
+    alg = cont.get_algorithm()
+    print cont.get_transform()
+    print alg.iterations
+
+    plot.subplot(2, 1, 1)
+    plot.plot(betas, '-g', cont.beta, '*r')
+
+    plot.subplot(2, 1, 2)
+    plot.plot(alg.f)
+    plot.title("Iterations: " + str(alg.iterations))
+
+    plot.show()
+
+    # Test group lasso!!
+    import scipy
+
+
+
+    return
 
     np.random.seed(42)
 
