@@ -651,144 +651,144 @@ if __name__ == "__main__":
 #    beta = algorithm.run(X, y)
 
 
-    # Test group lasso!!
-    import scipy
+#    # Test group lasso!!
+#    import scipy
+#
+#    np.random.seed(42)
+#
+#    p = 40
+#    betastar = np.zeros((p, 1)).ravel()
+##    betastar = [0., 0., 0., 0., 0., .5, .7, 1., .6, .7, 0., 0., 0., 0., 0.]
+##    groups = [[5, 6, 7, 8, 9]]
+##    groups = [range(p / 3), range(p / 3, 2 * p / 3), range(2 * p / 3, p)]
+#    groups = [range(p / 3, 2 * p / 3), range(p)]
+#    betastar[groups[0]] = 1
+#
+#    p = len(betastar)
+#    n = 20
+#
+#    r = 0.0
+#    u = r * np.random.randn(p, p)
+#    u += (1.0 - r) * np.eye(p, p)
+#    sigma = np.dot(u.T, u)
+#    mean = np.zeros(p)
+#
+#    X = np.random.multivariate_normal(mean, sigma, n)
+#    y = np.reshape(np.dot(X, betastar), (n, 1))
+#
+##    eps = 0.0001
+#    gamma = 1.0
+##    weights = [1.0] * len(groups)
+#
+##    lrgl = models.LinearRegressionGL(gamma, p, groups)
+#    lrgl = models.LinearRegressionTV(gamma, (1, 1, p))
+#    cont = models.ContinuationRun(lrgl,
+#                                  mus=[10, 1.0, 0.1, 0.01, 0.001, 0.0001])
+#    cont.set_tolerance(0.00001)
+#    cont.set_max_iter(10000)
+##    lrgl.set_data(X, y)
+##    lrgl.set_mu(lrgl.compute_mu(eps))
+#    cont.fit(X, y)
+#
+#    alg = cont.get_algorithm()
+#    print cont.get_transform()
+#    print alg.iterations
+#
+#    plot.subplot(2, 1, 1)
+#    plot.plot(betastar, '-g', cont.beta, '*r')
+#
+#    plot.subplot(2, 1, 2)
+#    plot.plot(alg.f)
+#    plot.title("Iterations: " + str(alg.iterations))
+#
+#    plot.show()
+
+
 
     np.random.seed(42)
 
-    p = 40
-    betastar = np.zeros((p, 1)).ravel()
-#    betastar = [0., 0., 0., 0., 0., .5, .7, 1., .6, .7, 0., 0., 0., 0., 0.]
-#    groups = [[5, 6, 7, 8, 9]]
-#    groups = [range(p / 3), range(p / 3, 2 * p / 3), range(2 * p / 3, p)]
-    groups = [range(p / 3, 2 * p / 3), range(p)]
-    betastar[groups[0]] = 1
+    maxit = 10000
 
-    p = len(betastar)
-    n = 20
+    px = 100
+    py = 1
+    pz = 1
+    p = px * py * pz  # Must be even!
+    n = 60
+    X = np.random.randn(n, p)
+    betastar = np.concatenate((np.zeros((p / 2, 1)),
+                               np.random.randn(p / 2, 1)))
+    betastar = np.sort(np.abs(betastar), axis=0)
+    y = np.dot(X, betastar)
 
-    r = 0.0
-    u = r * np.random.randn(p, p)
-    u += (1.0 - r) * np.eye(p, p)
-    sigma = np.dot(u.T, u)
-    mean = np.zeros(p)
+    m = models.NesterovProximalGradientMethod()
 
-    X = np.random.multivariate_normal(mean, sigma, n)
-    y = np.reshape(np.dot(X, betastar), (n, 1))
-
-#    eps = 0.0001
     gamma = 1.0
-#    weights = [1.0] * len(groups)
+    shape = [pz, py, px]
+    mu = 0.01
+    tv = loss_functions.TotalVariation(gamma, shape, mu)
+    lr = loss_functions.LinearRegressionError()
 
-#    lrgl = models.LinearRegressionGL(gamma, p, groups)
-    lrgl = models.LinearRegressionTV(gamma, (1, 1, p))
-    cont = models.ContinuationRun(lrgl,
-                                  mus=[10, 1.0, 0.1, 0.01, 0.001, 0.0001])
-    cont.set_tolerance(0.00001)
-    cont.set_max_iter(10000)
-#    lrgl.set_data(X, y)
-#    lrgl.set_mu(lrgl.compute_mu(eps))
-    cont.fit(X, y)
+    combo = loss_functions.CombinedNesterovLossFunction(lr, tv)
+    m.set_g(combo)
+    combo.set_data(X, y)
 
-    alg = cont.get_algorithm()
-    print cont.get_transform()
-    print alg.iterations
+    D = tv.num_groups()
+    A = tv.Lipschitz(mu) * mu
+    l = lr.Lipschitz()
 
-    plot.subplot(2, 1, 1)
-    plot.plot(betastar, '-g', cont.beta, '*r')
+    def mu_plus(eps):
+        return (-D * A + np.sqrt((D * A) ** 2.0 + D * l * eps * A)) / (D * l)
 
-    plot.subplot(2, 1, 2)
-    plot.plot(alg.f)
-    plot.title("Iterations: " + str(alg.iterations))
+    def eps_plus(mu):
+        return ((mu * D * l + D * A) ** 2.0 - (D * A) ** 2.0) / (D * l * A)
 
-    plot.show()
+    m.algorithm._set_tolerance(m.compute_tolerance(mu))
+    beta = m.algorithm.run(X, y)
 
+    eps = 0.01
+    mu = mu_plus(eps)
+    s = time()
+    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+    s = time()
+    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+    print
 
+    eps = 0.3
+    mu = mu_plus(eps)
+    s = time()
+    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+    s = time()
+    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+    print
 
-#    np.random.seed(42)
-#
-#    maxit = 10000
-#
-#    px = 100
-#    py = 1
-#    pz = 1
-#    p = px * py * pz  # Must be even!
-#    n = 60
-#    X = np.random.randn(n, p)
-#    betastar = np.concatenate((np.zeros((p / 2, 1)),
-#                               np.random.randn(p / 2, 1)))
-#    betastar = np.sort(np.abs(betastar), axis=0)
-#    y = np.dot(X, betastar)
-#
-#    m = models.NesterovProximalGradientMethod()
-#
-#    gamma = 1.0
-#    shape = [pz, py, px]
-#    mu = 0.01
-#    tv = loss_functions.TotalVariation(gamma, shape, mu)
-#    lr = loss_functions.LinearRegressionError()
-#
-#    combo = loss_functions.CombinedNesterovLossFunction(lr, tv)
-#    m.set_g(combo)
-#    combo.set_data(X, y)
-#
-#    D = tv.num_groups()
-#    A = tv.Lipschitz(mu) * mu
-#    l = lr.Lipschitz()
-#
-#    def mu_plus(eps):
-#        return (-D * A + np.sqrt((D * A) ** 2.0 + D * l * eps * A)) / (D * l)
-#
-#    def eps_plus(mu):
-#        return ((mu * D * l + D * A) ** 2.0 - (D * A) ** 2.0) / (D * l * A)
-#
-#    m.algorithm._set_tolerance(m.compute_tolerance(mu))
-#    beta = m.algorithm.run(X, y)
-#
-#    eps = 0.01
-#    mu = mu_plus(eps)
-#    s = time()
-#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
-#    s = time()
-#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
-#    print
-#
-#    eps = 0.3
-#    mu = mu_plus(eps)
-#    s = time()
-#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
-#    s = time()
-#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
-#    print
-#
-#    eps = 1.0
-#    mu = mu_plus(eps)
-#    s = time()
-#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
-#    s = time()
-#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
-#    print
-#
-#    mu = 0.00149
-#    eps = eps_plus(mu)
-#    s = time()
-#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
-#    s = time()
-#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
-#    print
-#
-#    mu = 0.01949
-#    eps = eps_plus(mu)
-#    s = time()
-#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
-#    s = time()
-#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
-#    print
-#
-#    mu = 0.03975
-#    eps = eps_plus(mu)
-#    s = time()
-#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
-#    s = time()
-#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
-#    print
+    eps = 1.0
+    mu = mu_plus(eps)
+    s = time()
+    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+    s = time()
+    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+    print
+
+    mu = 0.00149
+    eps = eps_plus(mu)
+    s = time()
+    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+    s = time()
+    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+    print
+
+    mu = 0.01949
+    eps = eps_plus(mu)
+    s = time()
+    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+    s = time()
+    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+    print
+
+    mu = 0.03975
+    eps = eps_plus(mu)
+    s = time()
+    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+    s = time()
+    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+    print

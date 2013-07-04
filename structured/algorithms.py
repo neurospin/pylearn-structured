@@ -796,6 +796,10 @@ class MonotoneFISTARegression(ISTARegression):
                         'convergence')
                 break
 
+        print "Smooth: ", f_new
+        print "True:   ", (self.g.f(beta_new, smooth=False) + self.h.f(beta_new))
+        print
+
         return beta_new
 
 
@@ -848,10 +852,6 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
         v = algorithms.SparseSVD(max_iter=100).run(A)
         u = A.dot(v)
         L = np.sum(u ** 2.0)
-
-#        L = self.h.Lipschitz(1.0)
-#        print "L:", L, ", _L:", _L
-
         del A
         L = L / self.g.lambda_min()  # Lipschitz constant
         print "Lipschitz constant:", L
@@ -905,6 +905,10 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
             alpha_hat = self._alpha_hat_muk(beta_new)
             for i in xrange(len(alpha_hat)):
                 u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
+
+        print "EGM Smooth: ", f_new
+        print "EGM True:   ", (self.g.f(beta_new, smooth=False) + self.h.f(beta_new, smooth=False))
+        print
 
         return beta_new
 

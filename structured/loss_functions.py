@@ -31,7 +31,8 @@ import numpy as np
 import scipy.sparse as sparse
 
 import algorithms
-from utils import norm, norm1, TOLERANCE, delete_sparse_csr_row
+#from utils import norm, norm1, TOLERANCE, delete_sparse_csr_row
+import utils
 
 
 class LossFunction(object):
@@ -142,7 +143,15 @@ class NesterovFunction(LossFunction,
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, gamma=1.0, mu=None, **kwargs):
+        """Construct a Nesterov loss function.
 
+        Parameters
+        ----------
+        gamma : The regularisation parameter for the nesterov penality.
+
+        mu : The Nesterov function regularisation parameter. Must be provided
+                unless you are using ContinuationRun.
+        """
         super(NesterovFunction, self).__init__(**kwargs)
 
         self.gamma = float(gamma)
@@ -161,6 +170,35 @@ class NesterovFunction(LossFunction,
 #        raise NotImplementedError('Abstract method "from_A" must be ' \
 #                                  'specialised!')
 
+    def compute_tolerance(self, mu):
+
+        D = self.num_compacts() / 2.0
+
+        def f(eps):
+            return self.compute_mu(eps) - mu
+
+        bm = algorithms.BisectionMethod(utils.AnonymousClass(f=f))
+        bm.run(utils.TOLERANCE, mu * D)
+
+        return bm.beta
+
+    def compute_mu(self, eps):
+
+        D = self.num_compacts() / 2.0
+
+        def f(mu):
+            return -(eps - mu * D) / self.Lipschitz(mu)
+
+        gs = algorithms.GoldenSectionSearch(utils.AnonymousClass(f=f))
+        gs.run(utils.TOLERANCE, eps / D)
+
+#        ts = algorithms.TernarySearch(utils.AnonymousClass(f=f))
+#        ts.run(utils.TOLERANCE, eps / D)
+#        print "gs.iterations: ", gs.iterations
+#        print "ts.iterations: ", ts.iterations
+
+        return gs.beta
+
     def Lipschitz(self, mu=None):
         """The Lipschitz constant of the gradient.
 
@@ -168,7 +206,7 @@ class NesterovFunction(LossFunction,
         divided by mu, but should be specialised in subclasses if faster
         approaches exist.
         """
-        if self.gamma < TOLERANCE:
+        if self.gamma < utils.TOLERANCE:
             return 0.0
 
         if self.lambda_max == None:
@@ -425,7 +463,6 @@ class LinearRegressionError(LossFunction,
 
         self.X = X
         self.y = y
-        self.Xy = np.dot(X.T, y)
 
         self.lipschitz = None
 
@@ -438,8 +475,8 @@ class LinearRegressionError(LossFunction,
     def grad(self, beta, **kwargs):
 
 #        return 2.0 * np.dot(self.X.T, np.dot(self.X, beta) - self.y)
-#        return 2.0 * (np.dot(self.X.T, np.dot(self.X, beta)) - self.Xy)
-        return np.dot(self.X.T, np.dot(self.X, beta)) - self.Xy
+#        return np.dot(self.X.T, np.dot(self.X, beta) - self.y)
+        return np.dot((np.dot(self.X, beta) - self.y).T, self.X).T
 
     def Lipschitz(self, *args, **kwargs):
 
@@ -470,11 +507,13 @@ class LogisticRegressionError(LossFunction,
         self.lipschitz = None
 
     def f(self, beta, **kwargs):
+
         logit = np.dot(self.X, beta)
         expt = np.exp(logit)
         return -np.sum(np.multiply(self.y, logit) + np.log(1 + expt))
 
     def grad(self, beta, **kwargs):
+
         logit = np.dot(self.X, beta)
         expt = np.exp(logit)
         pix = np.divide(expt, expt + 1)
@@ -532,17 +571,17 @@ class RidgeRegression(LossFunction,
 
     def f(self, beta, **kwargs):
 
-        return 0.5 * (np.sum((self.y - np.dot(self.X, beta)) ** 2.0) \
-                + self.l * np.sum(beta ** 2.0))
 #        return (np.sum((self.y - np.dot(self.X, beta)) ** 2.0) \
 #                + self.l * np.sum(beta ** 2.0))
+        return 0.5 * (np.sum((self.y - np.dot(self.X, beta)) ** 2.0) \
+                + self.l * np.sum(beta ** 2.0))
 
     def grad(self, beta, **kwargs):
 
-        return (np.dot(self.X.T, np.dot(self.X, beta)) - self.Xty) \
-                + self.l * beta
 #        return 2.0 * ((np.dot(self.X.T, np.dot(self.X, beta)) - self.Xty) \
 #                + self.l * beta)
+        return (np.dot(self.X.T, np.dot(self.X, beta)) - self.Xty) \
+                + self.l * beta
 
     def Lipschitz(self, *args, **kwargs):
 
@@ -551,8 +590,8 @@ class RidgeRegression(LossFunction,
             self.l_max = np.max(s) ** 2.0 + self.l
             self.l_min = np.min(s) ** 2.0 + self.l
 
-        return self.l_max
 #        return 2.0 * self.l_max
+        return self.l_max
 
     def lambda_min(self):
 
@@ -561,8 +600,8 @@ class RidgeRegression(LossFunction,
             self.l_max = np.max(s) ** 2.0 + self.l
             self.l_min = np.min(s) ** 2.0 + self.l
 
-        return self.l_min
 #        return 2.0 * self.l_min
+        return self.l_min
 
 
 class L1(ProximalOperator):
@@ -575,7 +614,7 @@ class L1(ProximalOperator):
 
     def f(self, beta):
 
-        return self.l * norm1(beta)
+        return self.l * utils.norm1(beta)
 
     def prox(self, x, factor=1.0, allow_empty=False):
 
@@ -653,7 +692,7 @@ class L1L2(ProximalOperator):
         self.k = k
 
     def f(self, x):
-        return self.l * norm1(x) + (self.k / 2.0) * np.sum(x ** 2.0)
+        return self.l * utils.norm1(x) + (self.k / 2.0) * np.sum(x ** 2.0)
 
     def prox(self, x, factor=1.0, allow_empty=False):
 
@@ -714,6 +753,11 @@ class TotalVariation(NesterovFunction):
 
         self.precompute()
 
+        if mu == None:
+            mu = max(utils.TOLERANCE,
+                     2.0 * utils.TOLERANCE / self.num_compacts())
+            self.set_mu(mu)
+
 #    def from_A(self, gamma, shape, A, mu=None, compress=True):
 #
 #        obj = self(gamma, [1, 1, 1], mu, compress)
@@ -721,24 +765,36 @@ class TotalVariation(NesterovFunction):
 #
 #        return obj
 
-    def f(self, beta, mu=None):
+    def f(self, beta, mu=None, smooth=True):
 
-        if self.gamma < TOLERANCE:
+        if self.gamma < utils.TOLERANCE:
             return 0.0
 
-        alpha = self.alpha(beta, mu)  # _compute_alpha_grad is called here
-        alpha_sqsum = 0.0
-        for a in alpha:
-            alpha_sqsum += np.sum(a ** 2.0)
+        if smooth:
+            alpha = self.alpha(beta, mu)  # _compute_alpha_grad is called here
+            alpha_sqsum = 0.0
+            for a in alpha:
+                alpha_sqsum += np.sum(a ** 2.0)
 
-        if mu == None:
-            mu = self.get_mu()
+            if mu == None:
+                mu = self.get_mu()
 
-        return np.dot(self._grad.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum
+            return np.dot(self._grad.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum
+
+        else:
+#            sqsum = 0.0
+#            for Ad in self._A:
+#                sqsum += Ad.dot(beta) ** 2.0
+#            sqsum = np.sqrt(sqsum)
+            sqsum = np.sum(np.sqrt(self._A[0].dot(beta) ** 2.0 + \
+                                   self._A[1].dot(beta) ** 2.0 + \
+                                   self._A[2].dot(beta) ** 2.0))
+
+            return self.gamma * np.sum(sqsum)
 
     def grad(self, beta, mu=None):
 
-        if self.gamma < TOLERANCE:
+        if self.gamma < utils.TOLERANCE:
             return np.zeros(beta.shape)
 
         self._compute_alpha_grad(beta, mu)
@@ -747,7 +803,7 @@ class TotalVariation(NesterovFunction):
 
     def alpha(self, beta, mu=None):
 
-        if self.gamma < TOLERANCE:
+        if self.gamma < utils.TOLERANCE:
             return [0.0, 0.0, 0.0]
 
         self._compute_alpha_grad(beta, mu)
@@ -866,9 +922,9 @@ class TotalVariation(NesterovFunction):
             # Remove from the end so that indices are not changed
             toremove.reverse()
             for i in toremove:
-                delete_sparse_csr_row(Ax, i)
-                delete_sparse_csr_row(Ay, i)
-                delete_sparse_csr_row(Az, i)
+                utils.delete_sparse_csr_row(Ax, i)
+                utils.delete_sparse_csr_row(Ay, i)
+                utils.delete_sparse_csr_row(Az, i)
 
         # Remove columns of A corresponding to masked-out variables
         if self.mask != None:
@@ -877,9 +933,9 @@ class TotalVariation(NesterovFunction):
             Azt = Az.T.tocsr()
             for i in reversed(xrange(p)):
                 if self.mask[i] == 0:
-                    delete_sparse_csr_row(Axt, i)
-                    delete_sparse_csr_row(Ayt, i)
-                    delete_sparse_csr_row(Azt, i)
+                    utils.delete_sparse_csr_row(Axt, i)
+                    utils.delete_sparse_csr_row(Ayt, i)
+                    utils.delete_sparse_csr_row(Azt, i)
 
             Ax = Axt.T
             Ay = Ayt.T
@@ -908,7 +964,8 @@ class SmoothL1(NesterovFunction):
 
         num_variables : The total number of variables.
 
-        mu : The Nesterov function regularisation parameter.
+        mu : The Nesterov function regularisation parameter. Must be provided
+                unless you are using ContinuationRun.
 
         mask : A 1-dimensional mask representing the 3D image mask. Must be a
                 list of 1s and 0s.
@@ -920,21 +977,35 @@ class SmoothL1(NesterovFunction):
 
         self.precompute()
 
-    def f(self, beta, mu=None):
+        if mu == None:
+            mu = max(utils.TOLERANCE,
+                     2.0 * utils.TOLERANCE / self.num_compacts())
+            self.set_mu(mu)
 
-        if self.gamma < TOLERANCE:
+    def f(self, beta, mu=None, smooth=True):
+
+        if self.gamma < utils.TOLERANCE:
             return 0.0
 
-        self._compute_alpha_grad(beta, mu)
+        if smooth:
+            alpha = self.alpha(beta, mu)  # _compute_alpha_grad is called here
+#            self._compute_alpha_grad(beta, mu)
 
-        if mu == None:
-            mu = self.get_mu()
-        return np.dot(self._grad.T, beta)[0, 0] \
-                       - (mu / 2.0) * np.sum(self._alpha[0] ** 2.0)
+            alpha_sqsum = 0.0
+            for a in alpha:
+                alpha_sqsum += np.sum(a ** 2.0)
+
+            if mu == None:
+                mu = self.get_mu()
+
+            return np.dot(self._grad.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum
+
+        else:
+            return self.gamma * utils.norm1(beta)
 
     def grad(self, beta, mu=None):
 
-        if self.gamma < TOLERANCE:
+        if self.gamma < utils.TOLERANCE:
             return np.zeros(beta.shape)
 
         self._compute_alpha_grad(beta, mu)
@@ -943,7 +1014,7 @@ class SmoothL1(NesterovFunction):
 
     def Lipschitz(self, mu=None):
 
-        if self.gamma < TOLERANCE:
+        if self.gamma < utils.TOLERANCE:
             return 0.0
 
         if self.lambda_max == None:
@@ -963,7 +1034,7 @@ class SmoothL1(NesterovFunction):
 
     def alpha(self, beta, mu=None):
 
-        if self.gamma < TOLERANCE:
+        if self.gamma < utils.TOLERANCE:
             return [0.0]
 
         self._compute_alpha_grad(beta, mu)
@@ -1010,7 +1081,7 @@ class SmoothL1(NesterovFunction):
             At = A.T.tocsr()
             for i in reversed(xrange(self.num_variables)):
                 if self.mask[i] == 0:
-                    delete_sparse_csr_row(At, i)
+                    utils.delete_sparse_csr_row(At, i)
 
             A = At.T
         else:
@@ -1037,15 +1108,16 @@ class GroupLassoOverlap(NesterovFunction):
                 contains two groups ([1,2] and [2,3]) with variable 1 and 2 in
                 the first group and variables 2 and 3 in the second group.
 
-        mu : The Nesterov function regularisation parameter.
+        mu : The Nesterov function regularisation parameter. Must be provided
+                unless you are using ContinuationRun.
 
         weights : Weights put on the groups. Default is weight 1 for each
                 group.
         """
         super(GroupLassoOverlap, self).__init__(gamma=gamma, mu=mu, **kwargs)
 
-        self.groups = groups
         self.num_variables = num_variables
+        self.groups = groups
 
         if weights == None:
             self.weights = [1.0] * len(groups)
@@ -1054,24 +1126,37 @@ class GroupLassoOverlap(NesterovFunction):
 
         self.precompute()
 
-    def f(self, beta, mu=None):
+        if mu == None:
+            mu = max(utils.TOLERANCE,
+                     2.0 * utils.TOLERANCE / self.num_compacts())
+            self.set_mu(mu)
 
-        if self.gamma < TOLERANCE:
+    def f(self, beta, mu=None, smooth=True):
+
+        if self.gamma < utils.TOLERANCE:
             return 0.0
 
-        alpha = self.alpha(beta, mu)  # _compute_alpha_grad is called within here
-        alpha_sqsum = 0.0
-        for a in alpha:
-            alpha_sqsum += np.sum(a ** 2.0)
+        if smooth:
+            alpha = self.alpha(beta, mu)  # _compute_alpha_grad is called here
+            alpha_sqsum = 0.0
+            for a in alpha:
+                alpha_sqsum += np.sum(a ** 2.0)
 
-        if mu == None:
-            mu = self.get_mu()
+            if mu == None:
+                mu = self.get_mu()
 
-        return np.dot(self._grad.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum
+            return np.dot(self._grad.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum
+
+        else:
+            sqsum = 0.0
+            for Ag in self._A:
+                sqsum += utils.norm(Ag.dot(beta))  # A.dot(beta) ** 2.0
+
+            return self.gamma * sqsum
 
     def grad(self, beta, mu=None):
 
-        if self.gamma < TOLERANCE:
+        if self.gamma < utils.TOLERANCE:
             return np.zeros(beta.shape)
 
         self._compute_alpha_grad(beta, mu)
@@ -1080,7 +1165,7 @@ class GroupLassoOverlap(NesterovFunction):
 
     def Lipschitz(self, mu=None):
 
-        if self.gamma < TOLERANCE:
+        if self.gamma < utils.TOLERANCE:
             return 0
 
 #        if self.lambda_max == None:
@@ -1101,7 +1186,7 @@ class GroupLassoOverlap(NesterovFunction):
 
     def alpha(self, beta, mu=None):
 
-        if self.gamma < TOLERANCE:
+        if self.gamma < utils.TOLERANCE:
             return tuple([0.0] * len(self._alpha))
 
         self._compute_alpha_grad(beta, mu)

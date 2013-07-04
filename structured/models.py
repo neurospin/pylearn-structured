@@ -808,7 +808,7 @@ class RGCCA(PLSBaseMethod):
 
 class ContinuationRun(BaseMethod):
 
-    def __init__(self, model, eps=None, mus=None, algorithm=None,
+    def __init__(self, model, tolerances=None, mus=None, algorithm=None,
                  *args, **kwargs):
         """Performs continuation for the given method. I.e. runs the method
         with sucessively smaller values of mu and uses the output from the
@@ -819,15 +819,15 @@ class ContinuationRun(BaseMethod):
         model : The NesterovProximalGradient model to perform continuation
                 on.
 
-        eps : A list of successively smaller eps values. The eps are used as
-                terminating condition for the continuation run. Mu is
-                computed from this list of eps. Note that only one of eps
-                and mus can be given.
+        tolerances : A list of successively smaller tolerances values. The
+                tolerances are used as terminating condition for the
+                continuation run. Mu is computed from this list of tolerances.
+                Note that only one of tolerances and mus can be given.
 
         mus : A list of successively smaller values of mu, the regularisation
-                parameter in the Nesterov smoothing. The eps are computed
-                from this list of mus. Note that only one of mus and eps can
-                be given.
+                parameter in the Nesterov smoothing. The tolerances are
+                computed from this list of mus. Note that only one of mus and
+                tolerances can be given.
 
         algorithm : The particular algorithm to use.
         """
@@ -838,9 +838,8 @@ class ContinuationRun(BaseMethod):
 
         super(ContinuationRun, self).__init__(num_comp=1, algorithm=algorithm,
                                               *args, **kwargs)
-
         self.model = model
-        self.eps = eps
+        self.tolerances = tolerances
         self.mus = mus
 
         if mus != None:
@@ -869,22 +868,20 @@ class ContinuationRun(BaseMethod):
         if self.mus != None:
             lst = self.mus
         else:
-            lst = self.eps
+            lst = self.tolerances
 
         if self.mu_min == None:
-            self.mu_min = self.model.compute_mu(self.eps[-1])
+            self.mu_min = self.model.compute_mu(self.tolerances[-1])
 
         for item in lst:
             if self.mus != None:
                 self.model.set_mu(item)
-#                self.model.set_tolerance(self.model.compute_tolerance(item))
+                self.model.set_tolerance(self.model.compute_tolerance(item))
             else:
-#                self.model.set_tolerance(item)
+                self.model.set_tolerance(item)
                 self.model.set_mu(self.model.compute_mu(item))
 
             self.model.set_start_vector(start_vector)
-#            print self.model.get_algorithm()
-            print "tol: ", self.model.get_tolerance()
             self.model.fit(X, y, early_stopping_mu=self.mu_min, **kwargs)
 
             utils.debug("Continuation with mu = ", self.model.get_mu(), \
@@ -903,6 +900,90 @@ class ContinuationRun(BaseMethod):
         return self
 
 
+#class Continuation(BaseMethod):
+#
+#    def __init__(self, model, iterations=1, algorithm=None, *args, **kwargs):
+#        """Performs continuation for the given method. I.e. builds models with
+#        sucessively smaller values of mu and uses the output from the use of
+#        one mu as start vector in the run with the next smaller mu.
+#
+#        Parameters
+#        ----------
+#        model : The NesterovProximalGradient model to perform continuation
+#                on.
+#
+#        iterations : The number of iterations in each continuation.
+#
+#        algorithm : The particular algorithm to use.
+#        """
+#        if algorithm == None:
+#            algorithm = model.get_algorithm()
+#        else:
+#            model.set_algorithm(algorithm)
+#
+#        super(ContinuationRun, self).__init__(num_comp=1, algorithm=algorithm,
+#                                              *args, **kwargs)
+#
+#        self.model = model
+#        self.iterations = iterations
+#
+#    def get_transform(self, index=0):
+#
+#        return self.beta
+#
+#    def get_algorithm(self):
+#
+#        return self.model.get_algorithm()
+#
+#    def set_algorithm(self, algorithm):
+#
+#        self.model.set_algorithm(algorithm)
+#
+#    def fit(self, X, y, **kwargs):
+#
+#        start_vector = self.model.get_start_vector()
+#        f = []
+#        self.model.set_data(X, y)
+#
+#        mu = max(utils.TOLERANCE,
+#                 2.0 * self.get_tolerance() / self.num_compacts())
+#
+#        self.model.set_max_iter(1)
+#        self.model.fit(X, y, **kwargs)
+#        f_true = self.model.f(self.model.get_transform(), smooth=False)
+#        f_mu = self.model.f(self.model.get_transform(), mu=mu)
+#
+#        while True:
+#            f_true = self.model.
+#            f_mu = 
+#            if self.mus != None:
+#                self.model.set_mu(item)
+##                self.model.set_tolerance(self.model.compute_tolerance(item))
+#            else:
+##                self.model.set_tolerance(item)
+#                self.model.set_mu(self.model.compute_mu(item))
+#
+#            self.model.set_start_vector(start_vector)
+##            print self.model.get_algorithm()
+#            print "tol: ", self.model.get_tolerance()
+#            self.model.fit(X, y, early_stopping_mu=self.mu_min, **kwargs)
+#
+#            utils.debug("Continuation with mu = ", self.model.get_mu(), \
+#                    ", tolerance = ", self.model.get_tolerance(), \
+#                    ", early_stopping_mu = ", self.mu_min, \
+#                    ", iterations = ", self.model.get_algorithm().iterations)
+#
+#            self.beta = self.model.get_transform()
+#            f = f + self.model.get_algorithm().f[1:]  # Skip the first, same
+#
+#            start_vector = start_vectors.IdentityStartVector(self.beta)
+#
+#        self.model.get_algorithm().f = f
+#        self.model.get_algorithm().iterations = len(f)
+#
+#        return self
+
+
 class NesterovProximalGradientMethod(BaseMethod):
 
     __metaclass__ = abc.ABCMeta
@@ -910,9 +991,9 @@ class NesterovProximalGradientMethod(BaseMethod):
     def __init__(self, algorithm=None, **kwargs):
 
         if algorithm == None:
-            algorithm = algorithms.ISTARegression()
+#            algorithm = algorithms.ISTARegression()
 #            algorithm = algorithms.FISTARegression()
-#            algorithm = algorithms.MonotoneFISTARegression()
+            algorithm = algorithms.MonotoneFISTARegression()
 
         super(NesterovProximalGradientMethod, self).__init__(num_comp=1,
                                                            algorithm=algorithm,
@@ -937,6 +1018,19 @@ class NesterovProximalGradientMethod(BaseMethod):
 
         return self
 
+    def f(self, *args, **kwargs):
+
+        return self.get_g().f(*args, **kwargs) \
+                + self.get_h().f(*args, **kwargs)
+
+    def compute_tolerance(self, mu):
+
+        return self.get_g().compute_tolerance(mu)
+
+    def compute_mu(self, eps):
+
+        return self.get_g().compute_mu(eps)
+
     def predict(self, X, **kwargs):
 
         yhat = np.dot(X, self.get_transform())
@@ -946,30 +1040,6 @@ class NesterovProximalGradientMethod(BaseMethod):
     def get_transform(self, index=0):
 
         return self.beta
-
-    def compute_tolerance(self, mu):
-
-        def f(eps):
-            return self.compute_mu(eps) - mu
-
-        bm = algorithms.BisectionMethod(utils.AnonymousClass(f=f))
-        bm.run(utils.TOLERANCE, 10.0)
-
-        return bm.beta
-
-    def compute_mu(self, eps):
-        D = self.get_g().num_compacts() / 2.0
-        def f(mu):
-            return -(eps - mu * D) / self.get_g().Lipschitz(mu)
-
-        gs = algorithms.GoldenSectionSearch(utils.AnonymousClass(f=f))
-        gs.run(utils.TOLERANCE, 10.0)
-#        ts = algorithms.GoldenSectionSearch(utils.Struct(f=f))
-#        ts.run(utils.TOLERANCE, 10.0)
-#        print "gs.iterations: ", gs.iterations
-#        print "ts.iterations: ", ts.iterations
-
-        return gs.beta
 
     def set_mu(self, mu):
 
