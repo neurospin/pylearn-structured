@@ -1110,7 +1110,8 @@ class GoldenSectionSearch(BaseAlgorithm):
         """
 
         b, it = self.golden_section_search(b_0, (b_0 + b_1) / 2.0, b_1,
-                                           np.sqrt(self.tolerance), 1)
+                                           self.tolerance, 1)
+#                                           np.sqrt(self.tolerance), 1)
 
         self.beta = b
         self.iterations = it

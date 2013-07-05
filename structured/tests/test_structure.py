@@ -329,7 +329,8 @@ def test():
     # Linear regression + Total variation penalty
     utils.debug("Linear regression + Total variation")
     gamma = 0.01
-    pgm = models.LinearRegressionTV(gamma, (pz, py, px), mu=mu)
+    pgm = models.LinearRegressionTV(gamma, shape=(pz, py, px), mu=mu)
+    pgm_lrtv = pgm  # For testing compute_mu and compute_tolerance
     pgm.set_max_iter(maxit)
     pgm.set_tolerance(eps)
     pgm.fit(X, y)
@@ -668,6 +669,74 @@ def test():
     utils.debug("")
 
 #    plot.show()
+
+    # Test the functions compute_mu and compute_tolerance
+    utils.debug("Testing compute_mu and compute_tolerance:")
+    g = pgm_lrtv.get_g()
+    lr = g.a
+    tv = g.b
+
+    D = tv.num_compacts() / 2.0
+#    print "D:", D
+    A = tv.Lipschitz(1.0)
+    l = lr.Lipschitz()
+
+#    print "A:", A
+#    print "l:", l
+
+    def mu_plus(eps):
+        return (-2.0 * D * A + np.sqrt((2.0 * D * A) ** 2.0 + 4.0 * D * l * eps * A)) / (2.0 * D * l)
+
+    def eps_plus(mu):
+        return ((2.0 * mu * D * l + 2.0 * D * A) ** 2.0 - (2.0 * D * A) ** 2.0) / (4.0 * D * l * A)
+
+    utils.debug("Testing eps:")
+    for eps in [1000000.0, 100000.0, 10000.0, 1000.0, 100.0, 10.0, \
+                1.0, 0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001]:
+        mu1 = mu_plus(eps)
+        eps1 = eps_plus(mu_plus(eps))
+        err1 = abs(eps - eps1) / eps
+        mu2 = pgm_lrtv.compute_mu(eps)
+        eps2 = pgm_lrtv.compute_tolerance(pgm_lrtv.compute_mu(eps))
+        err2 = abs(eps - eps2) / eps
+
+        utils.debug("eps: %.8f -> mu: %.8f -> eps: %.8f (err: %.8f)" \
+                % (eps, mu1, eps1, err1))
+        utils.debug("eps: %.8f -> mu: %.8f -> eps: %.8f (err: %.8f)" \
+                % (eps, mu2, eps2, err2))
+
+        if eps < 0.0001:
+            assert err1 < 1.0
+            assert err2 < 1.0
+        elif eps < 0.00001:
+            assert err1 < 0.005
+            assert err2 < 0.005
+        else:
+            assert err1 < 0.0005
+            assert err2 < 0.0005
+
+    utils.debug("")
+    utils.debug("Testing mu:")
+    for mu in [1000000.0, 100000.0, 10000.0, 1000.0, 100.0, 10.0,
+               1.0, 0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001]:
+        eps1 = eps_plus(mu)
+        mu1 = mu_plus(eps_plus(mu))
+        err1 = abs(mu - mu1) / mu
+        eps2 = pgm_lrtv.compute_tolerance(mu)
+        mu2 = pgm_lrtv.compute_mu(pgm_lrtv.compute_tolerance(mu))
+        err2 = abs(mu - mu2) / mu
+
+        utils.debug("mu: %.8f -> eps: %.8f -> mu: %.8f (err: %.8f)" \
+                % (mu, eps1, mu1, err1))
+        utils.debug("mu: %.8f -> eps: %.8f -> mu: %.8f (err: %.8f)" \
+                % (mu, eps2, mu2, err2))
+
+        if mu > 100000.0:
+            assert err1 < 0.01
+            assert err2 < 0.01
+        else:
+            assert err1 < 0.0005
+            assert err2 < 0.0005
 
 
 if __name__ == "__main__":

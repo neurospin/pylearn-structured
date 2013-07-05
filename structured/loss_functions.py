@@ -165,40 +165,6 @@ class NesterovFunction(LossFunction,
         self._grad = None  # The function's gradient
         self.lambda_max = None  # The largest eigenvalue of A'.A
 
-#    @abc.abstractmethod
-#    def from_A(self, gamma, A, mu=None):
-#        raise NotImplementedError('Abstract method "from_A" must be ' \
-#                                  'specialised!')
-
-    def compute_tolerance(self, mu):
-
-        D = self.num_compacts() / 2.0
-
-        def f(eps):
-            return self.compute_mu(eps) - mu
-
-        bm = algorithms.BisectionMethod(utils.AnonymousClass(f=f))
-        bm.run(utils.TOLERANCE, mu * D)
-
-        return bm.beta
-
-    def compute_mu(self, eps):
-
-        D = self.num_compacts() / 2.0
-
-        def f(mu):
-            return -(eps - mu * D) / self.Lipschitz(mu)
-
-        gs = algorithms.GoldenSectionSearch(utils.AnonymousClass(f=f))
-        gs.run(utils.TOLERANCE, eps / D)
-
-#        ts = algorithms.TernarySearch(utils.AnonymousClass(f=f))
-#        ts.run(utils.TOLERANCE, eps / D)
-#        print "gs.iterations: ", gs.iterations
-#        print "ts.iterations: ", ts.iterations
-
-        return gs.beta
-
     def Lipschitz(self, mu=None):
         """The Lipschitz constant of the gradient.
 
@@ -721,8 +687,8 @@ class ElasticNet(L1L2):
 
 class TotalVariation(NesterovFunction):
 
-    def __init__(self, gamma, shape, mu=None, mask=None, compress=True,
-                 **kwargs):
+    def __init__(self, gamma, shape=None, mu=None, mask=None,
+                 compress=True, A=None, **kwargs):
         """Construct a TotalVariation loss function.
 
         Parameters
@@ -732,7 +698,12 @@ class TotalVariation(NesterovFunction):
         shape : The shape of the 3D image. Must be a 3-tuple. If the image is
                 2D, let the Z dimension be 1, and if the "image" is 1D, let the
                 Y and Z dimensions be 1. The tuple must be on the form
-                (Z, Y, X).
+                (Z, Y, X). Either shape or A must be given, but not both.
+
+        A : If the linear operators are known already, provide them to the
+                constructor to create a TV object reusing those matrices. In TV
+                it is assumed that A is a list of three elements, the matrices
+                Ax, Ay and Az. Either shape or A must be given, but not both.
 
         mu : The Nesterov function regularisation parameter. Must be provided
                 unless you are using ContinuationRun.
@@ -747,21 +718,38 @@ class TotalVariation(NesterovFunction):
         """
         super(TotalVariation, self).__init__(gamma=gamma, mu=mu, **kwargs)
 
-        self.shape = shape
         self.mask = mask
         self.compress = compress
 
-        self.precompute()
+        if shape != None:
+            self.precompute(shape)
+        else:
+            self._A = [A[0], A[1], A[2]]
+            self._At = [A[0].T, A[1].T, A[2].T]
+            self._alpha = [0.0, 0.0, 0.0]
+
+            # TODO: This is only true if zero-rows have been removed!
+            self._num_compacts = A[0].shape[0]
+
+            self._buff = np.zeros((A[0].shape[1], 1))
 
         if mu == None:
             mu = max(utils.TOLERANCE,
                      2.0 * utils.TOLERANCE / self.num_compacts())
             self.set_mu(mu)
 
-#    def from_A(self, gamma, shape, A, mu=None, compress=True):
+#    def from_precomputed(cls, gamma, A, mu=None, mask=None, compress=True):
 #
-#        obj = self(gamma, [1, 1, 1], mu, compress)
-#        obj.A = A
+#        obj = cls(gamma, [1, 1, 1], mu=mu, mask=mask, compress=compress)
+#
+#        obj._A = [A[0], A[1], A[2]]
+#        obj._At = [A[0].T, A[1].T, A[2].T]
+#        obj._alpha = [0.0, 0.0, 0.0]
+#
+#        # TODO: This is only true if zero-rows have been removed!
+#        obj._num_compacts = A[0].shape[0]
+#
+#        obj._buff = np.zeros((A[0].shape[1], 1))
 #
 #        return obj
 
@@ -812,7 +800,8 @@ class TotalVariation(NesterovFunction):
 
     def num_compacts(self):
 
-        return np.prod(self.shape)  # Number of variables
+#        return np.prod(self.shape)  # Number of variables
+        return self._num_compacts
 
     def projection(self, *alpha):
 
@@ -845,8 +834,8 @@ class TotalVariation(NesterovFunction):
         self._alpha = self.projection(*self._alpha)
 
 #        self._grad = np.add(np.add(self._At[0].dot(self._alpha[0]),
-#                                    self._At[1].dot(self._alpha[1]), self.buff),
-#                                    self._At[2].dot(self._alpha[2]), self.buff)
+#                                    self._At[1].dot(self._alpha[1]), self._buff),
+#                                    self._At[2].dot(self._alpha[2]), self._buff)
         self._grad = self._At[0].dot(self._alpha[0])
         for i in xrange(1, len(self._alpha)):
             self._grad += self._At[i].dot(self._alpha[i])
@@ -874,11 +863,11 @@ class TotalVariation(NesterovFunction):
                yind.flatten().tolist(), \
                zind.flatten().tolist()
 
-    def precompute(self):
+    def precompute(self, shape):
 
-        Z = self.shape[0]
-        Y = self.shape[1]
-        X = self.shape[2]
+        Z = shape[0]
+        Y = shape[1]
+        X = shape[2]
         p = X * Y * Z
 
         smtype = 'csr'
@@ -949,7 +938,10 @@ class TotalVariation(NesterovFunction):
         self._At = [Axt, Ayt, Azt]
         self._alpha = [0.0, 0.0, 0.0]
 
-        self.buff = np.zeros((Ax.shape[1], 1))
+        # TODO: This is only true if zero-rows have been removed!
+        self._num_compacts = Ax.shape[0]
+
+        self._buff = np.zeros((Ax.shape[1], 1))
 
 
 class SmoothL1(NesterovFunction):

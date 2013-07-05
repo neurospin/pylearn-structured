@@ -744,41 +744,40 @@ if __name__ == "__main__":
 #    plot.show()
 
 
-    #  Test Logistic Group Lasso ==========
-    np.random.seed(42)
-    X, y, betas, groups, sigma = create_data()
-    #    eps = 0.0001
-    gamma = 10.
-    #    weights = [1.0] * len(groups)
-    p = len(betas)
-    lrgl = models.LogisticRegressionGL(gamma,p, groups, mu=None, weights=None)
-    cont = models.ContinuationRun(lrgl,
-                                 tolerances=[ 0.1, 0.01, 0.001, 0.0001])
-    #    lrgl.set_tolerance(eps)        
-    cont.set_max_iter(1000)
-    #    lrgl.set_data(X, y)
-    #    lrgl.set_mu(lrgl.compute_mu(eps))
-    cont.fit(X, y)
-   
-    alg = cont.get_algorithm()
-    print cont.get_transform()
-    print alg.iterations
+#    #  Test Logistic Group Lasso ==========
+#    np.random.seed(42)
+#    X, y, betas, groups, sigma = create_data()
+#    #    eps = 0.0001
+#    gamma = 10.
+#    #    weights = [1.0] * len(groups)
+#    p = len(betas)
+#    lrgl = models.LogisticRegressionGL(gamma,p, groups, mu=None, weights=None)
+#    cont = models.ContinuationRun(lrgl,
+#                                 tolerances=[ 0.1, 0.01, 0.001, 0.0001])
+#    #    lrgl.set_tolerance(eps)        
+#    cont.set_max_iter(1000)
+#    #    lrgl.set_data(X, y)
+#    #    lrgl.set_mu(lrgl.compute_mu(eps))
+#    cont.fit(X, y)
+#   
+#    alg = cont.get_algorithm()
+#    print cont.get_transform()
+#    print alg.iterations
+#
+#    plot.subplot(2, 1, 1)
+#    plot.plot(betas, '-g', cont.beta, '*r')
+#
+#    plot.subplot(2, 1, 2)
+#    plot.plot(alg.f)
+#    plot.title("Iterations: " + str(alg.iterations))
+#
+#    plot.show()
+#
+#    # Test group lasso!!
+#    import scipy
+#
+#    return
 
-    plot.subplot(2, 1, 1)
-    plot.plot(betas, '-g', cont.beta, '*r')
-
-    plot.subplot(2, 1, 2)
-    plot.plot(alg.f)
-    plot.title("Iterations: " + str(alg.iterations))
-
-    plot.show()
-
-    # Test group lasso!!
-    import scipy
-
-
-
-    return
 
     np.random.seed(42)
 
@@ -802,68 +801,102 @@ if __name__ == "__main__":
     mu = 0.01
     tv = loss_functions.TotalVariation(gamma, shape, mu)
     lr = loss_functions.LinearRegressionError()
-
     combo = loss_functions.CombinedNesterovLossFunction(lr, tv)
+
     m.set_g(combo)
     combo.set_data(X, y)
 
-    D = tv.num_groups()
-    A = tv.Lipschitz(mu) * mu
+    D = tv.num_compacts() / 2.0
+    print "D:", D
+#    _A = tv.Lipschitz(mu) * mu
+    A = tv.Lipschitz(1.0)
+#    assert abs(_A - A) < 0.0000001
     l = lr.Lipschitz()
 
+#    import scipy.sparse as sparse
+#    A_ = sparse.vstack(tv.A()).todense()
+#    L, V = np.linalg.eig(np.dot(A_.T, A_))
+#    print max(L)
+
+    print "A:", A
+    print "l:", l
+
     def mu_plus(eps):
-        return (-D * A + np.sqrt((D * A) ** 2.0 + D * l * eps * A)) / (D * l)
+        return (-2.0 * D * A + np.sqrt((2.0 * D * A) ** 2.0 + 4.0 * D * l * eps * A)) / (2.0 * D * l)
 
     def eps_plus(mu):
-        return ((mu * D * l + D * A) ** 2.0 - (D * A) ** 2.0) / (D * l * A)
+        return ((2.0 * mu * D * l + 2.0 * D * A) ** 2.0 - (2.0 * D * A) ** 2.0) / (4.0 * D * l * A)
 
     m.algorithm._set_tolerance(m.compute_tolerance(mu))
     beta = m.algorithm.run(X, y)
 
-    eps = 0.01
-    mu = mu_plus(eps)
-    s = time()
-    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
-    s = time()
-    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
-    print
+    for eps in [1000000.0, 100000.0, 10000.0, 1000.0, 100.0, 10.0, 1.0, 0.1, 0.01, 0.001]:
+        print "eps: %.7f -> mu: %.7f -> eps: %.7f" % (eps, mu_plus(eps), eps_plus(mu_plus(eps)))
+        print "eps: %.7f -> mu: %.7f -> eps: %.7f" % (eps, m.compute_mu(eps), m.compute_tolerance(m.compute_mu(eps)))
+        print "D * mu = %.7f" % (D * mu)
 
-    eps = 0.3
-    mu = mu_plus(eps)
-    s = time()
-    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
-    s = time()
-    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
-    print
+#    mu1 = []
+#    mu2 = []
+#    eps = []
+#    for _eps in xrange(1, 1000):
+#        eps.append(_eps / 1000.0)
+#
+##        mu1.append(mu_plus(eps[-1]))
+##        mu2.append(m.compute_mu(eps[-1]))
+#        mu1.append(eps_plus(eps[-1]))
+#        mu2.append(m.compute_tolerance(eps[-1]))
+#
+#    plot.plot(eps, mu1, '-r')
+#    plot.plot(eps, mu2, '-g')
+#    plot.show()
+#    print mu1[-10:]
+#    print mu2[-10:]
 
-    eps = 1.0
-    mu = mu_plus(eps)
-    s = time()
-    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
-    s = time()
-    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
-    print
-
-    mu = 0.00149
-    eps = eps_plus(mu)
-    s = time()
-    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
-    s = time()
-    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
-    print
-
-    mu = 0.01949
-    eps = eps_plus(mu)
-    s = time()
-    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
-    s = time()
-    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
-    print
-
-    mu = 0.03975
-    eps = eps_plus(mu)
-    s = time()
-    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
-    s = time()
-    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
-    print
+#    eps = 0.01
+#    mu = mu_plus(eps)
+#
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+#    print
+#
+#    eps = 0.3
+#    mu = mu_plus(eps)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+#    print
+#
+#    eps = 1.0
+#    mu = mu_plus(eps)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+#    print
+#
+#    mu = 0.00149
+#    eps = eps_plus(mu)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+#    print
+#
+#    mu = 0.01949
+#    eps = eps_plus(mu)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+#    print
+#
+#    mu = 0.03975
+#    eps = eps_plus(mu)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_tolerance(mu), eps, time() - s)
+#    s = time()
+#    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
+#    print
