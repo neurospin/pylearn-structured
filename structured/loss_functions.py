@@ -778,7 +778,7 @@ class TotalVariation(NesterovFunction):
                                    self._A[1].dot(beta) ** 2.0 + \
                                    self._A[2].dot(beta) ** 2.0))
 
-            return self.gamma * np.sum(sqsum)
+            return sqsum  # Gamma is already incorporated
 
     def grad(self, beta, mu=None):
 
@@ -1144,7 +1144,7 @@ class GroupLassoOverlap(NesterovFunction):
             for Ag in self._A:
                 sqsum += utils.norm(Ag.dot(beta))  # A.dot(beta) ** 2.0
 
-            return self.gamma * sqsum
+            return sqsum  # Gamma is already in A
 
     def grad(self, beta, mu=None):
 
