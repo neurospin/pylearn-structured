@@ -779,61 +779,61 @@ if __name__ == "__main__":
 #    return
 
 
-    np.random.seed(42)
-
-    maxit = 10000
-
-    px = 100
-    py = 1
-    pz = 1
-    p = px * py * pz  # Must be even!
-    n = 60
-    X = np.random.randn(n, p)
-    betastar = np.concatenate((np.zeros((p / 2, 1)),
-                               np.random.randn(p / 2, 1)))
-    betastar = np.sort(np.abs(betastar), axis=0)
-    y = np.dot(X, betastar)
-
-    m = models.NesterovProximalGradientMethod()
-
-    gamma = 1.0
-    shape = [pz, py, px]
-    mu = 0.01
-    tv = loss_functions.TotalVariation(gamma, shape, mu)
-    lr = loss_functions.LinearRegressionError()
-    combo = loss_functions.CombinedNesterovLossFunction(lr, tv)
-
-    m.set_g(combo)
-    combo.set_data(X, y)
-
-    D = tv.num_compacts() / 2.0
-    print "D:", D
-#    _A = tv.Lipschitz(mu) * mu
-    A = tv.Lipschitz(1.0)
-#    assert abs(_A - A) < 0.0000001
-    l = lr.Lipschitz()
-
-#    import scipy.sparse as sparse
-#    A_ = sparse.vstack(tv.A()).todense()
-#    L, V = np.linalg.eig(np.dot(A_.T, A_))
-#    print max(L)
-
-    print "A:", A
-    print "l:", l
-
-    def mu_plus(eps):
-        return (-2.0 * D * A + np.sqrt((2.0 * D * A) ** 2.0 + 4.0 * D * l * eps * A)) / (2.0 * D * l)
-
-    def eps_plus(mu):
-        return ((2.0 * mu * D * l + 2.0 * D * A) ** 2.0 - (2.0 * D * A) ** 2.0) / (4.0 * D * l * A)
-
-    m.algorithm._set_tolerance(m.compute_tolerance(mu))
-    beta = m.algorithm.run(X, y)
-
-    for eps in [1000000.0, 100000.0, 10000.0, 1000.0, 100.0, 10.0, 1.0, 0.1, 0.01, 0.001]:
-        print "eps: %.7f -> mu: %.7f -> eps: %.7f" % (eps, mu_plus(eps), eps_plus(mu_plus(eps)))
-        print "eps: %.7f -> mu: %.7f -> eps: %.7f" % (eps, m.compute_mu(eps), m.compute_tolerance(m.compute_mu(eps)))
-        print "D * mu = %.7f" % (D * mu)
+#    np.random.seed(42)
+#
+#    maxit = 10000
+#
+#    px = 100
+#    py = 1
+#    pz = 1
+#    p = px * py * pz  # Must be even!
+#    n = 60
+#    X = np.random.randn(n, p)
+#    betastar = np.concatenate((np.zeros((p / 2, 1)),
+#                               np.random.randn(p / 2, 1)))
+#    betastar = np.sort(np.abs(betastar), axis=0)
+#    y = np.dot(X, betastar)
+#
+#    m = models.NesterovProximalGradientMethod()
+#
+#    gamma = 1.0
+#    shape = [pz, py, px]
+#    mu = 0.01
+#    tv = loss_functions.TotalVariation(gamma, shape, mu)
+#    lr = loss_functions.LinearRegressionError()
+#    combo = loss_functions.CombinedNesterovLossFunction(lr, tv)
+#
+#    m.set_g(combo)
+#    combo.set_data(X, y)
+#
+#    D = tv.num_compacts() / 2.0
+#    print "D:", D
+##    _A = tv.Lipschitz(mu) * mu
+#    A = tv.Lipschitz(1.0)
+##    assert abs(_A - A) < 0.0000001
+#    l = lr.Lipschitz()
+#
+##    import scipy.sparse as sparse
+##    A_ = sparse.vstack(tv.A()).todense()
+##    L, V = np.linalg.eig(np.dot(A_.T, A_))
+##    print max(L)
+#
+#    print "A:", A
+#    print "l:", l
+#
+#    def mu_plus(eps):
+#        return (-2.0 * D * A + np.sqrt((2.0 * D * A) ** 2.0 + 4.0 * D * l * eps * A)) / (2.0 * D * l)
+#
+#    def eps_plus(mu):
+#        return ((2.0 * mu * D * l + 2.0 * D * A) ** 2.0 - (2.0 * D * A) ** 2.0) / (4.0 * D * l * A)
+#
+#    m.algorithm._set_tolerance(m.compute_tolerance(mu))
+#    beta = m.algorithm.run(X, y)
+#
+#    for eps in [1000000.0, 100000.0, 10000.0, 1000.0, 100.0, 10.0, 1.0, 0.1, 0.01, 0.001]:
+#        print "eps: %.7f -> mu: %.7f -> eps: %.7f" % (eps, mu_plus(eps), eps_plus(mu_plus(eps)))
+#        print "eps: %.7f -> mu: %.7f -> eps: %.7f" % (eps, m.compute_mu(eps), m.compute_tolerance(m.compute_mu(eps)))
+#        print "D * mu = %.7f" % (D * mu)
 
 #    mu1 = []
 #    mu2 = []
@@ -900,3 +900,59 @@ if __name__ == "__main__":
 #    s = time()
 #    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
 #    print
+
+    np.random.seed(42)
+
+    eps = 0.01
+    maxit = 10
+
+    px = 600
+    py = 1
+    pz = 1
+    p = px * py * pz  # Must be even!
+    n = 600
+    X = np.random.randn(n, p)
+    betastar = np.concatenate((np.zeros((p / 2, 1)),
+                               np.random.randn(p / 2, 1)))
+    betastar = np.sort(np.abs(betastar), axis=0)
+    y = np.dot(X, betastar)
+
+    print "LinearRegressionTV"
+    start = time()
+    gamma = 0.01
+    lrtv = models.LinearRegressionTV(gamma, shape=(pz, py, px))
+    lrtv.set_tolerance(eps)
+    lrtv.set_max_iter(maxit)
+    c = models.Continuation(lrtv, 200)
+    c.fit(X, y)
+    computed_beta = c.beta
+    print "time: ", (time() - start)
+
+    print "f: ", c.get_algorithm().f[-1]
+    print "its: ", c.get_algorithm().iterations
+
+    plot.subplot(2, 2, 1)
+    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
+    plot.subplot(2, 2, 2)
+    plot.plot(c.get_algorithm().f)
+    plot.title("Continuation")
+
+    start = time()
+    lrtv = models.LinearRegressionTV(gamma, shape=(pz, py, px))
+    lrtv.set_tolerance(eps)
+    lrtv.set_max_iter(20 * maxit)
+    cr = models.ContinuationRun(lrtv, tolerances=[1.0, 0.1, 0.01, 0.001, 0.0001])
+    cr.fit(X, y)
+    computed_beta = cr.beta
+    print "time: ", (time() - start)
+
+    print "f: ", cr.get_algorithm().f[-1]
+    print "its: ", cr.get_algorithm().iterations
+
+    plot.subplot(2, 2, 3)
+    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
+    plot.subplot(2, 2, 4)
+    plot.plot(cr.get_algorithm().f)
+    plot.title("Continuation Run")
+
+    plot.show()

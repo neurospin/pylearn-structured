@@ -47,12 +47,12 @@ import start_vectors
 from time import time
 
 
-class BaseMethod(object):
+class BaseModel(object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, algorithm, num_comp=2, norm_dir=False):
 
-        super(BaseMethod, self).__init__()
+        super(BaseModel, self).__init__()
 
         # Supplied by the user
         self.algorithm = algorithm
@@ -170,18 +170,18 @@ class BaseMethod(object):
         raise NotImplementedError('Abstract method "fit" must be specialised!')
 
 
-class PLSBaseMethod(BaseMethod):
+class PLSBaseModel(BaseModel):
 
     def __init__(self, algorithm=None, **kwargs):
 
         if algorithm == None:
             algorithm = algorithms.NIPALSAlgorithm()
 
-        super(PLSBaseMethod, self).__init__(algorithm=algorithm, **kwargs)
+        super(PLSBaseModel, self).__init__(algorithm=algorithm, **kwargs)
 
     def _check_inputs(self):
 
-        super(PLSBaseMethod, self)._check_inputs()
+        super(PLSBaseModel, self)._check_inputs()
 
 #        if self.adj_matrix != None and not hasattr(self, "n"):
 #            self.n = max(self.adj_matrix.shape)
@@ -304,7 +304,7 @@ class PLSBaseMethod(BaseMethod):
         return self.fit(*X, **kwargs).transform(*X)
 
 
-class PCA(PLSBaseMethod):
+class PCA(PLSBaseModel):
 
     def __init__(self, **kwargs):
 
@@ -364,7 +364,7 @@ class SVD(PCA):
         return self
 
 
-class PLSR(PLSBaseMethod):
+class PLSR(PLSBaseModel):
     """Performs PLS regression between two matrices X and Y.
     """
     def __init__(self, algorithm=None, **kwargs):
@@ -393,7 +393,7 @@ class PLSR(PLSBaseMethod):
         Y = kwargs.pop('y', Y)
         if Y == None:
             raise ValueError('Y is not supplied')
-#        PLSBaseMethod.fit(self, X, Y, **kwargs)
+#        PLSBaseModel.fit(self, X, Y, **kwargs)
         super(PLSR, self).fit(X, Y, **kwargs)
         self.C = self.W[1]
         self.U = self.T[1]
@@ -424,10 +424,10 @@ class PLSR(PLSBaseMethod):
 
         Y = kwargs.pop('y', Y)
         if Y != None:
-#            T = PLSBaseMethod.transform(self, X, Y, **kwargs)
+#            T = PLSBaseModel.transform(self, X, Y, **kwargs)
             T = super(PLSR, self).transform(X, Y, **kwargs)
         else:
-#            T = PLSBaseMethod.transform(self, X, **kwargs)
+#            T = PLSBaseModel.transform(self, X, **kwargs)
             T = super(PLSR, self).transform(X, **kwargs)
             T = T[0]
         return T
@@ -797,7 +797,7 @@ class O2PLS(PLSC):
             return Xpred
 
 
-class RGCCA(PLSBaseMethod):
+class RGCCA(PLSBaseModel):
 
     def __init__(self, num_comp=2, tau=None, **kwargs):
 
@@ -806,7 +806,7 @@ class RGCCA(PLSBaseMethod):
                                     **kwargs)
 
 
-class ContinuationRun(BaseMethod):
+class ContinuationRun(BaseModel):
 
     def __init__(self, model, tolerances=None, mus=None, algorithm=None,
                  *args, **kwargs):
@@ -900,93 +900,160 @@ class ContinuationRun(BaseMethod):
         return self
 
 
-#class Continuation(BaseMethod):
-#
-#    def __init__(self, model, iterations=1, algorithm=None, *args, **kwargs):
-#        """Performs continuation for the given method. I.e. builds models with
-#        sucessively smaller values of mu and uses the output from the use of
-#        one mu as start vector in the run with the next smaller mu.
-#
-#        Parameters
-#        ----------
-#        model : The NesterovProximalGradient model to perform continuation
-#                on.
-#
-#        iterations : The number of iterations in each continuation.
-#
-#        algorithm : The particular algorithm to use.
-#        """
-#        if algorithm == None:
-#            algorithm = model.get_algorithm()
-#        else:
-#            model.set_algorithm(algorithm)
-#
-#        super(ContinuationRun, self).__init__(num_comp=1, algorithm=algorithm,
-#                                              *args, **kwargs)
-#
-#        self.model = model
-#        self.iterations = iterations
-#
-#    def get_transform(self, index=0):
-#
-#        return self.beta
-#
-#    def get_algorithm(self):
-#
-#        return self.model.get_algorithm()
-#
-#    def set_algorithm(self, algorithm):
-#
-#        self.model.set_algorithm(algorithm)
-#
-#    def fit(self, X, y, **kwargs):
-#
-#        start_vector = self.model.get_start_vector()
-#        f = []
-#        self.model.set_data(X, y)
-#
-#        mu = max(utils.TOLERANCE,
-#                 2.0 * self.get_tolerance() / self.num_compacts())
-#
-#        self.model.set_max_iter(1)
-#        self.model.fit(X, y, **kwargs)
-#        f_true = self.model.f(self.model.get_transform(), smooth=False)
-#        f_mu = self.model.f(self.model.get_transform(), mu=mu)
-#
-#        while True:
-#            f_true = self.model.
-#            f_mu = 
-#            if self.mus != None:
-#                self.model.set_mu(item)
-##                self.model.set_tolerance(self.model.compute_tolerance(item))
-#            else:
-##                self.model.set_tolerance(item)
-#                self.model.set_mu(self.model.compute_mu(item))
-#
-#            self.model.set_start_vector(start_vector)
-##            print self.model.get_algorithm()
-#            print "tol: ", self.model.get_tolerance()
-#            self.model.fit(X, y, early_stopping_mu=self.mu_min, **kwargs)
-#
-#            utils.debug("Continuation with mu = ", self.model.get_mu(), \
-#                    ", tolerance = ", self.model.get_tolerance(), \
-#                    ", early_stopping_mu = ", self.mu_min, \
-#                    ", iterations = ", self.model.get_algorithm().iterations)
-#
-#            self.beta = self.model.get_transform()
-#            f = f + self.model.get_algorithm().f[1:]  # Skip the first, same
-#
-#            start_vector = start_vectors.IdentityStartVector(self.beta)
-#
-#        self.model.get_algorithm().f = f
-#        self.model.get_algorithm().iterations = len(f)
-#
-#        return self
+class Continuation(BaseModel):
+
+    def __init__(self, model, iterations=100, gap=None, algorithm=None,
+                 *args, **kwargs):
+        """Performs continuation for the given model. I.e. builds
+        NesterovProximalGradientMethod models with sucessively, and optimally,
+        smaller values of mu and uses the output from the use of one mu as
+        start vector in the fit of model with the next smaller mu.
+
+        Parameters
+        ----------
+        model : The NesterovProximalGradient model to perform continuation
+                on.
+
+        iterations : The number of iterations in each continuation.
+
+        gap : The gap to use in the first continuation. Default is
+                mu = max(abs(cov(X,y))) and then
+                gap = model.compute_tolerance(mu).
+
+        algorithm : The particular algorithm to use.
+        """
+        if algorithm == None:
+            algorithm = model.get_algorithm()
+        else:
+            model.set_algorithm(algorithm)
+
+        super(Continuation, self).__init__(num_comp=1, algorithm=algorithm,
+                                              *args, **kwargs)
+
+        self.model = model
+        self.iterations = iterations
+        self.gap = gap
+
+    def get_transform(self, index=0):
+
+        return self.beta
+
+    def get_algorithm(self):
+
+        return self.model.get_algorithm()
+
+    def set_algorithm(self, algorithm):
+
+        self.model.set_algorithm(algorithm)
+
+    def _gap(self, X, y):
+
+        # Fit dual model
+        npgm = NesterovProximalGradientMethod()
+
+        start_vector = start_vectors.IdentityStartVector(self.beta)
+        alg = self.model.get_algorithm()
+        cls = alg.__class__
+        dual_alg = cls(max_iter=alg._get_max_iter(),
+                       tolerance=alg._get_tolerance(),
+                       start_vector=start_vector)
+        npgm.set_algorithm(dual_alg)
+
+        g = self.model.get_g()
+        if isinstance(g.a, loss_functions.NesterovFunction) \
+                and isinstance(g.b, loss_functions.NesterovFunction):
+            smooth = loss_functions.ZeroErrorFunction()
+            smoothed = loss_functions.NesterovDualFunction(g)
+        elif isinstance(g.a, loss_functions.NesterovFunction):
+            smoothed = loss_functions.NesterovDualFunction(g.a)
+            smooth = g.b
+        elif isinstance(g.b, loss_functions.NesterovFunction):
+            smooth = g.a
+            smoothed = loss_functions.NesterovDualFunction(g.b)
+
+        dual = loss_functions.CombinedNesterovLossFunction(smooth, smoothed)
+        prox = copy.deepcopy(self.model.get_h())
+
+        npgm.set_g(dual)
+        npgm.set_h(prox)
+
+        npgm.fit(X, y)
+
+        gap = self.model.f(self.model.get_transform()) - npgm.f(npgm.beta)
+
+        return gap
+
+    def fit(self, X, y, **kwargs):
+
+        # Default start value. (Is there an optimal one?)
+        max_iter = self.get_max_iter()
+        self.model.set_data(X, y)
+        self.model.set_max_iter(self.iterations)
+        start_vector = self.model.get_start_vector()
+        if self.gap == None:
+            mu = np.max(np.abs(utils.corr(X, y)))
+            gap_mu = self.model.compute_tolerance(mu)
+        else:
+            gap_mu = self.gap
+            mu = self.model.compute_mu(gap_mu)
+
+        gap_nomu = gap_mu
+
+        tau = 1.1
+        eta = 2.0
+
+        f = []
+        for i in xrange(max_iter):
+
+            # With computed mu
+            self.model.set_mu(mu)
+            self.model.set_start_vector(start_vector)
+            self.model.fit(X, y, **kwargs)
+            # TODO: What about early stopping mu?
+
+            self.beta = self.model.get_transform()
+            f = f + self.model.get_algorithm().f[1:]  # Skip the first, same
+
+            gap_mu = abs(self._gap(X, y))  # We use abs, just in case
+
+            utils.debug("With mu: Continuation with mu = ",
+                                self.model.get_mu(), \
+                    ", tolerance = ", self.model.get_tolerance(), \
+                    ", iterations = ", self.model.get_algorithm().iterations, \
+                    ", gap = ", gap_mu)
+
+            # With mu ~= 0
+            self.model.set_mu(min(mu, utils.TOLERANCE))
+            self.model.set_start_vector(start_vector)
+            self.model.fit(X, y, **kwargs)
+
+            gap_nomu = abs(self._gap(X, y))  # We use abs, just in case
+
+            utils.debug("No mu: Continuation with mu = ",
+                                self.model.get_mu(), \
+                    ", tolerance = ", self.model.get_tolerance(), \
+                    ", iterations = ", self.model.get_algorithm().iterations, \
+                    ", gap = ", gap_nomu)
+
+            start_vector = start_vectors.IdentityStartVector(self.beta)
+
+            mu = min(mu, self.model.compute_mu(gap_nomu))
+            if gap_mu < gap_nomu / (2.0 * tau):
+                mu = mu / eta
+
+            if gap_nomu < utils.TOLERANCE:
+                print "Converged!!"
+                break
+
+        self.model.get_algorithm().f = f
+        self.model.get_algorithm().iterations = len(f)
+
+        self.model.set_max_iter(max_iter)
+
+        return self
 
 
-class NesterovProximalGradientMethod(BaseMethod):
-
-    __metaclass__ = abc.ABCMeta
+class NesterovProximalGradientMethod(BaseModel):
 
     def __init__(self, algorithm=None, **kwargs):
 
@@ -1022,14 +1089,6 @@ class NesterovProximalGradientMethod(BaseMethod):
 
         return self.get_g().f(*args, **kwargs) \
                 + self.get_h().f(*args, **kwargs)
-
-#    def compute_tolerance(self, mu):
-#
-#        return self.get_g().compute_tolerance(mu)
-#
-#    def compute_mu(self, eps):
-#
-#        return self.get_g().compute_mu(eps)
 
     def compute_tolerance(self, mu, max_iter=100):
 
@@ -1129,6 +1188,46 @@ class NesterovProximalGradientMethod(BaseMethod):
     def set_data(self, X, y):
 
         self.get_g().set_data(X, y)
+
+
+#class DualNesterovProximalGradientModel(NesterovProximalGradientMethod):
+#
+#    def __init__(self, npgm, iterations=100):
+#
+#        """Finds the beta that minimises f for a given alpha.
+#
+#        Note: set_data must be called before calling phi!
+#        """
+#        self.npgm = NesterovProximalGradientMethod(\
+#                                               algorithm=npgm.get_algorithm())
+#
+#        self.npgm.set_g(loss_functions.NesterovDualFunction(npgm.get_g()))
+#        self.npgm.set_h(npgm.get_h())
+#
+#        cls = npgm.algorithm.__class__
+#        alg = cls(max_iter=npgm.algorithm._get_max_iter(),
+#                  tolerance=npgm.algorithm._get_tolerance(),
+#                  start_vector=npgm.algorithm._get_start_vector())
+#        self.set_algorithm(alg)
+#
+#    def fit(self, X, y, **kwargs):
+#        """Fit the model to the given data.
+#
+#        Parameters
+#        ----------
+#        X : The independent variables.
+#
+#        y : The dependent variable.
+#
+#        Returns
+#        -------
+#        self: The model object.
+#        """
+#        self.set_data(X, y)
+#
+#        self.beta = self.algorithm.run(X, y, **kwargs)
+#
+#        return self
 
 
 class LinearRegression(NesterovProximalGradientMethod):
@@ -1527,7 +1626,7 @@ class LogisticRegressionL1TV(NesterovProximalGradientMethod):
         self.set_h(loss_functions.L1(l))
 
 
-class ExcessiveGapMethod(BaseMethod):
+class ExcessiveGapMethod(BaseModel):
 
     __metaclass__ = abc.ABCMeta
 

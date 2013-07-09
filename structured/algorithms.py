@@ -78,6 +78,9 @@ class BaseAlgorithm(object):
         self.max_iter = max_iter
         self.tolerance = tolerance
 
+    def _get_max_iter(self):
+        return self.max_iter
+
     def _set_max_iter(self, max_iter):
         self.max_iter = max_iter
 
@@ -796,9 +799,9 @@ class MonotoneFISTARegression(ISTARegression):
                         'convergence')
                 break
 
-        print "Smooth: ", f_new
-        print "True:   ", (self.g.f(beta_new, smooth=False) + self.h.f(beta_new))
-        print
+#        print "Smooth: ", f_new
+#        print "True:   ", (self.g.f(beta_new, smooth=False) + self.h.f(beta_new))
+#        print
 
         return beta_new
 
@@ -906,9 +909,9 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
             for i in xrange(len(alpha_hat)):
                 u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
 
-        print "EGM Smooth: ", f_new
-        print "EGM True:   ", (self.g.f(beta_new, smooth=False) + self.h.f(beta_new, smooth=False))
-        print
+#        print "EGM Smooth: ", f_new
+#        print "EGM True:   ", (self.g.f(beta_new, smooth=False) + self.h.f(beta_new, smooth=False))
+#        print
 
         return beta_new
 
