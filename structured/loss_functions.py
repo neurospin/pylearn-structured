@@ -910,6 +910,8 @@ class TotalVariation(NesterovFunction):
         asy = alpha[1]
         asz = alpha[2]
         asnorm = asx ** 2.0 + asy ** 2.0 + asz ** 2.0
+#        if np.min(asnorm) < 1.0:
+#            print np.min(asnorm)
         i = asnorm > 1.0
 
         asnorm_i = asnorm[i] ** 0.5  # Square root is taken here. Faster.

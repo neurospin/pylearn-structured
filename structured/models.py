@@ -1022,10 +1022,12 @@ class Continuation(BaseModel):
                     ", iterations = ", self.model.get_algorithm().iterations, \
                     ", gap = ", gap_mu)
 
-            # With mu ~= 0
-            self.model.set_mu(min(mu, utils.TOLERANCE))
+            # With mu very small
+            self.model.set_mu(min(mu, 1e-10))
             self.model.set_start_vector(start_vector)
             self.model.fit(X, y, **kwargs)
+#            import sys
+#            sys.exit(0)
 
             gap_nomu = abs(self._gap(X, y))  # We use abs, just in case
 

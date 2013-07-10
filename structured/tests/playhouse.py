@@ -906,8 +906,8 @@ if __name__ == "__main__":
     eps = 0.01
     maxit = 10
 
-    px = 600
-    py = 1
+    px = 1000
+    py = 10
     pz = 1
     p = px * py * pz  # Must be even!
     n = 600
