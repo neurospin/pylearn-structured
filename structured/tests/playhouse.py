@@ -905,9 +905,11 @@ if __name__ == "__main__":
 
     eps = 0.01
     maxit = 10
+    cont_maxit = 100
+    gamma = 10.0
 
     px = 1000
-    py = 10
+    py = 1
     pz = 1
     p = px * py * pz  # Must be even!
     n = 600
@@ -919,11 +921,10 @@ if __name__ == "__main__":
 
     print "LinearRegressionTV"
     start = time()
-    gamma = 0.01
     lrtv = models.LinearRegressionTV(gamma, shape=(pz, py, px))
     lrtv.set_tolerance(eps)
     lrtv.set_max_iter(maxit)
-    c = models.Continuation(lrtv, 200)
+    c = models.Continuation(lrtv, cont_maxit)
     c.fit(X, y)
     computed_beta = c.beta
     print "time: ", (time() - start)
@@ -940,7 +941,7 @@ if __name__ == "__main__":
     start = time()
     lrtv = models.LinearRegressionTV(gamma, shape=(pz, py, px))
     lrtv.set_tolerance(eps)
-    lrtv.set_max_iter(20 * maxit)
+    lrtv.set_max_iter(cont_maxit)
     cr = models.ContinuationRun(lrtv, tolerances=[1.0, 0.1, 0.01, 0.001, 0.0001])
     cr.fit(X, y)
     computed_beta = cr.beta

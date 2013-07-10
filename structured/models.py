@@ -842,11 +842,6 @@ class ContinuationRun(BaseModel):
         self.tolerances = tolerances
         self.mus = mus
 
-        if mus != None:
-            self.mu_min = mus[-1]
-        else:
-            self.mu_min = None
-
     def get_transform(self, index=0):
 
         return self.beta
@@ -870,9 +865,6 @@ class ContinuationRun(BaseModel):
         else:
             lst = self.tolerances
 
-        if self.mu_min == None:
-            self.mu_min = self.model.compute_mu(self.tolerances[-1])
-
         for item in lst:
             if self.mus != None:
                 self.model.set_mu(item)
@@ -882,11 +874,10 @@ class ContinuationRun(BaseModel):
                 self.model.set_mu(self.model.compute_mu(item))
 
             self.model.set_start_vector(start_vector)
-            self.model.fit(X, y, early_stopping_mu=self.mu_min, **kwargs)
+            self.model.fit(X, y, **kwargs)
 
             utils.debug("Continuation with mu = ", self.model.get_mu(), \
                     ", tolerance = ", self.model.get_tolerance(), \
-                    ", early_stopping_mu = ", self.mu_min, \
                     ", iterations = ", self.model.get_algorithm().iterations)
 
             self.beta = self.model.get_transform()
@@ -946,20 +937,19 @@ class Continuation(BaseModel):
 
         self.model.set_algorithm(algorithm)
 
-    def _gap(self, X, y):
+    def _gap(self, X, y, model):
 
         # Fit dual model
         npgm = NesterovProximalGradientMethod()
 
-        start_vector = start_vectors.IdentityStartVector(self.beta)
-        alg = self.model.get_algorithm()
+        alg = model.get_algorithm()
         cls = alg.__class__
         dual_alg = cls(max_iter=alg._get_max_iter(),
                        tolerance=alg._get_tolerance(),
-                       start_vector=start_vector)
+                       start_vector=alg._get_start_vector())
         npgm.set_algorithm(dual_alg)
 
-        g = self.model.get_g()
+        g = model.get_g()
         if isinstance(g.a, loss_functions.NesterovFunction) \
                 and isinstance(g.b, loss_functions.NesterovFunction):
             smooth = loss_functions.ZeroErrorFunction()
@@ -972,27 +962,27 @@ class Continuation(BaseModel):
             smoothed = loss_functions.NesterovDualFunction(g.b)
 
         dual = loss_functions.CombinedNesterovLossFunction(smooth, smoothed)
-        prox = copy.deepcopy(self.model.get_h())
 
         npgm.set_g(dual)
-        npgm.set_h(prox)
+        npgm.set_h(model.get_h())
 
         npgm.fit(X, y)
 
-        gap = self.model.f(self.model.get_transform()) - npgm.f(npgm.beta)
+        gap = model.f(model.get_transform()) - npgm.f(npgm.beta)
 
-        return gap
+        return gap, npgm.beta
 
     def fit(self, X, y, **kwargs):
 
-        # Default start value. (Is there an optimal one?)
         max_iter = self.get_max_iter()
         self.model.set_data(X, y)
-        self.model.set_max_iter(self.iterations)
         start_vector = self.model.get_start_vector()
+        start_vector_nomu = self.model.get_start_vector()
         if self.gap == None:
-            mu = np.max(np.abs(utils.corr(X, y)))
+            mu = max(np.max(np.abs(utils.corr(X, y))), 0.01)  # Necessary?
             gap_mu = self.model.compute_tolerance(mu)
+            print "mu:", mu
+            print "gap:", gap_mu
         else:
             gap_mu = self.gap
             mu = self.model.compute_mu(gap_mu)
@@ -1003,18 +993,21 @@ class Continuation(BaseModel):
         eta = 2.0
 
         f = []
-        for i in xrange(max_iter):
+        for i in xrange(1, max_iter + 1):
+
+            self.model.set_max_iter(float(self.iterations) / float(i))
 
             # With computed mu
             self.model.set_mu(mu)
             self.model.set_start_vector(start_vector)
             self.model.fit(X, y, **kwargs)
-            # TODO: What about early stopping mu?
 
-            self.beta = self.model.get_transform()
             f = f + self.model.get_algorithm().f[1:]  # Skip the first, same
+            self.beta = self.model.get_transform()
+            start_vector = start_vectors.IdentityStartVector(self.beta)
 
-            gap_mu = abs(self._gap(X, y))  # We use abs, just in case
+            gap_mu, beta_gap = self._gap(X, y, self.model)
+            gap_mu = abs(gap_mu)  # We use abs just in case
 
             utils.debug("With mu: Continuation with mu = ",
                                 self.model.get_mu(), \
@@ -1023,13 +1016,17 @@ class Continuation(BaseModel):
                     ", gap = ", gap_mu)
 
             # With mu very small
-            self.model.set_mu(min(mu, 1e-10))
-            self.model.set_start_vector(start_vector)
-            self.model.fit(X, y, **kwargs)
-#            import sys
-#            sys.exit(0)
+            self.model.set_mu(min(mu, utils.TOLERANCE))
+            self.model.get_g().alpha(beta=self.beta)  # Compute new alpha
 
-            gap_nomu = abs(self._gap(X, y))  # We use abs, just in case
+#            self.model.set_start_vector(start_vector_nomu)
+#            self.model.fit(X, y, **kwargs)
+#            self.beta_nomu = self.model.get_transform()
+            start_vector_nomu = start_vectors.IdentityStartVector(self.beta)
+            self.model.set_start_vector(start_vector_nomu)
+
+            gap_nomu, beta_gap = self._gap(X, y, self.model)
+            gap_nomu = abs(gap_nomu)  # We use abs just in case
 
             utils.debug("No mu: Continuation with mu = ",
                                 self.model.get_mu(), \
@@ -1037,13 +1034,11 @@ class Continuation(BaseModel):
                     ", iterations = ", self.model.get_algorithm().iterations, \
                     ", gap = ", gap_nomu)
 
-            start_vector = start_vectors.IdentityStartVector(self.beta)
-
             mu = min(mu, self.model.compute_mu(gap_nomu))
             if gap_mu < gap_nomu / (2.0 * tau):
                 mu = mu / eta
 
-            if gap_nomu < utils.TOLERANCE:
+            if gap_nomu < self.model.get_tolerance():
                 print "Converged!!"
                 break
 
