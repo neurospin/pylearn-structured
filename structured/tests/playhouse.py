@@ -901,59 +901,82 @@ if __name__ == "__main__":
 #    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
 #    print
 
-    np.random.seed(42)
+#    np.random.seed(42)
+#
+#    eps = 0.001
+#    maxit = 10
+#    cont_maxit = 100
+#    gamma = 15.0
+#
+#    px = 1000
+#    py = 1
+#    pz = 1
+#    p = px * py * pz  # Must be even!
+#    n = 100
+#    X = np.random.randn(n, p)
+#    betastar = np.concatenate((np.zeros((p / 2, 1)),
+#                               np.random.randn(p / 2, 1)))
+#    betastar = np.sort(np.abs(betastar), axis=0)
+#    y = np.dot(X, betastar)
+#
+#    print "LinearRegressionTV"
+#    start = time()
+#    lrtv = models.LinearRegressionTV(gamma, shape=(pz, py, px))
+#    lrtv.set_tolerance(eps)
+#    lrtv.set_max_iter(maxit)
+#    c = models.Continuation(lrtv, cont_maxit)
+#    c.fit(X, y)
+#    computed_beta = c.beta
+#    print "time: ", (time() - start)
+#
+#    print "f: ", c.get_algorithm().f[-1]
+#    print "its: ", c.get_algorithm().iterations
+#
+#    plot.subplot(2, 2, 1)
+#    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
+#    plot.subplot(2, 2, 2)
+#    plot.plot(c.get_algorithm().f)
+#    plot.title("Continuation")
+#
+#    start = time()
+#    lrtv = models.LinearRegressionTV(gamma, shape=(pz, py, px))
+#    lrtv.set_tolerance(eps)
+#    lrtv.set_max_iter(cont_maxit)
+#    cr = models.ContinuationRun(lrtv, tolerances=[1.0, 0.1, 0.01, 0.001, 0.0001])
+#    cr.fit(X, y)
+#    computed_beta = cr.beta
+#    print "time: ", (time() - start)
+#
+#    print "f: ", cr.get_algorithm().f[-1]
+#    print "its: ", cr.get_algorithm().iterations
+#
+#    plot.subplot(2, 2, 3)
+#    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
+#    plot.subplot(2, 2, 4)
+#    plot.plot(cr.get_algorithm().f)
+#    plot.title("Continuation Run")
+#
+#    plot.show()
 
-    eps = 0.01
-    maxit = 10
-    cont_maxit = 100
-    gamma = 10.0
+    def sign(x):
+        if x < 0:
+            return -1
+        if x > 0:
+            return 1
+        return 0
 
-    px = 1000
-    py = 1
-    pz = 1
-    p = px * py * pz  # Must be even!
-    n = 600
-    X = np.random.randn(n, p)
-    betastar = np.concatenate((np.zeros((p / 2, 1)),
-                               np.random.randn(p / 2, 1)))
-    betastar = np.sort(np.abs(betastar), axis=0)
-    y = np.dot(X, betastar)
-
-    print "LinearRegressionTV"
-    start = time()
-    lrtv = models.LinearRegressionTV(gamma, shape=(pz, py, px))
-    lrtv.set_tolerance(eps)
-    lrtv.set_max_iter(maxit)
-    c = models.Continuation(lrtv, cont_maxit)
-    c.fit(X, y)
-    computed_beta = c.beta
-    print "time: ", (time() - start)
-
-    print "f: ", c.get_algorithm().f[-1]
-    print "its: ", c.get_algorithm().iterations
-
-    plot.subplot(2, 2, 1)
-    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
-    plot.subplot(2, 2, 2)
-    plot.plot(c.get_algorithm().f)
-    plot.title("Continuation")
-
-    start = time()
-    lrtv = models.LinearRegressionTV(gamma, shape=(pz, py, px))
-    lrtv.set_tolerance(eps)
-    lrtv.set_max_iter(cont_maxit)
-    cr = models.ContinuationRun(lrtv, tolerances=[1.0, 0.1, 0.01, 0.001, 0.0001])
-    cr.fit(X, y)
-    computed_beta = cr.beta
-    print "time: ", (time() - start)
-
-    print "f: ", cr.get_algorithm().f[-1]
-    print "its: ", cr.get_algorithm().iterations
-
-    plot.subplot(2, 2, 3)
-    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
-    plot.subplot(2, 2, 4)
-    plot.plot(cr.get_algorithm().f)
-    plot.title("Continuation Run")
-
+    sparsity = 0.5  # \in [0, 1]
+    rho = 1.0  # ~SNR
+    n = 5
+    p = 10
+    ps = round(p * sparsity)  # <= p
+    P = (np.random.rand(n, p) - 0.5) * 2.0
+    v = np.random.rand(n, 1)
+    e = v / utils.norm(v)
+    b = np.dot(P.T, e)
+    ind = np.argsort(np.abs(b), axis=0)[::-1]
+    b = b[ind]
+    b_abs = np.abs(b)
+    plot.plot(b.flatten())
     plot.show()
+    

@@ -630,7 +630,8 @@ class FISTARegression(ISTARegression):
 
         super(FISTARegression, self).__init__(g, h, **kwargs)
 
-    def run(self, X, y, t=None, tscale=0.95, smooth=False, **kwargs):
+    def run(self, X, y, t=None, tscale=0.95, smooth=False, eval_f=True,
+            **kwargs):
 
         if t == None:
             t = tscale / self.g.Lipschitz()
@@ -640,8 +641,9 @@ class FISTARegression(ISTARegression):
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
 
-        f_new = self.g.f(beta_new, smooth=smooth) + self.h.f(beta_new)
-        self.f = [f_new]
+        if eval_f:
+            f_new = self.g.f(beta_new, smooth=smooth) + self.h.f(beta_new)
+            self.f = [f_new]
 
         self.iterations = 1
         while True:
@@ -655,9 +657,11 @@ class FISTARegression(ISTARegression):
             if norm1(z - beta_new) > self.tolerance * t:
                 self.converged = False
 
-            f_new = self.g.f(beta_new, smooth=smooth) + self.h.f(beta_new)
+            if eval_f:
+                f_new = self.g.f(beta_new, smooth=smooth) + self.h.f(beta_new)
 
-            self.f.append(f_new)
+                self.f.append(f_new)
+
             self.iterations += 1
 
             if self.converged:

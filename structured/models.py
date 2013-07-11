@@ -1034,13 +1034,13 @@ class Continuation(BaseModel):
                     ", iterations = ", self.model.get_algorithm().iterations, \
                     ", gap = ", gap_nomu)
 
-            mu = min(mu, self.model.compute_mu(gap_nomu))
-            if gap_mu < gap_nomu / (2.0 * tau):
-                mu = mu / eta
-
             if gap_nomu < self.model.get_tolerance():
                 print "Converged!!"
                 break
+
+            mu = min(mu, self.model.compute_mu(gap_nomu))
+            if gap_mu < gap_nomu / (2.0 * tau):
+                mu = mu / eta
 
         self.model.get_algorithm().f = f
         self.model.get_algorithm().iterations = len(f)
