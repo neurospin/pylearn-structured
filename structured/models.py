@@ -13,13 +13,16 @@ __all__ = ['PCA', 'SVD', 'PLSR', 'TuckerFactorAnalysis', 'PLSC', 'O2PLS',
 
            'ContinuationRun',
 
-           'LinearRegression', 'Lasso', 'RidgeRegression', 'ElasticNet',
+           'LinearRegression', 'Lasso', 'ElasticNet',
            'LinearRegressionL1L2',
 
            'LinearRegressionTV', 'LinearRegressionL1TV',
            'LinearRegressionL1L2TV', 'ElasticNetTV',
 
            'LinearRegressionGL',
+
+           'RidgeRegression',
+           'RidgeRegressionL1', 'RidgeRegressionTV', 'RidgeRegressionL1TV',
 
            'LogisticRegression', 'LogisticRegressionGL',
 
@@ -451,7 +454,6 @@ class TuckerFactorAnalysis(PLSR):
         Xhat = Y.C.Dy.W' = Y.By,
         Yhat = X.W.Dx.Q' = X.Bx.
     """
-
     def __init__(self, algorithm=None, **kwargs):
         if algorithm == None:
             algorithm = algorithms.NIPALSAlgorithm()
@@ -521,7 +523,6 @@ class PLSC(PLSR):
     i.e. with least squares estimation of T and U, times P and Q,
     respectively.
     """
-
     def __init__(self, algorithm=None, **kwargs):
 #        PLSR.__init__(self, algorithm=algorithm, **kwargs)
         if algorithm == None:
@@ -939,38 +940,12 @@ class Continuation(BaseModel):
 
     def _gap(self, X, y, model):
 
-        # Fit dual model
-        npgm = NesterovProximalGradientMethod()
+        dual_model = ConstantNesterovModelCopy(model)
+        dual_model.fit(X, y)
 
-        alg = model.get_algorithm()
-        cls = alg.__class__
-        dual_alg = cls(max_iter=alg._get_max_iter(),
-                       tolerance=alg._get_tolerance(),
-                       start_vector=alg._get_start_vector())
-        npgm.set_algorithm(dual_alg)
+        gap = model.f(model.get_transform()) - dual_model.f(dual_model.beta)
 
-        g = model.get_g()
-        if isinstance(g.a, loss_functions.NesterovFunction) \
-                and isinstance(g.b, loss_functions.NesterovFunction):
-            smooth = loss_functions.ZeroErrorFunction()
-            smoothed = loss_functions.NesterovDualFunction(g)
-        elif isinstance(g.a, loss_functions.NesterovFunction):
-            smoothed = loss_functions.NesterovDualFunction(g.a)
-            smooth = g.b
-        elif isinstance(g.b, loss_functions.NesterovFunction):
-            smooth = g.a
-            smoothed = loss_functions.NesterovDualFunction(g.b)
-
-        dual = loss_functions.CombinedNesterovLossFunction(smooth, smoothed)
-
-        npgm.set_g(dual)
-        npgm.set_h(model.get_h())
-
-        npgm.fit(X, y)
-
-        gap = model.f(model.get_transform()) - npgm.f(npgm.beta)
-
-        return gap, npgm.beta
+        return gap, dual_model.beta
 
     def fit(self, X, y, **kwargs):
 
@@ -1087,6 +1062,10 @@ class NesterovProximalGradientMethod(BaseModel):
         return self.get_g().f(*args, **kwargs) \
                 + self.get_h().f(*args, **kwargs)
 
+    def get_transform(self, **kwargs):
+
+        return self.beta
+
     def compute_tolerance(self, mu, max_iter=100):
 
         def f(eps):
@@ -1154,10 +1133,6 @@ class NesterovProximalGradientMethod(BaseModel):
 
         return yhat
 
-    def get_transform(self, index=0):
-
-        return self.beta
-
     def set_mu(self, mu):
 
         self.get_g().set_mu(mu)
@@ -1187,44 +1162,31 @@ class NesterovProximalGradientMethod(BaseModel):
         self.get_g().set_data(X, y)
 
 
-#class DualNesterovProximalGradientModel(NesterovProximalGradientMethod):
-#
-#    def __init__(self, npgm, iterations=100):
-#
-#        """Finds the beta that minimises f for a given alpha.
-#
-#        Note: set_data must be called before calling phi!
-#        """
-#        self.npgm = NesterovProximalGradientMethod(\
-#                                               algorithm=npgm.get_algorithm())
-#
-#        self.npgm.set_g(loss_functions.NesterovDualFunction(npgm.get_g()))
-#        self.npgm.set_h(npgm.get_h())
-#
-#        cls = npgm.algorithm.__class__
-#        alg = cls(max_iter=npgm.algorithm._get_max_iter(),
-#                  tolerance=npgm.algorithm._get_tolerance(),
-#                  start_vector=npgm.algorithm._get_start_vector())
-#        self.set_algorithm(alg)
-#
-#    def fit(self, X, y, **kwargs):
-#        """Fit the model to the given data.
-#
-#        Parameters
-#        ----------
-#        X : The independent variables.
-#
-#        y : The dependent variable.
-#
-#        Returns
-#        -------
-#        self: The model object.
-#        """
-#        self.set_data(X, y)
-#
-#        self.beta = self.algorithm.run(X, y, **kwargs)
-#
-#        return self
+class ConstantNesterovModelCopy(NesterovProximalGradientMethod):
+
+    def __init__(self, model):
+        """Constructs a copy of the given model's Nesterov functions, such that
+        all alphas and gradients are constant.
+        """
+        super(ConstantNesterovModelCopy, self).__init__()
+
+        # Copy the algorithm
+        # TODO: Potentially error prone since algorithms are not stateless yet!
+        self.set_algorithm(copy.copy(model.get_algorithm()))
+
+        g = model.get_g()
+        if isinstance(g.a, loss_functions.NesterovFunction) \
+                and isinstance(g.b, loss_functions.NesterovFunction):
+            dual = loss_functions.ConstantNesterovCopy(g)
+        elif isinstance(g.a, loss_functions.NesterovFunction):
+            smoothed = loss_functions.ConstantNesterovCopy(g.a)
+            dual = loss_functions.CombinedNesterovLossFunction(g.b, smoothed)
+        elif isinstance(g.b, loss_functions.NesterovFunction):
+            smoothed = loss_functions.ConstantNesterovCopy(g.b)
+            dual = loss_functions.CombinedNesterovLossFunction(g.a, smoothed)
+
+        self.set_g(dual)
+        self.set_h(model.get_h())
 
 
 class LinearRegression(NesterovProximalGradientMethod):
@@ -1249,56 +1211,12 @@ class Lasso(NesterovProximalGradientMethod):
     ----------
     l: The Lasso parameter.
     """
-
     def __init__(self, l, **kwargs):
 
         super(Lasso, self).__init__(**kwargs)
 
         self.set_g(loss_functions.LinearRegressionError())
         self.set_h(loss_functions.L1(l))
-
-
-class RidgeRegression(NesterovProximalGradientMethod):
-    """Ridge regression.
-
-    Optimises the function
-
-        f(b) = (1.0 / 2.0).||y - X.b||² + (l / 2.0).||b||²
-
-    Parameters
-    ----------
-    l : The ridge parameter.
-    """
-
-    def __init__(self, l, **kwargs):
-
-        super(RidgeRegression, self).__init__(**kwargs)
-
-        self.set_g(loss_functions.RidgeRegression(l))
-
-
-class LinearRegressionL1L2(NesterovProximalGradientMethod):
-    """Linear regression with L1 and L2 regularisation.
-
-    Optimises the function
-
-        f(b) = ||y - X.b||² + l.||b||_1 + (k / 2).||b||²,
-
-    where ||.||_1 is the L1 norm and ||.||² is the squared L2 norm.
-
-    Parameters
-    ----------
-    l : The L1 parameter.
-
-    k : The L2 parameter.
-    """
-
-    def __init__(self, l, k, **kwargs):
-
-        super(ElasticNet, self).__init__(**kwargs)
-
-        self.set_g(loss_functions.LinearRegressionError())
-        self.set_h(loss_functions.L1L2(l, k))
 
 
 class ElasticNet(NesterovProximalGradientMethod):
@@ -1314,7 +1232,6 @@ class ElasticNet(NesterovProximalGradientMethod):
     ----------
     l : The L1 and L2 parameter.
     """
-
     def __init__(self, l, **kwargs):
 
         super(ElasticNet, self).__init__(**kwargs)
@@ -1346,7 +1263,6 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
     mask : A 1-dimensional mask representing the 3D image mask. Must be a
            list of 1s and 0s.
     """
-
     def __init__(self, gamma, shape, mu=None, mask=None, **kwargs):
 
         super(LinearRegressionTV, self).__init__(**kwargs)
@@ -1500,6 +1416,29 @@ class ElasticNetTV(LinearRegressionTV):
         self.set_h(loss_functions.ElasticNet(l))
 
 
+class LinearRegressionL1L2(NesterovProximalGradientMethod):
+    """Linear regression with L1 and L2 regularisation.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + l.||b||_1 + (k / 2).||b||²,
+
+    where ||.||_1 is the L1 norm and ||.||² is the squared L2 norm.
+
+    Parameters
+    ----------
+    l : The L1 parameter.
+
+    k : The L2 parameter.
+    """
+    def __init__(self, l, k, **kwargs):
+
+        super(LinearRegressionL1L2, self).__init__(**kwargs)
+
+        self.set_g(loss_functions.LinearRegressionError())
+        self.set_h(loss_functions.L1L2(l, k))
+
+
 class LinearRegressionGL(NesterovProximalGradientMethod):
     """Linear regression with group lasso constraint.
 
@@ -1561,6 +1500,108 @@ class LinearRegressionGL(NesterovProximalGradientMethod):
 
         return ((2.0 * mu * D * l + 2.0 * D * A) ** 2.0 \
                 - (2.0 * D * A) ** 2.0) / (4.0 * D * l * A)
+
+
+class RidgeRegression(NesterovProximalGradientMethod):
+    """Ridge regression.
+
+    Optimises the function
+
+        f(b) = (1 / 2).||y - X.b||² + (l / 2).||b||²
+
+    Parameters
+    ----------
+    l : The ridge parameter.
+    """
+    def __init__(self, l, **kwargs):
+
+        super(RidgeRegression, self).__init__(**kwargs)
+
+        self.set_g(loss_functions.RidgeRegression(l))
+
+
+class RidgeRegressionL1(RidgeRegression):
+    """Ridge regression with L1 regularisation, i.e. linear regression with L1
+    and L2 constraints.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + l.||b||_1 + (k / 2).||b||²,
+
+    where ||.||_1 is the L1 norm and ||.||² is the squared L2 norm.
+
+    Parameters
+    ----------
+    l : The L1 parameter.
+
+    k : The L2 parameter.
+    """
+    def __init__(self, l, k, **kwargs):
+
+        super(RidgeRegression, self).__init__(k, **kwargs)
+
+        self.set_h(loss_functions.L1(l))
+
+
+class RidgeRegressionTV(RidgeRegression):
+    """Ridge regression with total variation constraint, i.e. linear regression
+    with L2 and TV constraints.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + (l / 2).||b||² + gamma.TV(b),
+
+    where ||.||² is the squared L2 norm and TV(.) is the total variation
+    constraint.
+
+    Parameters
+    ----------
+    l: The L1 regularisation parameter.
+
+    gamma: The TV regularisation parameter.
+
+    shape: The shape of the 3D image. Must be a 3-tuple. If the image is 2D,
+           let the Z dimension be 1, and if the "image" is 1D, let the Y and
+           Z dimensions be 1. The tuple must be on the form (Z, Y, X).
+
+    mu   : The Nesterov function regularisation parameter.
+
+    mask : A 1-dimensional mask representing the 3D image mask. Must be a
+           list of 1s and 0s.
+    """
+    def __init__(self, l, gamma, shape, mu=None, mask=None, **kwargs):
+
+        super(RidgeRegressionTV, self).__init__(l, **kwargs)
+
+        tv = loss_functions.TotalVariation(gamma, shape=shape, mu=mu,
+                                           mask=mask)
+
+        rr = self.get_g()
+        self.set_g(loss_functions.CombinedNesterovLossFunction(rr, tv))
+
+
+class RidgeRegressionL1TV(RidgeRegressionTV):
+    """Ridge regression with L1 and Total variation regularisation, i.e. linear
+    regression with L1, L2 and TV constraints.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + l.||b||_1 + (k / 2).||b||² + gamma.TV(b),
+
+    where ||.||_1 is the L1 norm, ||.||² is the squared L2 norm and TV is the
+    total variation function.
+
+    Parameters
+    ----------
+    l : The L1 parameter.
+
+    k : The L2 parameter.
+    """
+    def __init__(self, l, k, gamma, shape, mu=None, mask=None, **kwargs):
+
+        super(RidgeRegressionL1TV, self).__init__(k, gamma, shape=shape,
+                                                  mu=mu, mask=mask, **kwargs)
+        self.set_h(loss_functions.L1(l))
 
 
 class LogisticRegression(NesterovProximalGradientMethod):

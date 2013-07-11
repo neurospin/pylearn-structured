@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 """
+Loss functions should, as far as possible, be stateless. Loss functions may be
+shared and copied and should therefore not hold anythig that cannot be
+recomputed the next time it is called.
+
 Created on Mon Apr 22 10:54:29 2013
 
 @author:  Tommy Löfstedt, Vincent Guillemot and Fouad Hadj Selem
@@ -20,8 +24,8 @@ __all__ = ['LossFunction', 'LipschitzContinuous', 'Differentiable',
            'ZeroErrorFunction',
            'L1', 'L2', 'ElasticNet',
 
-           'NesterovFunction',
-           'TotalVariation', 'GroupLassoOverlap',
+           'NesterovFunction', 'ConstantNesterovCopy',
+           'TotalVariation', 'SmoothL1', 'GroupLassoOverlap',
 
            'CombinedLossFunction',
            'CombinedNesterovLossFunction']
@@ -686,25 +690,27 @@ class ElasticNet(L1L2):
         super(ElasticNet, self).__init__(l, 1.0 - l, **kwargs)
 
 
-class NesterovDualFunction(NesterovFunction):
-    """Duplicates a Nesterov loss function, but holds the alpha of this
-    function constant.
+class ConstantNesterovCopy(NesterovFunction):
+    """Duplicates a Nesterov loss function, but holds the alpha and the
+    gradient of this function constant.
 
     I.e., this class can be used to find a beta that corresponds to a
     particular alpha.
 
     This class also holds the gradient constant, i.e. _grad and grad() are
-    fixed, just like _alpha and alpha(). This means it assumes a constant A
-    matrix.
+    fixed, just like _alpha and alpha(). This also means it assumes a constant
+    A matrix.
+
+    Be aware of duplicated references!
     """
     def __init__(self, function, **kwargs):
 
-        super(NesterovDualFunction, self).__init__(gamma=function.gamma,
+        super(ConstantNesterovCopy, self).__init__(gamma=function.gamma,
                                                    mu=function.get_mu(),
                                                    **kwargs)
 
-        # TODO: Since __getattr__ and __setattr__ handles all the fields of the
-        #       Nesterov function, we do not need to keep references here as
+        # TODO: Make __getattr__ and __setattr__ handle all the fields of the
+        #       Nesterov function in order to avoid keeping references here as
         #       well!
 
         # Required fields
@@ -744,20 +750,20 @@ class NesterovDualFunction(NesterovFunction):
         self.function = function
 
     def f(self, *args, **kwargs):
-        pass
+        pass  # Set in the constructor
 
     def num_compacts(self, *args, **kwargs):
-        pass
+        pass  # Set in the constructor
 
     def precompute(self, *args, **kwargs):
-        pass
+        pass  # Set in the constructor
 
     def projection(self, *args, **kwargs):
-        pass
+        pass  # Set in the constructor
 
     def _compute_alpha_grad(self, *args, **kwargs):
         """Used by most (all?) Nesterov loss functions to compute a new value
-        of _alpha and _grad. Since this class controlls those, and they are
+        of _alpha and _grad. Since this class controls those, and they are
         constant, this function should not do anything.
         """
         pass

@@ -15,6 +15,10 @@ This includes models such as PCA (f(p) = cov(Xp, Xp)),
 PLS-R (f(w, c) = cov(Xw, Yc)), PLS-PM (the criteria above), RGCCA (the
 criteria above), etc.
 
+Try to avoid making the algorithms stateful. I.e. do not keep references to
+objects with state in the algorithm objects. It should be possible to copy and
+share algorithms between models, and thus they should not depend on any state.
+
 Created on Fri Feb  8 17:24:11 2013
 
 @author:  Tommy Löfstedt
@@ -37,6 +41,7 @@ import numpy as np
 from numpy import ones, eye
 from numpy.linalg import pinv
 import scipy.sparse as sparse
+import copy
 
 __all__ = ['BaseAlgorithm', 'SparseSVD', 'FastSVD', 'NIPALSBaseAlgorithm',
            'NIPALSAlgorithm', 'RGCCAAlgorithm', 'ISTARegression',
