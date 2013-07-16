@@ -1003,7 +1003,7 @@ if __name__ == "__main__":
 #
 #    y = np.dot(X, beta) + e
 
-    lambd = float(3.713)
+    lambd = float(0.25)
     #    gamma = 131.2457
     #    lambd = float(0.75)
     #    gamma = 131.2457
@@ -1028,7 +1028,7 @@ if __name__ == "__main__":
 
     v = []
     x = []
-    for l in xrange(320, 420):
+    for l in xrange(1, 250):
         l = l / float(100.0)
         lr = models.Lasso(l)
         lr.set_tolerance(tolerance)
@@ -1040,4 +1040,4 @@ if __name__ == "__main__":
 
     plot.plot(x, v, '-g')
     plot.show()
-    print "min:", x[np.argmin(v)], " == ", l
+    print "min:", x[np.argmin(v)], " == ", lambd

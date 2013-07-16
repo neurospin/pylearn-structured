@@ -95,7 +95,7 @@ def load(l, density, snr, P, e):
     b = np.dot(P.T, e)
     ind = np.flipud(np.argsort(np.abs(b), axis=0))
     b = b[ind[:, 0]]
-    sign_b = np.sign(b)
+#    sign_b = np.sign(b)
     abs_b = np.abs(b)
     P = P[:, ind[:, 0]]
 
