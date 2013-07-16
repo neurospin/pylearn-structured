@@ -245,6 +245,20 @@ class NesterovFunction(LossFunction,
         raise NotImplementedError('Abstract method "precompute" must be ' \
                                   'specialised!')
 
+    @abc.abstractmethod
+    def _compute_alpha(self, beta, mu=None):
+
+        raise NotImplementedError('Abstract method "_compute_alpha" must be ' \
+                                  'specialised!')
+
+    def _compute_grad(self, alpha):
+
+        grad = self._At[0].dot(alpha[0])
+        for i in xrange(1, len(self._At)):
+            grad += self._At[i].dot(alpha[i])
+
+        return grad
+
 
 class CombinedLossFunction(LossFunction, DataDependent):
 
@@ -282,6 +296,11 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
         super(CombinedNesterovLossFunction, self).__init__(a=a, b=b)
 
+    def phi(self, beta, alpha):
+
+            grad = self._compute_grad(alpha)
+            return np.dot(beta.T, grad)[0, 0]
+
     def grad(self, *args, **kwargs):
 
         return self.a.grad(*args, **kwargs) + self.b.grad(*args, **kwargs)
@@ -291,10 +310,13 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
         if isinstance(self.a, LipschitzContinuous) \
                 and isinstance(self.b, LipschitzContinuous):
             return self.a.Lipschitz(mu=mu) + self.b.Lipschitz(mu=mu)
+
         elif isinstance(self.a, LipschitzContinuous):
             return self.a.Lipschitz(mu=mu) + self.b.Lipschitz()
+
         elif isinstance(self.b, LipschitzContinuous):
             return self.a.Lipschitz() + self.b.Lipschitz(mu=mu)
+
         else:
             raise ValueError('At least one loss function must be ' \
                              'LipschitzContinuous')
@@ -303,6 +325,7 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
         if hasattr(self.a, 'precompute'):
             self.a.precompute(*args, **kwargs)
+
         if hasattr(self.b, 'precompute'):
             self.b.precompute(*args, **kwargs)
 
@@ -310,10 +333,13 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
         if hasattr(self.a, 'alpha') and hasattr(self.b, 'alpha'):
             return self.a.alpha(beta) + self.b.alpha(beta)  # Merge
+
         elif hasattr(self.a, 'alpha'):
             return self.a.alpha(beta)
+
         elif hasattr(self.b, 'alpha'):
             return self.b.alpha(beta)
+
         else:
             raise ValueError('At least one loss function must be Nesterov')
 
@@ -321,10 +347,13 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
         if hasattr(self.a, 'A') and hasattr(self.b, 'A'):
             return self.a.A() + self.b.A()
+
         elif hasattr(self.a, 'A'):
             return self.a.A()
+
         elif hasattr(self.b, 'A'):
             return self.b.A()
+
         else:
             raise ValueError('At least one loss function must be Nesterov')
 
@@ -332,10 +361,13 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
         if hasattr(self.a, 'At') and hasattr(self.b, 'At'):
             return self.a.At() + self.b.At()
+
         elif hasattr(self.a, 'At'):
             return self.a.At()
+
         elif hasattr(self.b, 'At'):
             return self.b.At()
+
         else:
             raise ValueError('At least one loss function must be Nesterov')
 
@@ -343,10 +375,13 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
         if hasattr(self.a, 'num_compacts') and hasattr(self.b, 'num_compacts'):
             return self.a.num_compacts() + self.b.num_compacts()
+
         elif hasattr(self.a, 'num_compacts'):
             return self.a.num_compacts()
+
         elif hasattr(self.b, 'num_compacts'):
             return self.b.num_compacts()
+
         else:
             raise ValueError('At least one loss function must be Nesterov')
 
@@ -354,10 +389,13 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
         if hasattr(self.a, 'num_groups') and hasattr(self.b, 'num_groups'):
             return self.a.num_groups() + self.b.num_groups()
+
         elif hasattr(self.a, 'num_groups'):
             return self.a.num_groups()
+
         elif hasattr(self.b, 'num_groups'):
             return self.b.num_groups()
+
         else:
             raise ValueError('At least one loss function must be Nesterov')
 
@@ -367,13 +405,46 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
             groups_a = self.a.num_groups()
 
-            return self.a.projection(*alpha[0:groups_a]) \
+            return self.a.projection(*alpha[:groups_a]) \
                  + self.b.projection(*alpha[groups_a:])
 
         elif hasattr(self.a, 'projection'):
             return self.a.projection(*alpha)
+
         elif hasattr(self.b, 'projection'):
             return self.b.projection(*alpha)
+
+        else:
+            raise ValueError('At least one loss function must be Nesterov')
+
+    def _compute_alpha(self, beta, mu=None):
+
+        if hasattr(self.a, '_compute_alpha') \
+                and hasattr(self.b, '_compute_alpha'):
+            return self.a._compute_alpha(beta, mu) \
+                    + self.b._compute_alpha(beta, mu)
+
+        elif hasattr(self.a, '_compute_alpha'):
+            return self.a._compute_alpha(beta, mu)
+
+        elif hasattr(self.b, '_compute_alpha'):
+            return self.b._compute_alpha(beta, mu)
+
+        else:
+            raise ValueError('At least one loss function must be Nesterov')
+
+    def _compute_grad(self, alpha):
+
+        if hasattr(self.a, '_compute_grad') \
+                and hasattr(self.b, '_compute_grad'):
+            return self.a._compute_grad(alpha) + self.b._compute_grad(alpha)
+
+        elif hasattr(self.a, '_compute_grad'):
+            return self.a._compute_grad(alpha)
+
+        elif hasattr(self.b, '_compute_grad'):
+            return self.b._compute_grad(alpha)
+
         else:
             raise ValueError('At least one loss function must be Nesterov')
 
@@ -381,8 +452,10 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
         if hasattr(self.a, 'get_mu') and hasattr(self.b, 'get_mu'):
             return min(self.a.get_mu(), self.b.get_mu())
+
         elif hasattr(self.b, 'get_mu'):
             return self.b.get_mu()
+
         else:
             return self.a.get_mu()
 
@@ -390,6 +463,7 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
         if hasattr(self.a, 'set_mu'):
             self.a.set_mu(mu)
+
         if hasattr(self.b, 'set_mu'):
             self.b.set_mu(mu)
 
@@ -535,7 +609,6 @@ class RidgeRegression(LossFunction,
 
         self.X = X
         self.y = y
-        self.Xty = np.dot(X.T, y)
 
         self.l_max = None
         self.l_min = None
@@ -551,7 +624,9 @@ class RidgeRegression(LossFunction,
 
 #        return 2.0 * ((np.dot(self.X.T, np.dot(self.X, beta)) - self.Xty) \
 #                + self.l * beta)
-        return (np.dot(self.X.T, np.dot(self.X, beta)) - self.Xty) \
+#        return (np.dot(self.X.T, np.dot(self.X, beta)) - self.Xty) \
+#                + self.l * beta
+        return  np.dot((np.dot(self.X, beta) - self.y).T, self.X).T \
                 + self.l * beta
 
     def Lipschitz(self, *args, **kwargs):
@@ -761,10 +836,169 @@ class ConstantNesterovCopy(NesterovFunction):
     def projection(self, *args, **kwargs):
         pass  # Set in the constructor
 
-    def _compute_alpha_grad(self, *args, **kwargs):
+#    def _compute_alpha_grad(self, *args, **kwargs):
+#        """Used by most (all?) Nesterov loss functions to compute a new value
+#        of _alpha and _grad. Since this class controls those, and they are
+#        constant, this function should not do anything.
+#        """
+#        pass
+
+    def _compute_alpha(self, *args, **kwargs):
         """Used by most (all?) Nesterov loss functions to compute a new value
-        of _alpha and _grad. Since this class controls those, and they are
-        constant, this function should not do anything.
+        of _alpha. Since this class controls it, and it is constant, this
+        function should not do anything.
+        """
+        pass
+
+    def _compute_grad(self, *args, **kwargs):
+        """Used by most (all?) Nesterov loss functions to compute a new value
+        of _grad. Since this class controls it, and it is constant, this
+        function should not do anything.
+        """
+        pass
+
+#    def __setattr__(self, name, value):
+#
+#        if name != '_alpha' and name != 'alpha' \
+#                and name != '_grad' and name != 'grad':
+#
+#            super(NesterovDualFunction, self).__setattr__(name, value)
+##            self.__dict__[name] = value  # Set attribute of this class
+##            self.function.__setattr__(name, value)
+
+#    def __delattr__(self, name):
+#
+#        if name != '_alpha' and name != 'alpha' \
+#                and name != '_grad' and name != 'grad':
+#            super(NesterovDualFunction, self).__delattr__(name)
+##            self.function.__delattr__(name)
+
+#    def __getattr__(self, name):
+#
+#        if name == '_alpha':
+#            return self.__alpha
+#
+#        if name == '_grad':
+#            return self.__grad
+#
+#        return super(NesterovDualFunction, self).__getattr__(name)
+
+    def alpha(self, *args, **kwargs):
+
+        return self.__alpha
+
+    def grad(self, *args, **kwargs):
+
+        return self.__grad
+
+
+class ConstantNesterovFunction(NesterovFunction):
+    """Constructs a Nesterov loss function with constant A and alpha.
+    """
+    def __init__(self, gamma, mu, A, alpha, **kwargs):
+        """Construct a Nesterov loss function.
+
+        Parameters
+        ----------
+        gamma : The regularisation parameter for the nesterov penality.
+
+        mu : The Nesterov function regularisation parameter. Must be provided
+                unless you are using ContinuationRun.
+
+        A : The linear operator.
+
+        alpha : The optimal (or any fixed) dual variable.
+        """
+        super(NesterovFunction, self).__init__(**kwargs)
+
+        self.gamma = float(gamma)
+        self.mu = float(mu)
+        self._A = copy.deepcopy(A)
+        self._At = [0] * len(A)
+        for i in len(A):
+            self._At[i] = A[i].T
+        self._alpha = copy.deepcopy(alpha)
+
+        self._grad = None  # The function's gradient
+        self.lambda_max = None  # The largest eigenvalue of A'.A
+
+
+
+
+        super(ConstantNesterovCopy, self).__init__(gamma=function.gamma,
+                                                   mu=function.get_mu(),
+                                                   **kwargs)
+
+        # TODO: Make __getattr__ and __setattr__ handle all the fields of the
+        #       Nesterov function in order to avoid keeping references here as
+        #       well!
+
+        # Required fields
+        self.lambda_max = function.Lipschitz(1.0)
+        self._A = function.A()
+        self._At = function.At()
+        self.set_mu(function.get_mu())
+        self._num_compacts = function.num_compacts()
+        self._alpha = function.alpha()
+        self._grad = function.grad()
+        # Copies of the "true", constant, internal alpha and grad!
+        self.__alpha = copy.deepcopy(self._alpha)
+        self.__grad = copy.deepcopy(self._grad)
+
+        # Optional fields
+        if hasattr(function, '_buff'):
+            self._buff = function._buff
+
+        # Methods defined in the base class NesterovFunction
+        self.Lipschitz = function.Lipschitz
+        self.A = function.A
+        self.At = function.At
+        self.get_mu = function.get_mu
+        self.set_mu = function.set_mu
+        self.num_groups = function.num_groups
+
+        # Methods defined in the subclasses
+        self.f = function.f
+        self.grad = function.grad
+
+        # Abstract methods defined in the subclasses
+        self.num_compacts = function.num_compacts
+        self.projection = function.projection
+        self.precompute = function.precompute
+
+        # The loss function we duplicate
+        self.function = function
+
+    def f(self, *args, **kwargs):
+        pass  # Set in the constructor
+
+    def num_compacts(self, *args, **kwargs):
+        pass  # Set in the constructor
+
+    def precompute(self, *args, **kwargs):
+        pass  # Set in the constructor
+
+    def projection(self, *args, **kwargs):
+        pass  # Set in the constructor
+
+#    def _compute_alpha_grad(self, *args, **kwargs):
+#        """Used by most (all?) Nesterov loss functions to compute a new value
+#        of _alpha and _grad. Since this class controls those, and they are
+#        constant, this function should not do anything.
+#        """
+#        pass
+
+    def _compute_alpha(self, *args, **kwargs):
+        """Used by most (all?) Nesterov loss functions to compute a new value
+        of _alpha. Since this class controls it, and it is constant, this
+        function should not do anything.
+        """
+        pass
+
+    def _compute_grad(self, *args, **kwargs):
+        """Used by most (all?) Nesterov loss functions to compute a new value
+        of _grad. Since this class controls it, and it is constant, this
+        function should not do anything.
         """
         pass
 
@@ -862,11 +1096,12 @@ class TotalVariation(NesterovFunction):
             return 0.0
 
         if smooth:
-            self._compute_alpha_grad(beta, mu)
+#            self._compute_alpha_grad(beta, mu)
+            self._alpha = self._compute_alpha(beta, mu)
+            self._grad = self._compute_grad(self._alpha)
 
-            alpha = self.alpha()
             alpha_sqsum = 0.0
-            for a in alpha:
+            for a in self._alpha:
                 alpha_sqsum += np.sum(a ** 2.0)
 
             if mu == None:
@@ -885,13 +1120,20 @@ class TotalVariation(NesterovFunction):
 
             return sqsum  # Gamma is already incorporated in A
 
+    def phi(self, beta, alpha):
+
+        grad = self._compute_grad(alpha)
+        return np.dot(beta.T, grad)[0, 0]
+
     def grad(self, beta=None, mu=None):
 
         if self.gamma < utils.TOLERANCE:
             return np.zeros(beta.shape)
 
         if beta != None:
-            self._compute_alpha_grad(beta, mu)
+#            self._compute_alpha_grad(beta, mu)
+            self._alpha = self._compute_alpha(beta, mu)
+            self._grad = self._compute_grad(self._alpha)
 
         return self._grad
 
@@ -901,7 +1143,9 @@ class TotalVariation(NesterovFunction):
             return [0.0, 0.0, 0.0]
 
         if beta != None:
-            self._compute_alpha_grad(beta, mu)
+#            self._compute_alpha_grad(beta, mu)
+            self._alpha = self._compute_alpha(beta, mu)
+            self._grad = self._compute_grad(self._alpha)
 
         return self._alpha
 
@@ -927,27 +1171,20 @@ class TotalVariation(NesterovFunction):
 
         return [asx, asy, asz]
 
-    def _compute_alpha_grad(self, beta, mu=None):
+    def _compute_alpha(self, beta, mu=None):
 
         if mu == None:
             mu = self.get_mu()
 
-        # Compute a* for each dimension
-#        self._alpha[0] = self._A[0].dot(beta) / mu
-#        self._alpha[1] = self._A[1].dot(beta) / mu
-#        self._alpha[2] = self._A[2].dot(beta) / mu
+        # Compute a*
+        alpha = [0] * len(self._A)
         for i in xrange(len(self._A)):
-            self._alpha[i] = self._A[i].dot(beta) / mu
+            alpha[i] = self._A[i].dot(beta) / mu
 
         # Apply projection
-        self._alpha = self.projection(*self._alpha)
+        alpha = self.projection(*alpha)
 
-#        self._grad = np.add(np.add(self._At[0].dot(self._alpha[0]),
-#                                    self._At[1].dot(self._alpha[1]), self._buff),
-#                                    self._At[2].dot(self._alpha[2]), self._buff)
-        self._grad = self._At[0].dot(self._alpha[0])
-        for i in xrange(1, len(self._alpha)):
-            self._grad += self._At[i].dot(self._alpha[i])
+        return alpha
 
     def _find_mask_ind(self, mask, ind):
 
@@ -1089,12 +1326,12 @@ class SmoothL1(NesterovFunction):
             return 0.0
 
         if smooth:
-            self._compute_alpha_grad(beta, mu)
-
-            alpha = self.alpha()
+#            self._compute_alpha_grad(beta, mu)
+            self._alpha = self._compute_alpha(beta, mu)
+            self._grad = self._compute_grad(self._alpha)
 
             alpha_sqsum = 0.0
-            for a in alpha:
+            for a in self._alpha:
                 alpha_sqsum += np.sum(a ** 2.0)
 
             if mu == None:
@@ -1105,13 +1342,20 @@ class SmoothL1(NesterovFunction):
         else:
             return self.gamma * utils.norm1(beta)
 
+    def phi(self, beta, alpha):
+
+        grad = self._compute_grad(alpha)
+        return np.dot(beta.T, grad)[0, 0]
+
     def grad(self, beta=None, mu=None):
 
         if self.gamma < utils.TOLERANCE:
             return np.zeros(beta.shape)
 
         if beta != None:
-            self._compute_alpha_grad(beta, mu)
+#            self._compute_alpha_grad(beta, mu)
+            self._alpha = self._compute_alpha(beta, mu)
+            self._grad = self._compute_grad(self._alpha)
 
         return self._grad
 
@@ -1141,7 +1385,9 @@ class SmoothL1(NesterovFunction):
             return [0.0]
 
         if beta != None:
-            self._compute_alpha_grad(beta, mu)
+#            self._compute_alpha_grad(beta, mu)
+            self._alpha = self._compute_alpha(beta, mu)
+            self._grad = self._compute_grad(self._alpha)
 
         return self._alpha
 
@@ -1149,6 +1395,7 @@ class SmoothL1(NesterovFunction):
 
         return self.num_variables
 
+    # TODO: Change so that projection instead always takes a list
     def projection(self, *alpha):
 
         a = alpha[0]
@@ -1160,20 +1407,28 @@ class SmoothL1(NesterovFunction):
 
         return [a]
 
-    def _compute_alpha_grad(self, beta, mu=None):
+    def _compute_alpha(self, beta, mu=None):
 
         if mu == None:
             mu = self.get_mu()
 
         # Compute a*
-#        self._alpha[0] = self._A[0].dot(beta) / mu
-        self._alpha[0] = (self.gamma / mu) * beta
+#        _alpha[0] = self._A[0].dot(beta) / mu
+        alpha = [0]
+        alpha[0] = (self.gamma / mu) * beta
 
         # Apply projection
-        self._alpha = self.projection(*self._alpha)
+        alpha = self.projection(*alpha)
 
-#        self._grad = self._At[0].dot(self._alpha[0])
-        self._grad = self.gamma * self._alpha[0]
+        return alpha
+
+    def _compute_grad(self, alpha):
+
+        # Compute a*
+#        grad = self._At[0].dot(alpha[0])
+        grad = self.gamma * alpha[0]
+
+        return grad
 
     def precompute(self):
 
@@ -1241,7 +1496,9 @@ class GroupLassoOverlap(NesterovFunction):
             return 0.0
 
         if smooth:
-            self._compute_alpha_grad(beta, mu)
+#            self._compute_alpha_grad(beta, mu)
+            self._alpha = self._compute_alpha(beta, mu)
+            self._grad = self._compute_grad(self._alpha)
 
             alpha = self.alpha()
             alpha_sqsum = 0.0
@@ -1260,13 +1517,20 @@ class GroupLassoOverlap(NesterovFunction):
 
             return sqsum  # Gamma is already incorporated in A
 
+    def phi(self, beta, alpha):
+
+        grad = self._compute_grad(alpha)
+        return np.dot(beta.T, grad)[0, 0]
+
     def grad(self, beta=None, mu=None):
 
         if self.gamma < utils.TOLERANCE:
             return np.zeros(beta.shape)
 
         if beta != None:
-            self._compute_alpha_grad(beta, mu)
+#            self._compute_alpha_grad(beta, mu)
+            self._alpha = self._compute_alpha(beta, mu)
+            self._grad = self._compute_grad(self._alpha)
 
         return self._grad
 
@@ -1297,7 +1561,9 @@ class GroupLassoOverlap(NesterovFunction):
             return tuple([0.0] * len(self._alpha))
 
         if beta != None:
-            self._compute_alpha_grad(beta, mu)
+#            self._compute_alpha_grad(beta, mu)
+            self._alpha = self._compute_alpha(beta, mu)
+            self._grad = self._compute_grad(self._alpha)
 
         return self._alpha
 
@@ -1318,20 +1584,20 @@ class GroupLassoOverlap(NesterovFunction):
 
         return alpha
 
-    def _compute_alpha_grad(self, beta, mu=None):
+    def _compute_alpha(self, beta, mu=None):
 
         if mu == None:
             mu = self.get_mu()
 
         # Compute a* for each dimension
-        self._grad = 0
+        alpha = [0] * len(self._A)
         for g in xrange(len(self._A)):
             astar = self._A[g].dot(beta) / mu
             astar = self.projection(astar)[0]
 
-            self._alpha[g] = astar
+            alpha[g] = astar
 
-            self._grad += self._At[g].dot(astar)
+        return alpha
 
     def precompute(self):
 
