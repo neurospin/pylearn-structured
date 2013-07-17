@@ -14,6 +14,7 @@ import structured.start_vectors as start_vectors
 import structured.loss_functions as loss_functions
 import structured.algorithms as algorithms
 import structured.tests.data.simulated.lasso as lasso
+import structured.tests.data.simulated.l1_l2_tv as l1_l2_tv
 #import multiblock.start_vectors as start_vectors
 #import multiblock.prox_ops as prox_ops
 #import multiblock.schemes as schemes
@@ -902,142 +903,163 @@ if __name__ == "__main__":
 #    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
 #    print
 
-#    np.random.seed(42)
+    np.random.seed(42)
+
+    eps = 0.001
+    maxit = 10
+    cont_maxit = 100
+    gamma = 15.0
+    l = 0.8
+    k = 1.0 - l
+
+    px = 1000
+    py = 1
+    pz = 1
+    p = px * py * pz  # Must be even!
+    n = 100
+    X = np.random.randn(n, p)
+    betastar = np.concatenate((np.zeros((p / 2, 1)),
+                               np.random.randn(p / 2, 1)))
+    betastar = np.sort(np.abs(betastar), axis=0)
+    y = np.dot(X, betastar)
+
+    start = time()
+    m = models.RidgeRegressionL1TV(l, k, gamma, shape=(pz, py, px),
+                                   compress=False)
+    m.set_tolerance(eps)
+    m.set_max_iter(maxit)
+    c = models.Continuation(m, cont_maxit)
+    c.fit(X, y)
+    computed_beta = c.beta
+    print "time: ", (time() - start)
+
+    print "f: ", c.get_algorithm().f[-1]
+    print "its: ", c.get_algorithm().iterations
+
+    plot.subplot(2, 2, 1)
+    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
+    plot.subplot(2, 2, 2)
+    plot.plot(c.get_algorithm().f)
+    plot.title("Continuation")
+
+    start = time()
+    m = models.RidgeRegressionL1TV(l, k, gamma, shape=(pz, py, px),
+                                   compress=False)
+    m.set_tolerance(eps)
+    m.set_max_iter(cont_maxit)
+    cr = models.ContinuationRun(m, tolerances=[1.0, 0.1, 0.01, 0.001, 0.0001])
+    cr.fit(X, y)
+    computed_beta = cr.beta
+    print "time: ", (time() - start)
+
+    print "f: ", cr.get_algorithm().f[-1]
+    print "its: ", cr.get_algorithm().iterations
+
+    plot.subplot(2, 2, 3)
+    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
+    plot.subplot(2, 2, 4)
+    plot.plot(cr.get_algorithm().f)
+    plot.title("Continuation Run")
+
+    plot.show()
+
+
+
+
+
+#     # Relevant tests for Lasso for the paper!
+#    lambdas = [3.00, 3.25, 3.50, 3.75, 4.00]
+#    for i in xrange(len(lambdas)):
+#        lambd = float(lambdas[i])
+##        lambd = float(0.25)
+#        #    gamma = 131.2457
+#        #    lambd = float(0.75)
+#        #    gamma = 131.2457
+#        density = float(0.5)  # Fraction of non-zero values. Must be \in [0, 1]
+#        snr = float(1.0)  # ~SNR
+#        n = 25
+#        p = 50
+#        ps = int(round(p * density))  # <= p
+#        #    P = (np.random.randn(n, p) - 0.5) * 2.0
+#        #    P = np.random.randn(n, p)
+#        Sigma = 0.8 * np.ones((p, p)) + 0.2 * np.eye(p)
+#        Mu = np.zeros(p)
+#        P = np.random.multivariate_normal(Mu, Sigma, n)
+#        e = np.random.randn(n, 1)
+#        #    e = np.random.rand(n, 1)
+#        e = e / np.sqrt(np.sum(e ** 2.0))
 #
-#    eps = 0.001
-#    maxit = 10
-#    cont_maxit = 100
-#    gamma = 15.0
-#    l = 0.8
-#    k = 1.0 - l
+#        X, y, beta = lasso.load(lambd, density, snr, P, e)
 #
-#    px = 1000
-#    py = 1
-#    pz = 1
-#    p = px * py * pz  # Must be even!
-#    n = 100
-#    X = np.random.randn(n, p)
-#    betastar = np.concatenate((np.zeros((p / 2, 1)),
-#                               np.random.randn(p / 2, 1)))
-#    betastar = np.sort(np.abs(betastar), axis=0)
-#    y = np.dot(X, betastar)
+#        tolerance = 0.00005
+#        maxit = 20000
 #
-#    start = time()
-#    m = models.RidgeRegressionL1TV(l, k, gamma, shape=(pz, py, px),
-#                                   compress=False)
-#    m.set_tolerance(eps)
-#    m.set_max_iter(maxit)
-#    c = models.Continuation(m, cont_maxit)
-#    c.fit(X, y)
-#    computed_beta = c.beta
-#    print "time: ", (time() - start)
+#        v = []
+#        x = []
+#        scale = 100.0
+#        a = max(0, int(round(lambd * scale - scale / 2.0)))
+#        b = int(round(lambd * scale + scale / 2.0))
+#        for l in xrange(a, b):
+#            l = l / float(scale)
+#            lr = models.Lasso(l)
+#            lr.set_tolerance(tolerance)
+#            lr.set_max_iter(maxit)
+#            lr.fit(X, y)
+#            v.append(np.sum((beta - lr.beta) ** 2.0))
+#            x.append(l)
+#            print "l = %.2f => %f" % (l, v[-1])
 #
-#    print "f: ", c.get_algorithm().f[-1]
-#    print "its: ", c.get_algorithm().iterations
-#
-#    plot.subplot(2, 2, 1)
-#    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
-#    plot.subplot(2, 2, 2)
-#    plot.plot(c.get_algorithm().f)
-#    plot.title("Continuation")
-#
-#    start = time()
-#    m = models.RidgeRegressionL1TV(l, k, gamma, shape=(pz, py, px),
-#                                   compress=False)
-#    m.set_tolerance(eps)
-#    m.set_max_iter(cont_maxit)
-#    cr = models.ContinuationRun(m, tolerances=[1.0, 0.1, 0.01, 0.001, 0.0001])
-#    cr.fit(X, y)
-#    computed_beta = cr.beta
-#    print "time: ", (time() - start)
-#
-#    print "f: ", cr.get_algorithm().f[-1]
-#    print "its: ", cr.get_algorithm().iterations
-#
-#    plot.subplot(2, 2, 3)
-#    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
-#    plot.subplot(2, 2, 4)
-#    plot.plot(cr.get_algorithm().f)
-#    plot.title("Continuation Run")
-#
+#        plot.subplot(len(lambdas), 1, i + 1)
+#        plot.plot(x, v, '-g')
+#        plot.title("l: %.2f, min: %.2f" % (lambd, x[np.argmin(v)]))
+#        plot.axis([a / scale, b / scale, min(v), max(v)])
 #    plot.show()
 
-#    l = float(0.75)
-#    density = float(0.3)  # Fraction of non-zero values. Must be \in [0, 1].
-#    rho = float(1.0)  # ~SNR
-#    n = 50
-#    p = 100
+#    # Relevant tests for EN + TV for the paper!
+#    lambd = float(0.713)
+#    gamma = float(3.142)
+#    density = float(0.5)  # Fraction of non-zero values. Must be \in [0, 1]
+#    snr = float(1.0)  # ~SNR
+#    n = 25
+#    p = 50
 #    ps = int(round(p * density))  # <= p
-#    P = (np.random.rand(n, p) - 0.5) * 2.0  # Should be normally distributed!
-#    v = np.random.rand(n, 1)  # Should be normally distributed!
+#    #    P = (np.random.randn(n, p) - 0.5) * 2.0
+#    #    P = np.random.randn(n, p)
+#    Sigma = 0.8 * np.ones((p, p)) + 0.2 * np.eye(p)
+#    Mu = np.zeros(p)
+#    P = np.random.multivariate_normal(Mu, Sigma, n)
+#    e = np.random.randn(n, 1)
+#    #    e = np.random.rand(n, 1)
+#    e = e / np.sqrt(np.sum(e ** 2.0))
 #
-#    e = v / utils.norm(v)
+#    X, y, beta = l1_l2_tv.load(lambd, 1.0 - lambd, gamma, density, snr, P, e)
 #
-#    b = np.dot(P.T, e)
-#    ind = np.flipud(np.argsort(np.abs(b), axis=0))
-#    b = b[ind[:, 0]]
-#    sign_b = np.sign(b)
-#    abs_b = np.abs(b)
+#    tolerance = 0.0001
+#    maxit = 100000
+#    mu = 0.00001
 #
-#    a_plus = l / abs_b[:ps, [0]]
+#    v = []
+#    x = []
+#    scale = 100.0
+#    value = gamma
+#    a = max(0, int(round(value * scale - scale / 2.0)))
+#    b = int(round(value * scale + scale / 2.0))
+##    start_vector = start_vectors.RandomStartVector()
+#    for val in xrange(a, b):
+#        l = lambd
+#        g = val / float(scale)
+#        axis = g
+#        lr = models.ElasticNetTV(l, g, shape=[1, 1, p], mu=mu)
+##        lr.set_start_vector(start_vector)
+#        lr.set_tolerance(tolerance)
+#        lr.set_max_iter(maxit)
+#        lr.fit(X, y)
+##        start_vector = start_vectors.IdentityStartVector(lr.beta)
+#        v.append(np.sum((beta - lr.beta) ** 2.0))
+#        x.append(axis)
+#        print "true = %.2f => %f" % (axis, v[-1])
 #
-#    b_zero = abs_b[ps:, [0]]  # |P'e|
-#    ind = (b_zero / l) < 1.0  # |P'e| / l < 1.0
-#
-#    a_zero = np.zeros((p - ps, 1))
-#    a_zero[ind] = 1.0
-#    ind = np.logical_not(ind)
-#    xi = np.random.rand(p - ps, 1)
-##    a_zero[ind] = -l / b_zero[ind]
-#    a_zero[ind] = np.divide(-l * xi[ind], b_zero[ind])
-#
-##    a_zero = np.multiply(a_zero, xi)
-#
-#    a = np.vstack((a_plus, a_zero))
-#
-#    X = P / a.T
-#
-#    beta = np.zeros((p, 1))
-#    xi = np.random.rand(ps, 1) * (rho / np.sqrt(ps))
-#    beta[:ps, [0]] = -np.multiply(xi, sign_b[:ps, [0]])
-#
-#    y = np.dot(X, beta) + e
-
-    lambd = float(0.25)
-    #    gamma = 131.2457
-    #    lambd = float(0.75)
-    #    gamma = 131.2457
-    density = float(0.5)  # Fraction of non-zero values. Must be \in [0, 1].
-    snr = float(1.0)  # ~SNR
-    n = 25
-    p = 50
-    ps = int(round(p * density))  # <= p
-    #    P = (np.random.randn(n, p) - 0.5) * 2.0
-    #    P = np.random.randn(n, p)
-    Sigma = 0.8 * np.ones((p, p)) + 0.2 * np.eye(p)
-    Mu = np.zeros(p)
-    P = np.random.multivariate_normal(Mu, Sigma, n)
-    #    e = np.random.randn(n, 1)
-    e = np.random.rand(n, 1)
-    e = e / np.sqrt(np.sum(e ** 2.0))
-
-    X, y, beta = lasso.load(lambd, density, snr, P, e)
-
-    tolerance = 0.0001
-    maxit = 20000
-
-    v = []
-    x = []
-    for l in xrange(1, 250):
-        l = l / float(100.0)
-        lr = models.Lasso(l)
-        lr.set_tolerance(tolerance)
-        lr.set_max_iter(maxit)
-        lr.fit(X, y)
-        v.append(np.sum((beta - lr.beta) ** 2.0))
-        x.append(l)
-        print "l = %.2f => %f" % (l, v[-1])
-
-    plot.plot(x, v, '-g')
-    plot.show()
-    print "min:", x[np.argmin(v)], " == ", lambd
+#    plot.plot(x, v, '-g')
+#    plot.title("true: %.2f, min: %.2f" % (value, x[np.argmin(v)]))
+#    plot.axis([a / scale, b / scale, min(v), max(v)])
+#    plot.show()

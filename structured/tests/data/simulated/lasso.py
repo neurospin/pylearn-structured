@@ -107,11 +107,11 @@ def load(l, density, snr, P, e):
             a[i, 0] = l / abs_b[i, 0]
         else:
             if abs_b[i, 0] < 1.0:
-                a[i, 0] = 1.0
+                a[i, 0] = l
             else:
                 a[i, 0] = l * np.random.rand() / abs_b[i, 0]
 
-        X[:, i] = a[i, 0] * P[:, i]
+        X[:, i] = P[:, i] * a[i, 0]
 
     for i in xrange(p):
         if i >= ps:

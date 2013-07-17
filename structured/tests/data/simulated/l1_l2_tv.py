@@ -71,25 +71,26 @@ def load(l, k, gamma, density, snr, P, e):
         if i >= ps:
             beta[i, 0] = 0
         else:
-            xi = np.random.rand() * snr / np.sqrt(ps)
-            beta[i, 0] = xi * np.sign(b[i, 0])
+            beta[i, 0] = U(0, 1) * snr / np.sqrt(ps)
     beta = np.flipud(np.sort(beta, axis=0))
 
     X = np.zeros(P.shape)
     a = np.zeros((p, 1))
-    a[0, 0] = (-k * beta[0, 0] - l + gamma) / b[0, 0]
-    for i in xrange(1, ps - 1):
+    a[0, 0] = (-k * beta[0, 0] - l - gamma) / b[0, 0]  # Warning: gamma was +
+    X[:, 0] = P[:, 0] * a[0, 0]
+    for i in xrange(1, ps):  # End was: ps - 1
         a[i, 0] = (-k * beta[i, 0] - l) / b[i, 0]
-    a[ps - 1, 0] = (-k * beta[ps - 1, 0] - l + 2 * gamma) / b[ps - 1, 0]
-    a[ps, 0] = (-k * beta[ps, 0] - l * U(-1, 1) - gamma * U(-1, 0)) \
-                    / b[ps, 0]
+        X[:, i] = P[:, i] * a[i, 0]
+#    a[ps - 1, 0] = (-k * beta[ps - 1, 0] - l + 2 * gamma) / b[ps - 1, 0]
+                                                     # Was [-1, 0]
+    a[ps, 0] = (-k * beta[ps, 0] - l * U(-1, 1) - gamma * U(-2, 0)) / b[ps, 0]
+    X[:, ps] = P[:, ps] * a[ps, 0]
     for i in xrange(ps + 1, p - 1):
-        a[i, 0] = (-k * beta[i, 0] - l * U(-1, 1) - gamma * U(-2, 2)) \
-                        / b[i, 0]
+        a[i, 0] = (-k * beta[i, 0] - l * U(-1, 1) - gamma * U(-2, 2)) / b[i, 0]
+        X[:, i] = P[:, i] * a[i, 0]
     a[p - 1, 0] = (-k * beta[p - 1, 0] - l * U(-1, 1) - gamma * U(-1, 1)) \
                     / b[p - 1, 0]
-
-#        X[:, i] = a[i, 0] * P[:, i]
+    X[:, p - 1] = P[:, p - 1] * a[p - 1, 0]
 
     y = np.dot(X, beta) - e
 

@@ -977,7 +977,8 @@ class Continuation(BaseModel):
         gap_ = self.model.phi(beta=self.model.beta, alpha=g.alpha()) \
                 - self.model.phi(beta=beta_, alpha=g.alpha())
 #        else:
-        dual_model = ConstantNesterovModelCopy(self.model)
+#        dual_model = ConstantNesterovModelCopy(self.model)
+        dual_model = ConstantNesterovModel(self.model)
         dual_model.fit(X, y)
         beta = dual_model.beta
 
@@ -986,8 +987,10 @@ class Continuation(BaseModel):
 
         print "gap_:", gap_
         print "gap:", gap
-        print "diff:", np.sqrt(np.sum((beta - beta_) ** 2.0))
-        print "diff:", np.sqrt(np.sum((beta - self.model.beta) ** 2.0))
+        print "diff:", np.sqrt(np.sum((self.model.beta - beta_) ** 2.0))
+        print "diff:", np.sqrt(np.sum((self.model.beta - dual_model.beta) ** 2.0))
+        print "f_:", self.model.f(beta_)
+        print "f:", dual_model.f(beta)
 
         return gap
 
@@ -1237,10 +1240,35 @@ class ConstantNesterovModel(NesterovProximalGradientMethod):
         """
         super(ConstantNesterovModel, self).__init__()
 
-        # Copy the algorithm
-        # TODO: Potential memory issues here, since algorithms are not
+        # TODO: Potential memory issues here, since algorithms are not yet
         # stateless!
+
+        # Copy the algorithm
         self.set_algorithm(copy.copy(model.get_algorithm()))
+
+        # Copy the loss functions
+        self.set_h(copy.copy(model.get_h()))
+
+        g = model.get_g()
+        if isinstance(g.a, loss_functions.NesterovFunction):
+            b = loss_functions.ConstantNesterovFunction(g.a.gamma,
+                                                        g.a.get_mu(),
+                                                        g.a.A(),
+                                                        g.a.alpha(),
+                                                        g.a.num_compacts())
+        else:
+            a = copy.copy(g.b)
+
+        if isinstance(g.b, loss_functions.NesterovFunction):
+            b = loss_functions.ConstantNesterovFunction(g.b.gamma,
+                                                        g.b.get_mu(),
+                                                        g.b.A(),
+                                                        g.b.alpha(),
+                                                        g.b.num_compacts())
+        else:
+            a = copy.copy(g.a)
+
+        self.set_g(loss_functions.CombinedNesterovLossFunction(a, b))
 
 
 class LinearRegression(NesterovProximalGradientMethod):
@@ -1271,27 +1299,6 @@ class Lasso(NesterovProximalGradientMethod):
 
         self.set_g(loss_functions.LinearRegressionError())
         self.set_h(loss_functions.L1(l))
-
-
-class ElasticNet(NesterovProximalGradientMethod):
-    """ElasticNet in linear regression.
-
-    Optimises the function
-
-        f(b) = ||y - X.b||² + l.||b||_1 + (1 - l).1/2.||b||²,
-
-    where ||.||_1 is the L1 norm and ||.||² is the squared L2 norm.
-
-    Parameters
-    ----------
-    l : The L1 and L2 parameter.
-    """
-    def __init__(self, l, **kwargs):
-
-        super(ElasticNet, self).__init__(**kwargs)
-
-        self.set_g(loss_functions.LinearRegressionError())
-        self.set_h(loss_functions.ElasticNet(l))
 
 
 class LinearRegressionTV(NesterovProximalGradientMethod):
@@ -1431,6 +1438,27 @@ class LinearRegressionL1L2TV(LinearRegressionTV):
 #
 #        self.set_g(loss_functions.CombinedNesterovLossFunction(lr, tv))
         self.set_h(loss_functions.L1L2(l, k))
+
+
+class ElasticNet(NesterovProximalGradientMethod):
+    """ElasticNet in linear regression.
+
+    Optimises the function
+
+        f(b) = ||y - X.b||² + l.||b||_1 + (1 - l).1/2.||b||²,
+
+    where ||.||_1 is the L1 norm and ||.||² is the squared L2 norm.
+
+    Parameters
+    ----------
+    l : The L1 and L2 parameter.
+    """
+    def __init__(self, l, **kwargs):
+
+        super(ElasticNet, self).__init__(**kwargs)
+
+        self.set_g(loss_functions.LinearRegressionError())
+        self.set_h(loss_functions.ElasticNet(l))
 
 
 class ElasticNetTV(LinearRegressionTV):
@@ -1681,11 +1709,15 @@ class RidgeRegressionL1TV(RidgeRegressionTV):
         If neither beta=None nor alpha=None, this function returns the
         associated loss function value for the given alpha and beta.
         """
-        g = self.get_g()
-        h = self.get_h()
+        g = self.get_g()  # RR + TV smooth loss functions
+        h = self.get_h()  # L1 proximal operator of non-smooth part
         # TODO: Warning! Be ware that this may be changed in the
         # constructors!
         rr = g.a
+        tv = g.b
+
+        if mu == None:
+            mu = self.get_mu()
 
         if beta != None and alpha == None:
             return g.alpha(beta, mu)
@@ -1697,7 +1729,7 @@ class RidgeRegressionL1TV(RidgeRegressionTV):
             raise ValueError("At least one of beta and alpha must be given!")
 
         elif beta == None and alpha != None:
-            if g.b.compress:
+            if tv.compress:
                 raise ValueError("Since the TV constraint is compressed " \
                                  "(zero rows removed) this will not work!")
 
@@ -1706,22 +1738,18 @@ class RidgeRegressionL1TV(RidgeRegressionTV):
                 XtX = np.dot(rr.X.T, rr.X)
                 self._invXXlI = np.linalg.inv(XtX + rr.l * np.eye(*XtX.shape))
 
-            Aalpha = g.b._compute_grad(alpha)
+            if not hasattr(self, "_tv_l1"):
+                l1 = loss_functions.SmoothL1(h.l,
+                                             num_variables=rr.X.shape[1],
+                                             mu=mu)
 
-            if not hasattr(self, "_smooth_l1"):
-                self._smooth_l1 = loss_functions.SmoothL1(h.l,
-                                                 num_variables=Aalpha.shape[0],
-                                                 mu=g.get_mu())
+                self._tv_l1 = loss_functions.CombinedNesterovLossFunction(tv,
+                                                                          l1)
 
-            Aalpha += self._smooth_l1._compute_grad(alpha)
+            tv_l1_alpha = self._tv_l1._compute_alpha(self.beta, mu)
+            Aalpha = self._tv_l1._compute_grad(tv_l1_alpha)
 
-            beta = np.dot(self._invXXlI, np.dot(rr.X.T, rr.y) - Aalpha)
-
-#            dual_model = ConstantNesterovModelCopy(self)
-#            dual_model.fit(self.get_g().a.X, self.get_g().a.y)
-#            beta_ = dual_model.beta
-
-#            print "diff:", np.sqrt(np.sum((beta - beta_) ** 2.0)), ", mu:", g.get_mu()
+            beta = np.dot(invXXlI, np.dot(rr.X.T, rr.y) - Aalpha)
 
             return beta
 
