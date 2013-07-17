@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 """
+Loss functions should, as far as possible, be stateless. Loss functions may be
+shared and copied and should therefore not hold anythig that cannot be
+recomputed the next time it is called.
+
 Created on Mon Apr 22 10:54:29 2013
 
 @author:  Tommy Löfstedt, Vincent Guillemot and Fouad Hadj Selem
@@ -20,8 +24,8 @@ __all__ = ['LossFunction', 'LipschitzContinuous', 'Differentiable',
            'ZeroErrorFunction',
            'L1', 'L2', 'ElasticNet',
 
-           'NesterovFunction',
-           'TotalVariation', 'GroupLassoOverlap',
+           'NesterovFunction', 'ConstantNesterovCopy',
+           'TotalVariation', 'SmoothL1', 'GroupLassoOverlap',
 
            'CombinedLossFunction',
            'CombinedNesterovLossFunction']
@@ -29,9 +33,11 @@ __all__ = ['LossFunction', 'LipschitzContinuous', 'Differentiable',
 import abc
 import numpy as np
 import scipy.sparse as sparse
+import copy
 
 import algorithms
-from utils import norm, norm1, TOLERANCE, delete_sparse_csr_row
+#from utils import norm, norm1, TOLERANCE, delete_sparse_csr_row
+import utils
 
 
 class LossFunction(object):
@@ -44,6 +50,7 @@ class LossFunction(object):
 
     @abc.abstractmethod
     def f(self, *args, **kwargs):
+
         raise NotImplementedError('Abstract method "f" must be specialised!')
 
 
@@ -57,6 +64,7 @@ class LipschitzContinuous(object):
 
     @abc.abstractmethod
     def Lipschitz(self, *args, **kwargs):
+
         raise NotImplementedError('Abstract method "Lipschitz" must be ' \
                                   'specialised!')
 
@@ -71,6 +79,7 @@ class Differentiable(object):
 
     @abc.abstractmethod
     def grad(self, *args, **kwargs):
+
         raise NotImplementedError('Abstract method "grad" must be ' \
                                   'specialised!')
 
@@ -85,6 +94,7 @@ class DataDependent(object):
 
     @abc.abstractmethod
     def set_data(self, *X):
+
         raise NotImplementedError('Abstract method "set_data" must be ' \
                                   'specialised!')
 
@@ -108,6 +118,7 @@ class StronglyConvex(object):
 
     @abc.abstractmethod
     def lambda_min(self):
+
         raise NotImplementedError('Abstract method "lambda_min" must be ' \
                                   'specialised!')
 
@@ -122,6 +133,7 @@ class ProximalOperator(LossFunction, Convex):
 
     @abc.abstractmethod
     def prox(self, x):
+
         raise NotImplementedError('Abstract method "prox" must be ' \
                                   'specialised!')
 
@@ -135,58 +147,103 @@ class NesterovFunction(LossFunction,
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, mu=None, **kwargs):
+    def __init__(self, gamma=1.0, mu=None, **kwargs):
+        """Construct a Nesterov loss function.
 
+        Parameters
+        ----------
+        gamma : The regularisation parameter for the nesterov penality.
+
+        mu : The Nesterov function regularisation parameter. Must be provided
+                unless you are using ContinuationRun.
+        """
         super(NesterovFunction, self).__init__(**kwargs)
+
+        self.gamma = float(gamma)
 
         if mu != None:
             self.set_mu(mu)
 
-#    @abc.abstractmethod
-#    def from_A(self, gamma, A, mu=None):
-#        raise NotImplementedError('Abstract method "from_A" must be ' \
-#                                  'specialised!')
+        self._A = None  # The linear operator
+        self._At = None  # The linear operator transposed
+        self._alpha = None  # The dual variable
+        self._grad = None  # The function's gradient
+        self.lambda_max = None  # The largest eigenvalue of A'.A
 
-    @abc.abstractmethod
-    def precompute(self, *args, **kwargs):
-        raise NotImplementedError('Abstract method "precompute" must be ' \
-                                  'specialised!')
+    def Lipschitz(self, mu=None):
+        """The Lipschitz constant of the gradient.
 
-    @abc.abstractmethod
-    def alpha(self, beta):
-        raise NotImplementedError('Abstract method "alpha" must be ' \
-                                  'specialised!')
+        In general the Lipschitz constant is the largest eigenvalue of A'.A
+        divided by mu, but should be specialised in subclasses if faster
+        approaches exist.
+        """
+        if self.gamma < utils.TOLERANCE:
+            return 0.0
 
-    @abc.abstractmethod
+        if self.lambda_max == None:
+            A = sparse.vstack(self.A())
+            v = algorithms.SparseSVD(max_iter=100).run(A)
+            us = A.dot(v)
+            self.lambda_max = np.sum(us ** 2.0)
+
+        if mu != None:
+            return self.lambda_max / mu
+        else:
+            return self.lambda_max / self.get_mu()
+
     def A(self):
-        raise NotImplementedError('Abstract method "A" must be ' \
-                                  'specialised!')
+        """Returns a list of the A blocks that constitute the A matrix, the
+        linear operator.
+        """
+        return self._A
 
-    @abc.abstractmethod
     def At(self):
-        raise NotImplementedError('Abstract method "At" must be ' \
-                                  'specialised!')
+        """Returns a list of the transposed A blocks that constitute the A
+        matrix, the linear operator.
+        """
+        return self._At
+
+    def get_mu(self):
+        """Returns the Nesterov regularisation constant mu.
+        """
+        return self.mu
+
+    def set_mu(self, mu):
+        """Sets the Nesterov regularisation constant mu.
+        """
+        self.mu = float(mu)
+
+    def num_groups(self):
+        """Returns the number of groups, i.e. the number of A blocks.
+        """
+        return len(self._A)
 
     @abc.abstractmethod
     def num_compacts(self):
+        """The smoothness gap between f and f_mu is mu * num_compacts().
+
+        Note that the constant D = num_compacts() / 2.
+        """
         raise NotImplementedError('Abstract method "num_compacts" must be ' \
                                   'specialised!')
 
     @abc.abstractmethod
-    def num_groups(self):
-        raise NotImplementedError('Abstract method "num_groups" must be ' \
-                                  'specialised!')
-
-    @abc.abstractmethod
     def projection(self, *alpha):
+
         raise NotImplementedError('Abstract method "projection" must be ' \
                                   'specialised!')
 
-    def get_mu(self):
-        return self.mu
+    @abc.abstractmethod
+    def alpha(self, beta=None, mu=None):
 
-    def set_mu(self, mu):
-        self.mu = mu
+        raise NotImplementedError('Abstract method "alpha" must be ' \
+                                  'specialised!')
+
+    @abc.abstractmethod
+    def precompute(self, *args, **kwargs):
+
+        raise NotImplementedError('Abstract method "precompute" must be ' \
+                                  'specialised!')
 
 
 class CombinedLossFunction(LossFunction, DataDependent):
@@ -209,7 +266,7 @@ class CombinedLossFunction(LossFunction, DataDependent):
         return self.a.f(*args, **kwargs) + self.b.f(*args, **kwargs)
 
 
-class CombinedNesterovLossFunction(NesterovFunction, CombinedLossFunction):
+class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
     """A loss function contructed as the sum of two loss functions, where
     at least one of them is a Nesterov function, i.e. a loss function computed
     using the Nestrov technique.
@@ -232,8 +289,8 @@ class CombinedNesterovLossFunction(NesterovFunction, CombinedLossFunction):
     def Lipschitz(self, mu=None):
 
         if isinstance(self.a, LipschitzContinuous) \
-            and isinstance(self.b, LipschitzContinuous):
-                return self.a.Lipschitz(mu=mu) + self.b.Lipschitz(mu=mu)
+                and isinstance(self.b, LipschitzContinuous):
+            return self.a.Lipschitz(mu=mu) + self.b.Lipschitz(mu=mu)
         elif isinstance(self.a, LipschitzContinuous):
             return self.a.Lipschitz(mu=mu) + self.b.Lipschitz()
         elif isinstance(self.b, LipschitzContinuous):
@@ -249,7 +306,7 @@ class CombinedNesterovLossFunction(NesterovFunction, CombinedLossFunction):
         if hasattr(self.b, 'precompute'):
             self.b.precompute(*args, **kwargs)
 
-    def alpha(self, beta):
+    def alpha(self, beta=None, mu=None):
 
         if hasattr(self.a, 'alpha') and hasattr(self.b, 'alpha'):
             return self.a.alpha(beta) + self.b.alpha(beta)  # Merge
@@ -284,7 +341,6 @@ class CombinedNesterovLossFunction(NesterovFunction, CombinedLossFunction):
 
     def num_compacts(self):
 
-        # TODO: Is this true when both are nesterov?
         if hasattr(self.a, 'num_compacts') and hasattr(self.b, 'num_compacts'):
             return self.a.num_compacts() + self.b.num_compacts()
         elif hasattr(self.a, 'num_compacts'):
@@ -296,7 +352,6 @@ class CombinedNesterovLossFunction(NesterovFunction, CombinedLossFunction):
 
     def num_groups(self):
 
-        # TODO: Is this true when both are nesterov?
         if hasattr(self.a, 'num_groups') and hasattr(self.b, 'num_groups'):
             return self.a.num_groups() + self.b.num_groups()
         elif hasattr(self.a, 'num_groups'):
@@ -379,7 +434,6 @@ class LinearRegressionError(LossFunction,
 
         self.X = X
         self.y = y
-        self.Xy = np.dot(X.T, y)
 
         self.lipschitz = None
 
@@ -389,11 +443,11 @@ class LinearRegressionError(LossFunction,
 #        return np.sum((self.y - np.dot(self.X, beta)) ** 2.0)
         return 0.5 * np.sum((self.y - np.dot(self.X, beta)) ** 2.0)
 
-    def grad(self, beta, **kwargs):
+    def grad(self, beta, *args, **kwargs):
 
 #        return 2.0 * np.dot(self.X.T, np.dot(self.X, beta) - self.y)
-#        return 2.0 * (np.dot(self.X.T, np.dot(self.X, beta)) - self.Xy)
-        return np.dot(self.X.T, np.dot(self.X, beta)) - self.Xy
+#        return np.dot(self.X.T, np.dot(self.X, beta) - self.y)
+        return np.dot((np.dot(self.X, beta) - self.y).T, self.X).T
 
     def Lipschitz(self, *args, **kwargs):
 
@@ -423,12 +477,14 @@ class LogisticRegressionError(LossFunction,
 
         self.lipschitz = None
 
-    def f(self, beta, **kwargs):
+    def f(self, beta, *args, **kwargs):
+
         logit = np.dot(self.X, beta)
         expt = np.exp(logit)
         return -np.sum(np.multiply(self.y, logit) + np.log(1 + expt))
 
     def grad(self, beta, **kwargs):
+
         logit = np.dot(self.X, beta)
         expt = np.exp(logit)
         pix = np.divide(expt, expt + 1)
@@ -486,17 +542,17 @@ class RidgeRegression(LossFunction,
 
     def f(self, beta, **kwargs):
 
-        return 0.5 * (np.sum((self.y - np.dot(self.X, beta)) ** 2.0) \
-                + self.l * np.sum(beta ** 2.0))
 #        return (np.sum((self.y - np.dot(self.X, beta)) ** 2.0) \
 #                + self.l * np.sum(beta ** 2.0))
+        return 0.5 * (np.sum((self.y - np.dot(self.X, beta)) ** 2.0) \
+                + self.l * np.sum(beta ** 2.0))
 
-    def grad(self, beta, **kwargs):
+    def grad(self, beta, *args, **kwargs):
 
-        return (np.dot(self.X.T, np.dot(self.X, beta)) - self.Xty) \
-                + self.l * beta
 #        return 2.0 * ((np.dot(self.X.T, np.dot(self.X, beta)) - self.Xty) \
 #                + self.l * beta)
+        return (np.dot(self.X.T, np.dot(self.X, beta)) - self.Xty) \
+                + self.l * beta
 
     def Lipschitz(self, *args, **kwargs):
 
@@ -505,8 +561,8 @@ class RidgeRegression(LossFunction,
             self.l_max = np.max(s) ** 2.0 + self.l
             self.l_min = np.min(s) ** 2.0 + self.l
 
-        return self.l_max
 #        return 2.0 * self.l_max
+        return self.l_max
 
     def lambda_min(self):
 
@@ -515,8 +571,8 @@ class RidgeRegression(LossFunction,
             self.l_max = np.max(s) ** 2.0 + self.l
             self.l_min = np.min(s) ** 2.0 + self.l
 
-        return self.l_min
 #        return 2.0 * self.l_min
+        return self.l_min
 
 
 class L1(ProximalOperator):
@@ -529,7 +585,7 @@ class L1(ProximalOperator):
 
     def f(self, beta):
 
-        return self.l * norm1(beta)
+        return self.l * utils.norm1(beta)
 
     def prox(self, x, factor=1.0, allow_empty=False):
 
@@ -607,7 +663,7 @@ class L1L2(ProximalOperator):
         self.k = k
 
     def f(self, x):
-        return self.l * norm1(x) + (self.k / 2.0) * np.sum(x ** 2.0)
+        return self.l * utils.norm1(x) + (self.k / 2.0) * np.sum(x ** 2.0)
 
     def prox(self, x, factor=1.0, allow_empty=False):
 
@@ -634,11 +690,123 @@ class ElasticNet(L1L2):
         super(ElasticNet, self).__init__(l, 1.0 - l, **kwargs)
 
 
-class TotalVariation(NesterovFunction,
-                     LipschitzContinuous):
+class ConstantNesterovCopy(NesterovFunction):
+    """Duplicates a Nesterov loss function, but holds the alpha and the
+    gradient of this function constant.
 
-    def __init__(self, gamma, shape, mu=None, mask=None, compress=True,
-                 **kwargs):
+    I.e., this class can be used to find a beta that corresponds to a
+    particular alpha.
+
+    This class also holds the gradient constant, i.e. _grad and grad() are
+    fixed, just like _alpha and alpha(). This also means it assumes a constant
+    A matrix.
+
+    Be aware of duplicated references!
+    """
+    def __init__(self, function, **kwargs):
+
+        super(ConstantNesterovCopy, self).__init__(gamma=function.gamma,
+                                                   mu=function.get_mu(),
+                                                   **kwargs)
+
+        # TODO: Make __getattr__ and __setattr__ handle all the fields of the
+        #       Nesterov function in order to avoid keeping references here as
+        #       well!
+
+        # Required fields
+        self.lambda_max = function.Lipschitz(1.0)
+        self._A = function.A()
+        self._At = function.At()
+        self.set_mu(function.get_mu())
+        self._num_compacts = function.num_compacts()
+        self._alpha = function.alpha()
+        self._grad = function.grad()
+        # Copies of the "true", constant, internal alpha and grad!
+        self.__alpha = copy.deepcopy(self._alpha)
+        self.__grad = copy.deepcopy(self._grad)
+
+        # Optional fields
+        if hasattr(function, '_buff'):
+            self._buff = function._buff
+
+        # Methods defined in the base class NesterovFunction
+        self.Lipschitz = function.Lipschitz
+        self.A = function.A
+        self.At = function.At
+        self.get_mu = function.get_mu
+        self.set_mu = function.set_mu
+        self.num_groups = function.num_groups
+
+        # Methods defined in the subclasses
+        self.f = function.f
+        self.grad = function.grad
+
+        # Abstract methods defined in the subclasses
+        self.num_compacts = function.num_compacts
+        self.projection = function.projection
+        self.precompute = function.precompute
+
+        # The loss function we duplicate
+        self.function = function
+
+    def f(self, *args, **kwargs):
+        pass  # Set in the constructor
+
+    def num_compacts(self, *args, **kwargs):
+        pass  # Set in the constructor
+
+    def precompute(self, *args, **kwargs):
+        pass  # Set in the constructor
+
+    def projection(self, *args, **kwargs):
+        pass  # Set in the constructor
+
+    def _compute_alpha_grad(self, *args, **kwargs):
+        """Used by most (all?) Nesterov loss functions to compute a new value
+        of _alpha and _grad. Since this class controls those, and they are
+        constant, this function should not do anything.
+        """
+        pass
+
+#    def __setattr__(self, name, value):
+#
+#        if name != '_alpha' and name != 'alpha' \
+#                and name != '_grad' and name != 'grad':
+#
+#            super(NesterovDualFunction, self).__setattr__(name, value)
+##            self.__dict__[name] = value  # Set attribute of this class
+##            self.function.__setattr__(name, value)
+
+#    def __delattr__(self, name):
+#
+#        if name != '_alpha' and name != 'alpha' \
+#                and name != '_grad' and name != 'grad':
+#            super(NesterovDualFunction, self).__delattr__(name)
+##            self.function.__delattr__(name)
+
+#    def __getattr__(self, name):
+#
+#        if name == '_alpha':
+#            return self.__alpha
+#
+#        if name == '_grad':
+#            return self.__grad
+#
+#        return super(NesterovDualFunction, self).__getattr__(name)
+
+    def alpha(self, *args, **kwargs):
+
+        return self.__alpha
+
+    def grad(self, *args, **kwargs):
+
+        return self.__grad
+
+
+class TotalVariation(NesterovFunction):
+
+    def __init__(self, gamma, shape=None, mu=None, mask=None,
+                 compress=True, A=None, **kwargs):
         """Construct a TotalVariation loss function.
 
         Parameters
@@ -648,7 +816,12 @@ class TotalVariation(NesterovFunction,
         shape : The shape of the 3D image. Must be a 3-tuple. If the image is
                 2D, let the Z dimension be 1, and if the "image" is 1D, let the
                 Y and Z dimensions be 1. The tuple must be on the form
-                (Z, Y, X).
+                (Z, Y, X). Either shape or A must be given, but not both.
+
+        A : If the linear operators are known already, provide them to the
+                constructor to create a TV object reusing those matrices. In TV
+                it is assumed that A is a list of three elements, the matrices
+                Ax, Ay and Az. Either shape or A must be given, but not both.
 
         mu : The Nesterov function regularisation parameter. Must be provided
                 unless you are using ContinuationRun.
@@ -661,93 +834,81 @@ class TotalVariation(NesterovFunction,
                 functions), and may therefore be turned off. Default is True,
                 set to False to keep all rows of A and alpha.
         """
-        super(TotalVariation, self).__init__(mu=mu, **kwargs)
+        super(TotalVariation, self).__init__(gamma=gamma, mu=mu, **kwargs)
 
-        self.gamma = gamma
-        self.shape = shape
         self.mask = mask
         self.compress = compress
 
-        self.precompute()
-        self.lambda_max = None
+        if shape != None:
+            self.precompute(shape)
+        else:
+            self._A = [A[0], A[1], A[2]]
+            self._At = [A[0].T, A[1].T, A[2].T]
+            self._alpha = [0.0, 0.0, 0.0]
 
-#    def from_A(self, gamma, shape, A, mu=None, compress=True):
-#
-#        obj = self(gamma, [1, 1, 1], mu, compress)
-#        obj.A = A
-#
-#        return obj
+            # TODO: This is only true if zero-rows have been removed!
+            self._num_compacts = A[0].shape[0]
 
-    def f(self, beta, mu=None):
-
-        if self.gamma < TOLERANCE:
-            return 0
-
-#        self.compute_alpha(beta)
-#        mu = self.get_mu()
-#        return np.dot(self.Aalpha.T, beta)[0, 0] \
-#                - (mu / 2.0) * (np.sum(self.asx ** 2.0) +
-#                                np.sum(self.asy ** 2.0) +
-#                                np.sum(self.asz ** 2.0))
-
-        alpha = self.alpha(beta)  # compute_alpha is called within here
-        alpha_sqsum = 0
-        for a in alpha:
-            alpha_sqsum += np.sum(a ** 2.0)
+            self._buff = np.zeros((A[0].shape[1], 1))
 
         if mu == None:
-            mu = self.get_mu()
-        return np.dot(self.Aalpha.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum
+            mu = max(utils.TOLERANCE,
+                     2.0 * utils.TOLERANCE / self.num_compacts())
+            self.set_mu(mu)
 
-    def grad(self, beta):
+    def f(self, beta, mu=None, smooth=True):
 
-        if self.gamma < TOLERANCE:
+        if self.gamma < utils.TOLERANCE:
+            return 0.0
+
+        if smooth:
+            self._compute_alpha_grad(beta, mu)
+
+            alpha = self.alpha()
+            alpha_sqsum = 0.0
+            for a in alpha:
+                alpha_sqsum += np.sum(a ** 2.0)
+
+            if mu == None:
+                mu = self.get_mu()
+
+            return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
+
+        else:
+#            sqsum = 0.0
+#            for Ad in self._A:
+#                sqsum += Ad.dot(beta) ** 2.0
+#            sqsum = np.sqrt(sqsum)
+            sqsum = np.sum(np.sqrt(self._A[0].dot(beta) ** 2.0 + \
+                                   self._A[1].dot(beta) ** 2.0 + \
+                                   self._A[2].dot(beta) ** 2.0))
+
+            return sqsum  # Gamma is already incorporated in A
+
+    def grad(self, beta=None, mu=None):
+
+        if self.gamma < utils.TOLERANCE:
             return np.zeros(beta.shape)
 
-        self.compute_alpha(beta)
+        if beta != None:
+            self._compute_alpha_grad(beta, mu)
 
-        return self.Aalpha
+        return self._grad
 
-    def Lipschitz(self, mu=None):
+    def alpha(self, beta=None, mu=None):
 
-        if self.gamma < TOLERANCE:
-            return 0
+        if self.gamma < utils.TOLERANCE:
+            return [0.0, 0.0, 0.0]
 
-        if self.lambda_max == None:
-            A = sparse.vstack(self.A())
-            v = algorithms.SparseSVD(max_iter=100).run(A)
-            us = A.dot(v)
-            self.lambda_max = np.sum(us ** 2.0)
+        if beta != None:
+            self._compute_alpha_grad(beta, mu)
 
-        if mu != None:
-            return self.lambda_max / mu
-        else:
-            return self.lambda_max / self.get_mu()
-
-    def alpha(self, beta):
-
-        if self.gamma < TOLERANCE:
-            return 0, 0, 0
-
-        self.compute_alpha(beta)
-
-        return self.asx, self.asy, self.asz
-
-    def A(self):
-
-        return self.Ax, self.Ay, self.Az
-
-    def At(self):
-
-        return self.Axt, self.Ayt, self.Azt
+        return self._alpha
 
     def num_compacts(self):
 
-        return np.prod(self.shape)  # Number of variables
-
-    def num_groups(self):
-
-        return 3
+#        return np.prod(self.shape)  # Number of variables
+        return self._num_compacts
 
     def projection(self, *alpha):
 
@@ -755,6 +916,8 @@ class TotalVariation(NesterovFunction,
         asy = alpha[1]
         asz = alpha[2]
         asnorm = asx ** 2.0 + asy ** 2.0 + asz ** 2.0
+#        if np.min(asnorm) < 1.0:
+#            print np.min(asnorm)
         i = asnorm > 1.0
 
         asnorm_i = asnorm[i] ** 0.5  # Square root is taken here. Faster.
@@ -762,28 +925,29 @@ class TotalVariation(NesterovFunction,
         asy[i] = np.divide(asy[i], asnorm_i)
         asz[i] = np.divide(asz[i], asnorm_i)
 
-        return asx, asy, asz
+        return [asx, asy, asz]
 
-    def compute_alpha(self, beta):
+    def _compute_alpha_grad(self, beta, mu=None):
 
-        mu = self.get_mu()
+        if mu == None:
+            mu = self.get_mu()
 
         # Compute a* for each dimension
-        self.asx = self.Ax.dot(beta) / mu
-        self.asy = self.Ay.dot(beta) / mu
-        self.asz = self.Az.dot(beta) / mu
+#        self._alpha[0] = self._A[0].dot(beta) / mu
+#        self._alpha[1] = self._A[1].dot(beta) / mu
+#        self._alpha[2] = self._A[2].dot(beta) / mu
+        for i in xrange(len(self._A)):
+            self._alpha[i] = self._A[i].dot(beta) / mu
 
         # Apply projection
-        self.asx, self.asy, self.asz = self.projection(self.asx,
-                                                       self.asy,
-                                                       self.asz)
+        self._alpha = self.projection(*self._alpha)
 
-#        self.Aalpha = self.Axt.dot(self.asx) + \
-#                      self.Ayt.dot(self.asy) + \
-#                      self.Azt.dot(self.asz)
-        self.Aalpha = np.add(np.add(self.Axt.dot(self.asx),
-                                    self.Ayt.dot(self.asy), self.buff),
-                                    self.Azt.dot(self.asz), self.buff)
+#        self._grad = np.add(np.add(self._At[0].dot(self._alpha[0]),
+#                                    self._At[1].dot(self._alpha[1]), self._buff),
+#                                    self._At[2].dot(self._alpha[2]), self._buff)
+        self._grad = self._At[0].dot(self._alpha[0])
+        for i in xrange(1, len(self._alpha)):
+            self._grad += self._At[i].dot(self._alpha[i])
 
     def _find_mask_ind(self, mask, ind):
 
@@ -808,20 +972,20 @@ class TotalVariation(NesterovFunction,
                yind.flatten().tolist(), \
                zind.flatten().tolist()
 
-    def precompute(self):
+    def precompute(self, shape):
 
-        Z = self.shape[0]
-        Y = self.shape[1]
-        X = self.shape[2]
+        Z = shape[0]
+        Y = shape[1]
+        X = shape[2]
         p = X * Y * Z
 
         smtype = 'csr'
-        self.Ax = self.gamma * (sparse.eye(p, p, 1, format=smtype) \
-                              - sparse.eye(p, p))
-        self.Ay = self.gamma * (sparse.eye(p, p, X, format=smtype) \
-                              - sparse.eye(p, p))
-        self.Az = self.gamma * (sparse.eye(p, p, X * Y, format=smtype) \
-                              - sparse.eye(p, p))
+        Ax = self.gamma * (sparse.eye(p, p, 1, format=smtype) \
+                            - sparse.eye(p, p))
+        Ay = self.gamma * (sparse.eye(p, p, X, format=smtype) \
+                            - sparse.eye(p, p))
+        Az = self.gamma * (sparse.eye(p, p, X * Y, format=smtype) \
+                            - sparse.eye(p, p))
 
         ind = np.reshape(xrange(p), (Z, Y, X))
         if self.mask != None:
@@ -833,21 +997,21 @@ class TotalVariation(NesterovFunction,
             zind = ind[-1, :, :].flatten().tolist()
 
         for i in xrange(len(xind)):
-            self.Ax.data[self.Ax.indptr[xind[i]]: \
-                         self.Ax.indptr[xind[i] + 1]] = 0
-        self.Ax.eliminate_zeros()
+            Ax.data[Ax.indptr[xind[i]]: \
+                    Ax.indptr[xind[i] + 1]] = 0
+        Ax.eliminate_zeros()
 
         for i in xrange(len(yind)):
-            self.Ay.data[self.Ay.indptr[yind[i]]: \
-                         self.Ay.indptr[yind[i] + 1]] = 0
-        self.Ay.eliminate_zeros()
+            Ay.data[Ay.indptr[yind[i]]: \
+                    Ay.indptr[yind[i] + 1]] = 0
+        Ay.eliminate_zeros()
 
 #        for i in xrange(len(zind)):
-#            self.Az.data[self.Az.indptr[zind[i]]: \
-#                         self.Az.indptr[zind[i] + 1]] = 0
-        self.Az.data[self.Az.indptr[zind[0]]: \
-                     self.Az.indptr[zind[-1] + 1]] = 0
-        self.Az.eliminate_zeros()
+#            Az.data[Az.indptr[zind[i]]: \
+#                    Az.indptr[zind[i] + 1]] = 0
+        Az.data[Az.indptr[zind[0]]: \
+                Az.indptr[zind[-1] + 1]] = 0
+        Az.eliminate_zeros()
 
         # Remove rows corresponding to indices excluded in all dimensions
         if self.compress:
@@ -856,121 +1020,134 @@ class TotalVariation(NesterovFunction,
             # Remove from the end so that indices are not changed
             toremove.reverse()
             for i in toremove:
-                delete_sparse_csr_row(self.Ax, i)
-                delete_sparse_csr_row(self.Ay, i)
-                delete_sparse_csr_row(self.Az, i)
+                utils.delete_sparse_csr_row(Ax, i)
+                utils.delete_sparse_csr_row(Ay, i)
+                utils.delete_sparse_csr_row(Az, i)
 
         # Remove columns of A corresponding to masked-out variables
         if self.mask != None:
-            self.Axt = self.Ax.T.tocsr()
-            self.Ayt = self.Ay.T.tocsr()
-            self.Azt = self.Az.T.tocsr()
+            Axt = Ax.T.tocsr()
+            Ayt = Ay.T.tocsr()
+            Azt = Az.T.tocsr()
             for i in reversed(xrange(p)):
                 if self.mask[i] == 0:
-                    delete_sparse_csr_row(self.Axt, i)
-                    delete_sparse_csr_row(self.Ayt, i)
-                    delete_sparse_csr_row(self.Azt, i)
+                    utils.delete_sparse_csr_row(Axt, i)
+                    utils.delete_sparse_csr_row(Ayt, i)
+                    utils.delete_sparse_csr_row(Azt, i)
 
-            self.Ax = self.Axt.T
-            self.Ay = self.Ayt.T
-            self.Az = self.Azt.T
+            Ax = Axt.T
+            Ay = Ayt.T
+            Az = Azt.T
         else:
-            self.Axt = self.Ax.T
-            self.Ayt = self.Ay.T
-            self.Azt = self.Az.T
+            Axt = Ax.T
+            Ayt = Ay.T
+            Azt = Az.T
 
-        self.buff = np.zeros((self.Ax.shape[1], 1))
+        self._A = [Ax, Ay, Az]
+        self._At = [Axt, Ayt, Azt]
+        self._alpha = [0.0, 0.0, 0.0]
+
+        # TODO: This is only true if zero-rows have been removed!
+        self._num_compacts = Ax.shape[0]
+
+        self._buff = np.zeros((Ax.shape[1], 1))
 
 
-class SmoothL1(NesterovFunction,
-               LipschitzContinuous):
+class SmoothL1(NesterovFunction):
 
-    def __init__(self, l, p, mu=None, mask=None, **kwargs):
+    def __init__(self, gamma, num_variables, mu=None, mask=None, **kwargs):
         """Construct an L1 loss function, smoothed using the Nesterov
         technique.
 
         Parameters
         ----------
-        l : The regularisation parameter for the L1 penality.
+        gamma : The regularisation parameter for the L1 penality.
 
-        p : The numbers of variables.
+        num_variables : The total number of variables.
 
-        mu : The Nesterov function regularisation parameter.
+        mu : The Nesterov function regularisation parameter. Must be provided
+                unless you are using ContinuationRun.
 
         mask : A 1-dimensional mask representing the 3D image mask. Must be a
                 list of 1s and 0s.
         """
-        super(SmoothL1, self).__init__(mu=mu, **kwargs)
+        super(SmoothL1, self).__init__(gamma=gamma, mu=mu, **kwargs)
 
-        self.l = l
-        self.p = p
+        self.num_variables = num_variables
         self.mask = mask
 
         self.precompute()
-        self.lambda_max = None
-
-    def f(self, beta, mu=None):
-
-        if self.l < TOLERANCE:
-            return 0
-
-        self.compute_alpha(beta)
 
         if mu == None:
-            mu = self.get_mu()
-        return np.dot(self.Aalpha.T, beta)[0, 0] \
-                      - (mu / 2.0) * np.sum(self.a ** 2.0)
+            mu = max(utils.TOLERANCE,
+                     2.0 * utils.TOLERANCE / self.num_compacts())
+            self.set_mu(mu)
 
-    def grad(self, beta):
+    def f(self, beta, mu=None, smooth=True):
 
-        if self.l < TOLERANCE:
+        if self.gamma < utils.TOLERANCE:
+            return 0.0
+
+        if smooth:
+            self._compute_alpha_grad(beta, mu)
+
+            alpha = self.alpha()
+
+            alpha_sqsum = 0.0
+            for a in alpha:
+                alpha_sqsum += np.sum(a ** 2.0)
+
+            if mu == None:
+                mu = self.get_mu()
+
+            return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
+
+        else:
+            return self.gamma * utils.norm1(beta)
+
+    def grad(self, beta=None, mu=None):
+
+        if self.gamma < utils.TOLERANCE:
             return np.zeros(beta.shape)
 
-        self.compute_alpha(beta)
+        if beta != None:
+            self._compute_alpha_grad(beta, mu)
 
-        return self.Aalpha
+        return self._grad
 
     def Lipschitz(self, mu=None):
 
-        if self.l < TOLERANCE:
+        if self.gamma < utils.TOLERANCE:
             return 0.0
 
         if self.lambda_max == None:
-            A = sparse.vstack(self.A())
-            v = algorithms.SparseSVD(max_iter=100).run(A)
-            us = A.dot(v)
-            self.lambda_max = np.sum(us ** 2.0)
-#            self.lambda_max = self.l ** 2.0
+#            A = sparse.vstack(self.A())
+#            v = algorithms.SparseSVD(max_iter=100).run(A)
+#            us = A.dot(v)
+#            self.lambda_max = np.sum(us ** 2.0)
+
+            self.lambda_max = self.gamma ** 2.0
+#        print self.lambda_max, " == ", lambda_max, "?"
+#        print "L1!!!"
 
         if mu != None:
             return self.lambda_max / mu
         else:
             return self.lambda_max / self.get_mu()
 
-    def alpha(self, beta):
+    def alpha(self, beta=None, mu=None):
 
-        if self.l < TOLERANCE:
-            return (0.0,)
+        if self.gamma < utils.TOLERANCE:
+            return [0.0]
 
-        self.compute_alpha(beta)
+        if beta != None:
+            self._compute_alpha_grad(beta, mu)
 
-        return (self.a,)
-
-    def A(self):
-
-        return (self.A1,)
-
-    def At(self):
-
-        return (self.A1t,)
+        return self._alpha
 
     def num_compacts(self):
 
-        return self.p
-
-    def num_groups(self):
-
-        return 1
+        return self.num_variables
 
     def projection(self, *alpha):
 
@@ -981,66 +1158,70 @@ class SmoothL1(NesterovFunction,
 
         a[i] = np.divide(a[i], asnorm_i)
 
-        return (a,)
+        return [a]
 
-    def compute_alpha(self, beta):
+    def _compute_alpha_grad(self, beta, mu=None):
 
-        mu = self.get_mu()
+        if mu == None:
+            mu = self.get_mu()
 
         # Compute a*
-        self.a = self.A1.dot(beta) / mu
-#        self.a = (float(self.l) / float(mu)) * beta
+#        self._alpha[0] = self._A[0].dot(beta) / mu
+        self._alpha[0] = (self.gamma / mu) * beta
 
         # Apply projection
-        self.a = self.projection(self.a)[0]
+        self._alpha = self.projection(*self._alpha)
 
-        self.Aalpha = self.A1t.dot(self.a)
-#        self.Aalpha = float(self.l) * self.a
+#        self._grad = self._At[0].dot(self._alpha[0])
+        self._grad = self.gamma * self._alpha[0]
 
     def precompute(self):
 
-        self.A1 = self.l * sparse.eye(self.p, self.p, format='csr')
+        A = self.gamma * sparse.eye(self.num_variables, self.num_variables,
+                                    format='csr')
 
         # Find indices in the mask to remove
         if self.mask != None:
-            self.A1t = self.A1.T.tocsr()
-            for i in reversed(xrange(self.p)):
+            At = A.T.tocsr()
+            for i in reversed(xrange(self.num_variables)):
                 if self.mask[i] == 0:
-                    delete_sparse_csr_row(self.A1t, i)
+                    utils.delete_sparse_csr_row(At, i)
 
-            self.A1 = self.At1.T
+            A = At.T
         else:
-            self.A1t = self.A1.T
+            At = A.T
+
+        self._A = [A]
+        self._At = [At]
+        self._alpha = [0.0]
 
 
-class GroupLassoOverlap(NesterovFunction,
-                        LipschitzContinuous):
+class GroupLassoOverlap(NesterovFunction):
 
-    def __init__(self, gamma, num_variables, groups, mu, weights=None,
+    def __init__(self, gamma, num_variables, groups, mu=None, weights=None,
                  **kwargs):
         """
         Parameters:
         ----------
         gamma : The GL regularisation parameter.
 
-        num_variables : The number of variable being regularised.
+        num_variables : The total number of variables.
 
         groups : A list of lists, with the outer list being the groups and the
                 inner lists the variables in the groups. E.g. [[1,2],[2,3]]
                 contains two groups ([1,2] and [2,3]) with variable 1 and 2 in
                 the first group and variables 2 and 3 in the second group.
 
-        mu : The Nesterov function regularisation parameter.
+        mu : The Nesterov function regularisation parameter. Must be provided
+                unless you are using ContinuationRun.
 
         weights : Weights put on the groups. Default is weight 1 for each
                 group.
         """
-        super(GroupLassoOverlap, self).__init__(mu=mu, **kwargs)
+        super(GroupLassoOverlap, self).__init__(gamma=gamma, mu=mu, **kwargs)
 
-        self.groups = groups
         self.num_variables = num_variables
-        self.gamma = gamma
-        self.set_mu(mu)
+        self.groups = groups
 
         if weights == None:
             self.weights = [1.0] * len(groups)
@@ -1048,34 +1229,50 @@ class GroupLassoOverlap(NesterovFunction,
             self.weights = weights
 
         self.precompute()
-        self.lambda_max = None
-
-    def f(self, beta, mu=None):
-
-        if self.gamma < TOLERANCE:
-            return 0
-
-        alpha = self.alpha(beta)  # compute_alpha is called within here
-        alpha_sqsum = 0
-        for a in alpha:
-            alpha_sqsum += np.sum(a ** 2.0)
 
         if mu == None:
-            mu = self.get_mu()
-        return np.dot(self.Aalpha.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum
+            mu = max(utils.TOLERANCE,
+                     2.0 * utils.TOLERANCE / self.num_compacts())
+            self.set_mu(mu)
 
-    def grad(self, beta):
+    def f(self, beta, mu=None, smooth=True):
 
-        if self.gamma < TOLERANCE:
+        if self.gamma < utils.TOLERANCE:
+            return 0.0
+
+        if smooth:
+            self._compute_alpha_grad(beta, mu)
+
+            alpha = self.alpha()
+            alpha_sqsum = 0.0
+            for a in alpha:
+                alpha_sqsum += np.sum(a ** 2.0)
+
+            if mu == None:
+                mu = self.get_mu()
+
+            return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
+
+        else:
+            sqsum = 0.0
+            for Ag in self._A:
+                sqsum += utils.norm(Ag.dot(beta))  # A.dot(beta) ** 2.0
+
+            return sqsum  # Gamma is already incorporated in A
+
+    def grad(self, beta=None, mu=None):
+
+        if self.gamma < utils.TOLERANCE:
             return np.zeros(beta.shape)
 
-        self.compute_alpha(beta)
+        if beta != None:
+            self._compute_alpha_grad(beta, mu)
 
-        return self.Aalpha
+        return self._grad
 
     def Lipschitz(self, mu=None):
 
-        if self.gamma < TOLERANCE:
+        if self.gamma < utils.TOLERANCE:
             return 0
 
 #        if self.lambda_max == None:
@@ -1094,30 +1291,19 @@ class GroupLassoOverlap(NesterovFunction,
 #            print "max col sum: ", (self.max_col_norm / self.get_mu())
             return self.max_col_norm / self.get_mu()
 
-    def alpha(self, beta):
+    def alpha(self, beta=None, mu=None):
 
-        if self.gamma < TOLERANCE:
-            return tuple([0] * len(self.astar))
+        if self.gamma < utils.TOLERANCE:
+            return tuple([0.0] * len(self._alpha))
 
-        self.compute_alpha(beta)
+        if beta != None:
+            self._compute_alpha_grad(beta, mu)
 
-        return self.astar
-
-    def A(self):
-
-        return self.Agl
-
-    def At(self):
-
-        return self.Aglt
+        return self._alpha
 
     def num_compacts(self):
 
         return self.num_groups()
-
-    def num_groups(self):
-
-        return len(self.groups)
 
     def projection(self, *alpha):
 
@@ -1130,26 +1316,27 @@ class GroupLassoOverlap(NesterovFunction,
                 astar /= normas
             alpha[i] = astar
 
-        return tuple(alpha)
+        return alpha
 
-    def compute_alpha(self, beta):
+    def _compute_alpha_grad(self, beta, mu=None):
 
-        mu = self.get_mu()
+        if mu == None:
+            mu = self.get_mu()
 
         # Compute a* for each dimension
-        self.Aalpha = 0
-        for g in xrange(len(self.Agl)):
-            astar = self.Agl[g].dot(beta) / mu
+        self._grad = 0
+        for g in xrange(len(self._A)):
+            astar = self._A[g].dot(beta) / mu
             astar = self.projection(astar)[0]
 
-            self.astar[g] = astar
+            self._alpha[g] = astar
 
-            self.Aalpha += self.Aglt[g].dot(astar)
+            self._grad += self._At[g].dot(astar)
 
     def precompute(self):
 
-        self.Agl = list()
-        self.Aglt = list()
+        self._A = list()
+        self._At = list()
 
         powers = np.zeros(self.num_variables)
         for g in xrange(len(self.groups)):
@@ -1162,8 +1349,8 @@ class GroupLassoOverlap(NesterovFunction,
                 powers[Gi[i]] += w ** 2.0
 
             # Matrix operations are a lot faster when the sparse matrix is csr
-            self.Agl.append(Ag.tocsr())
-            self.Aglt.append(self.Agl[-1].T)
+            self._A.append(Ag.tocsr())
+            self._At.append(self._A[-1].T)
 
         self.max_col_norm = np.max(powers)
-        self.astar = [0] * len(self.groups)
+        self._alpha = [0] * len(self.groups)

@@ -81,15 +81,21 @@ def corr(a, b):
     a_ = a - ma
     b_ = b - mb
 
-    norma = norm(a_)
-    normb = norm(b_)
+    norma = np.sqrt(np.sum(a_ ** 2.0, axis=0))
+    normb = np.sqrt(np.sum(b_ ** 2.0, axis=0))
 
-    if norma < TOLERANCE or normb < TOLERANCE:
-        return np.zeros((1, 1))
+    norma[norma < TOLERANCE] = 1.0
+    normb[normb < TOLERANCE] = 1.0
+
+    a_ /= norma
+    b_ /= normb
 
     ip = np.dot(a_.T, b_)
 
-    return ip[0, 0] / (norma * normb)
+    if ip.shape == (1, 1):
+        return ip[0, 0]
+    else:
+        return ip
 
 
 def cov(a, b):
@@ -99,9 +105,12 @@ def cov(a, b):
     a_ = a - ma
     b_ = b - mb
 
-    ip = np.dot(a_.T, b_)
+    ip = np.dot(a_.T, b_) / (a_.shape[0] - 1.0)
 
-    return ip[0, 0] / (a_.shape[0] - 1.0)
+    if ip.shape == (1, 1):
+        return ip[0, 0]
+    else:
+        return ip
 
 
 def sstot(a):
@@ -243,6 +252,10 @@ def optimal_shrinkage(*X, **kwargs):
 
 def delete_sparse_csr_row(mat, i):
     """Delete row i in-place from sparse matrix mat (CSR format).
+
+    Implementation from:
+
+        http://stackoverflow.com/questions/13077527/is-there-a-numpy-delete-equivalent-for-sparse-matrices
     """
     if not isinstance(mat, scipy.sparse.csr_matrix):
         raise ValueError("works only for CSR format -- use .tocsr() first")

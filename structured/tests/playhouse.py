@@ -607,6 +607,7 @@ def create_data(
 
     return X, y, betas, grp_desc, sigma
 
+
 if __name__ == "__main__":
 #    test_tv()
 #    test_lasso()
@@ -690,81 +691,92 @@ if __name__ == "__main__":
 #    lr.set_data(X, y)
 #    beta = algorithm.run(X, y)
 
+#    # Test group lasso!!
+#    import scipy
+#
+#    np.random.seed(42)
+#
+#    p = 40
+#    betastar = np.zeros((p, 1)).ravel()
+##    betastar = [0., 0., 0., 0., 0., .5, .7, 1., .6, .7, 0., 0., 0., 0., 0.]
+##    groups = [[5, 6, 7, 8, 9]]
+##    groups = [range(p / 3), range(p / 3, 2 * p / 3), range(2 * p / 3, p)]
+#    groups = [range(p / 3, 2 * p / 3), range(p)]
+#    betastar[groups[0]] = 1
+#
+#    p = len(betastar)
+#    n = 20
+#
+#    r = 0.0
+#    u = r * np.random.randn(p, p)
+#    u += (1.0 - r) * np.eye(p, p)
+#    sigma = np.dot(u.T, u)
+#    mean = np.zeros(p)
+#
+#    X = np.random.multivariate_normal(mean, sigma, n)
+#    y = np.reshape(np.dot(X, betastar), (n, 1))
+#
+##    eps = 0.0001
+#    gamma = 1.0
+##    weights = [1.0] * len(groups)
+#
+##    lrgl = models.LinearRegressionGL(gamma, p, groups)
+#    lrgl = models.LinearRegressionTV(gamma, (1, 1, p))
+#    cont = models.ContinuationRun(lrgl,
+#                                  mus=[10, 1.0, 0.1, 0.01, 0.001, 0.0001])
+#    cont.set_tolerance(0.00001)
+#    cont.set_max_iter(10000)
+##    lrgl.set_data(X, y)
+##    lrgl.set_mu(lrgl.compute_mu(eps))
+#    cont.fit(X, y)
+#
+#    alg = cont.get_algorithm()
+#    print cont.get_transform()
+#    print alg.iterations
+#
+#    plot.subplot(2, 1, 1)
+#    plot.plot(betastar, '-g', cont.beta, '*r')
+#
+#    plot.subplot(2, 1, 2)
+#    plot.plot(alg.f)
+#    plot.title("Iterations: " + str(alg.iterations))
+#
+#    plot.show()
 
-    #  Test Logistic Group Lasso ==========
-    X, y, betas, groups, sigma = create_data()
-    #    eps = 0.0001
-    gamma = 10.
-    #    weights = [1.0] * len(groups)
-    p = len(betas)
-    lrgl = models.LogisticRegressionGL(gamma,p, groups, mu=None, weights=None)
-    cont = models.ContinuationRun(lrgl,
-                                 tolerances=[ 0.1, 0.01, 0.001, 0.0001])
-    #    lrgl.set_tolerance(eps)        
-    cont.set_max_iter(1000)
-    #    lrgl.set_data(X, y)
-    #    lrgl.set_mu(lrgl.compute_mu(eps))
-    cont.fit(X, y)
-   
-    alg = cont.get_algorithm()
-    print cont.get_transform()
-    print alg.iterations
 
-    plot.subplot(2, 1, 1)
-    plot.plot(betas, '-g', cont.beta, '*r')
-
-    plot.subplot(2, 1, 2)
-    plot.plot(alg.f)
-    plot.title("Iterations: " + str(alg.iterations))
-
-    plot.show()
-
-    # Test group lasso!!
-    import scipy
-
-    np.random.seed(42)
-
-    betastar = [0., 0., 0., 0., 0., .5, .7, 1., .6, .7, 0., 0., 0., 0., 0.]
-    groups = [[5, 6, 7, 8, 9]]
-
-    p = len(betastar)
-    n = 10
-
-    r = 0.0
-    u = r * np.random.randn(p, p)
-    u += (1.0 - r) * np.eye(p, p)
-    sigma = np.dot(u.T, u)
-    mean = np.zeros(p)
-
-    X = np.random.multivariate_normal(mean, sigma, n)
-    y = np.reshape(np.dot(X, betastar), (n, 1))
-
-#    eps = 0.0001
-    gamma = 0.001
-#    weights = [1.0] * len(groups)
-
-    lrgl = models.LinearRegressionGL(gamma, p, groups, mu=None, weights=None)
-    cont = models.ContinuationRun(lrgl,
-                                  tolerances=[10, 1.0, 0.1, 0.01, 0.001, 0.0001])
-#    lrgl.set_tolerance(eps)
-    cont.set_max_iter(10000)
-#    lrgl.set_data(X, y)
-#    lrgl.set_mu(lrgl.compute_mu(eps))
-    cont.fit(X, y)
-
-    alg = cont.get_algorithm()
-    print cont.get_transform()
-    print alg.iterations
-
-    plot.subplot(2, 1, 1)
-    plot.plot(betastar, '-g', cont.beta, '*r')
-
-    plot.subplot(2, 1, 2)
-    plot.plot(alg.f)
-    plot.title("Iterations: " + str(alg.iterations))
-
-    plot.show()
-
+#    #  Test Logistic Group Lasso ==========
+#    np.random.seed(42)
+#    X, y, betas, groups, sigma = create_data()
+#    #    eps = 0.0001
+#    gamma = 10.
+#    #    weights = [1.0] * len(groups)
+#    p = len(betas)
+#    lrgl = models.LogisticRegressionGL(gamma,p, groups, mu=None, weights=None)
+#    cont = models.ContinuationRun(lrgl,
+#                                 tolerances=[ 0.1, 0.01, 0.001, 0.0001])
+#    #    lrgl.set_tolerance(eps)        
+#    cont.set_max_iter(1000)
+#    #    lrgl.set_data(X, y)
+#    #    lrgl.set_mu(lrgl.compute_mu(eps))
+#    cont.fit(X, y)
+#   
+#    alg = cont.get_algorithm()
+#    print cont.get_transform()
+#    print alg.iterations
+#
+#    plot.subplot(2, 1, 1)
+#    plot.plot(betas, '-g', cont.beta, '*r')
+#
+#    plot.subplot(2, 1, 2)
+#    plot.plot(alg.f)
+#    plot.title("Iterations: " + str(alg.iterations))
+#
+#    plot.show()
+#
+#    # Test group lasso!!
+#    import scipy
+#
+#    return
 
 
 #    np.random.seed(42)
@@ -789,26 +801,60 @@ if __name__ == "__main__":
 #    mu = 0.01
 #    tv = loss_functions.TotalVariation(gamma, shape, mu)
 #    lr = loss_functions.LinearRegressionError()
-#
 #    combo = loss_functions.CombinedNesterovLossFunction(lr, tv)
+#
 #    m.set_g(combo)
 #    combo.set_data(X, y)
 #
-#    D = tv.num_groups()
-#    A = tv.Lipschitz(mu) * mu
+#    D = tv.num_compacts() / 2.0
+#    print "D:", D
+##    _A = tv.Lipschitz(mu) * mu
+#    A = tv.Lipschitz(1.0)
+##    assert abs(_A - A) < 0.0000001
 #    l = lr.Lipschitz()
 #
+##    import scipy.sparse as sparse
+##    A_ = sparse.vstack(tv.A()).todense()
+##    L, V = np.linalg.eig(np.dot(A_.T, A_))
+##    print max(L)
+#
+#    print "A:", A
+#    print "l:", l
+#
 #    def mu_plus(eps):
-#        return (-D * A + np.sqrt((D * A) ** 2.0 + D * l * eps * A)) / (D * l)
+#        return (-2.0 * D * A + np.sqrt((2.0 * D * A) ** 2.0 + 4.0 * D * l * eps * A)) / (2.0 * D * l)
 #
 #    def eps_plus(mu):
-#        return ((mu * D * l + D * A) ** 2.0 - (D * A) ** 2.0) / (D * l * A)
+#        return ((2.0 * mu * D * l + 2.0 * D * A) ** 2.0 - (2.0 * D * A) ** 2.0) / (4.0 * D * l * A)
 #
 #    m.algorithm._set_tolerance(m.compute_tolerance(mu))
 #    beta = m.algorithm.run(X, y)
 #
+#    for eps in [1000000.0, 100000.0, 10000.0, 1000.0, 100.0, 10.0, 1.0, 0.1, 0.01, 0.001]:
+#        print "eps: %.7f -> mu: %.7f -> eps: %.7f" % (eps, mu_plus(eps), eps_plus(mu_plus(eps)))
+#        print "eps: %.7f -> mu: %.7f -> eps: %.7f" % (eps, m.compute_mu(eps), m.compute_tolerance(m.compute_mu(eps)))
+#        print "D * mu = %.7f" % (D * mu)
+
+#    mu1 = []
+#    mu2 = []
+#    eps = []
+#    for _eps in xrange(1, 1000):
+#        eps.append(_eps / 1000.0)
+#
+##        mu1.append(mu_plus(eps[-1]))
+##        mu2.append(m.compute_mu(eps[-1]))
+#        mu1.append(eps_plus(eps[-1]))
+#        mu2.append(m.compute_tolerance(eps[-1]))
+#
+#    plot.plot(eps, mu1, '-r')
+#    plot.plot(eps, mu2, '-g')
+#    plot.show()
+#    print mu1[-10:]
+#    print mu2[-10:]
+
 #    eps = 0.01
 #    mu = mu_plus(eps)
+#
 #    s = time()
 #    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
 #    s = time()
@@ -854,3 +900,109 @@ if __name__ == "__main__":
 #    s = time()
 #    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
 #    print
+
+    np.random.seed(42)
+
+    eps = 0.001
+    maxit = 10
+    cont_maxit = 100
+    gamma = 15.0
+
+    px = 1000
+    py = 1
+    pz = 1
+    p = px * py * pz  # Must be even!
+    n = 100
+    X = np.random.randn(n, p)
+    betastar = np.concatenate((np.zeros((p / 2, 1)),
+                               np.random.randn(p / 2, 1)))
+    betastar = np.sort(np.abs(betastar), axis=0)
+    y = np.dot(X, betastar)
+
+    print "LinearRegressionTV"
+    start = time()
+    lrtv = models.LinearRegressionTV(gamma, shape=(pz, py, px))
+    lrtv.set_tolerance(eps)
+    lrtv.set_max_iter(maxit)
+    c = models.Continuation(lrtv, cont_maxit)
+    c.fit(X, y)
+    computed_beta = c.beta
+    print "time: ", (time() - start)
+
+    print "f: ", c.get_algorithm().f[-1]
+    print "its: ", c.get_algorithm().iterations
+
+    plot.subplot(2, 2, 1)
+    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
+    plot.subplot(2, 2, 2)
+    plot.plot(c.get_algorithm().f)
+    plot.title("Continuation")
+
+    start = time()
+    lrtv = models.LinearRegressionTV(gamma, shape=(pz, py, px))
+    lrtv.set_tolerance(eps)
+    lrtv.set_max_iter(cont_maxit)
+    cr = models.ContinuationRun(lrtv, tolerances=[1.0, 0.1, 0.01, 0.001, 0.0001])
+    cr.fit(X, y)
+    computed_beta = cr.beta
+    print "time: ", (time() - start)
+
+    print "f: ", cr.get_algorithm().f[-1]
+    print "its: ", cr.get_algorithm().iterations
+
+    plot.subplot(2, 2, 3)
+    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
+    plot.subplot(2, 2, 4)
+    plot.plot(cr.get_algorithm().f)
+    plot.title("Continuation Run")
+
+    plot.show()
+
+#    l = float(1.0)
+#    density = float(0.3)  # \in [0, 1]
+#    rho = float(1.0)  # ~SNR
+#    n = 500
+#    p = 1000
+#    ps = round(p * density)  # <= p
+#    P = (np.random.rand(n, p) - 0.5) * 2.0  # Should be normally distributed
+#    v = np.random.rand(n, 1)  # Should be normally distributed
+#
+#    e = v / utils.norm(v)
+#
+#    b = np.dot(P.T, e)
+#    ind = np.flipud(np.argsort(np.abs(b), axis=0))
+#    b = b[ind[:, 0]]
+#    sign_b = np.sign(b)
+#    abs_b = np.abs(b)
+#
+#    a_plus = l / abs_b[:ps, [0]]
+#
+#    xi = np.random.rand(p - ps, 1)
+#    a_zero = np.divide(l * xi, abs_b[ps:, [0]])
+#    ind = abs_b[ps:, [0]] < l * 1.0  # !!!
+#    a_zero[ind] = 1.0
+#
+#    a = np.vstack((a_plus, a_zero))
+#
+#    X = P / a.T
+#
+#    beta = np.zeros((p, 1))
+#    xi = np.random.rand(ps, 1) * (rho / np.sqrt(ps))
+#    beta[:ps, [0]] = -np.multiply(xi, sign_b[:ps, [0]])
+#
+#    y = np.dot(X, beta) + e
+#
+#    tolerance = 0.01
+#    maxit = 10000
+#
+#    for l in xrange(50, 150):
+#        l = l / float(100.0)
+#        lr = models.Lasso(l)
+#        lr.set_tolerance(tolerance)
+#        lr.set_max_iter(maxit)
+#        lr.fit(X, y)
+#
+#        print "l = %.2f => %f" % (l, np.sum((beta - lr.beta) ** 2.0))
+#
+##    plot.plot(beta, '-g', lr.beta, ':*r')
+##    plot.show()
