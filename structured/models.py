@@ -935,40 +935,6 @@ class Continuation(BaseModel):
 
         self.model.set_algorithm(algorithm)
 
-#    def phi(self, beta=None, alpha=None, mu=None):
-#        """ At least one of beta or alpha must be given.
-#
-#        If alpha=None, this function finds and returns the alpha that maximises
-#        the associated loss function.
-#
-#        If beta=None, this function finds and returns the beta that
-#        minimises the associated loss function.
-#
-#        If neither beta=None nor alpha=None, this function returns the
-#        associated loss function value for the given alpha and beta.
-#        """
-#        g = self.model.get_g()
-#        smooth = g.a
-#
-#        if beta != None and alpha == None:
-#
-#            return g.alpha(beta, mu)
-#
-#        elif beta != None and alpha != None:
-#
-#            return g.phi(beta, alpha)
-#
-#        elif beta == None and alpha == None:
-#
-#            raise ValueError("At least one of beta and alpha must be given!")
-#
-#        elif beta == None and alpha != None:
-#
-#            dual_model = ConstantNesterovModelCopy(self.model)
-#            dual_model.fit(smooth.X, smooth.y)
-#
-#            return dual_model.beta
-
     def _gap(self, X, y):
 
 #        if hasattr(self.model, "phi"):
@@ -979,8 +945,11 @@ class Continuation(BaseModel):
                 - self.model.phi(beta=beta_, alpha=alpha_)
 #        else:
 
-        alpha = self.model.alpha(beta=self.model._beta, mu=self.model.get_mu())
-        dual_model = ConstantNesterovModelCopy(self.model._rr_l1_tv, alpha=alpha)
+#        alpha = self.model.alpha(beta=self.model._beta, mu=self.model.get_mu())
+        g = self.model.get_g()
+        alpha = g.alpha()
+        dual_model = ConstantNesterovModelCopy(self.model, alpha=alpha)
+#        dual_model.set_max_iter(10000)
         dual_model.fit(X, y)
         beta = dual_model._beta
 
@@ -1790,17 +1759,17 @@ class RidgeRegressionL1TV(RidgeRegressionTV):
 
         return self
 
-    def set_data(self, X, y):
-
-        super(RidgeRegressionL1TV, self).set_data(X, y)
-
-        self._rr_l1_tv.set_data(X, y)
-
     def set_mu(self, mu):
 
         super(RidgeRegressionL1TV, self).set_mu(mu)
 
         self._rr_l1_tv.set_mu(mu)
+
+    def set_data(self, X, y):
+
+        super(RidgeRegressionL1TV, self).set_data(X, y)
+
+        self._rr_l1_tv.set_data(X, y)
 
 
 class RidgeRegressionSmoothL1TV(RidgeRegression):
@@ -1842,62 +1811,62 @@ class RidgeRegressionSmoothL1TV(RidgeRegression):
         self.set_g(loss_functions.CombinedNesterovLossFunction(self.rr,
                                                                self.l1_tv))
 
+        self.small = 1e-10
+
     # TODO: Decide if phi(beta, alpha) should be in the general API for all
     # Nesterov functions.
     def phi(self, beta, alpha, *args, **kwargs):
         """The dual loss function. This function returns the associated loss
         function value for the given alpha and beta.
         """
-#        rr = self.get_g().a  # RR smooth loss function
-#        l1_tv = self.get_g().b  # L1 + TV smoothed loss functions
-
         return self.rr.f(beta) + self.l1_tv.phi(beta, alpha)
 
     def beta(self, alpha=None, mu=None):
         """Computes the beta that minimises the dual function value for the
         current computed or given alpha.
         """
-#        X, y = self.get_data()
-#        if not hasattr(self, "_invXXlI"):
-#            # Note that set_data must be called before using this method!
-#            XtX = np.dot(X.T, X)
-#            self._invXXlI = np.linalg.inv(XtX + self.rr.l * np.eye(*XtX.shape))
-#
-#        if alpha == None:
-#            Aalpha = self.l1_tv._compute_grad(self.l1_tv._alpha)
-#        else:
-#            Aalpha = self.l1_tv._compute_grad(alpha)
-#
-#        beta = np.dot(self._invXXlI, np.dot(X.T, y) - Aalpha)
-#
-#        return beta
+        X, y = self.get_data()
+        if not hasattr(self, "_invXXlI"):
+            # Note that set_data must be called before using this method!
+            XtX = np.dot(X.T, X)
+            self._invXXlI = np.linalg.inv(XtX + self.rr.l * np.eye(*XtX.shape))
 
-        dual_model = ConstantNesterovModelCopy(self, alpha)
-        dual_model.set_h(loss_functions.ZeroErrorFunction())
-        if mu != None:
-            dual_model.set_mu(mu)
-        dual_model.fit(*self.get_data())
+        if alpha == None:
+            Aalpha = self.l1_tv._compute_grad(self.l1_tv._alpha)
+        else:
+            Aalpha = self.l1_tv._compute_grad(alpha)
 
-        return dual_model._beta
+        beta = np.dot(self._invXXlI, np.dot(X.T, y) - Aalpha)
 
+        return beta
+
+#        dual_model = ConstantNesterovModelCopy(self, alpha)
+#        dual_model.set_h(loss_functions.ZeroErrorFunction())
+#        if mu != None:
+#            dual_model.set_mu(mu)
+#        dual_model.fit(*self.get_data())
+#
+#        return dual_model._beta
 
     def alpha(self, beta=None, mu=None):
         """Computes the alpha that maximises the smoothed loss function for the
         current computed beta.
         """
         g = self.get_g()
-        if isinstance(g.a, loss_functions.NesterovFunction) and \
-                isinstance(g.b, loss_functions.NesterovFunction):
-            return g.alpha(beta, mu)
+        l1 = g.b.a
+        tv = g.b.b
 
-        elif isinstance(g.a, loss_functions.NesterovFunction):
-            return g.a.alpha(beta, mu)
+        l1.set_mu(self.small)
+        return l1.alpha(beta=beta, mu=self.small) \
+                + tv.alpha(beta=beta, mu=mu)
 
-        elif isinstance(g.b, loss_functions.NesterovFunction):
-            return g.b.alpha(beta, mu)
+    def set_mu(self, mu):
 
-        else:
-            raise ValueError("The given functions must be Nesterov functions")
+        super(RidgeRegressionSmoothL1TV, self).set_mu(mu)
+
+        g = self.get_g()
+        l1 = g.b.a
+        l1.set_mu(self.small)
 
     def set_data(self, X, y):
 

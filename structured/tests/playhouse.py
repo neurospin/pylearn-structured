@@ -903,13 +903,13 @@ if __name__ == "__main__":
 #    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
 #    print
 
-    np.random.seed(42)
+#    np.random.seed(42)
 
     eps = 0.001
     maxit = 10
     cont_maxit = 100
-    gamma = 15.0
-    l = 0.8
+    gamma = 10.0
+    l = 0.9
     k = 1.0 - l
 
     px = 1000
@@ -955,13 +955,13 @@ if __name__ == "__main__":
     print "f: ", cr.get_algorithm().f[-1]
     print "its: ", cr.get_algorithm().iterations
 
-#    plot.subplot(2, 2, 3)
-#    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
-#    plot.subplot(2, 2, 4)
-#    plot.plot(cr.get_algorithm().f)
-#    plot.title("Continuation Run")
-#
-#    plot.show()
+    plot.subplot(2, 2, 3)
+    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
+    plot.subplot(2, 2, 4)
+    plot.plot(cr.get_algorithm().f)
+    plot.title("Continuation Run")
+
+    plot.show()
 
 
 
