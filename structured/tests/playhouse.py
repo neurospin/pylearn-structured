@@ -930,7 +930,7 @@ if __name__ == "__main__":
     m.set_max_iter(maxit)
     c = models.Continuation(m, cont_maxit)
     c.fit(X, y)
-    computed_beta = c.beta
+    computed_beta = c._beta
     print "time: ", (time() - start)
 
     print "f: ", c.get_algorithm().f[-1]
@@ -949,19 +949,19 @@ if __name__ == "__main__":
     m.set_max_iter(cont_maxit)
     cr = models.ContinuationRun(m, tolerances=[1.0, 0.1, 0.01, 0.001, 0.0001])
     cr.fit(X, y)
-    computed_beta = cr.beta
+    computed_beta = cr._beta
     print "time: ", (time() - start)
 
     print "f: ", cr.get_algorithm().f[-1]
     print "its: ", cr.get_algorithm().iterations
 
-    plot.subplot(2, 2, 3)
-    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
-    plot.subplot(2, 2, 4)
-    plot.plot(cr.get_algorithm().f)
-    plot.title("Continuation Run")
-
-    plot.show()
+#    plot.subplot(2, 2, 3)
+#    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
+#    plot.subplot(2, 2, 4)
+#    plot.plot(cr.get_algorithm().f)
+#    plot.title("Continuation Run")
+#
+#    plot.show()
 
 
 

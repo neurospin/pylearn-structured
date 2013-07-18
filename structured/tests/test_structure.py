@@ -78,11 +78,11 @@ def test():
 #    f = pgm.get_algorithm().f
 #
 #    plot.subplot(2, 2, 1)
-#    plot.plot(beta1D[:, 0], '-', pgm.beta[:, 0], '*')
+#    plot.plot(beta1D[:, 0], '-', pgm._beta[:, 0], '*')
 #    plot.title("PGM Linear regression (it=%d, err=%f)" % (len(f), f[-1]))
 #
 #    plot.subplot(2, 2, 2)
-#    plot.imshow(np.reshape(pgm.beta, (pz, py, px))[0, :, :],
+#    plot.imshow(np.reshape(pgm._beta, (pz, py, px))[0, :, :],
 #                interpolation='nearest', cmap=cm.gist_rainbow)
 
     egm = models.EGMRidgeRegression(0.0001)
@@ -92,51 +92,51 @@ def test():
 #    f = egm.get_algorithm().f
 #
 #    plot.subplot(2, 2, 3)
-#    plot.plot(beta1D[:, 0], '-', egm.beta[:, 0], '*')
+#    plot.plot(beta1D[:, 0], '-', egm._beta[:, 0], '*')
 #    plot.title("EGM Linear regression (it=%d, err=%f)" % (len(f), f[-1]))
 #
 #    plot.subplot(2, 2, 4)
-#    plot.imshow(np.reshape(egm.beta, (pz, py, px))[0, :, :],
+#    plot.imshow(np.reshape(egm._beta, (pz, py, px))[0, :, :],
 #                interpolation='nearest', cmap=cm.gist_rainbow)
 
-    lr_pgm_ss = np.sum(pgm.beta ** 2.0)
+    lr_pgm_ss = np.sum(pgm._beta ** 2.0)
     utils.debug("SS beta: ", lr_pgm_ss)
-    lr_egm_ss = np.sum(egm.beta ** 2.0)
+    lr_egm_ss = np.sum(egm._beta ** 2.0)
     utils.debug("SS beta: ", lr_egm_ss)
     assert lr_egm_ss < lr_pgm_ss
 
-    lr_true_error_pgm = np.sum((beta1D - pgm.beta) ** 2.0) \
+    lr_true_error_pgm = np.sum((beta1D - pgm._beta) ** 2.0) \
                         / np.sum(beta1D ** 2.0)
     utils.debug("True difference PGM:", lr_true_error_pgm)
-    lr_true_error_egm = np.sum((beta1D - egm.beta) ** 2.0) \
+    lr_true_error_egm = np.sum((beta1D - egm._beta) ** 2.0) \
                         / np.sum(beta1D ** 2.0)
     utils.debug("True difference EGM:", lr_true_error_egm)
     assert lr_true_error_pgm < 0.31
     assert lr_true_error_egm < 0.31
     assert abs(lr_true_error_pgm - lr_true_error_egm) < 0.005
 
-    lr_ols_diff_pgm = np.sum((betaOLS - pgm.beta) ** 2.0) \
+    lr_ols_diff_pgm = np.sum((betaOLS - pgm._beta) ** 2.0) \
                         / np.sum(betaOLS ** 2.0)
     utils.debug("Difference to OLS EGM:", lr_ols_diff_pgm)
-    lr_ols_diff_egm = np.sum((betaOLS - egm.beta) ** 2.0) \
+    lr_ols_diff_egm = np.sum((betaOLS - egm._beta) ** 2.0) \
                         / np.sum(betaOLS ** 2.0)
     utils.debug("Difference to OLS PGM:", lr_ols_diff_egm)
     assert lr_ols_diff_pgm < 0.00005
     assert lr_ols_diff_egm < 0.00005
 
-    lr_diff_egm_pgm = np.sum((pgm.beta - egm.beta) ** 2.0) \
-                        / np.sum(pgm.beta ** 2.0)
+    lr_diff_egm_pgm = np.sum((pgm._beta - egm._beta) ** 2.0) \
+                        / np.sum(pgm._beta ** 2.0)
     utils.debug("Difference EGM -- PGM:", lr_diff_egm_pgm)
-    lr_diff_pgm_egm = np.sum((pgm.beta - egm.beta) ** 2.0) \
-                        / np.sum(egm.beta ** 2.0)
+    lr_diff_pgm_egm = np.sum((pgm._beta - egm._beta) ** 2.0) \
+                        / np.sum(egm._beta ** 2.0)
     utils.debug("Difference PGM -- EGM:", lr_diff_pgm_egm)
     assert lr_diff_egm_pgm < 0.00005
     assert lr_diff_pgm_egm < 0.00005
 
-    lr_r2_pgm = 1.0 - np.sum((y - np.dot(X, pgm.beta)) ** 2.0) \
+    lr_r2_pgm = 1.0 - np.sum((y - np.dot(X, pgm._beta)) ** 2.0) \
                         / np.sum(y ** 2.0)
     utils.debug("R2 PGM:", lr_r2_pgm)
-    lr_r2_egm = 1.0 - np.sum((y - np.dot(X, egm.beta)) ** 2.0) \
+    lr_r2_egm = 1.0 - np.sum((y - np.dot(X, egm._beta)) ** 2.0) \
                         / np.sum(y ** 2.0)
     utils.debug("R2 EGM:", lr_r2_egm)
     assert abs(lr_r2_pgm - 1.0) < 0.0000005
@@ -154,11 +154,11 @@ def test():
 #    f = pgm.get_algorithm().f
 #
 #    plot.subplot(2, 2, 1)
-#    plot.plot(beta1D[:, 0], '-', pgm.beta[:, 0], '*')
+#    plot.plot(beta1D[:, 0], '-', pgm._beta[:, 0], '*')
 #    plot.title("PGM LASSO (%d, %f)" % (len(f), f[-1]))
 #
 #    plot.subplot(2, 2, 2)
-#    plot.imshow(np.reshape(pgm.beta, (pz, py, px))[0, :, :],
+#    plot.imshow(np.reshape(pgm._beta, (pz, py, px))[0, :, :],
 #                interpolation='nearest', cmap=cm.gist_rainbow)
 
     egm = models.EGMLinearRegressionL1L2(l, 0.001, p)
@@ -168,25 +168,25 @@ def test():
 #    f = egm.get_algorithm().f
 #
 #    plot.subplot(2, 2, 3)
-#    plot.plot(beta1D[:, 0], '-', egm.beta[:, 0], '*')
+#    plot.plot(beta1D[:, 0], '-', egm._beta[:, 0], '*')
 #    plot.title("EGM LASSO (%d, %f)" % (len(f), f[-1]))
 #
 #    plot.subplot(2, 2, 4)
-#    plot.imshow(np.reshape(egm.beta, (pz, py, px))[0, :, :],
+#    plot.imshow(np.reshape(egm._beta, (pz, py, px))[0, :, :],
 #                interpolation='nearest', cmap=cm.gist_rainbow)
 
-    lasso_pgm_ss = np.sum(pgm.beta ** 2.0)
+    lasso_pgm_ss = np.sum(pgm._beta ** 2.0)
     utils.debug("SS beta: ", lasso_pgm_ss)
-    lasso_egm_ss = np.sum(egm.beta ** 2.0)
+    lasso_egm_ss = np.sum(egm._beta ** 2.0)
     utils.debug("SS beta: ", lasso_egm_ss)
     assert lasso_egm_ss < lasso_pgm_ss
     assert lasso_egm_ss > lr_egm_ss
     assert lasso_pgm_ss > lr_pgm_ss
 
-    lasso_true_error_pgm = np.sum((beta1D - pgm.beta) ** 2.0) \
+    lasso_true_error_pgm = np.sum((beta1D - pgm._beta) ** 2.0) \
                         / np.sum(beta1D ** 2.0)
     utils.debug("True difference PGM:", lasso_true_error_pgm)
-    lasso_true_error_egm = np.sum((beta1D - egm.beta) ** 2.0) \
+    lasso_true_error_egm = np.sum((beta1D - egm._beta) ** 2.0) \
                         / np.sum(beta1D ** 2.0)
     utils.debug("True difference EGM:", lasso_true_error_egm)
     assert lasso_true_error_pgm < 0.01
@@ -195,10 +195,10 @@ def test():
     assert lasso_true_error_pgm < lr_true_error_pgm
     assert lasso_true_error_egm < lr_true_error_egm
 
-    lasso_ols_diff_pgm = np.sum((betaOLS - pgm.beta) ** 2.0) \
+    lasso_ols_diff_pgm = np.sum((betaOLS - pgm._beta) ** 2.0) \
                         / np.sum(betaOLS ** 2.0)
     utils.debug("Difference to OLS EGM:", lasso_ols_diff_pgm)
-    lasso_ols_diff_egm = np.sum((betaOLS - egm.beta) ** 2.0) \
+    lasso_ols_diff_egm = np.sum((betaOLS - egm._beta) ** 2.0) \
                         / np.sum(betaOLS ** 2.0)
     utils.debug("Difference to OLS PGM:", lasso_ols_diff_egm)
     assert lasso_ols_diff_pgm < 0.45
@@ -206,21 +206,21 @@ def test():
     assert lasso_ols_diff_pgm > lr_ols_diff_pgm
     assert lasso_ols_diff_egm > lr_ols_diff_egm
 
-    lasso_diff_egm_pgm = np.sum((pgm.beta - egm.beta) ** 2.0) \
-                        / np.sum(pgm.beta ** 2.0)
+    lasso_diff_egm_pgm = np.sum((pgm._beta - egm._beta) ** 2.0) \
+                        / np.sum(pgm._beta ** 2.0)
     utils.debug("Difference EGM -- PGM:", lasso_diff_egm_pgm)
-    lasso_diff_pgm_egm = np.sum((pgm.beta - egm.beta) ** 2.0) \
-                        / np.sum(egm.beta ** 2.0)
+    lasso_diff_pgm_egm = np.sum((pgm._beta - egm._beta) ** 2.0) \
+                        / np.sum(egm._beta ** 2.0)
     utils.debug("Difference PGM -- EGM:", lasso_diff_pgm_egm)
     assert lasso_diff_egm_pgm < 0.01
     assert lasso_diff_pgm_egm < 0.01
     assert lasso_diff_egm_pgm > lr_diff_egm_pgm
     assert lasso_diff_pgm_egm > lr_diff_pgm_egm
 
-    lasso_r2_pgm = 1.0 - np.sum((y - np.dot(X, pgm.beta)) ** 2.0) \
+    lasso_r2_pgm = 1.0 - np.sum((y - np.dot(X, pgm._beta)) ** 2.0) \
                         / np.sum(y ** 2.0)
     utils.debug("R2 PGM:", lasso_r2_pgm)
-    lasso_r2_egm = 1.0 - np.sum((y - np.dot(X, egm.beta)) ** 2.0) \
+    lasso_r2_egm = 1.0 - np.sum((y - np.dot(X, egm._beta)) ** 2.0) \
                         / np.sum(y ** 2.0)
     utils.debug("R2 EGM:", lasso_r2_egm)
     assert abs(lasso_r2_pgm - 1.0) < 0.0000005
@@ -240,11 +240,11 @@ def test():
 #    f = pgm.get_algorithm().f
 #
 #    plot.subplot(2, 2, 1)
-#    plot.plot(beta1D[:, 0], '-', pgm.beta[:, 0], '*')
+#    plot.plot(beta1D[:, 0], '-', pgm._beta[:, 0], '*')
 #    plot.title("Elastic Net (%d, %f)" % (len(f), f[-1]))
 #
 #    plot.subplot(2, 2, 2)
-#    plot.imshow(np.reshape(pgm.beta, (pz, py, px))[0, :, :],
+#    plot.imshow(np.reshape(pgm._beta, (pz, py, px))[0, :, :],
 #                interpolation='nearest', cmap=cm.gist_rainbow)
 
     egm = models.EGMElasticNet(l, p)
@@ -254,16 +254,16 @@ def test():
 #    f = egm.get_algorithm().f
 #
 #    plot.subplot(2, 2, 3)
-#    plot.plot(beta1D[:, 0], '-', egm.beta[:, 0], '*')
+#    plot.plot(beta1D[:, 0], '-', egm._beta[:, 0], '*')
 #    plot.title("Elastic Net (%d, %f)" % (len(f), f[-1]))
 #
 #    plot.subplot(2, 2, 4)
-#    plot.imshow(np.reshape(egm.beta, (pz, py, px))[0, :, :],
+#    plot.imshow(np.reshape(egm._beta, (pz, py, px))[0, :, :],
 #                interpolation='nearest', cmap=cm.gist_rainbow)
 
-    en_pgm_ss = np.sum(pgm.beta ** 2.0)
+    en_pgm_ss = np.sum(pgm._beta ** 2.0)
     utils.debug("SS beta: ", en_pgm_ss)
-    en_egm_ss = np.sum(egm.beta ** 2.0)
+    en_egm_ss = np.sum(egm._beta ** 2.0)
     utils.debug("SS beta: ", en_egm_ss)
     assert en_egm_ss < en_pgm_ss
     assert en_egm_ss > lr_egm_ss
@@ -271,10 +271,10 @@ def test():
     assert en_egm_ss < lasso_egm_ss
     assert en_pgm_ss < lasso_pgm_ss
 
-    en_true_error_pgm = np.sum((beta1D - pgm.beta) ** 2.0) \
+    en_true_error_pgm = np.sum((beta1D - pgm._beta) ** 2.0) \
                         / np.sum(beta1D ** 2.0)
     utils.debug("True difference PGM:", en_true_error_pgm)
-    en_true_error_egm = np.sum((beta1D - egm.beta) ** 2.0) \
+    en_true_error_egm = np.sum((beta1D - egm._beta) ** 2.0) \
                         / np.sum(beta1D ** 2.0)
     utils.debug("True difference EGM:", en_true_error_egm)
     assert en_true_error_pgm < 0.002
@@ -285,10 +285,10 @@ def test():
 #    assert en_true_error_pgm > lasso_true_error_pgm
 #    assert en_true_error_egm < lasso_true_error_egm
 
-    en_ols_diff_pgm = np.sum((betaOLS - pgm.beta) ** 2.0) \
+    en_ols_diff_pgm = np.sum((betaOLS - pgm._beta) ** 2.0) \
                         / np.sum(betaOLS ** 2.0)
     utils.debug("Difference to OLS EGM:", en_ols_diff_pgm)
-    en_ols_diff_egm = np.sum((betaOLS - egm.beta) ** 2.0) \
+    en_ols_diff_egm = np.sum((betaOLS - egm._beta) ** 2.0) \
                         / np.sum(betaOLS ** 2.0)
     utils.debug("Difference to OLS PGM:", en_ols_diff_egm)
     assert en_ols_diff_pgm < 0.40
@@ -298,11 +298,11 @@ def test():
     assert en_ols_diff_pgm < lasso_ols_diff_pgm
     assert en_ols_diff_egm < lasso_ols_diff_pgm
 
-    en_diff_egm_pgm = np.sum((pgm.beta - egm.beta) ** 2.0) \
-                        / np.sum(pgm.beta ** 2.0)
+    en_diff_egm_pgm = np.sum((pgm._beta - egm._beta) ** 2.0) \
+                        / np.sum(pgm._beta ** 2.0)
     utils.debug("Difference EGM -- PGM:", en_diff_egm_pgm)
-    en_diff_pgm_egm = np.sum((pgm.beta - egm.beta) ** 2.0) \
-                        / np.sum(egm.beta ** 2.0)
+    en_diff_pgm_egm = np.sum((pgm._beta - egm._beta) ** 2.0) \
+                        / np.sum(egm._beta ** 2.0)
     utils.debug("Difference PGM -- EGM:", en_diff_pgm_egm)
     assert en_diff_egm_pgm < 0.0005
     assert en_diff_pgm_egm < 0.0005
@@ -311,10 +311,10 @@ def test():
     assert en_diff_egm_pgm < lasso_diff_egm_pgm
     assert en_diff_pgm_egm < lasso_diff_pgm_egm
 
-    en_r2_pgm = 1.0 - np.sum((y - np.dot(X, pgm.beta)) ** 2.0) \
+    en_r2_pgm = 1.0 - np.sum((y - np.dot(X, pgm._beta)) ** 2.0) \
                         / np.sum(y ** 2.0)
     utils.debug("R2 PGM:", en_r2_pgm)
-    en_r2_egm = 1.0 - np.sum((y - np.dot(X, egm.beta)) ** 2.0) \
+    en_r2_egm = 1.0 - np.sum((y - np.dot(X, egm._beta)) ** 2.0) \
                         / np.sum(y ** 2.0)
     utils.debug("R2 EGM:", en_r2_egm)
     assert abs(en_r2_pgm - 1.0) < 0.00005
@@ -337,11 +337,11 @@ def test():
 #    f = pgm.get_algorithm().f
 #
 #    plot.subplot(2, 2, 1)
-#    plot.plot(beta1D[:, 0], '-', pgm.beta[:, 0], '*')
+#    plot.plot(beta1D[:, 0], '-', pgm._beta[:, 0], '*')
 #    plot.title("Linear regression + TV (%d, %f)" % (len(f), f[-1]))
 #
 #    plot.subplot(2, 2, 2)
-#    plot.imshow(np.reshape(pgm.beta, (pz, py, px))[0, :, :],
+#    plot.imshow(np.reshape(pgm._beta, (pz, py, px))[0, :, :],
 #                interpolation='nearest', cmap=cm.gist_rainbow)
 
     egm = models.EGMRidgeRegressionTV(0.0005, gamma, (pz, py, px))
@@ -351,16 +351,16 @@ def test():
 #    f = egm.get_algorithm().f
 #
 #    plot.subplot(2, 2, 3)
-#    plot.plot(beta1D[:, 0], '-', egm.beta[:, 0], '*')
+#    plot.plot(beta1D[:, 0], '-', egm._beta[:, 0], '*')
 #    plot.title("Linear regression + TV (%d, %f)" % (len(f), f[-1]))
 #
 #    plot.subplot(2, 2, 4)
-#    plot.imshow(np.reshape(egm.beta, (pz, py, px))[0, :, :],
+#    plot.imshow(np.reshape(egm._beta, (pz, py, px))[0, :, :],
 #                interpolation='nearest', cmap=cm.gist_rainbow)
 
-    tv_pgm_ss = np.sum(pgm.beta ** 2.0)
+    tv_pgm_ss = np.sum(pgm._beta ** 2.0)
     utils.debug("SS beta: ", tv_pgm_ss)
-    tv_egm_ss = np.sum(egm.beta ** 2.0)
+    tv_egm_ss = np.sum(egm._beta ** 2.0)
     utils.debug("SS beta: ", tv_egm_ss)
     assert tv_pgm_ss < tv_egm_ss
     assert tv_pgm_ss > lr_pgm_ss
@@ -368,10 +368,10 @@ def test():
     assert tv_pgm_ss > en_pgm_ss
     assert tv_egm_ss > en_egm_ss
 
-    tv_true_error_pgm = np.sum((beta1D - pgm.beta) ** 2.0) \
+    tv_true_error_pgm = np.sum((beta1D - pgm._beta) ** 2.0) \
                         / np.sum(beta1D ** 2.0)
     utils.debug("True difference PGM:", tv_true_error_pgm)
-    tv_true_error_egm = np.sum((beta1D - egm.beta) ** 2.0) \
+    tv_true_error_egm = np.sum((beta1D - egm._beta) ** 2.0) \
                         / np.sum(beta1D ** 2.0)
     utils.debug("True difference EGM:", tv_true_error_egm)
     assert tv_true_error_pgm < 0.001
@@ -384,10 +384,10 @@ def test():
     assert tv_true_error_pgm < en_true_error_pgm
     assert tv_true_error_egm < en_true_error_egm
 
-    tv_ols_diff_pgm = np.sum((betaOLS - pgm.beta) ** 2.0) \
+    tv_ols_diff_pgm = np.sum((betaOLS - pgm._beta) ** 2.0) \
                         / np.sum(betaOLS ** 2.0)
     utils.debug("Difference to OLS EGM:", tv_ols_diff_pgm)
-    tv_ols_diff_egm = np.sum((betaOLS - egm.beta) ** 2.0) \
+    tv_ols_diff_egm = np.sum((betaOLS - egm._beta) ** 2.0) \
                         / np.sum(betaOLS ** 2.0)
     utils.debug("Difference to OLS PGM:", tv_ols_diff_egm)
     assert tv_ols_diff_pgm < 0.43
@@ -397,11 +397,11 @@ def test():
     assert tv_ols_diff_pgm > en_ols_diff_pgm
     assert tv_ols_diff_egm > en_ols_diff_pgm
 
-    tv_diff_egm_pgm = np.sum((pgm.beta - egm.beta) ** 2.0) \
-                        / np.sum(pgm.beta ** 2.0)
+    tv_diff_egm_pgm = np.sum((pgm._beta - egm._beta) ** 2.0) \
+                        / np.sum(pgm._beta ** 2.0)
     utils.debug("Difference EGM -- PGM:", tv_diff_egm_pgm)
-    tv_diff_pgm_egm = np.sum((pgm.beta - egm.beta) ** 2.0) \
-                        / np.sum(egm.beta ** 2.0)
+    tv_diff_pgm_egm = np.sum((pgm._beta - egm._beta) ** 2.0) \
+                        / np.sum(egm._beta ** 2.0)
     utils.debug("Difference PGM -- EGM:", tv_diff_pgm_egm)
     assert tv_diff_egm_pgm < 0.001
     assert tv_diff_pgm_egm < 0.001
@@ -412,10 +412,10 @@ def test():
     assert tv_diff_egm_pgm > en_diff_egm_pgm
     assert tv_diff_pgm_egm > en_diff_pgm_egm
 
-    tv_r2_pgm = 1.0 - np.sum((y - np.dot(X, pgm.beta)) ** 2.0) \
+    tv_r2_pgm = 1.0 - np.sum((y - np.dot(X, pgm._beta)) ** 2.0) \
                         / np.sum(y ** 2.0)
     utils.debug("R2 PGM:", tv_r2_pgm)
-    tv_r2_egm = 1.0 - np.sum((y - np.dot(X, egm.beta)) ** 2.0) \
+    tv_r2_egm = 1.0 - np.sum((y - np.dot(X, egm._beta)) ** 2.0) \
                         / np.sum(y ** 2.0)
     utils.debug("R2 EGM:", tv_r2_egm)
     assert abs(tv_r2_pgm - 1.0) < 0.00005
@@ -442,30 +442,30 @@ def test():
 #    f = pgm.get_algorithm().f
 #
 #    plot.subplot(2, 2, 1)
-#    plot.plot(beta1D[:, 0], '-', pgm.beta[:, 0], '*')
+#    plot.plot(beta1D[:, 0], '-', pgm._beta[:, 0], '*')
 #    plot.title("Linear regression + L1 + TV (%d, %f)" % (len(f), f[-1]))
 #
 #    plot.subplot(2, 2, 2)
-#    plot.imshow(np.reshape(pgm.beta, (pz, py, px))[0, :, :],
+#    plot.imshow(np.reshape(pgm._beta, (pz, py, px))[0, :, :],
 #                interpolation='nearest', cmap=cm.gist_rainbow)
 
-    egm = models.EGMLinearRegressionL1L2TV(l, 0.0005, gamma, (pz, py, px))
+    egm = models.EGMRidgeRegressionL1TV(l, 0.0005, gamma, (pz, py, px))
     egm.set_max_iter(maxit)
     egm.set_tolerance(eps)
     egm.fit(X, y)
 #    f = egm.get_algorithm().f
 #
 #    plot.subplot(2, 2, 3)
-#    plot.plot(beta1D[:, 0], '-', egm.beta[:, 0], '*')
+#    plot.plot(beta1D[:, 0], '-', egm._beta[:, 0], '*')
 #    plot.title("Linear regression + L1 + TV (%d, %f)" % (len(f), f[-1]))
 #
 #    plot.subplot(2, 2, 4)
-#    plot.imshow(np.reshape(egm.beta, (pz, py, px))[0, :, :],
+#    plot.imshow(np.reshape(egm._beta, (pz, py, px))[0, :, :],
 #                interpolation='nearest', cmap=cm.gist_rainbow)
 
-    lassotv_pgm_ss = np.sum(pgm.beta ** 2.0)
+    lassotv_pgm_ss = np.sum(pgm._beta ** 2.0)
     utils.debug("SS beta: ", lassotv_pgm_ss)
-    lassotv_egm_ss = np.sum(egm.beta ** 2.0)
+    lassotv_egm_ss = np.sum(egm._beta ** 2.0)
     utils.debug("SS beta: ", lassotv_egm_ss)
     assert lassotv_pgm_ss < lassotv_egm_ss
     assert lassotv_pgm_ss > lr_pgm_ss
@@ -473,10 +473,10 @@ def test():
     assert lassotv_pgm_ss > en_pgm_ss
     assert lassotv_egm_ss > en_egm_ss
 
-    lassotv_true_error_pgm = np.sum((beta1D - pgm.beta) ** 2.0) \
+    lassotv_true_error_pgm = np.sum((beta1D - pgm._beta) ** 2.0) \
                         / np.sum(beta1D ** 2.0)
     utils.debug("True difference PGM:", lassotv_true_error_pgm)
-    lassotv_true_error_egm = np.sum((beta1D - egm.beta) ** 2.0) \
+    lassotv_true_error_egm = np.sum((beta1D - egm._beta) ** 2.0) \
                         / np.sum(beta1D ** 2.0)
     utils.debug("True difference EGM:", lassotv_true_error_egm)
     assert lassotv_true_error_pgm < 0.0005
@@ -491,10 +491,10 @@ def test():
     assert lassotv_true_error_pgm < tv_true_error_pgm
     assert lassotv_true_error_egm < tv_true_error_egm
 
-    lassotv_ols_diff_pgm = np.sum((betaOLS - pgm.beta) ** 2.0) \
+    lassotv_ols_diff_pgm = np.sum((betaOLS - pgm._beta) ** 2.0) \
                         / np.sum(betaOLS ** 2.0)
     utils.debug("Difference to OLS EGM:", lassotv_ols_diff_pgm)
-    lassotv_ols_diff_egm = np.sum((betaOLS - egm.beta) ** 2.0) \
+    lassotv_ols_diff_egm = np.sum((betaOLS - egm._beta) ** 2.0) \
                         / np.sum(betaOLS ** 2.0)
     utils.debug("Difference to OLS PGM:", lassotv_ols_diff_egm)
     assert lassotv_ols_diff_pgm < 0.44
@@ -504,11 +504,11 @@ def test():
     assert lassotv_ols_diff_pgm > en_ols_diff_pgm
     assert lassotv_ols_diff_egm > en_ols_diff_pgm
 
-    lassotv_diff_egm_pgm = np.sum((pgm.beta - egm.beta) ** 2.0) \
-                        / np.sum(pgm.beta ** 2.0)
+    lassotv_diff_egm_pgm = np.sum((pgm._beta - egm._beta) ** 2.0) \
+                        / np.sum(pgm._beta ** 2.0)
     utils.debug("Difference EGM -- PGM:", lassotv_diff_egm_pgm)
-    lassotv_diff_pgm_egm = np.sum((pgm.beta - egm.beta) ** 2.0) \
-                        / np.sum(egm.beta ** 2.0)
+    lassotv_diff_pgm_egm = np.sum((pgm._beta - egm._beta) ** 2.0) \
+                        / np.sum(egm._beta ** 2.0)
     utils.debug("Difference PGM -- EGM:", lassotv_diff_pgm_egm)
     assert lassotv_diff_egm_pgm < 0.0005
     assert lassotv_diff_pgm_egm < 0.0005
@@ -521,10 +521,10 @@ def test():
     assert lassotv_diff_egm_pgm < tv_diff_egm_pgm
     assert lassotv_diff_pgm_egm < tv_diff_pgm_egm
 
-    lassotv_r2_pgm = 1.0 - np.sum((y - np.dot(X, pgm.beta)) ** 2.0) \
+    lassotv_r2_pgm = 1.0 - np.sum((y - np.dot(X, pgm._beta)) ** 2.0) \
                         / np.sum(y ** 2.0)
     utils.debug("R2 PGM:", lassotv_r2_pgm)
-    lassotv_r2_egm = 1.0 - np.sum((y - np.dot(X, egm.beta)) ** 2.0) \
+    lassotv_r2_egm = 1.0 - np.sum((y - np.dot(X, egm._beta)) ** 2.0) \
                         / np.sum(y ** 2.0)
     utils.debug("R2 EGM:", lassotv_r2_egm)
     assert abs(lassotv_r2_pgm - 1.0) < 0.00005
@@ -552,11 +552,11 @@ def test():
 #    f = pgm.get_algorithm().f
 #
 #    plot.subplot(2, 2, 1)
-#    plot.plot(beta1D[:, 0], '-', pgm.beta[:, 0], '*')
+#    plot.plot(beta1D[:, 0], '-', pgm._beta[:, 0], '*')
 #    plot.title("Elastic Net + TV (%d, %f)" % (len(f), f[-1]))
 #
 #    plot.subplot(2, 2, 2)
-#    plot.imshow(np.reshape(pgm.beta, (pz, py, px))[0, :, :],
+#    plot.imshow(np.reshape(pgm._beta, (pz, py, px))[0, :, :],
 #                interpolation='nearest', cmap=cm.gist_rainbow)
 
     egm = models.EGMElasticNetTV(l, gamma, (pz, py, px))
@@ -566,16 +566,16 @@ def test():
 #    f = egm.get_algorithm().f
 #
 #    plot.subplot(2, 2, 3)
-#    plot.plot(beta1D[:, 0], '-', egm.beta[:, 0], '*')
+#    plot.plot(beta1D[:, 0], '-', egm._beta[:, 0], '*')
 #    plot.title("Elastic Net + TV (%d, %f)" % (len(f), f[-1]))
 #
 #    plot.subplot(2, 2, 4)
-#    plot.imshow(np.reshape(egm.beta, (pz, py, px))[0, :, :],
+#    plot.imshow(np.reshape(egm._beta, (pz, py, px))[0, :, :],
 #                interpolation='nearest', cmap=cm.gist_rainbow)
 
-    entv_pgm_ss = np.sum(pgm.beta ** 2.0)
+    entv_pgm_ss = np.sum(pgm._beta ** 2.0)
     utils.debug("SS beta: ", entv_pgm_ss)
-    entv_egm_ss = np.sum(egm.beta ** 2.0)
+    entv_egm_ss = np.sum(egm._beta ** 2.0)
     utils.debug("SS beta: ", entv_egm_ss)
     assert entv_pgm_ss > entv_egm_ss
     assert entv_pgm_ss > lr_pgm_ss
@@ -589,10 +589,10 @@ def test():
     assert entv_pgm_ss < lassotv_pgm_ss
     assert entv_egm_ss < lassotv_egm_ss
 
-    entv_true_error_pgm = np.sum((beta1D - pgm.beta) ** 2.0) \
+    entv_true_error_pgm = np.sum((beta1D - pgm._beta) ** 2.0) \
                         / np.sum(beta1D ** 2.0)
     utils.debug("True difference PGM:", entv_true_error_pgm)
-    entv_true_error_egm = np.sum((beta1D - egm.beta) ** 2.0) \
+    entv_true_error_egm = np.sum((beta1D - egm._beta) ** 2.0) \
                         / np.sum(beta1D ** 2.0)
     utils.debug("True difference EGM:", entv_true_error_egm)
     assert entv_true_error_pgm < 0.005
@@ -609,10 +609,10 @@ def test():
     assert entv_true_error_pgm > lassotv_true_error_pgm
     assert entv_true_error_egm > lassotv_true_error_egm
 
-    entv_ols_diff_pgm = np.sum((betaOLS - pgm.beta) ** 2.0) \
+    entv_ols_diff_pgm = np.sum((betaOLS - pgm._beta) ** 2.0) \
                         / np.sum(betaOLS ** 2.0)
     utils.debug("Difference to OLS EGM:", entv_ols_diff_pgm)
-    entv_ols_diff_egm = np.sum((betaOLS - egm.beta) ** 2.0) \
+    entv_ols_diff_egm = np.sum((betaOLS - egm._beta) ** 2.0) \
                         / np.sum(betaOLS ** 2.0)
     utils.debug("Difference to OLS PGM:", entv_ols_diff_egm)
     assert entv_ols_diff_pgm < 0.37
@@ -628,11 +628,11 @@ def test():
     assert entv_ols_diff_pgm < lassotv_ols_diff_pgm
     assert entv_ols_diff_egm < lassotv_ols_diff_egm
 
-    entv_diff_egm_pgm = np.sum((pgm.beta - egm.beta) ** 2.0) \
-                        / np.sum(pgm.beta ** 2.0)
+    entv_diff_egm_pgm = np.sum((pgm._beta - egm._beta) ** 2.0) \
+                        / np.sum(pgm._beta ** 2.0)
     utils.debug("Difference EGM -- PGM:", entv_diff_egm_pgm)
-    entv_diff_pgm_egm = np.sum((pgm.beta - egm.beta) ** 2.0) \
-                        / np.sum(egm.beta ** 2.0)
+    entv_diff_pgm_egm = np.sum((pgm._beta - egm._beta) ** 2.0) \
+                        / np.sum(egm._beta ** 2.0)
     utils.debug("Difference PGM -- EGM:", entv_diff_pgm_egm)
     assert entv_diff_egm_pgm < 0.00001
     assert entv_diff_pgm_egm < 0.00001
@@ -647,10 +647,10 @@ def test():
     assert entv_diff_egm_pgm < lassotv_diff_egm_pgm
     assert entv_diff_pgm_egm < lassotv_diff_pgm_egm
 
-    entv_r2_pgm = 1.0 - np.sum((y - np.dot(X, pgm.beta)) ** 2.0) \
+    entv_r2_pgm = 1.0 - np.sum((y - np.dot(X, pgm._beta)) ** 2.0) \
                         / np.sum(y ** 2.0)
     utils.debug("R2 PGM:", entv_r2_pgm)
-    entv_r2_egm = 1.0 - np.sum((y - np.dot(X, egm.beta)) ** 2.0) \
+    entv_r2_egm = 1.0 - np.sum((y - np.dot(X, egm._beta)) ** 2.0) \
                         / np.sum(y ** 2.0)
     utils.debug("R2 EGM:", entv_r2_egm)
     assert abs(entv_r2_pgm - 1.0) < 0.00005

@@ -98,6 +98,12 @@ class DataDependent(object):
         raise NotImplementedError('Abstract method "set_data" must be ' \
                                   'specialised!')
 
+    @abc.abstractmethod
+    def get_data(self):
+
+        raise NotImplementedError('Abstract method "get_data" must be ' \
+                                  'specialised!')
+
 
 class Convex(object):
 
@@ -170,6 +176,28 @@ class NesterovFunction(LossFunction,
         self._grad = None  # The function's gradient
         self.lambda_max = None  # The largest eigenvalue of A'.A
 
+    def f(self, beta, mu=None, **kwargs):
+
+        if self.gamma < utils.TOLERANCE:
+            return 0.0
+
+        self._alpha = self._compute_alpha(beta, mu)
+        self._grad = self._compute_grad(self._alpha)
+
+        alpha_sqsum = 0.0
+        for a in self._alpha:
+            alpha_sqsum += np.sum(a ** 2.0)
+
+        if mu == None:
+            mu = self.get_mu()
+
+        return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
+
+    def phi(self, beta, alpha):
+
+        grad = self._compute_grad(alpha)
+        return np.dot(beta.T, grad)[0, 0]
+
     def Lipschitz(self, mu=None):
         """The Lipschitz constant of the gradient.
 
@@ -231,6 +259,8 @@ class NesterovFunction(LossFunction,
             return [0.0] * len(self._A)
 
         if beta != None:
+            # TODO: Should these be saved to the class here?
+            # TODO: Grad need not be computed here!
             self._alpha = self._compute_alpha(beta, mu)
             self._grad = self._compute_grad(self._alpha)
 
@@ -242,7 +272,8 @@ class NesterovFunction(LossFunction,
             return np.zeros(beta.shape)
 
         if beta != None:
-#            self._compute_alpha_grad(beta, mu)
+            # TODO: Should these be saved to the class here?
+            # TODO: Allow alpha as argument to this function
             self._alpha = self._compute_alpha(beta, mu)
             self._grad = self._compute_grad(self._alpha)
 
@@ -287,11 +318,36 @@ class CombinedLossFunction(LossFunction, DataDependent):
     def set_data(self, *args, **kwargs):
 
         if hasattr(self.a, 'set_data'):
+
             self.a.set_data(*args, **kwargs)
+
         if hasattr(self.b, 'set_data'):
+
             self.b.set_data(*args, **kwargs)
 
+    def get_data(self):
+
+        data = tuple()
+        if hasattr(self.a, 'get_data'):
+
+            data += tuple(self.a.get_data())
+
+        if hasattr(self.b, 'get_data'):
+
+            data += tuple(self.b.get_data())
+
+        # Remove double, preserve order
+        ids = []
+        unique = []
+        for d in data:
+            if id(d) not in ids:
+                ids.append(id(d))
+                unique.append(d)
+
+        return tuple(unique)
+
     def f(self, *args, **kwargs):
+
         return self.a.f(*args, **kwargs) + self.b.f(*args, **kwargs)
 
 
@@ -313,8 +369,22 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
     def phi(self, beta, alpha):
 
-            grad = self._compute_grad(alpha)
-            return np.dot(beta.T, grad)[0, 0]
+        if isinstance(self.a, NesterovFunction) \
+                and isinstance(self.b, NesterovFunction):
+
+            return self.a.phi(beta, alpha) + self.b.phi(beta, alpha)
+
+        elif isinstance(self.a, NesterovFunction):
+
+            return self.a.phi(beta, alpha) + self.b.f(beta)
+
+        elif isinstance(self.b, NesterovFunction):
+
+            return self.a.f(beta) + self.b.phi(beta, alpha)
+
+        else:
+            raise ValueError('At least one loss function must be a ' \
+                             'NesterovFunction')
 
     def grad(self, *args, **kwargs):
 
@@ -502,6 +572,9 @@ class ZeroErrorFunction(Differentiable, LipschitzContinuous, DataDependent,
     def set_data(self, *args, **kwargs):
         pass
 
+    def get_data(self):
+        return tuple()
+
     def prox(self, beta, *args, **kwargs):
         return beta
 
@@ -525,6 +598,10 @@ class LinearRegressionError(LossFunction,
         self.y = y
 
         self.lipschitz = None
+
+    def get_data(self):
+
+        return self.X, self.y
 
     def f(self, beta, **kwargs):
 
@@ -565,6 +642,10 @@ class LogisticRegressionError(LossFunction,
         self.y = y
 
         self.lipschitz = None
+
+    def get_data(self):
+
+        return self.X, self.y
 
     def f(self, beta, *args, **kwargs):
 
@@ -627,6 +708,10 @@ class RidgeRegression(LossFunction,
 
         self.l_max = None
         self.l_min = None
+
+    def get_data(self):
+
+        return self.X, self.y
 
     def f(self, beta, **kwargs):
 
@@ -839,6 +924,14 @@ class ConstantNesterovCopy(NesterovFunction):
         # The loss function we duplicate
         self.function = function
 
+    def set_alpha(self, alpha):
+
+        self._alpha = alpha
+        self._grad = self.function._compute_grad(alpha)
+
+        self.__alpha = copy.deepcopy(self._alpha)
+        self.__grad = copy.deepcopy(self._grad)
+
     def f(self, *args, **kwargs):
         pass  # Set in the constructor
 
@@ -907,78 +1000,78 @@ class ConstantNesterovCopy(NesterovFunction):
         return self.__grad
 
 
-class ConstantNesterovFunction(NesterovFunction):
-    """Constructs a Nesterov loss function with constant A and alpha.
-    """
-    def __init__(self, gamma, mu, A, alpha, num_compacts, **kwargs):
-        """Construct a Nesterov loss function.
-
-        Parameters
-        ----------
-        gamma : The regularisation parameter for the nesterov penality.
-
-        mu : The Nesterov function regularisation parameter. Must be provided
-                unless you are using ContinuationRun.
-
-        A : The linear operator.
-
-        alpha : The optimal (or any fixed) dual variable.
-        """
-        super(NesterovFunction, self).__init__(**kwargs)
-
-        self.gamma = float(gamma)
-#        self.mu = float(mu)
-        self.set_mu(float(mu))
-        self._num_compacts = int(num_compacts)
-        self._A = copy.deepcopy(A)
-        self._At = [0] * len(A)
-        for i in xrange(len(A)):
-            self._At[i] = A[i].T
-        self._alpha = copy.deepcopy(alpha)
-
-        self._grad = self._compute_grad(alpha)  # The function's gradient
-        self.lambda_max = None  # The largest eigenvalue of A'.A
-
-    def f(self, beta, mu=None, smooth=True, **kwargs):
-
-        if self.gamma < utils.TOLERANCE:
-            return 0.0
-
-        alpha_sqsum = 0.0
-        if smooth:
-            for a in self._alpha:
-                alpha_sqsum += np.sum(a ** 2.0)
-
-        if mu == None:
-            mu = self.get_mu()
-
-        return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
-
-    def _compute_alpha(self, *args, **kwargs):
-
-        return self._alpha
-
-    def alpha(self, *args, **kwargs):
-
-        if self.gamma < utils.TOLERANCE:
-            return [0.0] * len(self._A)
-
-        return self._alpha
-
-    def grad(self, beta=None, mu=None):
-
-        if self.gamma < utils.TOLERANCE:
-            return np.zeros(beta.shape)
-
-        return self._grad
-
-    def projection(self, *alpha):
-
-        return alpha
-
-    def precompute(self, *args, **kwargs):
-
-        pass
+#class ConstantNesterovFunction(NesterovFunction):
+#    """Constructs a Nesterov loss function with constant A and alpha.
+#    """
+#    def __init__(self, gamma, mu, A, alpha, num_compacts, **kwargs):
+#        """Construct a Nesterov loss function.
+#
+#        Parameters
+#        ----------
+#        gamma : The regularisation parameter for the nesterov penality.
+#
+#        mu : The Nesterov function regularisation parameter. Must be provided
+#                unless you are using ContinuationRun.
+#
+#        A : The linear operator.
+#
+#        alpha : The optimal (or any fixed) dual variable.
+#        """
+#        super(NesterovFunction, self).__init__(**kwargs)
+#
+#        self.gamma = float(gamma)
+##        self.mu = float(mu)
+#        self.set_mu(float(mu))
+#        self._num_compacts = int(num_compacts)
+#        self._A = copy.deepcopy(A)
+#        self._At = [0] * len(A)
+#        for i in xrange(len(A)):
+#            self._At[i] = A[i].T
+#        self._alpha = copy.deepcopy(alpha)
+#
+#        self._grad = self._compute_grad(alpha)  # The function's gradient
+#        self.lambda_max = None  # The largest eigenvalue of A'.A
+#
+#    def f(self, beta, mu=None, smooth=True, **kwargs):
+#
+#        if self.gamma < utils.TOLERANCE:
+#            return 0.0
+#
+#        alpha_sqsum = 0.0
+#        if smooth:
+#            for a in self._alpha:
+#                alpha_sqsum += np.sum(a ** 2.0)
+#
+#        if mu == None:
+#            mu = self.get_mu()
+#
+#        return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
+#
+#    def _compute_alpha(self, *args, **kwargs):
+#
+#        return self._alpha
+#
+#    def alpha(self, *args, **kwargs):
+#
+#        if self.gamma < utils.TOLERANCE:
+#            return [0.0] * len(self._A)
+#
+#        return self._alpha
+#
+#    def grad(self, beta=None, mu=None):
+#
+#        if self.gamma < utils.TOLERANCE:
+#            return np.zeros(beta.shape)
+#
+#        return self._grad
+#
+#    def projection(self, *alpha):
+#
+#        return alpha
+#
+#    def precompute(self, *args, **kwargs):
+#
+#        pass
 
 
 class TotalVariation(NesterovFunction):
@@ -1040,18 +1133,20 @@ class TotalVariation(NesterovFunction):
             return 0.0
 
         if smooth:
-#            self._compute_alpha_grad(beta, mu)
-            self._alpha = self._compute_alpha(beta, mu)
-            self._grad = self._compute_grad(self._alpha)
 
-            alpha_sqsum = 0.0
-            for a in self._alpha:
-                alpha_sqsum += np.sum(a ** 2.0)
+            return super(TotalVariation, self).f(beta, mu)
 
-            if mu == None:
-                mu = self.get_mu()
-
-            return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
+#            self._alpha = self._compute_alpha(beta, mu)
+#            self._grad = self._compute_grad(self._alpha)
+#
+#            alpha_sqsum = 0.0
+#            for a in self._alpha:
+#                alpha_sqsum += np.sum(a ** 2.0)
+#
+#            if mu == None:
+#                mu = self.get_mu()
+#
+#            return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
 
         else:
 #            sqsum = 0.0
@@ -1064,10 +1159,10 @@ class TotalVariation(NesterovFunction):
 
             return sqsum  # Gamma is already incorporated in A
 
-    def phi(self, beta, alpha):
-
-        grad = self._compute_grad(alpha)
-        return np.dot(beta.T, grad)[0, 0]
+#    def phi(self, beta, alpha):
+#
+#        grad = self._compute_grad(alpha)
+#        return np.dot(beta.T, grad)[0, 0]
 
 #    def grad(self, beta=None, mu=None):
 #
@@ -1273,26 +1368,28 @@ class SmoothL1(NesterovFunction):
             return 0.0
 
         if smooth:
-#            self._compute_alpha_grad(beta, mu)
-            self._alpha = self._compute_alpha(beta, mu)
-            self._grad = self._compute_grad(self._alpha)
 
-            alpha_sqsum = 0.0
-            for a in self._alpha:
-                alpha_sqsum += np.sum(a ** 2.0)
+            return super(SmoothL1, self).f(beta, mu)
 
-            if mu == None:
-                mu = self.get_mu()
-
-            return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
+#            self._alpha = self._compute_alpha(beta, mu)
+#            self._grad = self._compute_grad(self._alpha)
+#
+#            alpha_sqsum = 0.0
+#            for a in self._alpha:
+#                alpha_sqsum += np.sum(a ** 2.0)
+#
+#            if mu == None:
+#                mu = self.get_mu()
+#
+#            return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
 
         else:
             return self.gamma * utils.norm1(beta)
 
-    def phi(self, beta, alpha):
-
-        grad = self._compute_grad(alpha)
-        return np.dot(beta.T, grad)[0, 0]
+#    def phi(self, beta, alpha):
+#
+#        grad = self._compute_grad(alpha)
+#        return np.dot(beta.T, grad)[0, 0]
 
 #    def grad(self, beta=None, mu=None):
 #
@@ -1445,19 +1542,20 @@ class GroupLassoOverlap(NesterovFunction):
             return 0.0
 
         if smooth:
-#            self._compute_alpha_grad(beta, mu)
-            self._alpha = self._compute_alpha(beta, mu)
-            self._grad = self._compute_grad(self._alpha)
 
-            alpha = self.alpha()
-            alpha_sqsum = 0.0
-            for a in alpha:
-                alpha_sqsum += np.sum(a ** 2.0)
+            return super(GroupLassoOverlap, self).f(beta, mu)
 
-            if mu == None:
-                mu = self.get_mu()
-
-            return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
+#            self._alpha = self._compute_alpha(beta, mu)
+#            self._grad = self._compute_grad(self._alpha)
+#
+#            alpha_sqsum = 0.0
+#            for a in self._alpha:
+#                alpha_sqsum += np.sum(a ** 2.0)
+#
+#            if mu == None:
+#                mu = self.get_mu()
+#
+#            return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
 
         else:
             sqsum = 0.0
@@ -1466,10 +1564,10 @@ class GroupLassoOverlap(NesterovFunction):
 
             return sqsum  # Gamma is already incorporated in A
 
-    def phi(self, beta, alpha):
-
-        grad = self._compute_grad(alpha)
-        return np.dot(beta.T, grad)[0, 0]
+#    def phi(self, beta, alpha):
+#
+#        grad = self._compute_grad(alpha)
+#        return np.dot(beta.T, grad)[0, 0]
 
 #    def grad(self, beta=None, mu=None):
 #

@@ -10,19 +10,25 @@
 
 ./structured/loss_functions.py:
 ------------------------------
-802: # TODO: Make __getattr__ and __setattr__ handle all the fields of the
-803: #       Nesterov function in order to avoid keeping references here as
-804: #       well!
+262: # TODO: Should these be saved to the class here?
+263: # TODO: Grad need not be computed here!
 
-1027: # TODO: This is only true if zero-rows have been removed!
+275: # TODO: Should these be saved to the class here?
+276: # TODO: Allow alpha as argument to this function
 
-1101: # TODO: Change so that projection instead always takes a list
+887: # TODO: Make __getattr__ and __setattr__ handle all the fields of the
+888: #       Nesterov function in order to avoid keeping references here as
+889: #       well!
 
-1232: # TODO: This is only true if zero-rows have been removed!
+1120: # TODO: This is only true if zero-rows have been removed!
 
-1345: # TODO: Change so that projection instead always takes a list
+1196: # TODO: Change so that projection instead always takes a list
 
-1523: # TODO: Change so that projection instead always takes a list
+1327: # TODO: This is only true if zero-rows have been removed!
+
+1442: # TODO: Change so that projection instead always takes a list
+
+1621: # TODO: Change so that projection instead always takes a list
 
 ./structured/modes.py:
 ---------------------
@@ -30,19 +36,15 @@
 
 ./structured/models.py:
 ----------------------
-1215: # TODO: Potential memory issues here, since algorithms are not
-1216: # stateless!
+1254: # TODO: Potential memory issues here, since algorithms are not
+1255: # stateless!
 
-1231: # TODO: Potential memory issues here, since algorithms are not
-1232: # stateless!
-1233: #        self.set_h(model.get_h())
+1257: # TODO: Potential memory issues here, since algorithms are not
+1258: # stateless!
 
-1243: # TODO: Potential memory issues here, since algorithms are not yet
-1244: # stateless!
+1751: # TODO: Decide if phi(beta, alpha) should be in the general API for all
+1752: # Nesterov functions.
 
-1698: # TODO: Decide if phi(beta, alpha) should be in the general API for all
-1699: # Nesterov functions.
-
-1714: # TODO: Warning! Be ware that this may be changed in the
-1715: # constructors!
+1845: # TODO: Decide if phi(beta, alpha) should be in the general API for all
+1846: # Nesterov functions.
 
