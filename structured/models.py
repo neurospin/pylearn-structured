@@ -1821,7 +1821,7 @@ class RidgeRegressionSmoothL1TV(RidgeRegression):
         """
         return self.rr.f(beta) + self.l1_tv.phi(beta, alpha)
 
-    def beta(self, alpha=None, mu=None):
+    def beta(self, alpha, mu=None):
         """Computes the beta that minimises the dual function value for the
         current computed or given alpha.
         """
@@ -1831,10 +1831,10 @@ class RidgeRegressionSmoothL1TV(RidgeRegression):
             XtX = np.dot(X.T, X)
             self._invXXlI = np.linalg.inv(XtX + self.rr.l * np.eye(*XtX.shape))
 
-        if alpha == None:
-            Aalpha = self.l1_tv._compute_grad(self.l1_tv._alpha)
-        else:
-            Aalpha = self.l1_tv._compute_grad(alpha)
+#        if alpha == None:
+#            Aalpha = self.l1_tv._compute_grad(self.l1_tv._alpha)
+#        else:
+        Aalpha = self.l1_tv._compute_grad(alpha)
 
         beta = np.dot(self._invXXlI, np.dot(X.T, y) - Aalpha)
 

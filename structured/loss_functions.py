@@ -522,7 +522,11 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
         if hasattr(self.a, '_compute_grad') \
                 and hasattr(self.b, '_compute_grad'):
-            return self.a._compute_grad(alpha) + self.b._compute_grad(alpha)
+
+            groups_a = self.a.num_groups()
+
+            return self.a._compute_grad(alpha[:groups_a]) \
+                    + self.b._compute_grad(alpha[groups_a:])
 
         elif hasattr(self.a, '_compute_grad'):
             return self.a._compute_grad(alpha)
