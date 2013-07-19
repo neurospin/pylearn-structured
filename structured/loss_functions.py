@@ -20,6 +20,8 @@ __all__ = ['LossFunction', 'LipschitzContinuous', 'Differentiable',
            'StronglyConvex',
            'RidgeRegression',
 
+           'LinearLossFunction',
+
            'ProximalOperator',
            'ZeroErrorFunction',
            'L1', 'L2', 'ElasticNet',
@@ -176,6 +178,8 @@ class NesterovFunction(LossFunction,
         self._grad = None  # The function's gradient
         self.lambda_max = None  # The largest eigenvalue of A'.A
 
+        self._use_mu = True
+
     def f(self, beta, mu=None, **kwargs):
 
         if self.gamma < utils.TOLERANCE:
@@ -191,12 +195,28 @@ class NesterovFunction(LossFunction,
         if mu == None:
             mu = self.get_mu()
 
-        return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
+        if self.use_mu():
+            return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
+        else:
+            return np.dot(beta.T, self.grad())[0, 0]
 
     def phi(self, beta, alpha):
 
         grad = self._compute_grad(alpha)
         return np.dot(beta.T, grad)[0, 0]
+
+    def grad(self, beta=None, mu=None):
+
+        if self.gamma < utils.TOLERANCE:
+            return np.zeros(beta.shape)
+
+        if beta != None:
+            # TODO: Should these be saved to the class here?
+            # TODO: Allow alpha as argument to this function
+            self._alpha = self._compute_alpha(beta, mu)
+            self._grad = self._compute_grad(self._alpha)
+
+        return self._grad
 
     def Lipschitz(self, mu=None):
         """The Lipschitz constant of the gradient.
@@ -214,10 +234,13 @@ class NesterovFunction(LossFunction,
             us = A.dot(v)
             self.lambda_max = np.sum(us ** 2.0)
 
-        if mu != None:
-            return self.lambda_max / mu
+        if self.use_mu():
+            if mu != None:
+                return self.lambda_max / mu
+            else:
+                return self.lambda_max / self.get_mu()
         else:
-            return self.lambda_max / self.get_mu()
+            return self.lambda_max
 
     def A(self):
         """Returns a list of the A blocks that constitute the A matrix, the
@@ -241,6 +264,13 @@ class NesterovFunction(LossFunction,
         """
         self.mu = float(mu)
 
+    def use_mu(self, use_mu=None):
+
+        if use_mu != None:
+            self._use_mu = float(use_mu)
+
+        return self._use_mu
+
     def num_groups(self):
         """Returns the number of groups, i.e. the number of A blocks.
         """
@@ -260,24 +290,11 @@ class NesterovFunction(LossFunction,
 
         if beta != None:
             # TODO: Should these be saved to the class here?
-            # TODO: Grad need not be computed here!
+            # TODO: Does grad need to be computed here?
             self._alpha = self._compute_alpha(beta, mu)
             self._grad = self._compute_grad(self._alpha)
 
         return self._alpha
-
-    def grad(self, beta=None, mu=None):
-
-        if self.gamma < utils.TOLERANCE:
-            return np.zeros(beta.shape)
-
-        if beta != None:
-            # TODO: Should these be saved to the class here?
-            # TODO: Allow alpha as argument to this function
-            self._alpha = self._compute_alpha(beta, mu)
-            self._grad = self._compute_grad(self._alpha)
-
-        return self._grad
 
     def _compute_grad(self, alpha):
 
@@ -306,7 +323,8 @@ class NesterovFunction(LossFunction,
                                   'specialised!')
 
 
-class CombinedLossFunction(LossFunction, DataDependent):
+class CombinedLossFunction(LossFunction, LipschitzContinuous, Differentiable,
+                           DataDependent):
 
     def __init__(self, a, b, **kwargs):
 
@@ -314,6 +332,28 @@ class CombinedLossFunction(LossFunction, DataDependent):
 
         self.a = a
         self.b = b
+
+    def f(self, *args, **kwargs):
+
+        return self.a.f(*args, **kwargs) + self.b.f(*args, **kwargs)
+
+    def grad(self, *args, **kwargs):
+
+        return self.a.grad(*args, **kwargs) + self.b.grad(*args, **kwargs)
+
+    def Lipschitz(self):
+
+        if isinstance(self.a, LipschitzContinuous) \
+                and isinstance(self.b, LipschitzContinuous):
+            return self.a.Lipschitz() + self.b.Lipschitz()
+
+        elif isinstance(self.a, LipschitzContinuous):
+            return self.a.Lipschitz()
+
+        elif isinstance(self.b, LipschitzContinuous):
+            return self.b.Lipschitz()
+
+        return 0
 
     def set_data(self, *args, **kwargs):
 
@@ -346,12 +386,8 @@ class CombinedLossFunction(LossFunction, DataDependent):
 
         return tuple(unique)
 
-    def f(self, *args, **kwargs):
 
-        return self.a.f(*args, **kwargs) + self.b.f(*args, **kwargs)
-
-
-class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
+class CombinedNesterovLossFunction(NesterovFunction, DataDependent):
     """A loss function contructed as the sum of two loss functions, where
     at least one of them is a Nesterov function, i.e. a loss function computed
     using the Nestrov technique.
@@ -363,28 +399,31 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
     where at least one of g1 or g2 is a Nesterov functions.
     """
 
-    def __init__(self, a, b):
+    def __init__(self, a, b, **kwargs):
 
-        super(CombinedNesterovLossFunction, self).__init__(a=a, b=b)
+        super(CombinedNesterovLossFunction, self).__init__(**kwargs)
+
+        self.a = a
+        self.b = b
+
+    def f(self, *args, **kwargs):
+
+        return self.a.f(*args, **kwargs) + self.b.f(*args, **kwargs)
 
     def phi(self, beta, alpha):
 
         if isinstance(self.a, NesterovFunction) \
                 and isinstance(self.b, NesterovFunction):
-
             return self.a.phi(beta, alpha) + self.b.phi(beta, alpha)
 
         elif isinstance(self.a, NesterovFunction):
-
             return self.a.phi(beta, alpha) + self.b.f(beta)
 
         elif isinstance(self.b, NesterovFunction):
-
             return self.a.f(beta) + self.b.phi(beta, alpha)
 
         else:
-            raise ValueError('At least one loss function must be a ' \
-                             'NesterovFunction')
+            return self.a.f(beta) + self.b.f(beta)
 
     def grad(self, *args, **kwargs):
 
@@ -392,19 +431,18 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
     def Lipschitz(self, mu=None):
 
-        if isinstance(self.a, LipschitzContinuous) \
-                and isinstance(self.b, LipschitzContinuous):
+        if isinstance(self.a, NesterovFunction) \
+                and isinstance(self.b, NesterovFunction):
             return self.a.Lipschitz(mu=mu) + self.b.Lipschitz(mu=mu)
 
-        elif isinstance(self.a, LipschitzContinuous):
+        elif isinstance(self.a, NesterovFunction):
             return self.a.Lipschitz(mu=mu) + self.b.Lipschitz()
 
-        elif isinstance(self.b, LipschitzContinuous):
+        elif isinstance(self.b, NesterovFunction):
             return self.a.Lipschitz() + self.b.Lipschitz(mu=mu)
 
         else:
-            raise ValueError('At least one loss function must be ' \
-                             'LipschitzContinuous')
+            return self.a.Lipschitz() + self.b.Lipschitz()
 
     def precompute(self, *args, **kwargs):
 
@@ -414,7 +452,7 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
         if hasattr(self.b, 'precompute'):
             self.b.precompute(*args, **kwargs)
 
-    def alpha(self, beta=None, mu=None):
+    def alpha(self, beta=None):
 
         if hasattr(self.a, 'alpha') and hasattr(self.b, 'alpha'):
             return self.a.alpha(beta) + self.b.alpha(beta)  # Merge
@@ -491,7 +529,7 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
             groups_a = self.a.num_groups()
 
             return self.a.projection(*alpha[:groups_a]) \
-                 + self.b.projection(*alpha[groups_a:])
+                    + self.b.projection(*alpha[groups_a:])
 
         elif hasattr(self.a, 'projection'):
             return self.a.projection(*alpha)
@@ -555,6 +593,45 @@ class CombinedNesterovLossFunction(CombinedLossFunction, NesterovFunction):
 
         if hasattr(self.b, 'set_mu'):
             self.b.set_mu(mu)
+
+    def use_mu(self, use_mu=None):
+
+        if hasattr(self.a, 'use_mu'):
+            self.a.use_mu(use_mu)
+
+        if hasattr(self.b, 'use_mu'):
+            self.b.use_mu(use_mu)
+
+    def set_data(self, *args, **kwargs):
+
+        if hasattr(self.a, 'set_data'):
+
+            self.a.set_data(*args, **kwargs)
+
+        if hasattr(self.b, 'set_data'):
+
+            self.b.set_data(*args, **kwargs)
+
+    def get_data(self):
+
+        data = tuple()
+        if hasattr(self.a, 'get_data'):
+
+            data += tuple(self.a.get_data())
+
+        if hasattr(self.b, 'get_data'):
+
+            data += tuple(self.b.get_data())
+
+        # Remove double, preserve order
+        ids = []
+        unique = []
+        for d in data:
+            if id(d) not in ids:
+                ids.append(id(d))
+                unique.append(d)
+
+        return tuple(unique)
 
 
 class ZeroErrorFunction(Differentiable, LipschitzContinuous, DataDependent,
@@ -696,8 +773,7 @@ class RidgeRegression(LossFunction,
                       DataDependent):
     """Loss function for ridge regression. Represents the function:
 
-        #f(b) = norm(y - X*b)² + lambda*norm(b)²
-        f(b) = (1.0 / 2.0) * norm(y - X*b)² + (lambda / 2.0) * norm(b)²
+        f(b) = (1.0 / 2.0) * norm(y - X.b)² + (lambda / 2.0) * norm(b)²
     """
     def __init__(self, l, **kwargs):
 
@@ -722,7 +798,7 @@ class RidgeRegression(LossFunction,
 #        return (np.sum((self.y - np.dot(self.X, beta)) ** 2.0) \
 #                + self.l * np.sum(beta ** 2.0))
         return 0.5 * (np.sum((self.y - np.dot(self.X, beta)) ** 2.0) \
-                + self.l * np.sum(beta ** 2.0))
+                        + self.l * np.sum(beta ** 2.0))
 
     def grad(self, beta, *args, **kwargs):
 
@@ -752,6 +828,33 @@ class RidgeRegression(LossFunction,
 
 #        return 2.0 * self.l_min
         return self.l_min
+
+
+class LinearLossFunction(LossFunction,
+                         Convex,
+                         Differentiable,
+                         LipschitzContinuous):
+    """Loss function for a linear loss. Represents the function:
+
+        f(b) = a'b
+    """
+    def __init__(self, a, **kwargs):
+
+        super(LinearLossFunction, self).__init__(**kwargs)
+
+        self.a = a
+
+    def f(self, beta, **kwargs):
+
+        return np.dot(self.a.T, beta)[0, 0]
+
+    def grad(self, beta, *args, **kwargs):
+
+        return self.a
+
+    def Lipschitz(self, *args, **kwargs):
+
+        return 0.0
 
 
 class L1(ProximalOperator):
@@ -898,8 +1001,8 @@ class ConstantNesterovCopy(NesterovFunction):
         self._At = function.At()
         self.set_mu(function.get_mu())
         self._num_compacts = function.num_compacts()
-        self._alpha = function.alpha()
-        self._grad = function.grad()
+        self._alpha = copy.deepcopy(function.alpha())
+        self._grad = copy.deepcopy(function.grad())
         # Copies of the "true", constant, internal alpha and grad!
         self.__alpha = copy.deepcopy(self._alpha)
         self.__grad = copy.deepcopy(self._grad)
@@ -918,91 +1021,59 @@ class ConstantNesterovCopy(NesterovFunction):
 
         # Methods defined in the subclasses
         self.f = function.f
-        self.grad = function.grad
+#        self.grad = function.grad
 
         # Abstract methods defined in the subclasses
         self.num_compacts = function.num_compacts
-        self.projection = function.projection
-        self.precompute = function.precompute
+#        self.projection = function.projection
+#        self.precompute = function.precompute
 
         # The loss function we duplicate
         self.function = function
 
-    def set_alpha(self, alpha):
-
-        self._alpha = alpha
-        self._grad = self.function._compute_grad(alpha)
-
-        self.__alpha = copy.deepcopy(self._alpha)
-        self.__grad = copy.deepcopy(self._grad)
-
     def f(self, *args, **kwargs):
+
         pass  # Set in the constructor
 
-    def num_compacts(self, *args, **kwargs):
-        pass  # Set in the constructor
+    def phi(self, beta, alpha=None):
 
-    def precompute(self, *args, **kwargs):
-        pass  # Set in the constructor
-
-    def projection(self, *args, **kwargs):
-        pass  # Set in the constructor
-
-#    def _compute_alpha_grad(self, *args, **kwargs):
-#        """Used by most (all?) Nesterov loss functions to compute a new value
-#        of _alpha and _grad. Since this class controls those, and they are
-#        constant, this function should not do anything.
-#        """
-#        pass
-
-    def _compute_alpha(self, *args, **kwargs):
-        """Used by most (all?) Nesterov loss functions to compute a new value
-        of _alpha. Since this class controls it, and it is constant, this
-        function should not do anything.
-        """
-        pass
-
-    def _compute_grad(self, *args, **kwargs):
-        """Used by most (all?) Nesterov loss functions to compute a new value
-        of _grad. Since this class controls it, and it is constant, this
-        function should not do anything.
-        """
-        pass
-
-#    def __setattr__(self, name, value):
-#
-#        if name != '_alpha' and name != 'alpha' \
-#                and name != '_grad' and name != 'grad':
-#
-#            super(NesterovDualFunction, self).__setattr__(name, value)
-##            self.__dict__[name] = value  # Set attribute of this class
-##            self.function.__setattr__(name, value)
-
-#    def __delattr__(self, name):
-#
-#        if name != '_alpha' and name != 'alpha' \
-#                and name != '_grad' and name != 'grad':
-#            super(NesterovDualFunction, self).__delattr__(name)
-##            self.function.__delattr__(name)
-
-#    def __getattr__(self, name):
-#
-#        if name == '_alpha':
-#            return self.__alpha
-#
-#        if name == '_grad':
-#            return self.__grad
-#
-#        return super(NesterovDualFunction, self).__getattr__(name)
-
-    def alpha(self, *args, **kwargs):
-
-        return self.__alpha
+        return np.dot(beta.T, self.__grad)[0, 0]
 
     def grad(self, *args, **kwargs):
 
         return self.__grad
 
+    def alpha(self, *args, **kwargs):
+
+        return self.__alpha
+
+    def set_alpha(self, alpha):
+
+        self._alpha = copy.deepcopy(alpha)
+        self._grad = copy.deepcopy(self.function._compute_grad(alpha))
+
+        self.__alpha = copy.deepcopy(self._alpha)
+        self.__grad = copy.deepcopy(self._grad)
+
+    def num_compacts(self, *args, **kwargs):
+
+        pass  # Set in the constructor
+
+    def precompute(self, *args, **kwargs):
+
+        pass
+
+    def projection(self, *alpha):
+
+        return alpha
+
+    def _compute_alpha(self, *args, **kwargs):
+
+        return self.__alpha
+
+    def _compute_grad(self, *args, **kwargs):
+
+        return self.__grad
 
 #class ConstantNesterovFunction(NesterovFunction):
 #    """Constructs a Nesterov loss function with constant A and alpha.
@@ -1204,9 +1275,11 @@ class TotalVariation(NesterovFunction):
         asy = alpha[1]
         asz = alpha[2]
         asnorm = asx ** 2.0 + asy ** 2.0 + asz ** 2.0
-#        if np.min(asnorm) < 1.0:
-#            print np.min(asnorm)
-        i = asnorm > 1.0
+
+        if self.use_mu():
+            i = asnorm > 1.0
+        else:
+            i = asnorm > utils.TOLERANCE
 
         asnorm_i = asnorm[i] ** 0.5  # Square root is taken here. Faster.
         asx[i] = np.divide(asx[i], asnorm_i)
@@ -1223,7 +1296,10 @@ class TotalVariation(NesterovFunction):
         # Compute a*
         alpha = [0] * len(self._A)
         for i in xrange(len(self._A)):
-            alpha[i] = self._A[i].dot(beta) / mu
+            if self.use_mu():
+                alpha[i] = self._A[i].dot(beta) / mu
+            else:
+                alpha[i] = self._A[i].dot(beta)
 
         # Apply projection
         alpha = self.projection(*alpha)
@@ -1390,23 +1466,6 @@ class SmoothL1(NesterovFunction):
         else:
             return self.gamma * utils.norm1(beta)
 
-#    def phi(self, beta, alpha):
-#
-#        grad = self._compute_grad(alpha)
-#        return np.dot(beta.T, grad)[0, 0]
-
-#    def grad(self, beta=None, mu=None):
-#
-#        if self.gamma < utils.TOLERANCE:
-#            return np.zeros(beta.shape)
-#
-#        if beta != None:
-##            self._compute_alpha_grad(beta, mu)
-#            self._alpha = self._compute_alpha(beta, mu)
-#            self._grad = self._compute_grad(self._alpha)
-#
-#        return self._grad
-
     def Lipschitz(self, mu=None):
 
         if self.gamma < utils.TOLERANCE:
@@ -1422,33 +1481,23 @@ class SmoothL1(NesterovFunction):
 #        print self.lambda_max, " == ", lambda_max, "?"
 #        print "L1!!!"
 
-        if mu != None:
-            return self.lambda_max / mu
+        if self.use_mu():
+            if mu != None:
+                return self.lambda_max / mu
+            else:
+                return self.lambda_max / self.get_mu()
         else:
-            return self.lambda_max / self.get_mu()
-
-#    def alpha(self, beta=None, mu=None):
-#
-#        if self.gamma < utils.TOLERANCE:
-#            return [0.0]
-#
-#        if beta != None:
-##            self._compute_alpha_grad(beta, mu)
-#            self._alpha = self._compute_alpha(beta, mu)
-#            self._grad = self._compute_grad(self._alpha)
-#
-#        return self._alpha
-
-#    def num_compacts(self):
-#
-#        return self.num_variables
+            return self.lambda_max
 
     # TODO: Change so that projection instead always takes a list
     def projection(self, *alpha):
 
         a = alpha[0]
         anorm = np.abs(a)
-        i = anorm > 1.0
+        if self.use_mu():
+            i = anorm > 1.0
+        else:
+            i = anorm > utils.TOLERANCE
         asnorm_i = anorm[i]
 
         a[i] = np.divide(a[i], asnorm_i)
@@ -1463,7 +1512,10 @@ class SmoothL1(NesterovFunction):
         # Compute a*
 #        _alpha[0] = self._A[0].dot(beta) / mu
         alpha = [0]
-        alpha[0] = (self.gamma / mu) * beta
+        if self.use_mu():
+            alpha[0] = (self.gamma / mu) * beta
+        else:
+            alpha[0] = self.gamma * beta
 
         # Apply projection
         alpha = self.projection(*alpha)
@@ -1568,23 +1620,6 @@ class GroupLassoOverlap(NesterovFunction):
 
             return sqsum  # Gamma is already incorporated in A
 
-#    def phi(self, beta, alpha):
-#
-#        grad = self._compute_grad(alpha)
-#        return np.dot(beta.T, grad)[0, 0]
-
-#    def grad(self, beta=None, mu=None):
-#
-#        if self.gamma < utils.TOLERANCE:
-#            return np.zeros(beta.shape)
-#
-#        if beta != None:
-##            self._compute_alpha_grad(beta, mu)
-#            self._alpha = self._compute_alpha(beta, mu)
-#            self._grad = self._compute_grad(self._alpha)
-#
-#        return self._grad
-
     def Lipschitz(self, mu=None):
 
         if self.gamma < utils.TOLERANCE:
@@ -1598,29 +1633,13 @@ class GroupLassoOverlap(NesterovFunction):
 
 #        test = self.lambda_max / self.get_mu()
 
-#        print "lambda_max : ", test
-        if mu != None:
-#            print "max col sum: ", (self.max_col_norm / mu)
-            return self.max_col_norm / mu
+        if self.use_mu():
+            if mu != None:
+                return self.max_col_norm / mu
+            else:
+                return self.max_col_norm / self.get_mu()
         else:
-#            print "max col sum: ", (self.max_col_norm / self.get_mu())
-            return self.max_col_norm / self.get_mu()
-
-#    def alpha(self, beta=None, mu=None):
-#
-#        if self.gamma < utils.TOLERANCE:
-#            return tuple([0.0] * len(self._alpha))
-#
-#        if beta != None:
-##            self._compute_alpha_grad(beta, mu)
-#            self._alpha = self._compute_alpha(beta, mu)
-#            self._grad = self._compute_grad(self._alpha)
-#
-#        return self._alpha
-
-#    def num_compacts(self):
-#
-#        return self.num_groups()
+            return self.max_col_norm
 
     # TODO: Change so that projection instead always takes a list
     def projection(self, *alpha):
@@ -1630,8 +1649,14 @@ class GroupLassoOverlap(NesterovFunction):
         for i in xrange(len(alpha)):
             astar = alpha[i]
             normas = np.sqrt(np.sum(astar ** 2.0))
-            if normas > 1.0:
-                astar /= normas
+
+            if self.use_mu():
+                if normas > 1.0:
+                    astar /= normas
+            else:
+                if normas > utils.TOLERANCE:
+                    astar /= normas
+
             alpha[i] = astar
 
         return alpha
@@ -1644,7 +1669,11 @@ class GroupLassoOverlap(NesterovFunction):
         # Compute a* for each dimension
         alpha = [0] * len(self._A)
         for g in xrange(len(self._A)):
-            astar = self._A[g].dot(beta) / mu
+            if self.use_mu():
+                astar = self._A[g].dot(beta) / mu
+            else:
+                astar = self._A[g].dot(beta)
+
             astar = self.projection(astar)[0]
 
             alpha[g] = astar

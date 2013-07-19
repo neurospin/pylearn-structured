@@ -688,7 +688,7 @@ class MonotoneFISTARegression(ISTARegression):
         super(MonotoneFISTARegression, self).__init__(**kwargs)
 
     def run(self, X, y, t=None, tscale=0.95, ista_steps=2, smooth=False,
-            **kwargs):
+            early_stopping=True, **kwargs):
 
         if t == None:
             t = tscale / self.g.Lipschitz()
@@ -727,7 +727,7 @@ class MonotoneFISTARegression(ISTARegression):
                     f_new = self.g.f(beta_new, smooth=smooth) \
                                 + self.h.f(beta_new)
 
-                    if f_new > f_old:  # Early stopping
+                    if early_stopping and f_new > f_old:  # Early stopping
                         self.converged = True
                         stop_early = True
                         warning('Early stopping criterion triggered. ' \
@@ -756,10 +756,6 @@ class MonotoneFISTARegression(ISTARegression):
                 warning('Maximum number of iterations reached before ' \
                         'convergence')
                 break
-
-#        print "Smooth: ", f_new
-#        print "True:   ", (self.g.f(beta_new, smooth=False) + self.h.f(beta_new))
-#        print
 
         return beta_new
 

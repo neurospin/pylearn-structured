@@ -908,8 +908,8 @@ if __name__ == "__main__":
     eps = 0.001
     maxit = 10
     cont_maxit = 100
-    gamma = 10.0
-    l = 0.9
+    gamma = 15.0
+    l = 0.8
     k = 1.0 - l
 
     px = 1000
@@ -947,7 +947,7 @@ if __name__ == "__main__":
                                    compress=False)
     m.set_tolerance(eps)
     m.set_max_iter(cont_maxit)
-    cr = models.ContinuationRun(m, tolerances=[1.0, 0.1, 0.01, 0.001, 0.0001])
+    cr = models.ContinuationRun(m, mus=[0.5 ** i for i in range(1, 5 + 1)])
     cr.fit(X, y)
     computed_beta = cr._beta
     print "time: ", (time() - start)
