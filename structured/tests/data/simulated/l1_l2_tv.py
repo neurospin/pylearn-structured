@@ -96,6 +96,7 @@ def load(l, k, gamma, density, snr, P, e):
 
     return X, y, beta
 
+
 def U(a, b):
     t = max(a, b)
     a = float(min(a, b))

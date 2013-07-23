@@ -908,52 +908,55 @@ class ExcessiveGapRidgeRegression(ExcessiveGapMethod):
 
 class BisectionMethod(BaseAlgorithm):
     """Finds the root of a function f: R^n -> R lying on the line between
-    b_0 and b_1.
+    x_0 and x_1.
 
-    I.e. returns a b such that f(b) = 0.
+    I.e. computes an x such that f(x) = 0.
 
-    If no root exist on the line between b_0 and b_1, the result is
-    undefined (but will be either b_0 or b_1).
+    If no root exist on the line between x_0 and x_1, the result is
+    undefined (but will be close to either x_0 or x_1).
     """
-    def __init__(self, function, max_iter=100, tolerance=TOLERANCE, **kwargs):
+    def __init__(self, max_iter=100, tolerance=TOLERANCE, **kwargs):
         """
         Parameters:
         ----------
-        function : The loss function for which the roots are found.
-
         max_iter : The number of iteration before the algorithm is forced to
                 stop. The default number of iterations is 100.
 
         tolerance : The level below which we treat numbers as zero. This is
-                used as stop criterion in the algorithm. Smaller value will
+                used as stopping criterion in the algorithm. Smaller value will
                 give more acurate results, but will take longer time to
                 compute. The default tolerance is utils.TOLERANCE.
         """
         super(BisectionMethod, self).__init__(max_iter=max_iter,
                                               tolerance=tolerance)
 
-        self.function = function
-
-    def run(self, b_0, b_1):
+    def run(self, function, x_0, x_1):
         """
         Parameters:
         ----------
-        b_0 : A variable for which f(b_0) < 0.
+        function : The loss function for which the roots are found.
 
-        b_1 : A variable for which f(b_0) > 0.
+        x_0 : A variable for which f(x_0) < 0.
+
+        x_1 : A variable for which f(x_1) > 0.
         """
         self.f = []
         self.iterations = 1
         while True:
-            self.beta = (b_1 + b_0) / 2.0
-            f = self.function.f(self.beta)
+            self.x = (x_1 + x_0) / 2.0
+            f = function.f(self.x)
             if f < 0:
-                b_0 = self.beta
+                x_0 = self.x
             if f > 0:
-                b_1 = self.beta
+                x_1 = self.x
 
-            if norm(b_1 - b_0) < self.tolerance:
+            print "x:", self.x, "f:", f
+
+            if np.sqrt(np.sum((x_1 - x_0) ** 2.0)) < self.tolerance:
                 break
+
+#            if abs(f) < self.tolerance:
+#                break
 
             if self.iterations >= self.max_iter:
                 break
@@ -961,10 +964,10 @@ class BisectionMethod(BaseAlgorithm):
             self.iterations += 1
             self.f.append(f)
 
-        self.beta = (b_1 + b_0) / 2.0
-        self.f.append(self.function.f(self.beta))
+        self.x = (x_1 + x_0) / 2.0
+        self.f.append(function.f(self.x))
 
-        return self.beta
+        return self.x
 
 
 class TernarySearch(BaseAlgorithm):
@@ -973,12 +976,10 @@ class TernarySearch(BaseAlgorithm):
 
     Implementation from: https://en.wikipedia.org/wiki/Ternary_search
     """
-    def __init__(self, function, max_iter=100, tolerance=TOLERANCE, **kwargs):
+    def __init__(self, max_iter=100, tolerance=TOLERANCE, **kwargs):
         """
         Parameters:
         ----------
-        function : The loss function to minimise.
-
         max_iter : The number of iteration before the algorithm is forced to
                 stop. The default number of iterations is 100.
 
@@ -990,27 +991,27 @@ class TernarySearch(BaseAlgorithm):
         super(TernarySearch, self).__init__(max_iter=max_iter,
                                             tolerance=tolerance)
 
-        self.function = function
-
-    def run(self, b_0, b_1):
+    def run(self, function, x_0, x_1):
         """
         Parameters:
         ----------
-        b_0 : A variable for which f(b_0) > f(b), where b is the optimum. Note
-              that we must have b_0 < b_1.
+        function : The loss function to minimise.
 
-        b_1 : A variable for which f(b_1) > f(b), where b is the optimum. Note
-              that we must have b_0 < b_1.
+        x_0 : A variable for which f(x_0) < f(x), where x is the optimum. Note
+              that we must have x_0 < x_1.
+
+        x_1 : A variable for which f(x_1) > f(x), where x is the optimum. Note
+              that we must have x_0 < x_1.
         """
 
-        b, it = self.ternary_search(b_0, b_1, 1)
+        x, it = self.ternary_search(x_0, x_1, 1, function)
 
-        self.beta = b
+        self.x = x
         self.iterations = it
 
-        return self.beta
+        return self.x
 
-    def ternary_search(self, left, right, it):
+    def ternary_search(self, left, right, it, function):
 
         # Left and right are the current bounds; the maximum is between them
         if (right - left) < self.tolerance:
@@ -1022,10 +1023,10 @@ class TernarySearch(BaseAlgorithm):
         leftThird = (2.0 * left + right) / 3.0
         rightThird = (left + 2.0 * right) / 3.0
 
-        if self.function.f(leftThird) > self.function.f(rightThird):
-            return self.ternary_search(leftThird, right, it + 1)
+        if function.f(leftThird) > function.f(rightThird):
+            return self.ternary_search(leftThird, right, it + 1, function)
         else:
-            return self.ternary_search(left, rightThird, it + 1)
+            return self.ternary_search(left, rightThird, it + 1, function)
 
 
 class GoldenSectionSearch(BaseAlgorithm):
@@ -1034,12 +1035,10 @@ class GoldenSectionSearch(BaseAlgorithm):
 
     Implementation from: https://en.wikipedia.org/wiki/Golden_section_search
     """
-    def __init__(self, function, max_iter=100, tolerance=TOLERANCE, **kwargs):
+    def __init__(self, max_iter=100, tolerance=TOLERANCE, **kwargs):
         """
         Parameters:
         ----------
-        function : The loss function to minimise.
-
         max_iter : The number of iteration before the algorithm is forced to
                 stop. The default number of iterations is 100.
 
@@ -1051,32 +1050,32 @@ class GoldenSectionSearch(BaseAlgorithm):
         super(GoldenSectionSearch, self).__init__(max_iter=max_iter,
                                                   tolerance=tolerance)
 
-        self.function = function
-
         self.phi = (1.0 + np.sqrt(5)) / 2.0
         self.resphi = 2.0 - self.phi
 
-    def run(self, b_0, b_1):
+    def run(self, function, x_0, x_1):
         """
         Parameters:
         ----------
-        b_0 : A variable for which f(b_0) > f(b), where b is the optimum. Note
-              that we must have b_0 < b_1.
+        function : The loss function to minimise.
 
-        b_1 : A variable for which f(b_1) > f(b), where b is the optimum. Note
-              that we must have b_0 < b_1.
+        x_0 : A variable for which f(x_0) < f(x), where x is the optimum. Note
+              that we must have x_0 < x_1.
+
+        x_1 : A variable for which f(x_1) > f(x), where x is the optimum. Note
+              that we must have x_0 < x_1.
         """
 
-        b, it = self.golden_section_search(b_0, (b_0 + b_1) / 2.0, b_1,
-                                           self.tolerance, 1)
+        x, it = self.golden_section_search(x_0, (x_0 + x_1) / 2.0, x_1,
+                                           self.tolerance, 1, function)
 #                                           np.sqrt(self.tolerance), 1)
 
-        self.beta = b
+        self.x = x
         self.iterations = it
 
-        return self.beta
+        return self.x
 
-    def golden_section_search(self, a, b, c, tau, it):
+    def golden_section_search(self, a, b, c, tau, it, function):
 
         if c - b > b - a:
             x = b + self.resphi * (c - b)
@@ -1094,13 +1093,13 @@ class GoldenSectionSearch(BaseAlgorithm):
         if it >= self.max_iter:
             return (c + a) / 2.0, it
 
-        if self.function.f(x) < self.function.f(b):
+        if function.f(x) < function.f(b):
             if c - b > b - a:
-                return self.golden_section_search(b, x, c, tau, it + 1)
+                return self.golden_section_search(b, x, c, tau, it + 1, function)
             else:
-                return self.golden_section_search(a, x, b, tau, it + 1)
+                return self.golden_section_search(a, x, b, tau, it + 1, function)
         else:
             if c - b > b - a:
-                return self.golden_section_search(a, b, x, tau, it + 1)
+                return self.golden_section_search(a, b, x, tau, it + 1, function)
             else:
-                return self.golden_section_search(x, b, c, tau, it + 1)
+                return self.golden_section_search(x, b, c, tau, it + 1, function)

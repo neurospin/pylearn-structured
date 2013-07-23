@@ -1186,11 +1186,10 @@ class NesterovProximalGradientMethod(BaseModel):
 #            print "lb:", lb, ", f(lb):", a
 #            print "ub:", ub, ", f(ub):", b
 
-        bm = algorithms.BisectionMethod(utils.AnonymousClass(f=f),
-                                        max_iter=max_iter)
-        bm.run(lb, ub)
+        bm = algorithms.BisectionMethod(max_iter=max_iter)
+        bm.run(utils.AnonymousClass(f=f), lb, ub)
 
-        return bm.beta
+        return bm.x
 
     def compute_mu(self, eps):
 
@@ -1200,15 +1199,15 @@ class NesterovProximalGradientMethod(BaseModel):
         def f(mu):
             return -(eps - mu * D) / g.Lipschitz(mu)
 
-        gs = algorithms.GoldenSectionSearch(utils.AnonymousClass(f=f))
-        gs.run(utils.TOLERANCE, eps / (2.0 * D))
+        gs = algorithms.GoldenSectionSearch()
+        gs.run(utils.AnonymousClass(f=f), utils.TOLERANCE, eps / (2.0 * D))
 
 #        ts = algorithms.TernarySearch(utils.AnonymousClass(f=f))
 #        ts.run(utils.TOLERANCE, eps / D)
 #        print "gs.iterations: ", gs.iterations
 #        print "ts.iterations: ", ts.iterations
 
-        return gs.beta
+        return gs.x
 
     def predict(self, X, **kwargs):
 

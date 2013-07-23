@@ -1014,117 +1014,116 @@ if __name__ == "__main__":
 #        plot.axis([a / scale, b / scale, min(v), max(v)])
 #    plot.show()
 
-#    # Relevant tests for EN + TV for the paper!
-#    lambd = float(0.713)
-#    gamma = float(3.142)
+    # Relevant tests for EN + TV for the paper!
+    gammas = [0.50, 1.00, 1.50, 2.00, 2.50, 3.00]
+    for i in xrange(len(gammas)):
+        lambd = float(1.00)
+        gamma = float(gammas[i])  # float(1.142)
+        density = float(0.5)  # Fraction of non-zero values. Must be \in [0, 1]
+        snr = float(10.0)  # ~SNR
+        n = 25
+        p = 50
+        ps = int(round(p * density))  # <= p
+        #    P = (np.random.randn(n, p) - 0.5) * 2.0
+        #    P = np.random.randn(n, p)
+        Sigma = 0.8 * np.ones((p, p)) + 0.2 * np.eye(p)
+        Mu = np.zeros(p)
+        P = np.random.multivariate_normal(Mu, Sigma, n)
+        e = np.random.randn(n, 1)
+        #    e = np.random.rand(n, 1)
+        e = e / np.sqrt(np.sum(e ** 2.0))
+
+        np.random.seed(42)
+        X, y, beta = l1_l2_tv.load(lambd, 1.0 - lambd, gamma, density, snr, P, e)
+
+        tolerance = 0.00001
+        maxit = 50000
+        mu = 0.00001
+
+        v = []
+        x = []
+        scale = 100.0
+        value = gamma
+        a = max(0, int(round(value * scale - scale / 2.0)))
+        b = int(round(value * scale + scale / 2.0))
+        start_vector = start_vectors.RandomStartVector()
+        for val in xrange(a, b):
+            l = lambd
+            g = val / float(scale)
+            axis = g
+            lr = models.ElasticNetTV(l, g, shape=[1, 1, p], mu=mu)
+            lr.set_start_vector(start_vector)
+            lr.set_tolerance(tolerance)
+            lr.set_max_iter(maxit)
+            lr.fit(X, y)
+            start_vector = start_vectors.IdentityStartVector(lr._beta)
+            v.append(np.sum((beta - lr._beta) ** 2.0))
+            x.append(axis)
+            print "true = %.2f => %f" % (axis, v[-1])
+
+        plot.subplot(len(gammas), 1, i + 1)
+        plot.plot(x, v, '-g')
+        plot.title("true: %.2f, min: %.2f" % (value, x[np.argmin(v)]))
+        plot.axis([a / scale, b / scale, min(v), max(v)])
+    plot.show()
+
+
+#     # Test to find SNR for Lasso
+#    l = 3.14159
 #    density = float(0.5)  # Fraction of non-zero values. Must be \in [0, 1]
-#    snr = float(1.0)  # ~SNR
-#    n = 25
-#    p = 50
+#    snr = float(100)  # 100 = |X.b| / |e|
+#    n = 200
+#    p = 1000
 #    ps = int(round(p * density))  # <= p
-#    #    P = (np.random.randn(n, p) - 0.5) * 2.0
-#    #    P = np.random.randn(n, p)
+#    #    M = (np.random.randn(n, p) - 0.5) * 2.0
+#    #    M = np.random.randn(n, p)
 #    Sigma = 0.8 * np.ones((p, p)) + 0.2 * np.eye(p)
 #    Mu = np.zeros(p)
-#    P = np.random.multivariate_normal(Mu, Sigma, n)
+#    M = np.random.multivariate_normal(Mu, Sigma, n)
 #    e = np.random.randn(n, 1)
 #    #    e = np.random.rand(n, 1)
-#    e = e / np.sqrt(np.sum(e ** 2.0))
+#    norm_e = np.sqrt(np.sum(e ** 2.0))
+#    e = e / norm_e
 #
-#    X, y, beta = l1_l2_tv.load(lambd, 1.0 - lambd, gamma, density, snr, P, e)
+#    seed = np.random.randint(2000000000)
 #
-#    tolerance = 0.0001
-#    maxit = 100000
-#    mu = 0.00001
+#    low = 0.0
+#    high = 1.0
+#    for i in xrange(30):
+#        print "low:", low, "high:", high
+#        np.random.seed(seed)
+#        X, y, beta = lasso.load(l, density, high, M, e)
+#        val = np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0))
+#        if val > snr:
+#            break
+#        else:
+#            low = high
+#            high = high * 2.0
 #
-#    v = []
-#    x = []
-#    scale = 100.0
-#    value = gamma
-#    a = max(0, int(round(value * scale - scale / 2.0)))
-#    b = int(round(value * scale + scale / 2.0))
-##    start_vector = start_vectors.RandomStartVector()
-#    for val in xrange(a, b):
-#        l = lambd
-#        g = val / float(scale)
-#        axis = g
-#        lr = models.ElasticNetTV(l, g, shape=[1, 1, p], mu=mu)
-##        lr.set_start_vector(start_vector)
-#        lr.set_tolerance(tolerance)
-#        lr.set_max_iter(maxit)
-#        lr.fit(X, y)
-##        start_vector = start_vectors.IdentityStartVector(lr.beta)
-#        v.append(np.sum((beta - lr.beta) ** 2.0))
-#        x.append(axis)
-#        print "true = %.2f => %f" % (axis, v[-1])
+#    def f(x):
+#        np.random.seed(seed)
+#        X, y, beta = lasso.load(l, density, x, M, e)
+#        return np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0)) - snr
 #
-#    plot.plot(x, v, '-g')
-#    plot.title("true: %.2f, min: %.2f" % (value, x[np.argmin(v)]))
-#    plot.axis([a / scale, b / scale, min(v), max(v)])
-#    plot.show()
-
-
-     # Test of SNR for Lasso
-    l = 3.14159
-    density = float(0.5)  # Fraction of non-zero values. Must be \in [0, 1]
-    snr = float(100)  # 100 = |X.b| / |e|
-    n = 2000
-    p = 10000
-    ps = int(round(p * density))  # <= p
-    #    M = (np.random.randn(n, p) - 0.5) * 2.0
-    #    M = np.random.randn(n, p)
-    Sigma = 0.8 * np.ones((p, p)) + 0.2 * np.eye(p)
-    Mu = np.zeros(p)
-    M = np.random.multivariate_normal(Mu, Sigma, n)
-    e = np.random.randn(n, 1)
-    #    e = np.random.rand(n, 1)
-    norm_e = np.sqrt(np.sum(e ** 2.0))
-    e = e / norm_e
-
-    low = 0.0
-    high = snr
-    for i in xrange(30):
-        print "low:", low, "high:", high
-        np.random.seed(42)
-        X, y, beta = lasso.load(l, density, high, M, e)
-        val = np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0))
-        if val > snr:
-            break
-        else:
-            low = high
-            high = high * 2.0
-    for i in xrange(30):
-        mid = low + (high - low) / 2.0
-        print "low:", low, "mid:", mid, "high:", high
-        np.random.seed(42)
-        X, y, beta = lasso.load(l, density, mid, M, e)
-        val = np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0)) - snr
-        if val > 0.0:
-            high = mid
-        else:
-            low = mid
-
-        print "  val:", val
-
-        if abs(val) < utils.TOLERANCE:
-            break
-
-    mid = (high - low) / 2.0
-
-    print "snr = %.5f = %.5f = |X.b| / |e| = %.5f / %.5f" \
-            % (snr, np.linalg.norm(np.dot(X, beta) / np.linalg.norm(e)),
-               np.linalg.norm(np.dot(X, beta)), np.linalg.norm(e))
-
-#    tolerance = 0.00005
-#    maxit = 20000
+#    bm = algorithms.BisectionMethod(max_iter=20)
+#    bm.run(utils.AnonymousClass(f=f), low, high)
 #
-#    lr = models.Lasso(l)
-#    lr.set_tolerance(tolerance)
-#    lr.set_max_iter(maxit)
-#    lr.fit(X, y)
+#    np.random.seed(seed)
+#    X, y, beta = lasso.load(l, density, bm.x, M, e)
+#    print "snr = %.5f = %.5f = |X.b| / |e| = %.5f / %.5f" \
+#            % (snr, np.linalg.norm(np.dot(X, beta) / np.linalg.norm(e)),
+#               np.linalg.norm(np.dot(X, beta)), np.linalg.norm(e))
 #
-#    plot.subplot(len(lambdas), 1, i + 1)
-#    plot.plot(x, v, '-g')
-#    plot.title("l: %.2f, min: %.2f" % (lambd, x[np.argmin(v)]))
-#    plot.axis([a / scale, b / scale, min(v), max(v)])
-#    plot.show()
+##    tolerance = 0.00005
+##    maxit = 20000
+##
+##    lr = models.Lasso(l)
+##    lr.set_tolerance(tolerance)
+##    lr.set_max_iter(maxit)
+##    lr.fit(X, y)
+##
+##    plot.subplot(len(lambdas), 1, i + 1)
+##    plot.plot(x, v, '-g')
+##    plot.title("l: %.2f, min: %.2f" % (lambd, x[np.argmin(v)]))
+##    plot.axis([a / scale, b / scale, min(v), max(v)])
+##    plot.show()
