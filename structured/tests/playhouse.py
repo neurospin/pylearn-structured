@@ -903,6 +903,7 @@ if __name__ == "__main__":
 #    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
 #    print
 
+    # Testing the new continuation
 #    np.random.seed(42)
 
     eps = 0.001

@@ -1010,7 +1010,6 @@ class Continuation(BaseModel):
 
             # With computed mu
             self.model.set_mu(mu)
-            self.model.use_mu(True)
             self.model.set_start_vector(start_vector_mu)
             self.model.fit(X, y, **kwargs)
             f = f + self.model.get_algorithm().f[1:]  # Skip the first, same
@@ -1019,22 +1018,22 @@ class Continuation(BaseModel):
             start_vector_mu = start_vectors.IdentityStartVector(beta_new)
 
             self.model.set_start_vector(start_vector_mu)
-#            gap_mu = self._gap(X, y)
             alpha_mu = self.model.get_g().alpha()
-            gap_mu = self.model.phi(beta=self.model._beta, alpha=alpha_mu) \
+            gap_mu = self.model.phi(beta=beta_new, alpha=alpha_mu) \
                         - self.model.phi(beta=None, alpha=alpha_mu)
 
-#            utils.debug("With mu: Continuation with mu = ",
-#                                self.model.get_mu(), \
-#                    ", tolerance = ", self.model.get_tolerance(), \
-#                    ", iterations = ", self.model.get_algorithm().iterations, \
-#                    ", gap = ", gap_mu)
+            utils.debug("With mu: Continuation with mu = ",
+                                self.model.get_mu(), \
+                    ", tolerance = ", self.model.get_tolerance(), \
+                    ", iterations = ", self.model.get_algorithm().iterations, \
+                    ", gap = ", gap_mu)
 
             # With mu "very small"
+            self.model.set_mu(min(mu, mu_zero))
             alpha_nomu = self.model.get_g().alpha(beta_new, min(mu, mu_zero))
-            gap_nomu = self.model.phi(beta=self.model._beta,
-                                    alpha=alpha_nomu) \
-                        - self.model.phi(beta=None, alpha=alpha_nomu)
+            gap_nomu = self.model.phi(beta=beta_new, alpha=alpha_nomu) \
+                        - self.model.phi(beta=None, alpha=alpha_nomu,
+                                         mu=min(mu, mu_zero))
 
             utils.debug("No mu: Continuation with mu = ",
                                 self.model.get_mu(), \
@@ -1054,6 +1053,7 @@ class Continuation(BaseModel):
                 print "Converged in beta!!"
                 break
 
+            self.model.set_mu(mu)
             mu = min(mu, self.model.compute_mu(gap_nomu))
             if gap_mu < gap_nomu / (2.0 * tau):
                 mu = mu / eta
@@ -1768,8 +1768,10 @@ class RidgeRegressionL1TV(RidgeRegressionTV):
                                                   compress=compress, **kwargs)
         self.set_h(loss_functions.L1(l))
 
-#        self._rr_l1_tv = RidgeRegressionSmoothL1TV(l, k, gamma, shape=shape,
-#                                                   mu=mu, mask=mask)
+        self._l1 = loss_functions.SmoothL1(k, num_variables=np.prod(shape),
+                                           mu=1e-12, mask=mask)
+        self._tv = loss_functions.TotalVariation(gamma, shape=shape, mu=mu,
+                                                 mask=mask, compress=False)
 
     # TODO: Decide if phi(beta, alpha) should be in the general API for all
     # Nesterov functions.
@@ -1789,20 +1791,54 @@ class RidgeRegressionL1TV(RidgeRegressionTV):
         elif beta == None:
 
             rr = self.get_g().a
-            Aa = self.get_g().b.grad()
-            tv = loss_functions.LinearLossFunction(Aa)
-            dual_model = NesterovProximalGradientMethod()
-            dual_model.set_start_vector(self.get_start_vector())
-            dual_model.set_max_iter(self.get_max_iter())
-            dual_model.set_g(loss_functions.CombinedNesterovLossFunction(rr,
-                                                                         tv))
-            dual_model.use_mu(self.use_mu())
-
-            dual_model.set_h(self.get_h())
-
             X, y = self.get_data()
-            dual_model.fit(X, y, early_stopping=False)
-            beta = dual_model._beta
+
+            #####
+            mu_zero = min(mu, 1e-12)
+#            beta_ = self._beta
+#            mask_ = tv.get_mask()
+#            shape_ = tv.get_shape()
+
+            alpha_l1_ = self._l1.alpha(self._beta, mu=mu_zero)
+            alpha_tv_ = alpha  # self._tv.alpha(self._beta, mu=mu)
+            Aa_l1_ = self._l1.grad(self._beta, mu=mu_zero)
+            Aa_tv_ = self._tv.grad(self._beta, mu=mu)
+            Aa_ = Aa_l1_ + Aa_tv_
+            if not hasattr(self, '_XtinvXXtlI'):
+#                XtX_ = np.dot(X.T, X)
+#                self._invXtXlI = np.linalg.inv(XtX_ \
+#                                                + rr.l * np.eye(*XtX_.shape))
+                invXXtlI = np.linalg.inv(np.dot(X, X.T) \
+                                            + rr.l * np.eye(X.shape[0]))
+                self._XtinvXXtlI = np.dot(X.T, invXXtlI)
+                self._Xty = np.dot(y.T, X).T
+
+            wk_ = (self._Xty - Aa_) / rr.l
+            beta = wk_ - np.dot(self._XtinvXXtlI, np.dot(X, wk_))
+
+#            beta_ = np.dot(self._invXtXlI, np.dot(X.T, y) - Aa_)
+#            beta = beta_
+
+            return self._l1.phi(beta, alpha_l1_) \
+                    + self._tv.phi(beta, alpha_tv_)
+            #####
+
+#            tv = self.get_g().b
+#            Aa = tv.grad()
+#            tv = loss_functions.LinearLossFunction(Aa)
+#            dual_model = NesterovProximalGradientMethod()
+#            dual_model.set_start_vector(self.get_start_vector())
+#            dual_model.set_max_iter(self.get_max_iter())
+#            dual_model.set_g(loss_functions.CombinedNesterovLossFunction(rr,
+#                                                                         tv))
+#            dual_model.use_mu(self.use_mu())
+#
+#            dual_model.set_h(self.get_h())
+#
+#            dual_model.fit(X, y, early_stopping=False)
+#            beta = dual_model._beta
+
+#            print "diff:", np.sum((beta_ - beta) ** 2.0)
 
         return self.get_g().phi(beta, alpha) + self.get_h().f(beta)
 
@@ -1820,143 +1856,13 @@ class RidgeRegressionL1TV(RidgeRegressionTV):
         raise ValueError("Do not call this function!")
 #        return self._rr_l1_tv.alpha(beta=beta, mu=mu)
 
-#    def fit(self, X, y, **kwargs):
-#        """Fit the model to the given data.
-#
-#        Parameters
-#        ----------
-#        X : The independent variables.
-#
-#        y : The dependent variable.
-#
-#        Returns
-#        -------
-#        self: The model object.
-#        """
-#        super(RidgeRegressionL1TV, self).fit(X, y, **kwargs)
-#
-#        self._rr_l1_tv._beta = self._beta
-#
-#        return self
+    def set_data(self, X, y):
 
-#    def set_mu(self, mu):
-#
-#        super(RidgeRegressionL1TV, self).set_mu(mu)
-#
-#        self._rr_l1_tv.set_mu(mu)
-#
-#    def set_data(self, X, y):
-#
-#        super(RidgeRegressionL1TV, self).set_data(X, y)
-#
-#        self._rr_l1_tv.set_data(X, y)
+        super(RidgeRegressionL1TV, self).set_data(X, y)
 
-
-#class RidgeRegressionSmoothL1TV(RidgeRegression):
-#    """Ridge regression with smooth L1 and Total variation regularisation, i.e.
-#    linear regression with smoothed L1, L2 and TV constraints.
-#
-#    Optimises the function
-#
-#        f(b) = ||y - X.b||² + l.L1(b) + (k / 2).||b||² + gamma.TV(b),
-#
-#    where L1 is the smoothed L1 norm, ||.||² is the squared L2 norm and TV is
-#    the smoothed total variation function.
-#
-#    Parameters
-#    ----------
-#    l : The L1 regularisation parameter.
-#
-#    k : The L2 regularisation parameter.
-#
-#    gamma : The TV regularisation parameter.
-#
-#    mu : The Nesterov function regularisation parameter.
-#
-#    mask : A 1-dimensional mask representing the 3D image mask. Must be a
-#           list of 1s and 0s.
-#    """
-#    def __init__(self, l, k, gamma, shape, mu=None, mask=None, **kwargs):
-#
-#        super(RidgeRegressionSmoothL1TV, self).__init__(k, **kwargs)
-#
-#        self.small = 1e-10
-#
-#        l1 = loss_functions.SmoothL1(l, np.prod(shape), mu=self.small,
-#                                     mask=mask, **kwargs)
-#        tv = loss_functions.TotalVariation(gamma, shape=shape, mu=mu,
-#                                           mask=mask, compress=False)
-#
-#        self.l1_tv = loss_functions.CombinedNesterovLossFunction(l1, tv)
-#        self.rr = self.get_g()
-#
-#        self.set_g(loss_functions.CombinedNesterovLossFunction(self.rr,
-#                                                               self.l1_tv))
-#
-#    # TODO: Decide if phi(beta, alpha) should be in the general API for all
-#    # Nesterov functions.
-#    def phi(self, beta, alpha, *args, **kwargs):
-#        """The dual loss function. This function returns the associated loss
-#        function value for the given alpha and beta.
-#        """
-#        return self.get_g().phi(beta, alpha)
-#
-#    def beta(self, alpha, mu=None):
-#        """Computes the beta that minimises the dual function value for the
-#        current computed or given alpha.
-#        """
-#        X, y = self.get_data()
-#        if not hasattr(self, "_invXXlI"):
-#            # Note that set_data must be called before using this method!
-#            XtX = np.dot(X.T, X)
-#            self._invXXlI = np.linalg.inv(XtX + self.rr.l * np.eye(*XtX.shape))
-#
-##        if alpha == None:
-##            Aalpha = self.l1_tv._compute_grad(self.l1_tv._alpha)
-##        else:
-#        Aalpha = self.l1_tv._compute_grad(alpha)
-#
-#        beta = np.dot(self._invXXlI, np.dot(X.T, y) - Aalpha)
-#
-#        return beta
-#
-##        dual_model = ConstantNesterovModelCopy(self, alpha)
-##        dual_model.set_h(loss_functions.ZeroErrorFunction())
-##        if mu != None:
-##            dual_model.set_mu(mu)
-##        dual_model.fit(*self.get_data())
-##
-##        return dual_model._beta
-#
-#    def alpha(self, beta=None, mu=None):
-#        """Computes the alpha that maximises the smoothed loss function for the
-#        current computed beta.
-#        """
-#        g = self.get_g()
-#        l1 = g.b.a
-#        tv = g.b.b
-#
-#        print "Här!!"
-#
-#        l1.set_mu(self.small)
-#        return l1.alpha(beta=beta, mu=self.small) \
-#                + tv.alpha(beta=beta, mu=mu)
-#
-#    def set_mu(self, mu):
-#
-#        super(RidgeRegressionSmoothL1TV, self).set_mu(mu)
-#
-#        g = self.get_g()
-#        l1 = g.b.a
-#        l1.set_mu(self.small)
-#
-#    def set_data(self, X, y):
-#
-#        super(RidgeRegressionSmoothL1TV, self).set_data(X, y)
-#
 #        # We will need to recompute this matrix
-#        if hasattr(self, "_invXXlI"):
-#            del self._invXXlI
+#        if hasattr(self, "_XtinvXXtlI"):
+#            del self._XtinvXXtlI
 
 
 class LogisticRegression(NesterovProximalGradientMethod):

@@ -414,7 +414,11 @@ class CombinedNesterovLossFunction(NesterovFunction, DataDependent):
 
         if isinstance(self.a, NesterovFunction) \
                 and isinstance(self.b, NesterovFunction):
-            return self.a.phi(beta, alpha) + self.b.phi(beta, alpha)
+
+            groups_a = self.a.num_groups()
+
+            return self.a.phi(beta, alpha[:groups_a]) \
+                    + self.b.phi(beta, alpha[groups_a:])
 
         elif isinstance(self.a, NesterovFunction):
             return self.a.phi(beta, alpha) + self.b.f(beta)
@@ -1075,79 +1079,6 @@ class ConstantNesterovCopy(NesterovFunction):
 
         return self.__grad
 
-#class ConstantNesterovFunction(NesterovFunction):
-#    """Constructs a Nesterov loss function with constant A and alpha.
-#    """
-#    def __init__(self, gamma, mu, A, alpha, num_compacts, **kwargs):
-#        """Construct a Nesterov loss function.
-#
-#        Parameters
-#        ----------
-#        gamma : The regularisation parameter for the nesterov penality.
-#
-#        mu : The Nesterov function regularisation parameter. Must be provided
-#                unless you are using ContinuationRun.
-#
-#        A : The linear operator.
-#
-#        alpha : The optimal (or any fixed) dual variable.
-#        """
-#        super(NesterovFunction, self).__init__(**kwargs)
-#
-#        self.gamma = float(gamma)
-##        self.mu = float(mu)
-#        self.set_mu(float(mu))
-#        self._num_compacts = int(num_compacts)
-#        self._A = copy.deepcopy(A)
-#        self._At = [0] * len(A)
-#        for i in xrange(len(A)):
-#            self._At[i] = A[i].T
-#        self._alpha = copy.deepcopy(alpha)
-#
-#        self._grad = self._compute_grad(alpha)  # The function's gradient
-#        self.lambda_max = None  # The largest eigenvalue of A'.A
-#
-#    def f(self, beta, mu=None, smooth=True, **kwargs):
-#
-#        if self.gamma < utils.TOLERANCE:
-#            return 0.0
-#
-#        alpha_sqsum = 0.0
-#        if smooth:
-#            for a in self._alpha:
-#                alpha_sqsum += np.sum(a ** 2.0)
-#
-#        if mu == None:
-#            mu = self.get_mu()
-#
-#        return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
-#
-#    def _compute_alpha(self, *args, **kwargs):
-#
-#        return self._alpha
-#
-#    def alpha(self, *args, **kwargs):
-#
-#        if self.gamma < utils.TOLERANCE:
-#            return [0.0] * len(self._A)
-#
-#        return self._alpha
-#
-#    def grad(self, beta=None, mu=None):
-#
-#        if self.gamma < utils.TOLERANCE:
-#            return np.zeros(beta.shape)
-#
-#        return self._grad
-#
-#    def projection(self, *alpha):
-#
-#        return alpha
-#
-#    def precompute(self, *args, **kwargs):
-#
-#        pass
-
 
 class TotalVariation(NesterovFunction):
 
@@ -1182,6 +1113,7 @@ class TotalVariation(NesterovFunction):
         """
         super(TotalVariation, self).__init__(gamma=gamma, mu=mu, **kwargs)
 
+#        self.shape = shape
         self.mask = mask
         self.compress = compress
 
@@ -1202,6 +1134,14 @@ class TotalVariation(NesterovFunction):
                      2.0 * utils.TOLERANCE / self.num_compacts())
             self.set_mu(mu)
 
+#    def get_mask(self):
+#
+#        return self.mask
+#
+#    def get_shape(self):
+#
+#        return self.shape
+
     def f(self, beta, mu=None, smooth=True):
 
         if self.gamma < utils.TOLERANCE:
@@ -1211,62 +1151,13 @@ class TotalVariation(NesterovFunction):
 
             return super(TotalVariation, self).f(beta, mu)
 
-#            self._alpha = self._compute_alpha(beta, mu)
-#            self._grad = self._compute_grad(self._alpha)
-#
-#            alpha_sqsum = 0.0
-#            for a in self._alpha:
-#                alpha_sqsum += np.sum(a ** 2.0)
-#
-#            if mu == None:
-#                mu = self.get_mu()
-#
-#            return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
-
         else:
-#            sqsum = 0.0
-#            for Ad in self._A:
-#                sqsum += Ad.dot(beta) ** 2.0
-#            sqsum = np.sqrt(sqsum)
+
             sqsum = np.sum(np.sqrt(self._A[0].dot(beta) ** 2.0 + \
                                    self._A[1].dot(beta) ** 2.0 + \
                                    self._A[2].dot(beta) ** 2.0))
 
             return sqsum  # Gamma is already incorporated in A
-
-#    def phi(self, beta, alpha):
-#
-#        grad = self._compute_grad(alpha)
-#        return np.dot(beta.T, grad)[0, 0]
-
-#    def grad(self, beta=None, mu=None):
-#
-#        if self.gamma < utils.TOLERANCE:
-#            return np.zeros(beta.shape)
-#
-#        if beta != None:
-##            self._compute_alpha_grad(beta, mu)
-#            self._alpha = self._compute_alpha(beta, mu)
-#            self._grad = self._compute_grad(self._alpha)
-#
-#        return self._grad
-
-#    def alpha(self, beta=None, mu=None):
-#
-#        if self.gamma < utils.TOLERANCE:
-#            return [0.0, 0.0, 0.0]
-#
-#        if beta != None:
-##            self._compute_alpha_grad(beta, mu)
-#            self._alpha = self._compute_alpha(beta, mu)
-#            self._grad = self._compute_grad(self._alpha)
-#
-#        return self._alpha
-
-#    def num_compacts(self):
-#
-##        return np.prod(self.shape)  # Number of variables
-#        return self._num_compacts
 
     # TODO: Change so that projection instead always takes a list
     def projection(self, *alpha):
