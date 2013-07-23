@@ -987,7 +987,7 @@ class Continuation(BaseModel):
         self.model.set_max_iter(self.iterations)
         self.model.set_data(X, y)
         start_vector_mu = self.model.get_start_vector()
-        start_vector_nomu = self.model.get_start_vector()
+#        start_vector_nomu = self.model.get_start_vector()
         if self.gap == None:
             mu = max(np.max(np.abs(utils.corr(X, y))), 0.01)  # Necessary?
             gap_mu = self.model.compute_tolerance(mu)
@@ -1001,7 +1001,7 @@ class Continuation(BaseModel):
 
         tau = 1.1
         eta = 2.0
-        mu_zero = 5e-10
+        mu_zero = 5e-12
 
         f = []
         for i in xrange(1, max_iter + 1):
@@ -1013,33 +1013,28 @@ class Continuation(BaseModel):
             self.model.use_mu(True)
             self.model.set_start_vector(start_vector_mu)
             self.model.fit(X, y, **kwargs)
-            beta_primal = self.model.get_transform()
-            start_vector_mu = start_vectors.IdentityStartVector(beta_primal)
-
-            self.model.set_start_vector(start_vector_mu)
-            gap_mu = self._gap(X, y)
-
-            utils.debug("With mu: Continuation with mu = ",
-                                self.model.get_mu(), \
-                    ", tolerance = ", self.model.get_tolerance(), \
-                    ", iterations = ", self.model.get_algorithm().iterations, \
-                    ", gap = ", gap_mu)
-
-            # With mu "very small"
-            self.model.set_mu(mu)  # min(mu, mu_zero))
-            self.model.use_mu(True)
-            if i == 1:
-                self.model.set_start_vector(start_vector_mu)
-            else:
-                self.model.set_start_vector(start_vector_nomu)
-            self.model.fit(X, y, **kwargs)
             f = f + self.model.get_algorithm().f[1:]  # Skip the first, same
             beta_old = beta_new
             beta_new = self.model.get_transform()
-            start_vector_nomu = start_vectors.IdentityStartVector(beta_new)
+            start_vector_mu = start_vectors.IdentityStartVector(beta_new)
 
-            self.model.set_start_vector(start_vector_nomu)
-            gap_nomu = self._gap(X, y)
+            self.model.set_start_vector(start_vector_mu)
+#            gap_mu = self._gap(X, y)
+            alpha_mu = self.model.get_g().alpha()
+            gap_mu = self.model.phi(beta=self.model._beta, alpha=alpha_mu) \
+                        - self.model.phi(beta=None, alpha=alpha_mu)
+
+#            utils.debug("With mu: Continuation with mu = ",
+#                                self.model.get_mu(), \
+#                    ", tolerance = ", self.model.get_tolerance(), \
+#                    ", iterations = ", self.model.get_algorithm().iterations, \
+#                    ", gap = ", gap_mu)
+
+            # With mu "very small"
+            alpha_nomu = self.model.get_g().alpha(beta_new, min(mu, mu_zero))
+            gap_nomu = self.model.phi(beta=self.model._beta,
+                                    alpha=alpha_nomu) \
+                        - self.model.phi(beta=None, alpha=alpha_nomu)
 
             utils.debug("No mu: Continuation with mu = ",
                                 self.model.get_mu(), \
@@ -1051,9 +1046,9 @@ class Continuation(BaseModel):
                 print "Converged in G!!"
                 break
 
-#            if len(f) > 1 and abs(f[-2] - f[-1]) < self.model.get_tolerance():
-#                print "Converged in f!!"
-#                break
+            if len(f) > 1 and abs(f[-2] - f[-1]) < self.model.get_tolerance():
+                print "Converged in f!!"
+                break
 
             if utils.norm1(beta_old - beta_new) < self.model.get_tolerance():
                 print "Converged in beta!!"

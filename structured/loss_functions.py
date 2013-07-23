@@ -452,16 +452,16 @@ class CombinedNesterovLossFunction(NesterovFunction, DataDependent):
         if hasattr(self.b, 'precompute'):
             self.b.precompute(*args, **kwargs)
 
-    def alpha(self, beta=None):
+    def alpha(self, beta=None, mu=None):
 
         if hasattr(self.a, 'alpha') and hasattr(self.b, 'alpha'):
-            return self.a.alpha(beta) + self.b.alpha(beta)  # Merge
+            return self.a.alpha(beta, mu=mu) + self.b.alpha(beta, mu=mu)
 
         elif hasattr(self.a, 'alpha'):
-            return self.a.alpha(beta)
+            return self.a.alpha(beta, mu=mu)
 
         elif hasattr(self.b, 'alpha'):
-            return self.b.alpha(beta)
+            return self.b.alpha(beta, mu=mu)
 
         else:
             raise ValueError('At least one loss function must be Nesterov')

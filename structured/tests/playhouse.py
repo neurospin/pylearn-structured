@@ -906,7 +906,7 @@ if __name__ == "__main__":
 #    np.random.seed(42)
 
     eps = 0.001
-    maxit = 10
+    maxit = 5
     cont_maxit = 100
     gamma = 15.0
     l = 0.8
@@ -1005,7 +1005,7 @@ if __name__ == "__main__":
 #            lr.set_tolerance(tolerance)
 #            lr.set_max_iter(maxit)
 #            lr.fit(X, y)
-#            v.append(np.sum((beta - lr.beta) ** 2.0))
+#            v.append(np.sum((beta - lr._beta) ** 2.0))
 #            x.append(l)
 #            print "l = %.2f => %f" % (l, v[-1])
 #
