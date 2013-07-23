@@ -1068,8 +1068,8 @@ if __name__ == "__main__":
     l = 3.14159
     density = float(0.5)  # Fraction of non-zero values. Must be \in [0, 1]
     snr = float(100)  # 100 = |X.b| / |e|
-    n = 25
-    p = 50
+    n = 2000
+    p = 10000
     ps = int(round(p * density))  # <= p
     #    M = (np.random.randn(n, p) - 0.5) * 2.0
     #    M = np.random.randn(n, p)
@@ -1081,34 +1081,39 @@ if __name__ == "__main__":
     norm_e = np.sqrt(np.sum(e ** 2.0))
     e = e / norm_e
 
-    snr *= np.sqrt(np.sum(e ** 2.0))  # Not necessary, but might be later!
-
     low = 0.0
     high = snr
-    for i in xrange(10):
+    for i in xrange(30):
         print "low:", low, "high:", high
+        np.random.seed(42)
         X, y, beta = lasso.load(l, density, high, M, e)
         val = np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0))
         if val > snr:
             break
         else:
-            high *= 2.0
-    for i in xrange(10):
-        mid = (high - low) / 2.0
+            low = high
+            high = high * 2.0
+    for i in xrange(30):
+        mid = low + (high - low) / 2.0
         print "low:", low, "mid:", mid, "high:", high
+        np.random.seed(42)
         X, y, beta = lasso.load(l, density, mid, M, e)
         val = np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0)) - snr
         if val > 0.0:
             high = mid
         else:
             low = mid
+
         print "  val:", val
+
+        if abs(val) < utils.TOLERANCE:
+            break
+
     mid = (high - low) / 2.0
 
     print "snr = %.5f = %.5f = |X.b| / |e| = %.5f / %.5f" \
-            % (snr, np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0)),
-               np.sqrt(np.sum(np.dot(X, beta) ** 2.0)),
-               np.sqrt(np.sum(e ** 2.0)))
+            % (snr, np.linalg.norm(np.dot(X, beta) / np.linalg.norm(e)),
+               np.linalg.norm(np.dot(X, beta)), np.linalg.norm(e))
 
 #    tolerance = 0.00005
 #    maxit = 20000

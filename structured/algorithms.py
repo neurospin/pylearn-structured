@@ -912,7 +912,8 @@ class BisectionMethod(BaseAlgorithm):
 
     I.e. returns a b such that f(b) = 0.
 
-    If no root exist on the line between b_0 and b_1, the result is undefined.
+    If no root exist on the line between b_0 and b_1, the result is
+    undefined (but will be either b_0 or b_1).
     """
     def __init__(self, function, max_iter=100, tolerance=TOLERANCE, **kwargs):
         """
