@@ -6,5 +6,6 @@ Created on Mon Apr 22 11:31:13 2013
 """
 
 import Russett
+import simulated
 
-__all__ = ['Russett']
+__all__ = ['Russett', 'simulated']

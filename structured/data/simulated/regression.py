@@ -126,13 +126,9 @@ def load(size=[[100, 100]], rho=[0.05], delta=0.1, eps=None, sparsity=0.5,
     var = (np.sum(y ** 2.0) / float(n - 1)) / float(snr)
     e = np.random.randn(n, 1)
     e *= np.sqrt(var)
-    y += e
+    y -= e
 
     return X, y, b, e
-
-
-def labels():
-    pass
 
 
 if __name__ == "__main__":

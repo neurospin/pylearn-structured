@@ -11,12 +11,13 @@ import algorithms
 import preprocess
 import prox_ops
 # TODO: Remove prox_ops, and/or move relevant parts to loss_functions.
+import data
 import tests
 import utils
 import loss_functions
 import start_vectors
 
-__version__ = '0.0.9'
+__version__ = '0.0.98'
 
 __all__ = ['models', 'prox_ops', 'algorithms', 'preprocess',
-           'tests', 'utils', 'loss_functions', 'start_vectors']
+           'data', 'tests', 'utils', 'loss_functions', 'start_vectors']

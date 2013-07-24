@@ -4,6 +4,7 @@ import structured.algorithms as algorithms
 import structured.preprocess as preprocess
 import structured.models as models
 import structured.utils as utils
+import structured.data.Russett as Russett
 from structured.utils import direct, TOLERANCE, MAX_ITER, corr, cov, norm
 from structured.utils import optimal_shrinkage
 from structured.utils.testing import assert_array_almost_equal, orth_matrix
@@ -33,7 +34,6 @@ def test_rgcca():
     X, Y = orth_matrix(10)
     Z = np.random.rand(10, 10)
 
-    import structured.tests.data.Russett as Russett
     X, Y, Z = Russett.load()
 
     preprocX = preprocess.PreprocessQueue([preprocess.Center(),
