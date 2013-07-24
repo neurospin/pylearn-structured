@@ -144,6 +144,9 @@ class BaseModel(object):
         if not isinstance(self.algorithm, algorithms.BaseAlgorithm):
             raise ValueError('The algorithm must be an instance of ' \
                              '"BaseAlgorithm"')
+        # TODO: This does not works since algorithms are not stateless.
+        # They must be made so. In particular, any methods g and h set will
+        # not be available after this.
         self.algorithm = algorithm
 
     def get_prox_op(self):

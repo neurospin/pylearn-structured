@@ -1014,58 +1014,58 @@ if __name__ == "__main__":
 #        plot.axis([a / scale, b / scale, min(v), max(v)])
 #    plot.show()
 
-    # Relevant tests for EN + TV for the paper!
-    gammas = [0.50, 1.00, 1.50, 2.00, 2.50, 3.00]
-    for i in xrange(len(gammas)):
-        lambd = float(1.00)
-        gamma = float(gammas[i])  # float(1.142)
-        density = float(0.5)  # Fraction of non-zero values. Must be \in [0, 1]
-        snr = float(10.0)  # ~SNR
-        n = 25
-        p = 50
-        ps = int(round(p * density))  # <= p
-        #    P = (np.random.randn(n, p) - 0.5) * 2.0
-        #    P = np.random.randn(n, p)
-        Sigma = 0.8 * np.ones((p, p)) + 0.2 * np.eye(p)
-        Mu = np.zeros(p)
-        P = np.random.multivariate_normal(Mu, Sigma, n)
-        e = np.random.randn(n, 1)
-        #    e = np.random.rand(n, 1)
-        e = e / np.sqrt(np.sum(e ** 2.0))
-
-        np.random.seed(42)
-        X, y, beta = l1_l2_tv.load(lambd, 1.0 - lambd, gamma, density, snr, P, e)
-
-        tolerance = 0.00001
-        maxit = 50000
-        mu = 0.00001
-
-        v = []
-        x = []
-        scale = 100.0
-        value = gamma
-        a = max(0, int(round(value * scale - scale / 2.0)))
-        b = int(round(value * scale + scale / 2.0))
-        start_vector = start_vectors.RandomStartVector()
-        for val in xrange(a, b):
-            l = lambd
-            g = val / float(scale)
-            axis = g
-            lr = models.ElasticNetTV(l, g, shape=[1, 1, p], mu=mu)
-            lr.set_start_vector(start_vector)
-            lr.set_tolerance(tolerance)
-            lr.set_max_iter(maxit)
-            lr.fit(X, y)
-            start_vector = start_vectors.IdentityStartVector(lr._beta)
-            v.append(np.sum((beta - lr._beta) ** 2.0))
-            x.append(axis)
-            print "true = %.2f => %f" % (axis, v[-1])
-
-        plot.subplot(len(gammas), 1, i + 1)
-        plot.plot(x, v, '-g')
-        plot.title("true: %.2f, min: %.2f" % (value, x[np.argmin(v)]))
-        plot.axis([a / scale, b / scale, min(v), max(v)])
-    plot.show()
+#    # Relevant tests for EN + TV for the paper!
+#    gammas = [1.50, 2.00, 2.50]
+#    for i in xrange(len(gammas)):
+#        lambd = float(1.00)
+#        gamma = float(gammas[i])  # float(1.142)
+#        density = float(0.5)  # Fraction of non-zero values. Must be \in [0, 1]
+#        snr = float(10.0)  # ~SNR
+#        n = 25
+#        p = 50
+#        ps = int(round(p * density))  # <= p
+#        #    P = (np.random.randn(n, p) - 0.5) * 2.0
+#        #    P = np.random.randn(n, p)
+#        Sigma = 0.8 * np.ones((p, p)) + 0.2 * np.eye(p)
+#        Mu = np.zeros(p)
+#        P = np.random.multivariate_normal(Mu, Sigma, n)
+#        e = np.random.randn(n, 1)
+#        #    e = np.random.rand(n, 1)
+#        e = e / np.sqrt(np.sum(e ** 2.0))
+#
+#        np.random.seed(42)
+#        X, y, beta = l1_l2_tv.load(lambd, 1.0 - lambd, gamma, density, snr, P, e)
+#
+#        tolerance = 0.00001
+#        maxit = 25000
+#        mu = 0.00001
+#
+#        v = []
+#        x = []
+#        scale = 50.0
+#        value = gamma
+#        a = max(0, int(round(value * scale - scale / 2.0)))
+#        b = int(round(value * scale + scale / 2.0))
+#        start_vector = start_vectors.RandomStartVector()
+#        for val in xrange(a, b):
+#            l = lambd
+#            g = val / float(scale)
+#            axis = g
+#            lr = models.ElasticNetTV(l, g, shape=[1, 1, p], mu=mu)
+#            lr.set_start_vector(start_vector)
+#            lr.set_tolerance(tolerance)
+#            lr.set_max_iter(maxit)
+#            lr.fit(X, y)
+#            start_vector = start_vectors.IdentityStartVector(lr._beta)
+#            v.append(np.sum((beta - lr._beta) ** 2.0))
+#            x.append(axis)
+#            print "true = %.2f => %f" % (axis, v[-1])
+#
+#        plot.subplot(len(gammas), 1, i + 1)
+#        plot.plot(x, v, '-g')
+#        plot.title("true: %.2f, min: %.2f" % (value, x[np.argmin(v)]))
+#        plot.axis([a / scale, b / scale, min(v), max(v)])
+#    plot.show()
 
 
 #     # Test to find SNR for Lasso
@@ -1127,3 +1127,58 @@ if __name__ == "__main__":
 ##    plot.title("l: %.2f, min: %.2f" % (lambd, x[np.argmin(v)]))
 ##    plot.axis([a / scale, b / scale, min(v), max(v)])
 ##    plot.show()
+
+     # Test to find SNR for EN + TV
+    tolerance = 0.00001
+    maxit = 25000
+    mu = 0.00001
+    alg = algorithms.FISTARegression()
+
+    l = 2.71828
+    k = 0.61803
+    gamma = 3.14159
+    density = float(0.5)  # Fraction of non-zero values. Must be \in [0, 1]
+    snr = float(100)  # 100 = |X.b| / |e|
+    n = 5
+    p = 10
+    ps = int(round(p * density))  # <= p
+    #    M = (np.random.randn(n, p) - 0.5) * 2.0
+    #    M = np.random.randn(n, p)
+    Sigma = 0.8 * np.ones((p, p)) + 0.2 * np.eye(p)
+    Mu = np.zeros(p)
+    M = np.random.multivariate_normal(Mu, Sigma, n)
+    e = np.random.randn(n, 1)
+    #    e = np.random.rand(n, 1)
+    norm_e = np.sqrt(np.sum(e ** 2.0))
+    e = e / norm_e
+
+    X, y, beta = l1_l2_tv.load(l, k, gamma, density, snr, M, e)
+
+    v = []
+    x = []
+    scale = 20.0
+    value = k
+    a = max(0, int(round(value * scale - scale / 2.0)))
+    b = int(round(value * scale + scale / 2.0))
+    start_vector = start_vectors.RandomStartVector()
+    for val in xrange(a, b):
+        l_ = l  # val / float(scale)
+        k_ = val / float(scale)
+        g_ = gamma  # val / float(scale)
+
+        model = models.RidgeRegressionL1TV(l_, k_, g_, shape=[1, 1, p],
+                                           mu=mu, compress=False,
+                                           algorithm=alg)
+        model.set_start_vector(start_vector)
+        model.set_tolerance(tolerance)
+        model.set_max_iter(maxit)
+        model.fit(X, y)
+        start_vector = start_vectors.IdentityStartVector(model._beta)
+        v.append(np.sum((beta - model._beta) ** 2.0))
+        x.append(val / float(scale))
+        print "true = %.2f => %f" % (val / float(scale), v[-1])
+
+    plot.plot(x, v, '-g')
+    plot.title("true: %.2f, min: %.2f" % (value, x[np.argmin(v)]))
+    plot.axis([a / scale, b / scale, min(v), max(v)])
+    plot.show()

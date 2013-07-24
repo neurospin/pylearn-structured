@@ -9,6 +9,8 @@ Created on Tue Jul 16 12:32:00 2013
 __all__ = ['load']
 
 import numpy as np
+import structured.utils as utils
+import structured.algorithms as algorithms
 
 
 def load(l, k, gamma, density, snr, P, e):
@@ -50,6 +52,41 @@ def load(l, k, gamma, density, snr, P, e):
 
     beta : The generated regression vector.
     """
+    seed = np.random.randint(2147483648)
+
+    low = 0.0
+    high = 1.0
+    for i in xrange(30):
+        print "low:", low, "high:", high
+        np.random.seed(seed)
+        X, y, beta = _generate(l, k, gamma, density, high, P, e)
+        val = np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0))
+        if val > snr:
+            break
+        else:
+            low = high
+            high = high * 2.0
+
+    def f(x):
+        np.random.seed(seed)
+        X, y, beta = _generate(l, k, gamma, density, x, P, e)
+        return np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0)) - snr
+
+    bm = algorithms.BisectionMethod(max_iter=20)
+    bm.run(utils.AnonymousClass(f=f), low, high)
+
+    np.random.seed(seed)
+    X, y, beta = _generate(l, k, gamma, density, bm.x, P, e)
+    print "snr = %.5f = %.5f = |X.b| / |e| = %.5f / %.5f" \
+            % (snr, np.linalg.norm(np.dot(X, beta) / np.linalg.norm(e)),
+               np.linalg.norm(np.dot(X, beta)), np.linalg.norm(e))
+
+    return X, y, beta
+#    return _generate(l, k, gamma, density, snr, P, e)
+
+
+def _generate(l, k, gamma, density, snr, P, e):
+
     l = float(l)
     k = float(k)
     gamma = float(gamma)
@@ -76,21 +113,24 @@ def load(l, k, gamma, density, snr, P, e):
 
     X = np.zeros(P.shape)
     a = np.zeros((p, 1))
-    a[0, 0] = (-k * beta[0, 0] - l - gamma) / b[0, 0]  # Warning: gamma was +
+    a[0, 0] = (-k * beta[0, 0] - l - gamma) / b[0, 0]
     X[:, 0] = P[:, 0] * a[0, 0]
-    for i in xrange(1, ps):  # End was: ps - 1
+#    print "1 p = %d" % (0)
+    for i in xrange(1, ps):
         a[i, 0] = (-k * beta[i, 0] - l) / b[i, 0]
         X[:, i] = P[:, i] * a[i, 0]
-#    a[ps - 1, 0] = (-k * beta[ps - 1, 0] - l + 2 * gamma) / b[ps - 1, 0]
-                                                     # Was [-1, 0]
+#        print "2 p = %d" % (i)
     a[ps, 0] = (-k * beta[ps, 0] - l * U(-1, 1) - gamma * U(-2, 0)) / b[ps, 0]
     X[:, ps] = P[:, ps] * a[ps, 0]
+#    print "3 p = %d" % (ps)
     for i in xrange(ps + 1, p - 1):
         a[i, 0] = (-k * beta[i, 0] - l * U(-1, 1) - gamma * U(-2, 2)) / b[i, 0]
         X[:, i] = P[:, i] * a[i, 0]
+#        print "4 p = %d" % (i)
     a[p - 1, 0] = (-k * beta[p - 1, 0] - l * U(-1, 1) - gamma * U(-1, 1)) \
                     / b[p - 1, 0]
     X[:, p - 1] = P[:, p - 1] * a[p - 1, 0]
+#    print "5 p = %d" % (p - 1)
 
     y = np.dot(X, beta) - e
 
