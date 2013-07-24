@@ -9,6 +9,8 @@ Created on Tue Jul 16 11:33:05 2013
 __all__ = ['load']
 
 import numpy as np
+import structured.utils as utils
+import structured.algorithms as algorithms
 
 
 def load(l, density, snr, P, e):
@@ -44,6 +46,37 @@ def load(l, density, snr, P, e):
 
     beta : The generated regression vector.
     """
+
+    seed = np.random.randint(2147483648)
+
+    low = 0.0
+    high = 1.0
+    for i in xrange(30):
+        np.random.seed(seed)
+        X, y, beta = _generate(l, density, high, P, e)
+        val = np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0))
+        if val > snr:
+            break
+        else:
+            low = high
+            high = high * 2.0
+
+    def f(x):
+        np.random.seed(seed)
+        X, y, beta = _generate(l, density, x, P, e)
+        return np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0)) - snr
+
+    bm = algorithms.BisectionMethod(max_iter=20)
+    bm.run(utils.AnonymousClass(f=f), low, high)
+
+    np.random.seed(seed)
+    X, y, beta = _generate(l, density, bm.x, P, e)
+
+    return X, y, beta
+#    return _generate(l, density, snr, P, e)
+
+
+def _generate(l, density, snr, P, e):
     l = float(l)
     density = float(density)
     snr = float(snr)

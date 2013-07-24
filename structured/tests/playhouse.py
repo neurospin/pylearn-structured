@@ -1085,31 +1085,31 @@ if __name__ == "__main__":
 #    norm_e = np.sqrt(np.sum(e ** 2.0))
 #    e = e / norm_e
 #
-#    seed = np.random.randint(2000000000)
-#
-#    low = 0.0
-#    high = 1.0
-#    for i in xrange(30):
-#        print "low:", low, "high:", high
-#        np.random.seed(seed)
-#        X, y, beta = lasso.load(l, density, high, M, e)
-#        val = np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0))
-#        if val > snr:
-#            break
-#        else:
-#            low = high
-#            high = high * 2.0
-#
-#    def f(x):
-#        np.random.seed(seed)
-#        X, y, beta = lasso.load(l, density, x, M, e)
-#        return np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0)) - snr
-#
-#    bm = algorithms.BisectionMethod(max_iter=20)
-#    bm.run(utils.AnonymousClass(f=f), low, high)
-#
-#    np.random.seed(seed)
-#    X, y, beta = lasso.load(l, density, bm.x, M, e)
+##    seed = np.random.randint(2000000000)
+##
+##    low = 0.0
+##    high = 1.0
+##    for i in xrange(30):
+##        print "low:", low, "high:", high
+##        np.random.seed(seed)
+##        X, y, beta = lasso.load(l, density, high, M, e)
+##        val = np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0))
+##        if val > snr:
+##            break
+##        else:
+##            low = high
+##            high = high * 2.0
+##
+##    def f(x):
+##        np.random.seed(seed)
+##        X, y, beta = lasso.load(l, density, x, M, e)
+##        return np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0)) - snr
+##
+##    bm = algorithms.BisectionMethod(max_iter=20)
+##    bm.run(utils.AnonymousClass(f=f), low, high)
+##
+##    np.random.seed(seed)
+#    X, y, beta = lasso.load(l, density, snr, M, e)
 #    print "snr = %.5f = %.5f = |X.b| / |e| = %.5f / %.5f" \
 #            % (snr, np.linalg.norm(np.dot(X, beta) / np.linalg.norm(e)),
 #               np.linalg.norm(np.dot(X, beta)), np.linalg.norm(e))
@@ -1128,57 +1128,63 @@ if __name__ == "__main__":
 ##    plot.axis([a / scale, b / scale, min(v), max(v)])
 ##    plot.show()
 
+
+
      # Test to find SNR for EN + TV
     tolerance = 0.00001
-    maxit = 25000
+    maxit = 15000
     mu = 0.00001
     alg = algorithms.FISTARegression()
 
-    l = 2.71828
-    k = 0.61803
-    gamma = 3.14159
-    density = float(0.5)  # Fraction of non-zero values. Must be \in [0, 1]
-    snr = float(100)  # 100 = |X.b| / |e|
-    n = 5
-    p = 10
-    ps = int(round(p * density))  # <= p
-    #    M = (np.random.randn(n, p) - 0.5) * 2.0
-    #    M = np.random.randn(n, p)
-    Sigma = 0.8 * np.ones((p, p)) + 0.2 * np.eye(p)
-    Mu = np.zeros(p)
-    M = np.random.multivariate_normal(Mu, Sigma, n)
-    e = np.random.randn(n, 1)
-    #    e = np.random.rand(n, 1)
-    norm_e = np.sqrt(np.sum(e ** 2.0))
-    e = e / norm_e
+    gammas = [2.00, 2.25, 2.50, 2.75, 3.00]
+    for i in xrange(len(gammas)):
+        l = 2.71828
+        k = 0.61803
+#        gamma = 3.14159
+        gamma = gammas[i]
+        density = float(0.5)  # Fraction of non-zero values. Must be \in [0, 1]
+        snr = float(100)  # 100 = |X.b| / |e|
+        n = 5
+        p = 10
+        ps = int(round(p * density))  # <= p
+        #    M = (np.random.randn(n, p) - 0.5) * 2.0
+        #    M = np.random.randn(n, p)
+        Sigma = 0.8 * np.ones((p, p)) + 0.2 * np.eye(p)
+        Mu = np.zeros(p)
+        M = np.random.multivariate_normal(Mu, Sigma, n)
+        e = np.random.randn(n, 1)
+        #    e = np.random.rand(n, 1)
+        norm_e = np.sqrt(np.sum(e ** 2.0))
+        e = e / norm_e
+    
+        X, y, beta = l1_l2_tv.load(l, k, gamma, density, snr, M, e)
+    
+        v = []
+        x = []
+        scale = 20.0
+        value = gamma  # Ändra här också!
+        a = max(0, int(round(value * scale - scale / 2.0)))
+        b = int(round(value * scale + scale / 2.0))
+        start_vector = start_vectors.RandomStartVector()
+        for val in xrange(a, b):
+            l_ = l  # val / float(scale)
+            k_ = k  # val / float(scale)
+            g_ = val / float(scale)
+    
+            model = models.RidgeRegressionL1TV(l_, k_, g_, shape=[1, 1, p],
+                                               mu=mu, compress=False,
+                                               algorithm=alg)
+            model.set_start_vector(start_vector)
+            model.set_tolerance(tolerance)
+            model.set_max_iter(maxit)
+            model.fit(X, y)
+            start_vector = start_vectors.IdentityStartVector(model._beta)
+            v.append(np.sum((beta - model._beta) ** 2.0))
+            x.append(val / float(scale))
+            print "true = %.2f => %f" % (val / float(scale), v[-1])
 
-    X, y, beta = l1_l2_tv.load(l, k, gamma, density, snr, M, e)
-
-    v = []
-    x = []
-    scale = 20.0
-    value = k
-    a = max(0, int(round(value * scale - scale / 2.0)))
-    b = int(round(value * scale + scale / 2.0))
-    start_vector = start_vectors.RandomStartVector()
-    for val in xrange(a, b):
-        l_ = l  # val / float(scale)
-        k_ = val / float(scale)
-        g_ = gamma  # val / float(scale)
-
-        model = models.RidgeRegressionL1TV(l_, k_, g_, shape=[1, 1, p],
-                                           mu=mu, compress=False,
-                                           algorithm=alg)
-        model.set_start_vector(start_vector)
-        model.set_tolerance(tolerance)
-        model.set_max_iter(maxit)
-        model.fit(X, y)
-        start_vector = start_vectors.IdentityStartVector(model._beta)
-        v.append(np.sum((beta - model._beta) ** 2.0))
-        x.append(val / float(scale))
-        print "true = %.2f => %f" % (val / float(scale), v[-1])
-
-    plot.plot(x, v, '-g')
-    plot.title("true: %.2f, min: %.2f" % (value, x[np.argmin(v)]))
-    plot.axis([a / scale, b / scale, min(v), max(v)])
+        plot.subplot(len(gammas), 1, i + 1)
+        plot.plot(x, v, '-g')
+        plot.title("true: %.2f, min: %.2f" % (value, x[np.argmin(v)]))
+        plot.axis([a / scale, b / scale, min(v), max(v)])
     plot.show()
