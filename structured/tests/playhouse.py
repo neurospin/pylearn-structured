@@ -1132,11 +1132,11 @@ if __name__ == "__main__":
 
      # Test to find SNR for EN + TV
     tolerance = 0.00001
-    maxit = 15000
+    maxit = 25000
     mu = 0.00001
     alg = algorithms.FISTARegression()
 
-    gammas = [2.00, 2.25, 2.50, 2.75, 3.00]
+    gammas = [3.00, 3.25, 3.50, 3.75, 4.00]
     for i in xrange(len(gammas)):
         l = 2.71828
         k = 0.61803
@@ -1156,9 +1156,9 @@ if __name__ == "__main__":
         #    e = np.random.rand(n, 1)
         norm_e = np.sqrt(np.sum(e ** 2.0))
         e = e / norm_e
-    
+
         X, y, beta = l1_l2_tv.load(l, k, gamma, density, snr, M, e)
-    
+
         v = []
         x = []
         scale = 20.0
@@ -1170,7 +1170,7 @@ if __name__ == "__main__":
             l_ = l  # val / float(scale)
             k_ = k  # val / float(scale)
             g_ = val / float(scale)
-    
+
             model = models.RidgeRegressionL1TV(l_, k_, g_, shape=[1, 1, p],
                                                mu=mu, compress=False,
                                                algorithm=alg)

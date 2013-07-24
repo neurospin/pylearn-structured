@@ -884,6 +884,14 @@ class ContinuationRun(BaseModel):
             self._beta = self.model.get_transform()
             f = f + self.model.get_algorithm().f[1:]  # Skip the first, same
 
+            if len(f) > 1 and abs(f[-2] - f[-1]) < self.model.get_tolerance():
+                print "Converged in f!!"
+                break
+
+#            if utils.norm1(beta_old - beta_new) < self.model.get_tolerance():
+#                print "Converged in beta!!"
+#                break
+
             start_vector = start_vectors.IdentityStartVector(self._beta)
 
         self.model.get_algorithm().f = f
