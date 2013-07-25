@@ -113,24 +113,33 @@ def _generate(l, k, gamma, density, snr, P, e):
 
     X = np.zeros(P.shape)
     a = np.zeros((p, 1))
+
+    # Case 1: Positive edge
     a[0, 0] = (-k * beta[0, 0] - l - gamma) / b[0, 0]
     X[:, 0] = P[:, 0] * a[0, 0]
-#    print "1 p = %d" % (0)
+
+    # Case 2: Positive neighbours left and right
     for i in xrange(1, ps):
         a[i, 0] = (-k * beta[i, 0] - l) / b[i, 0]
         X[:, i] = P[:, i] * a[i, 0]
-#        print "2 p = %d" % (i)
-    a[ps, 0] = (-k * beta[ps, 0] - l * U(-1, 1) - gamma * U(-2, 0)) / b[ps, 0]
+
+    # Case 3: Positive neighbour left, zero neighbour right
+#    a[ps, 0] = (-k * beta[ps, 0] - l * U(-1, 1) - gamma * U(-2, 0)) / b[ps, 0]
+    a[ps, 0] = (-k * beta[ps, 0] - l * U(-1, 1) - gamma * (U(-1, 1) + 1)) \
+                    / b[ps, 0]
     X[:, ps] = P[:, ps] * a[ps, 0]
-#    print "3 p = %d" % (ps)
+
+    # Case 4: Zero neighbours left and right
     for i in xrange(ps + 1, p - 1):
-        a[i, 0] = (-k * beta[i, 0] - l * U(-1, 1) - gamma * U(-2, 2)) / b[i, 0]
+#        a[i, 0] = (-k * beta[i, 0] - l * U(-1, 1) - gamma * U(-2, 2)) / b[i, 0]
+        a[i, 0] = (-k * beta[i, 0] - l * U(-1, 1) - gamma * (U(-1, 1) + U(-1, 1))) \
+                    / b[i, 0]
         X[:, i] = P[:, i] * a[i, 0]
-#        print "4 p = %d" % (i)
+
+    # Case 5: Zero edge
     a[p - 1, 0] = (-k * beta[p - 1, 0] - l * U(-1, 1) - gamma * U(-1, 1)) \
                     / b[p - 1, 0]
     X[:, p - 1] = P[:, p - 1] * a[p - 1, 0]
-#    print "5 p = %d" % (p - 1)
 
     y = np.dot(X, beta) - e
 

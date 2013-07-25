@@ -13,8 +13,8 @@ import structured.preprocess as preprocess
 import structured.start_vectors as start_vectors
 import structured.loss_functions as loss_functions
 import structured.algorithms as algorithms
-import structured.tests.data.simulated.lasso as lasso
-import structured.tests.data.simulated.l1_l2_tv as l1_l2_tv
+import structured.data.simulated.lasso as lasso
+import structured.data.simulated.l1_l2_tv as l1_l2_tv
 #import multiblock.start_vectors as start_vectors
 #import multiblock.prox_ops as prox_ops
 #import multiblock.schemes as schemes
@@ -1131,17 +1131,20 @@ if __name__ == "__main__":
 
 
      # Test to find SNR for EN + TV
-    tolerance = 0.00001
-    maxit = 25000
+    tolerance = 0.0001
+    maxit = 100000
     mu = 0.00001
     alg = algorithms.FISTARegression()
 
-    gammas = [3.00, 3.25, 3.50, 3.75, 4.00]
-    for i in xrange(len(gammas)):
+#    vals = [3.00, 3.25, 3.50, 3.75, 4.00]
+    vals = [4.00]
+    for i in xrange(len(vals)):
         l = 2.71828
         k = 0.61803
 #        gamma = 3.14159
-        gamma = gammas[i]
+        gamma = vals[i]
+        value = gamma  # Ändra här också!
+
         density = float(0.5)  # Fraction of non-zero values. Must be \in [0, 1]
         snr = float(100)  # 100 = |X.b| / |e|
         n = 5
@@ -1149,7 +1152,7 @@ if __name__ == "__main__":
         ps = int(round(p * density))  # <= p
         #    M = (np.random.randn(n, p) - 0.5) * 2.0
         #    M = np.random.randn(n, p)
-        Sigma = 0.8 * np.ones((p, p)) + 0.2 * np.eye(p)
+        Sigma = 0.9 * np.ones((p, p)) + 0.1 * np.eye(p)
         Mu = np.zeros(p)
         M = np.random.multivariate_normal(Mu, Sigma, n)
         e = np.random.randn(n, 1)
@@ -1161,15 +1164,14 @@ if __name__ == "__main__":
 
         v = []
         x = []
-        scale = 20.0
-        value = gamma  # Ändra här också!
-        a = max(0, int(round(value * scale - scale / 2.0)))
-        b = int(round(value * scale + scale / 2.0))
+        scale = 51.0
         start_vector = start_vectors.RandomStartVector()
-        for val in xrange(a, b):
-            l_ = l  # val / float(scale)
-            k_ = k  # val / float(scale)
-            g_ = val / float(scale)
+        a = max(0, value - 0.5)
+        b = value + 0.5
+        for val in np.linspace(a, b, scale):
+            l_ = l
+            k_ = k
+            g_ = val
 
             model = models.RidgeRegressionL1TV(l_, k_, g_, shape=[1, 1, p],
                                                mu=mu, compress=False,
@@ -1180,11 +1182,11 @@ if __name__ == "__main__":
             model.fit(X, y)
             start_vector = start_vectors.IdentityStartVector(model._beta)
             v.append(np.sum((beta - model._beta) ** 2.0))
-            x.append(val / float(scale))
-            print "true = %.2f => %f" % (val / float(scale), v[-1])
+            x.append(val)
+            print "true = %.2f => %f" % (val, v[-1])
 
-        plot.subplot(len(gammas), 1, i + 1)
+        plot.subplot(len(vals), 1, i + 1)
         plot.plot(x, v, '-g')
         plot.title("true: %.2f, min: %.2f" % (value, x[np.argmin(v)]))
-        plot.axis([a / scale, b / scale, min(v), max(v)])
+        plot.axis([a, b, min(v), max(v)])
     plot.show()
