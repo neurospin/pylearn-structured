@@ -1136,8 +1136,8 @@ if __name__ == "__main__":
     mu = 0.00001
     alg = algorithms.FISTARegression()
 
-#    vals = [3.00, 3.25, 3.50, 3.75, 4.00]
-    vals = [4.00]
+    vals = [6.00, 6.25, 6.50, 6.75, 7.00]
+#    vals = [6.00]
     for i in xrange(len(vals)):
         l = 2.71828
         k = 0.61803
@@ -1164,7 +1164,7 @@ if __name__ == "__main__":
 
         v = []
         x = []
-        scale = 51.0
+        scale = 101.0
         start_vector = start_vectors.RandomStartVector()
         a = max(0, value - 0.5)
         b = value + 0.5
@@ -1178,12 +1178,15 @@ if __name__ == "__main__":
                                                algorithm=alg)
             model.set_start_vector(start_vector)
             model.set_tolerance(tolerance)
-            model.set_max_iter(maxit)
+            if val == a:
+                model.set_max_iter(maxit * 10)
+            else:
+                model.set_max_iter(maxit)
             model.fit(X, y)
             start_vector = start_vectors.IdentityStartVector(model._beta)
             v.append(np.sum((beta - model._beta) ** 2.0))
             x.append(val)
-            print "true = %.2f => %f" % (val, v[-1])
+            print "true = %.2f => %.7f" % (val, v[-1])
 
         plot.subplot(len(vals), 1, i + 1)
         plot.plot(x, v, '-g')

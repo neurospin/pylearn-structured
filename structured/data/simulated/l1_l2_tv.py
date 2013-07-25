@@ -125,7 +125,7 @@ def _generate(l, k, gamma, density, snr, P, e):
 
     # Case 3: Positive neighbour left, zero neighbour right
 #    a[ps, 0] = (-k * beta[ps, 0] - l * U(-1, 1) - gamma * U(-2, 0)) / b[ps, 0]
-    a[ps, 0] = (-k * beta[ps, 0] - l * U(-1, 1) - gamma * (U(-1, 1) + 1)) \
+    a[ps, 0] = (-k * beta[ps, 0] - l * U(-1, 1) - gamma * (U(-1, 1) - 1)) \
                     / b[ps, 0]
     X[:, ps] = P[:, ps] * a[ps, 0]
 
