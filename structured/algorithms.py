@@ -950,7 +950,7 @@ class BisectionMethod(BaseAlgorithm):
             if f > 0:
                 x_1 = self.x
 
-            print "x:", self.x, "f:", f
+#            print "x:", self.x, "f:", f
 
             if np.sqrt(np.sum((x_1 - x_0) ** 2.0)) < self.tolerance:
                 break

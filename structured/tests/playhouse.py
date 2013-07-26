@@ -903,66 +903,79 @@ if __name__ == "__main__":
 #    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
 #    print
 
-#    # Testing the new continuation
-##    np.random.seed(42)
-#
-#    eps = 0.001
-#    maxit = 5
-#    cont_maxit = 100
-#    gamma = 15.0
-#    l = 0.8
-#    k = 1.0 - l
-#
-#    px = 1000
-#    py = 1
-#    pz = 1
-#    p = px * py * pz  # Must be even!
-#    n = 100
+    # Testing the new continuation
+    np.random.seed(42)
+
+    eps = 0.001
+    maxit = 5
+    cont_maxit = 100
+    gamma = 15.0
+    l = 0.8
+    k = 1.0 - l
+
+    px = 1000
+    py = 1
+    pz = 1
+    p = px * py * pz  # Must be even!
+    n = 100
 #    X = np.random.randn(n, p)
 #    betastar = np.concatenate((np.zeros((p / 2, 1)),
 #                               np.random.randn(p / 2, 1)))
 #    betastar = np.sort(np.abs(betastar), axis=0)
 #    y = np.dot(X, betastar)
-#
-#    start = time()
-#    m = models.RidgeRegressionL1TV(l, k, gamma, shape=(pz, py, px),
-#                                   compress=False)
-#    m.set_tolerance(eps)
+
+    Sigma = 0.999 * np.ones((p, p)) + 0.001 * np.eye(p)
+    Mu = np.zeros(p)
+    M = np.random.multivariate_normal(Mu, Sigma, n)
+    e = np.random.randn(n, 1)
+    e = e / np.sqrt(np.sum(e ** 2.0))
+    X, y, betastar = l1_l2_tv.load(l, k, gamma, density=0.5, snr=100.0,
+                                   M=M, e=e)
+    start_vector = start_vectors.IdentityStartVector(betastar \
+                                + 0.001 * np.random.randn(*betastar.shape))
+
+    start = time()
+    m = models.RidgeRegressionL1TV(l, k, gamma, shape=(pz, py, px),
+                                   compress=False)
+    m.set_tolerance(eps)
 #    m.set_max_iter(maxit)
+    m.set_max_iter(5000000)
+#    m.set_start_vector(start_vector)
 #    c = models.Continuation(m, cont_maxit)
-#    c.fit(X, y)
-#    computed_beta = c._beta
-#    print "time: ", (time() - start)
-#
-#    print "f: ", c.get_algorithm().f[-1]
-#    print "its: ", c.get_algorithm().iterations
-#
-#    plot.subplot(2, 2, 1)
-#    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
-#    plot.subplot(2, 2, 2)
-#    plot.plot(c.get_algorithm().f)
-#    plot.title("Continuation")
-#
-#    start = time()
-#    m = models.RidgeRegressionL1TV(l, k, gamma, shape=(pz, py, px),
-#                                   compress=False)
-#    m.set_tolerance(eps)
-#    m.set_max_iter(cont_maxit)
-#    cr = models.ContinuationRun(m, mus=[0.5 ** i for i in range(1, 5 + 1)])
-#    cr.fit(X, y)
-#    computed_beta = cr._beta
-#    print "time: ", (time() - start)
-#
-#    print "f: ", cr.get_algorithm().f[-1]
-#    print "its: ", cr.get_algorithm().iterations
-#
-#    plot.subplot(2, 2, 3)
-#    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
-#    plot.subplot(2, 2, 4)
-#    plot.plot(cr.get_algorithm().f)
-#    plot.title("Continuation Run")
-#
-#    plot.show()
+    c = m
+    c.fit(X, y)
+    computed_beta = c._beta
+    print "time: ", (time() - start)
+
+    print "f: ", c.get_algorithm().f[-1]
+    print "its: ", c.get_algorithm().iterations
+
+    plot.subplot(2, 2, 1)
+    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
+    plot.subplot(2, 2, 2)
+    plot.plot(c.get_algorithm().f)
+    plot.title("Continuation")
+
+    start = time()
+    m = models.RidgeRegressionL1TV(l, k, gamma, shape=(pz, py, px),
+                                   compress=False)
+    m.set_tolerance(eps)
+    m.set_max_iter(cont_maxit)
+    cr = models.ContinuationRun(m, mus=[0.5 ** i for i in range(1, 5 + 1)])
+    cr.fit(X, y)
+    computed_beta = cr._beta
+    print "time: ", (time() - start)
+
+    print "f: ", cr.get_algorithm().f[-1]
+    print "its: ", cr.get_algorithm().iterations
+
+    plot.subplot(2, 2, 3)
+    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
+    plot.subplot(2, 2, 4)
+    plot.plot(cr.get_algorithm().f)
+    plot.title("Continuation Run")
+
+    plot.show()
 
 
 
@@ -1130,66 +1143,66 @@ if __name__ == "__main__":
 
 
 
-     # Test to find SNR for EN + TV
-    tolerance = 0.0001
-    maxit = 100000
-    mu = 0.00001
-    alg = algorithms.FISTARegression()
-
-    vals = [6.00, 6.25, 6.50, 6.75, 7.00]
-#    vals = [6.00]
-    for i in xrange(len(vals)):
-        l = 2.71828
-        k = 0.61803
-#        gamma = 3.14159
-        gamma = vals[i]
-        value = gamma  # Ändra här också!
-
-        density = float(0.5)  # Fraction of non-zero values. Must be \in [0, 1]
-        snr = float(100)  # 100 = |X.b| / |e|
-        n = 5
-        p = 10
-        ps = int(round(p * density))  # <= p
-        #    M = (np.random.randn(n, p) - 0.5) * 2.0
-        #    M = np.random.randn(n, p)
-        Sigma = 0.9 * np.ones((p, p)) + 0.1 * np.eye(p)
-        Mu = np.zeros(p)
-        M = np.random.multivariate_normal(Mu, Sigma, n)
-        e = np.random.randn(n, 1)
-        #    e = np.random.rand(n, 1)
-        norm_e = np.sqrt(np.sum(e ** 2.0))
-        e = e / norm_e
-
-        X, y, beta = l1_l2_tv.load(l, k, gamma, density, snr, M, e)
-
-        v = []
-        x = []
-        scale = 101.0
-        start_vector = start_vectors.RandomStartVector()
-        a = max(0, value - 0.5)
-        b = value + 0.5
-        for val in np.linspace(a, b, scale):
-            l_ = l
-            k_ = k
-            g_ = val
-
-            model = models.RidgeRegressionL1TV(l_, k_, g_, shape=[1, 1, p],
-                                               mu=mu, compress=False,
-                                               algorithm=alg)
-            model.set_start_vector(start_vector)
-            model.set_tolerance(tolerance)
-            if val == a:
-                model.set_max_iter(maxit * 10)
-            else:
-                model.set_max_iter(maxit)
-            model.fit(X, y)
-            start_vector = start_vectors.IdentityStartVector(model._beta)
-            v.append(np.sum((beta - model._beta) ** 2.0))
-            x.append(val)
-            print "true = %.2f => %.7f" % (val, v[-1])
-
-        plot.subplot(len(vals), 1, i + 1)
-        plot.plot(x, v, '-g')
-        plot.title("true: %.2f, min: %.2f" % (value, x[np.argmin(v)]))
-        plot.axis([a, b, min(v), max(v)])
-    plot.show()
+#     # Test to find SNR for EN + TV
+#    tolerance = 0.0001
+#    maxit = 100000
+#    mu = 0.00001
+#    alg = algorithms.FISTARegression()
+#
+#    vals = [6.00, 6.25, 6.50, 6.75, 7.00]
+##    vals = [6.00]
+#    for i in xrange(len(vals)):
+#        l = 2.71828
+#        k = 0.61803
+##        gamma = 3.14159
+#        gamma = vals[i]
+#        value = gamma  # Ändra här också!
+#
+#        density = float(0.5)  # Fraction of non-zero values. Must be \in [0, 1]
+#        snr = float(100)  # 100 = |X.b| / |e|
+#        n = 5
+#        p = 10
+#        ps = int(round(p * density))  # <= p
+#        #    M = (np.random.randn(n, p) - 0.5) * 2.0
+#        #    M = np.random.randn(n, p)
+#        Sigma = 0.9 * np.ones((p, p)) + 0.1 * np.eye(p)
+#        Mu = np.zeros(p)
+#        M = np.random.multivariate_normal(Mu, Sigma, n)
+#        e = np.random.randn(n, 1)
+#        #    e = np.random.rand(n, 1)
+#        norm_e = np.sqrt(np.sum(e ** 2.0))
+#        e = e / norm_e
+#
+#        X, y, beta = l1_l2_tv.load(l, k, gamma, density, snr, M, e)
+#
+#        v = []
+#        x = []
+#        scale = 101.0
+#        start_vector = start_vectors.RandomStartVector()
+#        a = max(0, value - 0.5)
+#        b = value + 0.5
+#        for val in np.linspace(a, b, scale):
+#            l_ = l
+#            k_ = k
+#            g_ = val
+#
+#            model = models.RidgeRegressionL1TV(l_, k_, g_, shape=[1, 1, p],
+#                                               mu=mu, compress=False,
+#                                               algorithm=alg)
+#            model.set_start_vector(start_vector)
+#            model.set_tolerance(tolerance)
+#            if val == a:
+#                model.set_max_iter(maxit * 10)
+#            else:
+#                model.set_max_iter(maxit)
+#            model.fit(X, y)
+#            start_vector = start_vectors.IdentityStartVector(model._beta)
+#            v.append(np.sum((beta - model._beta) ** 2.0))
+#            x.append(val)
+#            print "true = %.2f => %.7f" % (val, v[-1])
+#
+#        plot.subplot(len(vals), 1, i + 1)
+#        plot.plot(x, v, '-g')
+#        plot.title("true: %.2f, min: %.2f" % (value, x[np.argmin(v)]))
+#        plot.axis([a, b, min(v), max(v)])
+#    plot.show()
