@@ -809,7 +809,7 @@ class RGCCA(PLSBaseModel):
 
 class ContinuationRun(BaseModel):
 
-    def __init__(self, model, tolerances=None, mus=None, algorithm=None,
+    def __init__(self, model, gaps=None, mus=None, algorithm=None,
                  *args, **kwargs):
         """Performs continuation for the given method. I.e. runs the method
         with sucessively smaller values of mu and uses the output from the
@@ -820,15 +820,15 @@ class ContinuationRun(BaseModel):
         model : The NesterovProximalGradient model to perform continuation
                 on.
 
-        tolerances : A list of successively smaller tolerances values. The
-                tolerances are used as terminating condition for the
-                continuation run. Mu is computed from this list of tolerances.
-                Note that only one of tolerances and mus can be given.
+        gaps : A list of successively smaller gap values. The gaps are used as
+                terminating condition for the continuation run. Mu is computed
+                from this list of gaps. Note that only one of gaps and mus can
+                be given.
 
         mus : A list of successively smaller values of mu, the regularisation
-                parameter in the Nesterov smoothing. The tolerances are
+                parameter in the Nesterov smoothing. The gaps are
                 computed from this list of mus. Note that only one of mus and
-                tolerances can be given.
+                gaps can be given.
 
         algorithm : The particular algorithm to use.
         """
@@ -840,7 +840,7 @@ class ContinuationRun(BaseModel):
         super(ContinuationRun, self).__init__(num_comp=1, algorithm=algorithm,
                                               *args, **kwargs)
         self.model = model
-        self.tolerances = tolerances
+        self.gaps = gaps
         self.mus = mus
 
     def get_transform(self, index=0):
@@ -864,14 +864,16 @@ class ContinuationRun(BaseModel):
         if self.mus != None:
             lst = self.mus
         else:
-            lst = self.tolerances
+            lst = self.gaps
+
+        beta_new = 0
 
         for item in lst:
             if self.mus != None:
                 self.model.set_mu(item)
-                self.model.set_tolerance(self.model.compute_tolerance(item))
+#                self.model.set_tolerance(self.model.compute_gap(item))
             else:
-                self.model.set_tolerance(item)
+#                self.model.set_tolerance(item)
                 self.model.set_mu(self.model.compute_mu(item))
 
             self.model.set_start_vector(start_vector)
@@ -881,19 +883,23 @@ class ContinuationRun(BaseModel):
                     ", tolerance = ", self.model.get_tolerance(), \
                     ", iterations = ", self.model.get_algorithm().iterations)
 
-            self._beta = self.model.get_transform()
+            beta_old = beta_new
+            beta_new = self.model.get_transform()
             f = f + self.model.get_algorithm().f[1:]  # Skip the first, same
 
-            if len(f) > 1 and abs(f[-2] - f[-1]) < self.model.get_tolerance():
-                print "Converged in f!!"
-                break
-
-#            if utils.norm1(beta_old - beta_new) < self.model.get_tolerance():
-#                print "Converged in beta!!"
+#            if len(f) > 1 and abs(f[-2] - f[-1]) < self.model.get_tolerance():
+#                print "Converged in f!!"
 #                break
 
-            start_vector = start_vectors.IdentityStartVector(self._beta)
+            if utils.norm1(beta_old - beta_new) < self.model.get_tolerance():
+                print "Converged in beta!!"
+                print utils.norm1(beta_old - beta_new)
+                print self.model.get_tolerance()
+                break
 
+            start_vector = start_vectors.IdentityStartVector(beta_new)
+
+        self._beta = beta_new
         self.model.get_algorithm().f = f
         self.model.get_algorithm().iterations = len(f)
 
@@ -918,7 +924,7 @@ class Continuation(BaseModel):
 
         gap : The gap to use in the first continuation. Default is
                 mu = max(abs(cov(X,y))) and then
-                gap = model.compute_tolerance(mu).
+                gap = model.compute_gap(mu).
 
         algorithm : The particular algorithm to use.
         """
@@ -946,52 +952,6 @@ class Continuation(BaseModel):
 
         self.model.set_algorithm(algorithm)
 
-    def _gap(self, X, y):
-
-#        if hasattr(self.model, "phi"):
-#        alpha_ = self.model.alpha(beta=self.model._beta, mu=self.model.get_mu())
-#        beta_ = self.model.beta(alpha=alpha_, mu=self.model.get_mu())
-#
-#        gap_ = self.model.phi(beta=self.model._beta, alpha=alpha_) \
-#                - self.model.phi(beta=beta_, alpha=alpha_)
-#        else:
-
-#        alpha = self.model.alpha(beta=self.model._beta, mu=self.model.get_mu())
-#        g = self.model.get_g()
-#        alpha = g.alpha()
-#        dual_model = ConstantNesterovModelCopy(self.model, alpha=alpha)
-#        dual_model.set_max_iter(10000)
-#        print "Fitting dual model:"
-
-#        rr = self.model.get_g().a
-#        Aa = self.model.get_g().b.grad()
-#        tv = loss_functions.LinearLossFunction(Aa)
-#        dual_model = NesterovProximalGradientMethod()
-#        dual_model.set_max_iter(self.model.get_max_iter())
-#        dual_model.set_g(loss_functions.CombinedNesterovLossFunction(rr, tv))
-#        l1 = self.model.get_h()
-#        dual_model.set_h(l1)
-#
-#        dual_model.fit(X, y, early_stopping=False)
-#        beta = dual_model._beta
-
-        alpha = self.model.get_g().alpha()
-        gap = self.model.phi(beta=self.model._beta, alpha=alpha) \
-                - self.model.phi(beta=None, alpha=alpha)
-
-#        print "phi_:", self.model.phi(beta=self.model._beta, alpha=alpha_)
-#        print "phi:", self.model.phi(beta=self.model._beta, alpha=alpha)
-#        print "phi_:", self.model.phi(beta=beta_, alpha=alpha_)
-#        print "phi:", self.model.phi(beta=beta, alpha=alpha)
-#        print "gap_:", gap_
-#        print "gap:", gap
-#        print "diff:", np.sqrt(np.sum((self.model._beta - beta_) ** 2.0))
-#        print "diff:", np.sqrt(np.sum((self.model._beta - dual_model._beta) ** 2.0))
-#        print "f_:", self.model.f(beta_)
-#        print "f:", dual_model.f(beta)
-
-        return gap  # , beta
-
     def fit(self, X, y, **kwargs):
 
         max_iter = self.get_max_iter()
@@ -1001,7 +961,7 @@ class Continuation(BaseModel):
 #        start_vector_nomu = self.model.get_start_vector()
         if self.gap == None:
             mu = max(np.max(np.abs(utils.corr(X, y))), 0.01)  # Necessary?
-            gap_mu = self.model.compute_tolerance(mu)
+            gap_mu = self.model.compute_gap(mu)
         else:
             gap_mu = self.gap
             mu = self.model.compute_mu(gap_mu)
@@ -1056,9 +1016,9 @@ class Continuation(BaseModel):
                 print "Converged in G!!"
                 break
 
-            if len(f) > 1 and abs(f[-2] - f[-1]) < self.model.get_tolerance():
-                print "Converged in f!!"
-                break
+#            if len(f) > 1 and abs(f[-2] - f[-1]) < self.model.get_tolerance():
+#                print "Converged in f!!"
+#                break
 
             if utils.norm1(beta_old - beta_new) < self.model.get_tolerance():
                 print "Converged in beta!!"
@@ -1160,7 +1120,7 @@ class NesterovProximalGradientMethod(BaseModel):
 
         return self._beta
 
-    def compute_tolerance(self, mu, max_iter=100):
+    def compute_gap(self, mu, max_iter=100):
 
         def f(eps):
             return self.compute_mu(eps) - mu
@@ -1430,7 +1390,7 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
         return (-2.0 * D * A + np.sqrt((2.0 * D * A) ** 2.0 \
                 + 4.0 * D * l * eps * A)) / (2.0 * D * l)
 
-    def compute_tolerance(self, mu, max_iter=100):
+    def compute_gap(self, mu, max_iter=100):
 
         g = self.get_g()
         lr = g.a
@@ -1653,7 +1613,7 @@ class LinearRegressionGL(NesterovProximalGradientMethod):
         return (-2.0 * D * A + np.sqrt((2.0 * D * A) ** 2.0 \
                 + 4.0 * D * l * eps * A)) / (2.0 * D * l)
 
-    def compute_tolerance(self, mu, max_iter=100):
+    def compute_gap(self, mu, max_iter=100):
 
         g = self.get_g()
         lr = g.a
@@ -1780,6 +1740,7 @@ class RidgeRegressionL1TV(RidgeRegressionTV):
 
         self._l1 = loss_functions.SmoothL1(k, num_variables=np.prod(shape),
                                            mu=1e-12, mask=mask)
+        # TODO: Reuse the A matrices from self.get_g().b
         self._tv = loss_functions.TotalVariation(gamma, shape=shape, mu=mu,
                                                  mask=mask, compress=False)
 
@@ -1811,8 +1772,8 @@ class RidgeRegressionL1TV(RidgeRegressionTV):
 
             alpha_l1_ = self._l1.alpha(self._beta, mu=mu_zero)
             alpha_tv_ = alpha  # self._tv.alpha(self._beta, mu=mu)
-            Aa_l1_ = self._l1.grad(self._beta, mu=mu_zero)
-            Aa_tv_ = self._tv.grad(self._beta, mu=mu)
+            Aa_l1_ = self._l1.grad(self._beta, alpha=alpha_l1_, mu=mu_zero)
+            Aa_tv_ = self._tv.grad(self._beta, alpha=alpha_tv_, mu=mu)
             Aa_ = Aa_l1_ + Aa_tv_
             if not hasattr(self, '_XtinvXXtlI'):
 #                XtX_ = np.dot(X.T, X)
@@ -1829,12 +1790,14 @@ class RidgeRegressionL1TV(RidgeRegressionTV):
 #            beta_ = np.dot(self._invXtXlI, np.dot(X.T, y) - Aa_)
 #            beta = beta_
 
-            return self._l1.phi(beta, alpha_l1_) \
+            return rr.f(beta) \
+                    + self._l1.phi(beta, alpha_l1_) \
                     + self._tv.phi(beta, alpha_tv_)
+                    # TODO: NOT WORKING!! _tv.phi(beta, alpha_tv_) is negative!
             #####
 
 #            tv = self.get_g().b
-#            Aa = tv.grad()
+#            Aa = tv.grad() <-- WARNING!
 #            tv = loss_functions.LinearLossFunction(Aa)
 #            dual_model = NesterovProximalGradientMethod()
 #            dual_model.set_start_vector(self.get_start_vector())

@@ -330,7 +330,7 @@ def test():
     utils.debug("Linear regression + Total variation")
     gamma = 0.01
     pgm = models.LinearRegressionTV(gamma, shape=(pz, py, px), mu=mu)
-    pgm_lrtv = pgm  # For testing compute_mu and compute_tolerance
+    pgm_lrtv = pgm  # For testing compute_mu and compute_eps
     pgm.set_max_iter(maxit)
     pgm.set_tolerance(eps)
     pgm.fit(X, y)
@@ -434,7 +434,7 @@ def test():
     l = 0.01
     gamma = 0.005
     pgm = models.LinearRegressionL1TV(l, gamma, (pz, py, px), mu=mu)
-#    pgm = models.ContinuationRun(pgm, tolerances=[100 * eps, 10 * eps, eps])
+#    pgm = models.ContinuationRun(pgm, gaps=[100 * eps, 10 * eps, eps])
 #    pgm.set_max_iter(maxit / 3.0)
     pgm.set_max_iter(maxit)
     pgm.set_tolerance(eps)
@@ -545,7 +545,7 @@ def test():
     l = 0.8
     gamma = 1.0
     pgm = models.ElasticNetTV(l, gamma, (pz, py, px))  # , mu=mu)
-    pgm = models.ContinuationRun(pgm, tolerances=[10000 * eps, 100 * eps, eps])
+    pgm = models.ContinuationRun(pgm, gaps=[10000 * eps, 100 * eps, eps])
     pgm.set_max_iter(maxit / 3.0)
 #    pgm.set_tolerance(eps)
     pgm.fit(X, y)
@@ -670,8 +670,8 @@ def test():
 
 #    plot.show()
 
-    # Test the functions compute_mu and compute_tolerance
-    utils.debug("Testing compute_mu and compute_tolerance:")
+    # Test the functions compute_mu and compute_gap
+    utils.debug("Testing compute_mu and compute_gap:")
     g = pgm_lrtv.get_g()
     lr = g.a
     tv = g.b
@@ -685,10 +685,12 @@ def test():
 #    print "l:", l
 
     def mu_plus(eps):
-        return (-2.0 * D * A + np.sqrt((2.0 * D * A) ** 2.0 + 4.0 * D * l * eps * A)) / (2.0 * D * l)
+        return (-2.0 * D * A + np.sqrt((2.0 * D * A) ** 2.0 \
+                + 4.0 * D * l * eps * A)) / (2.0 * D * l)
 
     def eps_plus(mu):
-        return ((2.0 * mu * D * l + 2.0 * D * A) ** 2.0 - (2.0 * D * A) ** 2.0) / (4.0 * D * l * A)
+        return ((2.0 * mu * D * l + 2.0 * D * A) ** 2.0 \
+                - (2.0 * D * A) ** 2.0) / (4.0 * D * l * A)
 
     utils.debug("Testing eps:")
     for eps in [1000000.0, 100000.0, 10000.0, 1000.0, 100.0, 10.0, \
@@ -697,7 +699,7 @@ def test():
         eps1 = eps_plus(mu_plus(eps))
         err1 = abs(eps - eps1) / eps
         mu2 = pgm_lrtv.compute_mu(eps)
-        eps2 = pgm_lrtv.compute_tolerance(pgm_lrtv.compute_mu(eps))
+        eps2 = pgm_lrtv.compute_gap(pgm_lrtv.compute_mu(eps))
         err2 = abs(eps - eps2) / eps
 
         utils.debug("eps: %.8f -> mu: %.8f -> eps: %.8f (err: %.8f)" \
@@ -722,8 +724,8 @@ def test():
         eps1 = eps_plus(mu)
         mu1 = mu_plus(eps_plus(mu))
         err1 = abs(mu - mu1) / mu
-        eps2 = pgm_lrtv.compute_tolerance(mu)
-        mu2 = pgm_lrtv.compute_mu(pgm_lrtv.compute_tolerance(mu))
+        eps2 = pgm_lrtv.compute_gap(mu)
+        mu2 = pgm_lrtv.compute_mu(pgm_lrtv.compute_gap(mu))
         err2 = abs(mu - mu2) / mu
 
         utils.debug("mu: %.8f -> eps: %.8f -> mu: %.8f (err: %.8f)" \

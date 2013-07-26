@@ -196,25 +196,26 @@ class NesterovFunction(LossFunction,
             mu = self.get_mu()
 
         if self.use_mu():
-            return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
+            return np.dot(beta.T, self._grad)[0, 0] - (mu / 2.0) * alpha_sqsum
         else:
-            return np.dot(beta.T, self.grad())[0, 0]
+            return np.dot(beta.T, self._grad)[0, 0]
 
     def phi(self, beta, alpha):
 
         grad = self._compute_grad(alpha)
         return np.dot(beta.T, grad)[0, 0]
 
-    def grad(self, beta=None, mu=None):
+    def grad(self, beta, alpha=None, mu=None):
 
         if self.gamma < utils.TOLERANCE:
             return np.zeros(beta.shape)
 
-        if beta != None:
-            # TODO: Should these be saved to the class here?
-            # TODO: Allow alpha as argument to this function
+        # TODO: Should these be saved to the class here?
+        if alpha == None:
             self._alpha = self._compute_alpha(beta, mu)
-            self._grad = self._compute_grad(self._alpha)
+            alpha = self._alpha
+
+        self._grad = self._compute_grad(alpha)
 
         return self._grad
 
@@ -254,6 +255,19 @@ class NesterovFunction(LossFunction,
         """
         return self._At
 
+    def alpha(self, beta=None, mu=None):
+
+        if self.gamma < utils.TOLERANCE:
+            return [0.0] * len(self._A)
+
+        if beta != None:
+            # TODO: Should these be saved to the class here?
+            # TODO: Does grad need to be computed here?
+            self._alpha = self._compute_alpha(beta, mu)
+            self._grad = self._compute_grad(self._alpha)
+
+        return self._alpha
+
     def get_mu(self):
         """Returns the Nesterov regularisation constant mu.
         """
@@ -282,19 +296,6 @@ class NesterovFunction(LossFunction,
         Note that the constant D = num_compacts() / 2.
         """
         return self._num_compacts
-
-    def alpha(self, beta=None, mu=None):
-
-        if self.gamma < utils.TOLERANCE:
-            return [0.0] * len(self._A)
-
-        if beta != None:
-            # TODO: Should these be saved to the class here?
-            # TODO: Does grad need to be computed here?
-            self._alpha = self._compute_alpha(beta, mu)
-            self._grad = self._compute_grad(self._alpha)
-
-        return self._alpha
 
     def _compute_grad(self, alpha):
 
@@ -738,7 +739,7 @@ class LogisticRegressionError(LossFunction,
         expt = np.exp(logit)
         return -np.sum(np.multiply(self.y, logit) + np.log(1 + expt))
 
-    def grad(self, beta, **kwargs):
+    def grad(self, beta, *args, **kwargs):
 
         logit = np.dot(self.X, beta)
         expt = np.exp(logit)
@@ -852,7 +853,7 @@ class LinearLossFunction(LossFunction,
 
         return np.dot(self.a.T, beta)[0, 0]
 
-    def grad(self, beta, *args, **kwargs):
+    def grad(self, *args, **kwargs):
 
         return self.a
 
@@ -976,108 +977,108 @@ class ElasticNet(L1L2):
         super(ElasticNet, self).__init__(l, 1.0 - l, **kwargs)
 
 
-class ConstantNesterovCopy(NesterovFunction):
-    """Duplicates a Nesterov loss function, but holds the alpha and the
-    gradient of this function constant.
-
-    I.e., this class can be used to find a beta that corresponds to a
-    particular alpha.
-
-    This class also holds the gradient constant, i.e. _grad and grad() are
-    fixed, just like _alpha and alpha(). This also means it assumes a constant
-    A matrix.
-
-    Be aware of duplicated references!
-    """
-    def __init__(self, function, **kwargs):
-
-        super(ConstantNesterovCopy, self).__init__(gamma=function.gamma,
-                                                   mu=function.get_mu(),
-                                                   **kwargs)
-
-        # TODO: Make __getattr__ and __setattr__ handle all the fields of the
-        #       Nesterov function in order to avoid keeping references here as
-        #       well!
-
-        # Required fields
-        self.lambda_max = function.Lipschitz(1.0)
-        self._A = function.A()
-        self._At = function.At()
-        self.set_mu(function.get_mu())
-        self._num_compacts = function.num_compacts()
-        self._alpha = copy.deepcopy(function.alpha())
-        self._grad = copy.deepcopy(function.grad())
-        # Copies of the "true", constant, internal alpha and grad!
-        self.__alpha = copy.deepcopy(self._alpha)
-        self.__grad = copy.deepcopy(self._grad)
-
-        # Optional fields
-        if hasattr(function, '_buff'):
-            self._buff = function._buff
-
-        # Methods defined in the base class NesterovFunction
-        self.Lipschitz = function.Lipschitz
-        self.A = function.A
-        self.At = function.At
-        self.get_mu = function.get_mu
-        self.set_mu = function.set_mu
-        self.num_groups = function.num_groups
-
-        # Methods defined in the subclasses
-        self.f = function.f
-#        self.grad = function.grad
-
-        # Abstract methods defined in the subclasses
-        self.num_compacts = function.num_compacts
-#        self.projection = function.projection
-#        self.precompute = function.precompute
-
-        # The loss function we duplicate
-        self.function = function
-
-    def f(self, *args, **kwargs):
-
-        pass  # Set in the constructor
-
-    def phi(self, beta, alpha=None):
-
-        return np.dot(beta.T, self.__grad)[0, 0]
-
-    def grad(self, *args, **kwargs):
-
-        return self.__grad
-
-    def alpha(self, *args, **kwargs):
-
-        return self.__alpha
-
-    def set_alpha(self, alpha):
-
-        self._alpha = copy.deepcopy(alpha)
-        self._grad = copy.deepcopy(self.function._compute_grad(alpha))
-
-        self.__alpha = copy.deepcopy(self._alpha)
-        self.__grad = copy.deepcopy(self._grad)
-
-    def num_compacts(self, *args, **kwargs):
-
-        pass  # Set in the constructor
-
-    def precompute(self, *args, **kwargs):
-
-        pass
-
-    def projection(self, *alpha):
-
-        return alpha
-
-    def _compute_alpha(self, *args, **kwargs):
-
-        return self.__alpha
-
-    def _compute_grad(self, *args, **kwargs):
-
-        return self.__grad
+#class ConstantNesterovCopy(NesterovFunction):
+#    """Duplicates a Nesterov loss function, but holds the alpha and the
+#    gradient of this function constant.
+#
+#    I.e., this class can be used to find a beta that corresponds to a
+#    particular alpha.
+#
+#    This class also holds the gradient constant, i.e. _grad and grad() are
+#    fixed, just like _alpha and alpha(). This also means it assumes a constant
+#    A matrix.
+#
+#    Be aware of duplicated references!
+#    """
+#    def __init__(self, function, **kwargs):
+#
+#        super(ConstantNesterovCopy, self).__init__(gamma=function.gamma,
+#                                                   mu=function.get_mu(),
+#                                                   **kwargs)
+#
+#        # TODO: Make __getattr__ and __setattr__ handle all the fields of the
+#        #       Nesterov function in order to avoid keeping references here as
+#        #       well!
+#
+#        # Required fields
+#        self.lambda_max = function.Lipschitz(1.0)
+#        self._A = function.A()
+#        self._At = function.At()
+#        self.set_mu(function.get_mu())
+#        self._num_compacts = function.num_compacts()
+#        self._alpha = copy.deepcopy(function.alpha())
+#        self._grad = copy.deepcopy(function._grad)
+#        # Copies of the "true", constant, internal alpha and grad!
+#        self.__alpha = copy.deepcopy(self._alpha)
+#        self.__grad = copy.deepcopy(self._grad)
+#
+#        # Optional fields
+#        if hasattr(function, '_buff'):
+#            self._buff = function._buff
+#
+#        # Methods defined in the base class NesterovFunction
+#        self.Lipschitz = function.Lipschitz
+#        self.A = function.A
+#        self.At = function.At
+#        self.get_mu = function.get_mu
+#        self.set_mu = function.set_mu
+#        self.num_groups = function.num_groups
+#
+#        # Methods defined in the subclasses
+#        self.f = function.f
+##        self.grad = function.grad
+#
+#        # Abstract methods defined in the subclasses
+#        self.num_compacts = function.num_compacts
+##        self.projection = function.projection
+##        self.precompute = function.precompute
+#
+#        # The loss function we duplicate
+#        self.function = function
+#
+#    def f(self, *args, **kwargs):
+#
+#        pass  # Set in the constructor
+#
+#    def phi(self, beta, alpha=None):
+#
+#        return np.dot(beta.T, self.__grad)[0, 0]
+#
+#    def grad(self, *args, **kwargs):
+#
+#        return self.__grad
+#
+#    def alpha(self, *args, **kwargs):
+#
+#        return self.__alpha
+#
+#    def set_alpha(self, alpha):
+#
+#        self._alpha = copy.deepcopy(alpha)
+#        self._grad = copy.deepcopy(self.function._compute_grad(alpha))
+#
+#        self.__alpha = copy.deepcopy(self._alpha)
+#        self.__grad = copy.deepcopy(self._grad)
+#
+#    def num_compacts(self, *args, **kwargs):
+#
+#        pass  # Set in the constructor
+#
+#    def precompute(self, *args, **kwargs):
+#
+#        pass
+#
+#    def projection(self, *alpha):
+#
+#        return alpha
+#
+#    def _compute_alpha(self, *args, **kwargs):
+#
+#        return self.__alpha
+#
+#    def _compute_grad(self, *args, **kwargs):
+#
+#        return self.__grad
 
 
 class TotalVariation(NesterovFunction):
@@ -1342,18 +1343,6 @@ class SmoothL1(NesterovFunction):
 
             return super(SmoothL1, self).f(beta, mu)
 
-#            self._alpha = self._compute_alpha(beta, mu)
-#            self._grad = self._compute_grad(self._alpha)
-#
-#            alpha_sqsum = 0.0
-#            for a in self._alpha:
-#                alpha_sqsum += np.sum(a ** 2.0)
-#
-#            if mu == None:
-#                mu = self.get_mu()
-#
-#            return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
-
         else:
             return self.gamma * utils.norm1(beta)
 
@@ -1491,18 +1480,6 @@ class GroupLassoOverlap(NesterovFunction):
         if smooth:
 
             return super(GroupLassoOverlap, self).f(beta, mu)
-
-#            self._alpha = self._compute_alpha(beta, mu)
-#            self._grad = self._compute_grad(self._alpha)
-#
-#            alpha_sqsum = 0.0
-#            for a in self._alpha:
-#                alpha_sqsum += np.sum(a ** 2.0)
-#
-#            if mu == None:
-#                mu = self.get_mu()
-#
-#            return np.dot(beta.T, self.grad())[0, 0] - (mu / 2.0) * alpha_sqsum
 
         else:
             sqsum = 0.0
