@@ -1131,12 +1131,12 @@ if __name__ == "__main__":
 
 
      # Test to find SNR for EN + TV
-    tolerance = 0.0001
-    maxit = 100000
-    mu = 0.00001
+    tolerance = 0.00001
+    maxit = 200000
+    mu = 0.000001
     alg = algorithms.FISTARegression()
 
-    vals = [6.00, 6.25, 6.50, 6.75, 7.00]
+    vals = [0.50, 1.5, 2.50, 3.5, 4.50, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5]
 #    vals = [6.00]
     for i in xrange(len(vals)):
         l = 2.71828
