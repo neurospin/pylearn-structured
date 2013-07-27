@@ -10,11 +10,13 @@ import scipy.linalg
 
 
 def make_classification(n_samples=100,
-                        n_complementary_patterns=1, size_complementary_patterns=2,
-                        n_suppressor_patterns=1,
-                        n_redundant_patterns=1, size_redundant_patterns=2,
-                        n_independant_features=2,
-                        snr=3., grp_proportion=.5, n_noize=None):
+                n_complementary_patterns=1, size_complementary_patterns=2,
+                n_suppressor_patterns=1,
+                n_redundant_patterns=1, size_redundant_patterns=2,
+                n_independant_features=2,
+                n_noize=None,
+                snr=3., grp_proportion=.5,
+                random_seed=None):
     """ Build classification samples.
 
     The SNR is distributed accross informative features such that the mean
@@ -61,10 +63,18 @@ def make_classification(n_samples=100,
         features.
 
     snr: float
-        Global Signal to noize ratio
+        Global Signal to noize ratio ie.: the Mahalanobis distance between 
+        the two groups.
 
     grp_proportion: float
         The proportion of samples of the first group. Default 0.5
+
+    full_info: bool
+        If False (default) return only X and y. Otherwise return 
+
+    random_seed: None or int
+        See numpy.random.seed(). If not None, it can be used to obtain
+        reproducable samples.
 
     Returns
     -------
@@ -74,10 +84,19 @@ def make_classification(n_samples=100,
     y : array of shape [n_samples]
         The integer labels for class membership of each sample.
 
-    weigths: The weigths of a Fisher's linear discriminant function, knowing
+    If full_info is True, also return:
+
+    weigths: arrays of shape [n_informative_features]
+        The weigths of a Fisher's linear discriminant function, knowing
         the true covariance and mean os the data: Sigma^-1 (m1 - m0)
 
-    m0, m1, Cov the parameters used to generate the multivariate normal samples.
+    m0, m1: arrays of shape [n_informative_features]
+        The means of the two classes, for the informative_features only.
+        Those means were used to generate multivariate normal samples.
+
+    Cov: array of shape [n_informative_features, n_informative_features]
+        The within class covariance for the informative_features only.
+        This covariance was used to generate multivariate normal samples.    
     """
     n_informative_features = \
     n_complementary_patterns * size_complementary_patterns + \
@@ -112,8 +131,8 @@ def make_classification(n_samples=100,
         bloc[np.diag_indices(bloc.shape[0])] = var
         la, v = scipy.linalg.eig(bloc)
         #la = np.real(la)
-        dmeans = v[:, np.argmin(np.abs(la))].ravel()
-        m1[idx:(idx + size_complementary_patterns)] += dmeans
+        eig_vec_min = v[:, np.argmin(np.abs(la))].ravel()
+        m1[idx:(idx + size_complementary_patterns)] += eig_vec_min
         # Scale the mean of ALL features such that the sum of univariate snrs
         # is size_complementary_patterns * snr_per_feature
         snrs = calc_univ_snrs(
@@ -142,6 +161,7 @@ def make_classification(n_samples=100,
         snrs = calc_univ_snrs(m0[idx:(idx + 2)], m1[idx:(idx + 2)], var)
         print "Suppressors patterns snrs:", snrs
         idx += 2
+
     # Redundant patterns
     for i in xrange(n_redundant_patterns):
         bloc = Cov[idx:(idx + size_redundant_patterns),
@@ -150,8 +170,8 @@ def make_classification(n_samples=100,
         bloc[np.diag_indices(bloc.shape[0])] = var
         la, v = scipy.linalg.eig(bloc)
         #la = np.real(la)
-        dmeans = v[:, np.argmax(np.abs(la))].ravel()
-        m1[idx:(idx + size_redundant_patterns)] += dmeans
+        eig_vec_max = v[:, np.argmax(np.abs(la))].ravel()
+        m1[idx:(idx + size_redundant_patterns)] += eig_vec_max
         # Scale the mean of ALL features such that the sum of univariate snrs
         # is size_complementary_patterns * snr_per_feature
         snrs = calc_univ_snrs(
@@ -182,6 +202,8 @@ def make_classification(n_samples=100,
 
     n_g0 = int(np.round(n_samples * grp_proportion))
 
+    # Sample according to means and Cov
+    np.random.seed(random_seed)
     X0 = np.random.multivariate_normal(m0, Cov, n_g0)
     X1 = np.random.multivariate_normal(m1, Cov, n_samples - n_g0)
     X = np.vstack([X0, X1])
@@ -193,7 +215,8 @@ def make_classification(n_samples=100,
     if n_noize is None:
         n_noize = n_informative_features * 10
 
-    X = np.hstack([X, np.random.rand(n_samples, n_noize)])
+    X = np.hstack([X, 
+        np.random.normal(0, 1, n_samples*n_noize).reshape(n_samples, n_noize)])
     weigths = np.concatenate((weigths, [0] * n_noize))
 
     return X, y, weigths, m0, m1, Cov
@@ -223,24 +246,24 @@ if __name__ == '__main__':
         plt.plot(X[y == 0, 0], X[y == 0, 1], 'or', X[y == 1, 0], X[y == 1, 1],
                  'ob')
         # plot means
-        plt.plot(m0_hat[0], m0_hat[1], 'oy', m1_hat[0], m1_hat[1], 'oy',
-                 markersize=18)
+        plt.plot(m0_hat[0], m0_hat[1], 'ok', m1_hat[0], m1_hat[1], 'ok',
+                 markersize=10)
         # plot Cov
         la, v = scipy.linalg.eig(cov_hat)
         std_dev = np.sqrt(np.real(la))
         e0 = patches.Ellipse(m0_hat, 2 * std_dev[0], 2 * std_dev[1],
                  angle=np.arctan(v[1, 0] / v[0, 0]) * 180. / np.pi,
-                 linewidth=3, fill=False, color='y', linestyle='dashed',
+                 linewidth=3, fill=False, color='k', linestyle='dashed',
                  zorder=10)
         plot.add_patch(e0)
         e1 = patches.Ellipse(m1_hat, 2 * std_dev[0], 2 * std_dev[1],
                  angle=np.arctan(v[1, 0] / v[0, 0]) * 180. / np.pi,
-                 linewidth=3, fill=False, color='y', linestyle='dashed',
+                 linewidth=3, fill=False, color='k', linestyle='dashed',
                  zorder=10)
         plot.add_patch(e1)
         # plot weights
         plot.arrow(m0_hat[0], m0_hat[1], weigths_hat[0], weigths_hat[1],
-                   head_width=.5, fc="g", ec="g", head_length=.5, linewidth=3,
+                   head_width=.3, fc="y", ec="y", head_length=.3, linewidth=3,
                    zorder=10)
         plt.xlabel(xlab + ': snr=%.2f' % snrs[0])
         plt.ylabel(ylab + ': snr=%.2f' % snrs[1])
