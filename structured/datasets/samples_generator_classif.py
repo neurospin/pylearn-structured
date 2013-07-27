@@ -16,7 +16,8 @@ def make_classification(n_samples=100,
                 n_independant_features=2,
                 n_noize=None,
                 snr=3., grp_proportion=.5,
-                random_seed=None):
+                random_seed=None,
+                full_info=False):
     """ Build classification samples.
 
     The SNR is distributed accross informative features such that the mean
@@ -197,8 +198,8 @@ def make_classification(n_samples=100,
     # Nomalize m1 to scale to the desire global snr
     snr_actual = np.sqrt(np.dot(np.dot(scipy.linalg.inv(Cov), m1 - m0),
                                 m1 - m0))
-    print "Global snr:", snr_actual
-    m1 = m1 * snr / snr_actual
+    print "Global snr before scaling:", snr_actual
+    m1 *= snr / snr_actual
 
     n_g0 = int(np.round(n_samples * grp_proportion))
 
@@ -218,9 +219,12 @@ def make_classification(n_samples=100,
     X = np.hstack([X, 
         np.random.normal(0, 1, n_samples*n_noize).reshape(n_samples, n_noize)])
     weigths = np.concatenate((weigths, [0] * n_noize))
-
-    return X, y, weigths, m0, m1, Cov
-
+    
+    if full_info:
+        return X, y, weigths, m0, m1, Cov
+    else:
+        return X, y
+    
 if __name__ == '__main__':
     X, y, weigths, m0, m1, Cov = make_classification(n_samples=500,
                         n_complementary_patterns=1,
@@ -228,7 +232,8 @@ if __name__ == '__main__':
                         n_suppressor_patterns=1,
                         n_redundant_patterns=1,
                         size_redundant_patterns=2, n_independant_features=2,
-                        snr=3., grp_proportion=.5, n_noize=None)
+                        snr=3., grp_proportion=.5,
+                        n_noize=None, full_info=True)
 
     def plot_2d(plot, X, y, xlab, ylab, title):
         m0_hat = X[y == 0, :].mean(axis=0)
