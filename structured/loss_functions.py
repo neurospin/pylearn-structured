@@ -26,7 +26,7 @@ __all__ = ['LossFunction', 'LipschitzContinuous', 'Differentiable',
            'ZeroErrorFunction',
            'L1', 'L2', 'ElasticNet',
 
-           'NesterovFunction', 'ConstantNesterovCopy',
+           'NesterovFunction',
            'TotalVariation', 'SmoothL1', 'GroupLassoOverlap',
 
            'CombinedLossFunction',
@@ -178,8 +178,6 @@ class NesterovFunction(LossFunction,
         self._grad = None  # The function's gradient
         self.lambda_max = None  # The largest eigenvalue of A'.A
 
-        self._use_mu = True
-
     def f(self, beta, mu=None, **kwargs):
 
         if self.gamma < utils.TOLERANCE:
@@ -195,10 +193,7 @@ class NesterovFunction(LossFunction,
         if mu == None:
             mu = self.get_mu()
 
-        if self.use_mu():
-            return np.dot(beta.T, self._grad)[0, 0] - (mu / 2.0) * alpha_sqsum
-        else:
-            return np.dot(beta.T, self._grad)[0, 0]
+        return np.dot(beta.T, self._grad)[0, 0] - (mu / 2.0) * alpha_sqsum
 
     def phi(self, beta, alpha):
 
@@ -235,13 +230,10 @@ class NesterovFunction(LossFunction,
             us = A.dot(v)
             self.lambda_max = np.sum(us ** 2.0)
 
-        if self.use_mu():
-            if mu != None:
-                return self.lambda_max / mu
-            else:
-                return self.lambda_max / self.get_mu()
+        if mu != None:
+            return self.lambda_max / mu
         else:
-            return self.lambda_max
+            return self.lambda_max / self.get_mu()
 
     def A(self):
         """Returns a list of the A blocks that constitute the A matrix, the
@@ -258,7 +250,11 @@ class NesterovFunction(LossFunction,
     def alpha(self, beta=None, mu=None):
 
         if self.gamma < utils.TOLERANCE:
-            return [0.0] * len(self._A)
+            ret = []
+            for A in self.A():
+                ret.append(np.zeros((A.shape[0], 1)))
+            return ret
+#            return [0.0] * len(self._A)
 
         if beta != None:
             # TODO: Should these be saved to the class here?
@@ -277,13 +273,6 @@ class NesterovFunction(LossFunction,
         """Sets the Nesterov regularisation constant mu.
         """
         self.mu = float(mu)
-
-    def use_mu(self, use_mu=None):
-
-        if use_mu != None:
-            self._use_mu = float(use_mu)
-
-        return self._use_mu
 
     def num_groups(self):
         """Returns the number of groups, i.e. the number of A blocks.
@@ -457,16 +446,17 @@ class CombinedNesterovLossFunction(NesterovFunction, DataDependent):
         if hasattr(self.b, 'precompute'):
             self.b.precompute(*args, **kwargs)
 
-    def alpha(self, beta=None, mu=None):
+    def alpha(self, *args, **kwargs):
 
         if hasattr(self.a, 'alpha') and hasattr(self.b, 'alpha'):
-            return self.a.alpha(beta, mu=mu) + self.b.alpha(beta, mu=mu)
+            return self.a.alpha(*args, **kwargs) \
+                    + self.b.alpha(*args, **kwargs)
 
         elif hasattr(self.a, 'alpha'):
-            return self.a.alpha(beta, mu=mu)
+            return self.a.alpha(*args, **kwargs)
 
         elif hasattr(self.b, 'alpha'):
-            return self.b.alpha(beta, mu=mu)
+            return self.b.alpha(*args, **kwargs)
 
         else:
             raise ValueError('At least one loss function must be Nesterov')
@@ -598,14 +588,6 @@ class CombinedNesterovLossFunction(NesterovFunction, DataDependent):
 
         if hasattr(self.b, 'set_mu'):
             self.b.set_mu(mu)
-
-    def use_mu(self, use_mu=None):
-
-        if hasattr(self.a, 'use_mu'):
-            self.a.use_mu(use_mu)
-
-        if hasattr(self.b, 'use_mu'):
-            self.b.use_mu(use_mu)
 
     def set_data(self, *args, **kwargs):
 
@@ -1167,11 +1149,7 @@ class TotalVariation(NesterovFunction):
         asy = alpha[1]
         asz = alpha[2]
         asnorm = asx ** 2.0 + asy ** 2.0 + asz ** 2.0
-
-        if self.use_mu():
-            i = asnorm > 1.0
-        else:
-            i = asnorm > utils.TOLERANCE
+        i = asnorm > 1.0
 
         asnorm_i = asnorm[i] ** 0.5  # Square root is taken here. Faster.
         asx[i] = np.divide(asx[i], asnorm_i)
@@ -1188,10 +1166,7 @@ class TotalVariation(NesterovFunction):
         # Compute a*
         alpha = [0] * len(self._A)
         for i in xrange(len(self._A)):
-            if self.use_mu():
-                alpha[i] = self._A[i].dot(beta) / mu
-            else:
-                alpha[i] = self._A[i].dot(beta)
+            alpha[i] = self._A[i].dot(beta) / mu
 
         # Apply projection
         alpha = self.projection(*alpha)
@@ -1361,23 +1336,17 @@ class SmoothL1(NesterovFunction):
 #        print self.lambda_max, " == ", lambda_max, "?"
 #        print "L1!!!"
 
-        if self.use_mu():
-            if mu != None:
-                return self.lambda_max / mu
-            else:
-                return self.lambda_max / self.get_mu()
+        if mu != None:
+            return self.lambda_max / mu
         else:
-            return self.lambda_max
+            return self.lambda_max / self.get_mu()
 
     # TODO: Change so that projection instead always takes a list
     def projection(self, *alpha):
 
         a = alpha[0]
         anorm = np.abs(a)
-        if self.use_mu():
-            i = anorm > 1.0
-        else:
-            i = anorm > utils.TOLERANCE
+        i = anorm > 1.0
         asnorm_i = anorm[i]
 
         a[i] = np.divide(a[i], asnorm_i)
@@ -1392,10 +1361,7 @@ class SmoothL1(NesterovFunction):
         # Compute a*
 #        _alpha[0] = self._A[0].dot(beta) / mu
         alpha = [0]
-        if self.use_mu():
-            alpha[0] = (self.gamma / mu) * beta
-        else:
-            alpha[0] = self.gamma * beta
+        alpha[0] = (self.gamma / mu) * beta
 
         # Apply projection
         alpha = self.projection(*alpha)
@@ -1501,13 +1467,10 @@ class GroupLassoOverlap(NesterovFunction):
 
 #        test = self.lambda_max / self.get_mu()
 
-        if self.use_mu():
-            if mu != None:
-                return self.max_col_norm / mu
-            else:
-                return self.max_col_norm / self.get_mu()
+        if mu != None:
+            return self.max_col_norm / mu
         else:
-            return self.max_col_norm
+            return self.max_col_norm / self.get_mu()
 
     # TODO: Change so that projection instead always takes a list
     def projection(self, *alpha):
@@ -1518,12 +1481,8 @@ class GroupLassoOverlap(NesterovFunction):
             astar = alpha[i]
             normas = np.sqrt(np.sum(astar ** 2.0))
 
-            if self.use_mu():
-                if normas > 1.0:
-                    astar /= normas
-            else:
-                if normas > utils.TOLERANCE:
-                    astar /= normas
+            if normas > 1.0:
+                astar /= normas
 
             alpha[i] = astar
 
@@ -1537,10 +1496,7 @@ class GroupLassoOverlap(NesterovFunction):
         # Compute a* for each dimension
         alpha = [0] * len(self._A)
         for g in xrange(len(self._A)):
-            if self.use_mu():
-                astar = self._A[g].dot(beta) / mu
-            else:
-                astar = self._A[g].dot(beta)
+            astar = self._A[g].dot(beta) / mu
 
             astar = self.projection(astar)[0]
 

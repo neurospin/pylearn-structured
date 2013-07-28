@@ -1194,10 +1194,6 @@ class NesterovProximalGradientMethod(BaseModel):
 
         return self.get_g().get_mu()
 
-    def use_mu(self, use_mu=None):
-
-        return self.get_g().use_mu(use_mu)
-
     def get_g(self):
 
         return self.algorithm.g
@@ -1804,8 +1800,6 @@ class RidgeRegressionL1TV(RidgeRegressionTV):
 #            dual_model.set_max_iter(self.get_max_iter())
 #            dual_model.set_g(loss_functions.CombinedNesterovLossFunction(rr,
 #                                                                         tv))
-#            dual_model.use_mu(self.use_mu())
-#
 #            dual_model.set_h(self.get_h())
 #
 #            dual_model.fit(X, y, early_stopping=False)

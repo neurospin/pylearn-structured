@@ -15,6 +15,7 @@ import structured.loss_functions as loss_functions
 import structured.algorithms as algorithms
 import structured.data.simulated.lasso as lasso
 import structured.data.simulated.l1_l2_tv as l1_l2_tv
+import structured.data.simulated.l1_l2_tv_2D as l1_l2_tv_2D
 #import multiblock.start_vectors as start_vectors
 #import multiblock.prox_ops as prox_ops
 #import multiblock.schemes as schemes
@@ -903,79 +904,79 @@ if __name__ == "__main__":
 #    print "%.5f = %.5f? (%f s)" % (m.compute_mu(eps), mu, time() - s)
 #    print
 
-    # Testing the new continuation
-    np.random.seed(42)
-
-    eps = 0.00001
-    maxit = 5
-    cont_maxit = 100
-    gamma = 6.0
-    l = 0.6
-    k = 1.0 - l
-
-    px = 1000
-    py = 1
-    pz = 1
-    p = px * py * pz  # Must be even!
-    n = 100
-    X = np.random.randn(n, p)
-    betastar = np.concatenate((np.zeros((p / 2, 1)),
-                               np.random.randn(p / 2, 1)))
-    betastar = np.sort(np.abs(betastar), axis=0)
-    y = np.dot(X, betastar)
-
-#    Sigma = 0.999 * np.ones((p, p)) + 0.001 * np.eye(p)
-#    Mu = np.zeros(p)
-#    M = np.random.multivariate_normal(Mu, Sigma, n)
-#    e = np.random.randn(n, 1)
-#    e = e / np.sqrt(np.sum(e ** 2.0))
-#    X, y, betastar = l1_l2_tv.load(l, k, gamma, density=0.5, snr=100.0,
-#                                   M=M, e=e)
-#    start_vector = start_vectors.IdentityStartVector(betastar \
-#                                + 0.001 * np.random.randn(*betastar.shape))
-
-    start = time()
-    m = models.RidgeRegressionL1TV(l, k, gamma, shape=(pz, py, px),
-                                   compress=False)  # , mu=0.01)
-    m.set_tolerance(eps)
-    m.set_max_iter(maxit)
-#    m.set_max_iter(5000000)
-#    m.set_start_vector(start_vector)
-#    c = m
-    c = models.Continuation(m, cont_maxit)
-    c.fit(X, y)
-    computed_beta = c._beta
-    print "time: ", (time() - start)
-
-    print "f: ", c.get_algorithm().f[-1]
-    print "its: ", c.get_algorithm().iterations
-
-    plot.subplot(2, 2, 1)
-    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
-    plot.subplot(2, 2, 2)
-    plot.plot(c.get_algorithm().f)
-    plot.title("Continuation")
-
-    start = time()
-    m = models.RidgeRegressionL1TV(l, k, gamma, shape=(pz, py, px),
-                                   compress=False)
-    m.set_tolerance(eps)
-    m.set_max_iter(cont_maxit)
-    cr = models.ContinuationRun(m, mus=[0.5 ** i for i in range(1, maxit + 1)])
-    cr.fit(X, y)
-    computed_beta = cr._beta
-    print "time: ", (time() - start)
-
-    print "f: ", cr.get_algorithm().f[-1]
-    print "its: ", cr.get_algorithm().iterations
-
-    plot.subplot(2, 2, 3)
-    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
-    plot.subplot(2, 2, 4)
-    plot.plot(cr.get_algorithm().f)
-    plot.title("Continuation Run")
-
-    plot.show()
+#    # Testing the new continuation
+#    np.random.seed(42)
+#
+#    eps = 0.00001
+#    maxit = 5
+#    cont_maxit = 100
+#    gamma = 0.0
+#    l = 0.6
+#    k = 1.0 - l
+#
+#    px = 1000
+#    py = 1
+#    pz = 1
+#    p = px * py * pz  # Must be even!
+#    n = 100
+#    X = np.random.randn(n, p)
+#    betastar = np.concatenate((np.zeros((p / 2, 1)),
+#                               np.random.randn(p / 2, 1)))
+#    betastar = np.sort(np.abs(betastar), axis=0)
+#    y = np.dot(X, betastar)
+#
+##    Sigma = 0.999 * np.ones((p, p)) + 0.001 * np.eye(p)
+##    Mu = np.zeros(p)
+##    M = np.random.multivariate_normal(Mu, Sigma, n)
+##    e = np.random.randn(n, 1)
+##    e = e / np.sqrt(np.sum(e ** 2.0))
+##    X, y, betastar = l1_l2_tv.load(l, k, gamma, density=0.5, snr=100.0,
+##                                   M=M, e=e)
+##    start_vector = start_vectors.IdentityStartVector(betastar \
+##                                + 0.001 * np.random.randn(*betastar.shape))
+#
+#    start = time()
+#    m = models.RidgeRegressionL1TV(l, k, gamma, shape=(pz, py, px),
+#                                   compress=False)  # , mu=0.01)
+#    m.set_tolerance(eps)
+#    m.set_max_iter(maxit)
+##    m.set_max_iter(5000000)
+##    m.set_start_vector(start_vector)
+##    c = m
+#    c = models.Continuation(m, cont_maxit)
+#    c.fit(X, y)
+#    computed_beta = c._beta
+#    print "time: ", (time() - start)
+#
+#    print "f: ", c.get_algorithm().f[-1]
+#    print "its: ", c.get_algorithm().iterations
+#
+#    plot.subplot(2, 2, 1)
+#    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
+#    plot.subplot(2, 2, 2)
+#    plot.plot(c.get_algorithm().f)
+#    plot.title("Continuation")
+#
+#    start = time()
+#    m = models.RidgeRegressionL1TV(l, k, gamma, shape=(pz, py, px),
+#                                   compress=False)
+#    m.set_tolerance(eps)
+#    m.set_max_iter(cont_maxit)
+#    cr = models.ContinuationRun(m, mus=[0.5 ** i for i in range(1, maxit + 1)])
+#    cr.fit(X, y)
+#    computed_beta = cr._beta
+#    print "time: ", (time() - start)
+#
+#    print "f: ", cr.get_algorithm().f[-1]
+#    print "its: ", cr.get_algorithm().iterations
+#
+#    plot.subplot(2, 2, 3)
+#    plot.plot(betastar[:, 0], '-', computed_beta[:, 0], '*')
+#    plot.subplot(2, 2, 4)
+#    plot.plot(cr.get_algorithm().f)
+#    plot.title("Continuation Run")
+#
+#    plot.show()
 
 
 
@@ -1206,3 +1207,67 @@ if __name__ == "__main__":
 #        plot.title("true: %.2f, min: %.2f" % (value, x[np.argmin(v)]))
 #        plot.axis([a, b, min(v), max(v)])
 #    plot.show()
+
+
+
+    # Testing the new continuation
+    np.random.seed(42)
+
+    tolerance = 0.00001
+    maxit = 500000
+    mu = 0.0001
+    alg = algorithms.FISTARegression()
+
+    gamma = 0.0
+    l = 0.0
+    k = 1.0
+
+    px = 6
+    py = 6
+    p = px * py
+    n = 25
+
+    alpha = 1.0
+    Sigma = alpha * np.eye(p) + (1.0 - alpha) * np.ones((p, p))
+    Mu = np.zeros(p)
+    M = np.random.multivariate_normal(Mu, Sigma, n)
+    e = np.random.randn(n, 1)
+    e = e / np.sqrt(np.sum(e ** 2.0))
+    X, y, beta = l1_l2_tv_2D.load(l, k, gamma, density=0.25, snr=10.0,
+                                      M=M, e=e, shape=(py, px))
+
+    vals = np.linspace(0.5, 1.5, 17)
+#    vals = [0.00, 0.25, 0.50, 0.75, 1.00]
+    v = []
+    x = []
+    f = []
+    start_vector = start_vectors.RandomStartVector()
+    for i in range(len(vals)):
+        val = vals[i]
+        model = models.RidgeRegressionL1TV(l, val, gamma,
+                                           shape=[1, py, px],
+                                           mu=mu, compress=False,
+                                           algorithm=alg)
+        model.set_start_vector(start_vector)
+        model.set_tolerance(tolerance)
+        if i == 0:
+            model.set_max_iter(maxit * 10)
+        else:
+            model.set_max_iter(maxit)
+        model.fit(X, y)
+#        c = models.ContinuationRun(model, mus=[0.1, 0.01, 0.001, 0.0001, 0.00001])
+#        c.fit(X, y)
+        beta_ = model._beta
+        f_ = model.algorithm.f
+        start_vector = start_vectors.IdentityStartVector(beta_)
+
+        v.append(np.sum((beta - beta_) ** 2.0))
+        x.append(val)
+        f.append(f_)
+        print "true = %.2f => %.7f" % (val, v[-1])
+
+    plot.subplot(2,1,1)
+    plot.plot(x, v, '-b')
+    plot.subplot(2,1,2)
+    plot.plot(x, [min(i) for i in f], '-b')
+    plot.show()
