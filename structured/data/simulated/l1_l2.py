@@ -92,17 +92,17 @@ def _generate(l1, l2, density, snr, M, e):
 
     beta = np.zeros((p, 1))
     for i in xrange(p):
-        if i >= ps:
-            beta[i, 0] = 0.0
-        else:
+        if i < ps:
             beta[i, 0] = U(0, 1) * snr / np.sqrt(ps)
+        else:
+            beta[i, 0] = 0.0
 #    beta = np.flipud(np.sort(beta, axis=0))
 
     X = np.zeros(M.shape)
     for i in xrange(p):
         Mte = np.dot(M[:, i].T, e)
-        if abs(Mte) < utils.TOLERANCE:  # Avoid to make alpha very large
-            Mte = 1.0
+#        if abs(Mte) < utils.TOLERANCE:  # Avoid to make alpha very large
+#            Mte = 1.0
         alpha = 0.0
 
         # L1

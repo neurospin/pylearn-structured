@@ -1220,18 +1220,18 @@ if __name__ == "__main__":
     # Testing the new continuation
     np.random.seed(42)
 
-    tolerance = 0.00001
-    maxit = 100000
-    mu = 0.000001
+    tolerance = 0.0001
+    maxit = 50000
+    mu = 0.00001
     alg = algorithms.FISTARegression()
 
-#    gamma = 0.0
-    l = 3.14159
+    l = 0.61803
     k = 2.71828
-    opt = k
+    gamma = 3.14159
+    opt = gamma
 
-    px = 11
-    py = 11
+    px = 6
+    py = 6
     p = px * py
     n = 25
 
@@ -1240,34 +1240,20 @@ if __name__ == "__main__":
     Mu = np.zeros(p)
     M = np.random.multivariate_normal(Mu, Sigma, n)
     e = np.random.randn(n, 1)
-#    e = e / np.sqrt(np.sum(e ** 2.0))
 
 #    X, y, beta = lasso.load(l, density=0.7, snr=100.0, M=M, e=e)
 #    X, y, beta = ridge.load(k, density=0.7, snr=100.0, M=M, e=e)
 #    X, y, beta = ridge_2D.load(k, density=0.7, snr=100.0, M=M, e=e,
 #                               shape=(py, px))
-#    XtX = np.dot(X.T, X)
-#    invXtXkI = np.linalg.inv(XtX + k * np.eye(*XtX.shape))
-#    beta_ = np.dot(invXtXkI, np.dot(X.T, y))
-#    plot.plot(beta, '-g')
-#    plot.plot(beta_, '-r')
-#    plot.show()
-#    print "diff:", np.sum((beta - beta_) ** 2.0)
-#    while True:
-#        pass
 #    X, y, beta = lasso_2D.load(l, density=0.7, snr=100.0, M=M, e=e,
 #                               shape=(py, px))
 #    X, y, beta = l1_l2.load(l, k, density=0.7, snr=100.0, M=M, e=e)
-    X, y, beta = l1_l2_2D.load(l, k, density=0.7, snr=100.0, M=M, e=e,
-                               shape=(py, px))
-
-#    X, y, beta = l2_2D.load(k, density=1.0, snr=100.0, M=M, e=e,
-#                            shape=(py, px))
-#    X, y, beta = l1_l2_tv_2D.load(l, k, gamma, density=0.25, snr=100.0,
-#                                      M=M, e=e, shape=(py, px))
+#    X, y, beta = l1_l2_2D.load(l, k, density=0.7, snr=100.0, M=M, e=e,
+#                               shape=(py, px))
+    X, y, beta = l1_l2_tv.load(l, k, gamma, density=0.50, snr=100.0,
+                               M=M, e=e)
 
     vals = np.maximum(0.0, np.linspace(opt - 0.25, opt + 0.25, 25))
-#    vals = [0.00, 0.25, 0.50, 0.75, 1.00]
     v = []
     x = []
     f = []
@@ -1278,11 +1264,11 @@ if __name__ == "__main__":
         val = vals[i]
 #        model = models.Lasso(val, algorithm=alg)
 #        model = models.RidgeRegression(val, algorithm=alg)
-        model = models.LinearRegressionL1L2(l, val, algorithm=alg)
-#        model = models.RidgeRegressionL1TV(l, val, gamma,
-#                                           shape=[1, py, px],
-#                                           mu=mu, compress=False,
-#                                           algorithm=alg)
+#        model = models.LinearRegressionL1L2(l, val, algorithm=alg)
+        model = models.RidgeRegressionL1TV(l, k, val,
+                                           shape=[1, py, px],
+                                           mu=mu, compress=False,
+                                           algorithm=alg)
         model.set_start_vector(start_vector)
         model.set_tolerance(tolerance)
         if i == 0:
