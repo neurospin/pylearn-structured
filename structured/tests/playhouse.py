@@ -14,8 +14,8 @@ import structured.start_vectors as start_vectors
 import structured.loss_functions as loss_functions
 import structured.algorithms as algorithms
 import structured.data.simulated.lasso as lasso
-import structured.data.simulated.ridge as ridge
-import structured.data.simulated.l2_2D as l2_2D
+#import structured.data.simulated.ridge as ridge
+#import structured.data.simulated.l2_2D as l2_2D
 import structured.data.simulated.l1_l2_tv as l1_l2_tv
 import structured.data.simulated.l1_l2_tv_2D as l1_l2_tv_2D
 #import multiblock.start_vectors as start_vectors
@@ -27,6 +27,7 @@ from time import time
 import matplotlib.pyplot as plot
 import matplotlib.cm as cm
 #import pylab
+import copy
 
 
 def test_lasso():
@@ -1215,14 +1216,15 @@ if __name__ == "__main__":
     # Testing the new continuation
     np.random.seed(42)
 
-    tolerance = 0.000001
+    tolerance = 0.0000001
     maxit = 500000
-    mu = 0.00001
+    mu = 0.000001
     alg = algorithms.FISTARegression()
 
     gamma = 0.0
-    l = 0.0
-    k = 1.7
+    l = 3.14159
+    k = 0.0
+    l_opt = l
 
     px = 6
     py = 6
@@ -1235,7 +1237,8 @@ if __name__ == "__main__":
     M = np.random.multivariate_normal(Mu, Sigma, n)
     e = np.random.randn(n, 1)
     e = e / np.sqrt(np.sum(e ** 2.0))
-    X, y, beta = ridge.load(k, density=1.0, snr=100.0, M=M, e=e)
+    X, y, beta = lasso.load(l, density=0.7, snr=100.0, M=M, e=e)
+#    X, y, beta = ridge.load(k, density=1.0, snr=100.0, M=M, e=e)
 
 #    XtX = np.dot(X.T, X)
 #    invXtXkI = np.linalg.inv(XtX + k * np.eye(*XtX.shape))
@@ -1252,15 +1255,18 @@ if __name__ == "__main__":
 #    X, y, beta = l1_l2_tv_2D.load(l, k, gamma, density=0.25, snr=100.0,
 #                                      M=M, e=e, shape=(py, px))
 
-    vals = np.maximum(0.0, np.linspace(k - 0.7, k + 0.7, 51))
+    vals = np.maximum(0.0, np.linspace(l_opt - 0.7, l_opt + 0.7, 51))
 #    vals = [0.00, 0.25, 0.50, 0.75, 1.00]
     v = []
     x = []
     f = []
     start_vector = start_vectors.RandomStartVector()
+    best_vec = 0
+    best_val = float("inf")
     for i in range(len(vals)):
         val = vals[i]
-        model = models.RidgeRegression(val, algorithm=alg)
+        model = models.Lasso(val, algorithm=alg)
+#        model = models.RidgeRegression(val, algorithm=alg)
 #        model = models.RidgeRegressionL1TV(l, val, gamma,
 #                                           shape=[1, py, px],
 #                                           mu=mu, compress=False,
@@ -1278,14 +1284,19 @@ if __name__ == "__main__":
         f_ = model.algorithm.f
         start_vector = start_vectors.IdentityStartVector(beta_)
 
-        v.append(np.sum((beta - beta_) ** 2.0))
+        curr_val = np.sum((beta - beta_) ** 2.0)
+        v.append(curr_val)
         x.append(val)
         f.append(f_)
         print "true = %.2f => %.7f" % (val, v[-1])
 
-#    plot.subplot(2, 1, 1)
+        if curr_val < best_val:
+            best_val = curr_val
+            best_vec = copy.deepcopy(beta_)
+
+    plot.subplot(2, 1, 1)
     plot.plot(x, v, '-b')
-    plot.title("true: %.2f, min: %.2f" % (k, x[np.argmin(v)]))
-#    plot.subplot(2, 1, 2)
-#    plot.plot(x, [min(i) for i in f], '-b')
+    plot.title("true: %.2f, min: %.2f" % (l_opt, x[np.argmin(v)]))
+    plot.subplot(2, 1, 2)
+    plot.plot(beta, '-g', best_vec, '-r')
     plot.show()
