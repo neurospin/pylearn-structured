@@ -71,6 +71,9 @@ def load(l, density, snr, P, e):
 
     np.random.seed(seed)
     X, y, beta = _generate(l, density, bm.x, P, e)
+    print "snr = %.5f = %.5f = |X.b| / |e| = %.5f / %.5f" \
+            % (snr, np.linalg.norm(np.dot(X, beta) / np.linalg.norm(e)),
+               np.linalg.norm(np.dot(X, beta)), np.linalg.norm(e))
 
     return X, y, beta
 #    return _generate(l, density, snr, P, e)

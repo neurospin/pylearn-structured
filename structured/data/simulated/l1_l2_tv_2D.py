@@ -57,37 +57,37 @@ def load(l, k, gamma, density, snr, M, e, shape):
 
     beta : The generated regression vector.
     """
-#    seed = np.random.randint(2147483648)
-#
-#    low = 0.0
-#    high = 1.0
-#    for i in xrange(30):
-##        print "low:", low, "high:", high
-#        np.random.seed(seed)
-#        X, y, beta = _generate(l, k, gamma, density, high, M, e)
-#        val = np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0))
-#        if val > snr:
-#            break
-#        else:
-#            low = high
-#            high = high * 2.0
-#
-#    def f(x):
-#        np.random.seed(seed)
-#        X, y, beta = _generate(l, k, gamma, density, x, M, e)
-#        return np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0)) - snr
-#
-#    bm = algorithms.BisectionMethod(max_iter=20)
-#    bm.run(utils.AnonymousClass(f=f), low, high)
-#
-#    np.random.seed(seed)
-#    X, y, beta = _generate(l, k, gamma, density, bm.x, M, e)
-#    print "snr = %.5f = %.5f = |X.b| / |e| = %.5f / %.5f" \
-#            % (snr, np.linalg.norm(np.dot(X, beta) / np.linalg.norm(e)),
-#               np.linalg.norm(np.dot(X, beta)), np.linalg.norm(e))
-#
-#    return X, y, beta
-    return _generate(l, k, gamma, density, snr, M, e, shape)
+    seed = np.random.randint(2147483648)
+
+    low = 0.0
+    high = 1.0
+    for i in xrange(30):
+#        print "low:", low, "high:", high
+        np.random.seed(seed)
+        X, y, beta = _generate(l, k, gamma, density, high, M, e, shape)
+        val = np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0))
+        if val > snr:
+            break
+        else:
+            low = high
+            high = high * 2.0
+
+    def f(x):
+        np.random.seed(seed)
+        X, y, beta = _generate(l, k, gamma, density, x, M, e, shape)
+        return np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0)) - snr
+
+    bm = algorithms.BisectionMethod(max_iter=20)
+    bm.run(utils.AnonymousClass(f=f), low, high)
+
+    np.random.seed(seed)
+    X, y, beta = _generate(l, k, gamma, density, bm.x, M, e, shape)
+    print "snr = %.5f = %.5f = |X.b| / |e| = %.5f / %.5f" \
+            % (snr, np.linalg.norm(np.dot(X, beta) / np.linalg.norm(e)),
+               np.linalg.norm(np.dot(X, beta)), np.linalg.norm(e))
+
+    return X, y, beta
+#    return _generate(l, k, gamma, density, snr, M, e, shape)
 
 
 def _generate(l, k, gamma, density, snr, M, e, shape):

@@ -14,6 +14,8 @@ import structured.start_vectors as start_vectors
 import structured.loss_functions as loss_functions
 import structured.algorithms as algorithms
 import structured.data.simulated.lasso as lasso
+import structured.data.simulated.ridge as ridge
+import structured.data.simulated.l2_2D as l2_2D
 import structured.data.simulated.l1_l2_tv as l1_l2_tv
 import structured.data.simulated.l1_l2_tv_2D as l1_l2_tv_2D
 #import multiblock.start_vectors as start_vectors
@@ -1213,14 +1215,14 @@ if __name__ == "__main__":
     # Testing the new continuation
     np.random.seed(42)
 
-    tolerance = 0.00001
+    tolerance = 0.000001
     maxit = 500000
-    mu = 0.0001
+    mu = 0.00001
     alg = algorithms.FISTARegression()
 
     gamma = 0.0
     l = 0.0
-    k = 1.0
+    k = 1.7
 
     px = 6
     py = 6
@@ -1233,10 +1235,24 @@ if __name__ == "__main__":
     M = np.random.multivariate_normal(Mu, Sigma, n)
     e = np.random.randn(n, 1)
     e = e / np.sqrt(np.sum(e ** 2.0))
-    X, y, beta = l1_l2_tv_2D.load(l, k, gamma, density=0.25, snr=10.0,
-                                      M=M, e=e, shape=(py, px))
+    X, y, beta = ridge.load(k, density=1.0, snr=100.0, M=M, e=e)
 
-    vals = np.linspace(0.5, 1.5, 17)
+#    XtX = np.dot(X.T, X)
+#    invXtXkI = np.linalg.inv(XtX + k * np.eye(*XtX.shape))
+#    beta_ = np.dot(invXtXkI, np.dot(X.T, y))
+#    plot.plot(beta, '-g')
+#    plot.plot(beta_, '-r')
+#    plot.show()
+#    print "diff:", np.sum((beta - beta_) ** 2.0)
+#    print "beta:", beta.T
+#    while True:
+#        pass
+#    X, y, beta = l2_2D.load(k, density=1.0, snr=100.0, M=M, e=e,
+#                            shape=(py, px))
+#    X, y, beta = l1_l2_tv_2D.load(l, k, gamma, density=0.25, snr=100.0,
+#                                      M=M, e=e, shape=(py, px))
+
+    vals = np.maximum(0.0, np.linspace(k - 0.7, k + 0.7, 51))
 #    vals = [0.00, 0.25, 0.50, 0.75, 1.00]
     v = []
     x = []
@@ -1244,10 +1260,11 @@ if __name__ == "__main__":
     start_vector = start_vectors.RandomStartVector()
     for i in range(len(vals)):
         val = vals[i]
-        model = models.RidgeRegressionL1TV(l, val, gamma,
-                                           shape=[1, py, px],
-                                           mu=mu, compress=False,
-                                           algorithm=alg)
+        model = models.RidgeRegression(val, algorithm=alg)
+#        model = models.RidgeRegressionL1TV(l, val, gamma,
+#                                           shape=[1, py, px],
+#                                           mu=mu, compress=False,
+#                                           algorithm=alg)
         model.set_start_vector(start_vector)
         model.set_tolerance(tolerance)
         if i == 0:
@@ -1266,8 +1283,9 @@ if __name__ == "__main__":
         f.append(f_)
         print "true = %.2f => %.7f" % (val, v[-1])
 
-    plot.subplot(2,1,1)
+#    plot.subplot(2, 1, 1)
     plot.plot(x, v, '-b')
-    plot.subplot(2,1,2)
-    plot.plot(x, [min(i) for i in f], '-b')
+    plot.title("true: %.2f, min: %.2f" % (k, x[np.argmin(v)]))
+#    plot.subplot(2, 1, 2)
+#    plot.plot(x, [min(i) for i in f], '-b')
     plot.show()
