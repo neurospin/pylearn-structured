@@ -14,7 +14,11 @@ import structured.start_vectors as start_vectors
 import structured.loss_functions as loss_functions
 import structured.algorithms as algorithms
 import structured.data.simulated.lasso as lasso
-#import structured.data.simulated.ridge as ridge
+import structured.data.simulated.ridge as ridge
+import structured.data.simulated.l1_l2 as l1_l2
+import structured.data.simulated.l1_l2_2D as l1_l2_2D
+import structured.data.simulated.ridge_2D as ridge_2D
+import structured.data.simulated.lasso_2D as lasso_2D
 #import structured.data.simulated.l2_2D as l2_2D
 import structured.data.simulated.l1_l2_tv as l1_l2_tv
 import structured.data.simulated.l1_l2_tv_2D as l1_l2_tv_2D
@@ -1216,18 +1220,18 @@ if __name__ == "__main__":
     # Testing the new continuation
     np.random.seed(42)
 
-    tolerance = 0.0000001
-    maxit = 500000
+    tolerance = 0.0001
+    maxit = 200000
     mu = 0.000001
     alg = algorithms.FISTARegression()
 
-    gamma = 0.0
-    l = 3.14159
-    k = 0.0
-    l_opt = l
+#    gamma = 0.0
+    l = 0.314159
+    k = 0.271828
+    opt = k
 
-    px = 6
-    py = 6
+    px = 11
+    py = 11
     p = px * py
     n = 25
 
@@ -1236,10 +1240,12 @@ if __name__ == "__main__":
     Mu = np.zeros(p)
     M = np.random.multivariate_normal(Mu, Sigma, n)
     e = np.random.randn(n, 1)
-    e = e / np.sqrt(np.sum(e ** 2.0))
-    X, y, beta = lasso.load(l, density=0.7, snr=100.0, M=M, e=e)
-#    X, y, beta = ridge.load(k, density=1.0, snr=100.0, M=M, e=e)
+#    e = e / np.sqrt(np.sum(e ** 2.0))
 
+#    X, y, beta = lasso.load(l, density=0.7, snr=100.0, M=M, e=e)
+#    X, y, beta = ridge.load(k, density=0.7, snr=100.0, M=M, e=e)
+#    X, y, beta = ridge_2D.load(k, density=0.7, snr=100.0, M=M, e=e,
+#                               shape=(py, px))
 #    XtX = np.dot(X.T, X)
 #    invXtXkI = np.linalg.inv(XtX + k * np.eye(*XtX.shape))
 #    beta_ = np.dot(invXtXkI, np.dot(X.T, y))
@@ -1247,15 +1253,20 @@ if __name__ == "__main__":
 #    plot.plot(beta_, '-r')
 #    plot.show()
 #    print "diff:", np.sum((beta - beta_) ** 2.0)
-#    print "beta:", beta.T
 #    while True:
 #        pass
+#    X, y, beta = lasso_2D.load(l, density=0.7, snr=100.0, M=M, e=e,
+#                               shape=(py, px))
+#    X, y, beta = l1_l2.load(l, k, density=0.7, snr=100.0, M=M, e=e)
+    X, y, beta = l1_l2_2D.load(l, k, density=0.7, snr=100.0, M=M, e=e,
+                               shape=(py, px))
+
 #    X, y, beta = l2_2D.load(k, density=1.0, snr=100.0, M=M, e=e,
 #                            shape=(py, px))
 #    X, y, beta = l1_l2_tv_2D.load(l, k, gamma, density=0.25, snr=100.0,
 #                                      M=M, e=e, shape=(py, px))
 
-    vals = np.maximum(0.0, np.linspace(l_opt - 0.7, l_opt + 0.7, 51))
+    vals = np.maximum(0.0, np.linspace(opt - 0.25, opt + 0.25, 25))
 #    vals = [0.00, 0.25, 0.50, 0.75, 1.00]
     v = []
     x = []
@@ -1265,8 +1276,9 @@ if __name__ == "__main__":
     best_val = float("inf")
     for i in range(len(vals)):
         val = vals[i]
-        model = models.Lasso(val, algorithm=alg)
+#        model = models.Lasso(val, algorithm=alg)
 #        model = models.RidgeRegression(val, algorithm=alg)
+        model = models.LinearRegressionL1L2(l, val, algorithm=alg)
 #        model = models.RidgeRegressionL1TV(l, val, gamma,
 #                                           shape=[1, py, px],
 #                                           mu=mu, compress=False,
@@ -1296,7 +1308,7 @@ if __name__ == "__main__":
 
     plot.subplot(2, 1, 1)
     plot.plot(x, v, '-b')
-    plot.title("true: %.2f, min: %.2f" % (l_opt, x[np.argmin(v)]))
+    plot.title("true: %.2f, min: %.2f" % (opt, x[np.argmin(v)]))
     plot.subplot(2, 1, 2)
     plot.plot(beta, '-g', best_vec, '-r')
     plot.show()
