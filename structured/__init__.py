@@ -15,8 +15,10 @@ import tests
 import utils
 import loss_functions
 import start_vectors
+import datasets
 
 __version__ = '0.0.9'
 
 __all__ = ['models', 'prox_ops', 'algorithms', 'preprocess',
-           'tests', 'utils', 'loss_functions', 'start_vectors']
+           'tests', 'utils', 'loss_functions', 'start_vectors',
+           'datasets']

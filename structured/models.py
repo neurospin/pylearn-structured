@@ -46,6 +46,7 @@ import schemes
 import modes
 import loss_functions
 import start_vectors
+import utils
 
 from time import time
 
@@ -1051,6 +1052,7 @@ class NesterovProximalGradientMethod(BaseModel):
         -------
         self: The model object.
         """
+        X, y = utils.check_arrays(X, y)
         self.set_data(X, y)
 
         self.beta = self.algorithm.run(X, y, **kwargs)
@@ -1128,7 +1130,7 @@ class NesterovProximalGradientMethod(BaseModel):
         return gs.beta
 
     def predict(self, X, **kwargs):
-
+        X = utils.check_arrays(X)
         yhat = np.dot(X, self.get_transform())
 
         return yhat

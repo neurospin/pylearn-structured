@@ -23,6 +23,7 @@ from .utils import _DEBUG
 from .utils import optimal_shrinkage
 from .utils import delete_sparse_csr_row
 from .utils import AnonymousClass
+from .check_arrays import check_arrays
 
 import testing
 
@@ -30,4 +31,5 @@ __all__ = ['norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
            'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy',
            'sstot', 'ssvar', 'sqrt', 'rand', 'zeros',
            'testing', 'direct', 'debug', 'warning', '_DEBUG',
-           'optimal_shrinkage', 'delete_sparse_csr_row', 'AnonymousClass']
+           'optimal_shrinkage', 'delete_sparse_csr_row', 'AnonymousClass',
+           'check_arrays']
