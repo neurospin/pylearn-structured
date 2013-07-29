@@ -81,9 +81,10 @@ def load(l, k, density, snr, M, e):
 #    return _generate(l, density, snr, M, e)
 
 
-def _generate(l, k, density, snr, M, e):
+def _generate(l1, l2, density, snr, M, e):
 
-    l = float(l)
+    l1 = float(l1)
+    l2 = float(l2)
     density = float(density)
     snr = float(snr)
     p = M.shape[1]
@@ -107,12 +108,12 @@ def _generate(l, k, density, snr, M, e):
         # L1
         sign_beta = sign(beta[i, 0])
         if i < ps:
-            alpha += -l * sign_beta
+            alpha += -l1 * sign_beta
         else:
-            alpha = -l * U(-1, 1)
+            alpha += -l1 * U(-1, 1)
 
         # L2
-        alpha += -k * beta[i, 0]
+        alpha += -l2 * beta[i, 0]
 
         alpha /= Mte
 

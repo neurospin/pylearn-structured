@@ -1220,14 +1220,14 @@ if __name__ == "__main__":
     # Testing the new continuation
     np.random.seed(42)
 
-    tolerance = 0.0001
-    maxit = 200000
+    tolerance = 0.00001
+    maxit = 100000
     mu = 0.000001
     alg = algorithms.FISTARegression()
 
 #    gamma = 0.0
-    l = 0.314159
-    k = 0.271828
+    l = 3.14159
+    k = 2.71828
     opt = k
 
     px = 11

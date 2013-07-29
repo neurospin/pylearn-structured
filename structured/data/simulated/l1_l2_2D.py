@@ -60,7 +60,7 @@ def load(l, k, density, snr, M, e, shape):
     high = 1.0
     for i in xrange(30):
         np.random.seed(seed)
-        X, y, beta = _generate(l, density, high, M, e, shape)
+        X, y, beta = _generate(l, k, density, high, M, e, shape)
         val = np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0))
         if val > snr:
             break
@@ -70,14 +70,14 @@ def load(l, k, density, snr, M, e, shape):
 
     def f(x):
         np.random.seed(seed)
-        X, y, beta = _generate(l, density, x, M, e, shape)
+        X, y, beta = _generate(l, k, density, x, M, e, shape)
         return np.sqrt(np.sum(np.dot(X, beta) ** 2.0) / np.sum(e ** 2.0)) - snr
 
     bm = algorithms.BisectionMethod(max_iter=20)
     bm.run(utils.AnonymousClass(f=f), low, high)
 
     np.random.seed(seed)
-    X, y, beta = _generate(l, density, bm.x, M, e, shape)
+    X, y, beta = _generate(l, k, density, bm.x, M, e, shape)
     print "snr = %.5f = %.5f = |X.b| / |e| = %.5f / %.5f" \
             % (snr, np.linalg.norm(np.dot(X, beta) / np.linalg.norm(e)),
                np.linalg.norm(np.dot(X, beta)), np.linalg.norm(e))
@@ -86,46 +86,45 @@ def load(l, k, density, snr, M, e, shape):
 #    return _generate(l, density, snr, M, e)
 
 
-def _generate(l, density, snr, M, e, shape):
+def _generate(l1, l2, density, snr, M, e, shape):
 
-    l = float(l)
+    l1 = float(l1)
+    l2 = float(l2)
     density = float(density)
     snr = float(snr)
     p = M.shape[1]
-#    ps = int(round(p * density))
 
     px = shape[1]
     py = shape[0]
     pys, pxs = find_dense(density, shape)
-    print pys * pxs / float(p)
 
     beta = np.zeros((py, px))
     for i in xrange(py):
         for j in xrange(px):
-            if i >= pys or j >= pxs:
-                beta[i, j] = 0.0
-            else:
+            if i < pys and j < pxs:
                 beta[i, j] = U(0, 1) * snr / np.sqrt(pys * pxs)
+            else:
+                beta[i, j] = 0.0
 #    beta = np.fliplr(np.sort(np.flipud(np.sort(beta, axis=0)), axis=1))
-
-    print beta
 
     X = np.zeros(M.shape)
     for i in xrange(py):
         for j in xrange(px):
             k = px * i + j
             Mte = np.dot(M[:, k].T, e)
+            if abs(Mte) < utils.TOLERANCE:  # Avoid to make alpha very large
+                Mte = 1.0
             alpha = 0.0
 
             # L1
             sign_beta = sign(beta[i, j])
             if i < pys and j < pxs:
-                alpha = (-l * sign_beta) / Mte
+                alpha += -l1 * sign_beta
             else:
-                alpha = -l * U(-1, 1) / Mte
+                alpha += -l1 * U(-1, 1)
 
             # L2
-            alpha += -k * beta[i, j]
+            alpha += -l2 * beta[i, j]
 
             alpha /= Mte
 

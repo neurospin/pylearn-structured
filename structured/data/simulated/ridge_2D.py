@@ -99,10 +99,10 @@ def _generate(l, density, snr, M, e, shape):
     beta = np.zeros((py, px))
     for i in xrange(py):
         for j in xrange(px):
-            if i >= pys or j >= pxs:
-                beta[i, j] = 0.0
-            else:
+            if i < pys and j < pxs:
                 beta[i, j] = U(0, 1) * snr / np.sqrt(pys * pxs)
+            else:
+                beta[i, j] = 0.0
 #    beta = np.fliplr(np.sort(np.flipud(np.sort(beta, axis=0)), axis=1))
 
     X = np.zeros(M.shape)
