@@ -18,11 +18,38 @@ def make_classification(n_samples=100,
                 snr=3., grp_proportion=.5,
                 random_seed=None,
                 full_info=False):
-    """ Build classification samples.
+    """ Generate classification samples with features having a covariance
+    structure.
 
-    The SNR is distributed accross informative features such that the mean
-    of SNR individual feature is constant for all patterns. Thus we can observ
-    additionnal SNR emerging from features covariation.
+    The function creates patterns of informative features with a structure
+    of covariance. This covariance structure may be of four types:
+    (1) Independant features:
+    The is no covariance betwenne informative features. It is the
+    "n_independant_features" parameter ("n_redundant_patterns parameter").
+
+    (2) Pattern of redundant features:
+    The covariance between features is mixed up with the predictive
+    information. Thus each feature of the pattern carries the same predictive
+    information, ie.: the features of the pattern are redundant. A predictive
+    algorithm need only to select one of them to exploit the predictive
+    information contained in the pattern
+
+    (3) Pattern of complementary features:
+    The covariance between features is orthogonal with the predictive
+    information. Thus the difference of two features within the pattern will
+    cancel out non predictive information resulting to a highly predictive
+    pattern. This is controled by the "n_complementary_patterns".
+
+    (4) Pattern of one informative feature an one suppressor feature.
+    The covariance between features is independant to the predictive
+    information. And one feature of the pattern carries predictive information.
+    So any other feature of the pattern will cancel out non predictive
+    information resulting to a highly predictive pattern.
+    This is controled by the "n_suppressor_patterns".
+
+    The SNR (Mahalanobis distance) is distributed accross informative features
+    such that the mean of SNR individual feature is constant for all patterns.
+    Thus we can observ additionnal SNR emerging from features covariation.
 
     Parameters
     ----------

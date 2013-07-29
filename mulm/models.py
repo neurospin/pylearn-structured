@@ -10,10 +10,11 @@ import numpy as np
 from sklearn.utils import safe_asarray
 from .ols import ols_stats_tcon
 
+
 class LinearRegression:
     """ Massiv univariate LinearRegression. Repeat linear regression for
     each columns of Y.
-    
+
     Example
     -------
     >>> import numpy as np
