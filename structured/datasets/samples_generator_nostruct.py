@@ -169,10 +169,10 @@ def make_classification(n_samples=100,
         m1[idx:(idx + size_complementary_patterns)] *= \
             size_complementary_patterns * snr_per_feature * np.sqrt(var) \
             / snrs.sum()
-        snrs = calc_univ_snrs(
-            m0[idx:(idx + size_complementary_patterns)],
-            m1[idx:(idx + size_complementary_patterns)], var)
-        print "Complementary patterns snrs:", snrs
+#        snrs = calc_univ_snrs(
+#            m0[idx:(idx + size_complementary_patterns)],
+#            m1[idx:(idx + size_complementary_patterns)], var)
+#        print "Complementary patterns snrs:", snrs
         idx += size_complementary_patterns
 
     # Suppressors patterns
@@ -186,8 +186,8 @@ def make_classification(n_samples=100,
         # is 2 * snr_per_feature
         snrs = calc_univ_snrs(m0[idx:(idx + 2)], m1[idx:(idx + 2)], var)
         m1[idx] *= 2 * snr_per_feature * np.sqrt(var) / snrs.sum()
-        snrs = calc_univ_snrs(m0[idx:(idx + 2)], m1[idx:(idx + 2)], var)
-        print "Suppressors patterns snrs:", snrs
+#        snrs = calc_univ_snrs(m0[idx:(idx + 2)], m1[idx:(idx + 2)], var)
+#        print "Suppressors patterns snrs:", snrs
         idx += 2
 
     # Redundant patterns
@@ -208,10 +208,10 @@ def make_classification(n_samples=100,
         m1[idx:(idx + size_redundant_patterns)] *= \
             size_redundant_patterns * snr_per_feature * np.sqrt(var) \
             / snrs.sum()
-        snrs = calc_univ_snrs(
-            m0[idx:(idx + size_redundant_patterns)],
-            m1[idx:(idx + size_redundant_patterns)], var)
-        print "Redundant patterns snrs:", snrs
+#        snrs = calc_univ_snrs(
+#            m0[idx:(idx + size_redundant_patterns)],
+#            m1[idx:(idx + size_redundant_patterns)], var)
+#        print "Redundant patterns snrs:", snrs
         #dmeans = v[:, np.argmax(np.abs(la))].ravel() * np.sqrt(max_var) * \
         #    snr_per_feature
         #m1[idx:(idx + size_redundant_patterns)] += dmeans
@@ -225,7 +225,7 @@ def make_classification(n_samples=100,
     # Nomalize m1 to scale to the desire global snr
     snr_actual = np.sqrt(np.dot(np.dot(scipy.linalg.inv(Cov), m1 - m0),
                                 m1 - m0))
-    print "Global snr before scaling:", snr_actual
+#    print "Global snr before scaling:", snr_actual
     m1 *= snr / snr_actual
 
     n_g0 = int(np.round(n_samples * grp_proportion))

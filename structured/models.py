@@ -1610,7 +1610,8 @@ class LogisticRegression(NesterovProximalGradientMethod):
 
     def __init__(self, **kwargs):
 
-        super(LogisticRegression, self).__init__(**kwargs)
+        super(LogisticRegression, self).__init__(
+            algorithm=algorithms.FISTARegression(), **kwargs)
 
         self.set_g(loss_functions.LogisticRegressionError())
 

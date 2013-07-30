@@ -13,7 +13,7 @@ import test_o2pls
 import test_regularisation
 import test_multiblock
 import test_structure
-
+import test_unpenalized
 
 def test():
     test_SVD_PCA.test()
@@ -22,7 +22,7 @@ def test():
     test_regularisation.test()
     test_multiblock.test()
     test_structure.test()
-
+    test_unpenalized.test()
 
 if __name__ == "__main__":
 
