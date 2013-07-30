@@ -1271,6 +1271,10 @@ class TotalVariation(NesterovFunction):
         self._At = [Axt, Ayt, Azt]
         self._alpha = [0.0, 0.0, 0.0]
 
+#        print self._A[0].todense()
+#        print self._A[1].todense()
+#        print self._A[2].todense()
+
         # TODO: This is only true if zero-rows have been removed!
         self._num_compacts = Ax.shape[0]
 

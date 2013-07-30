@@ -20,6 +20,7 @@ import structured.data.simulated.l1_l2_2D as l1_l2_2D
 import structured.data.simulated.ridge_2D as ridge_2D
 import structured.data.simulated.lasso_2D as lasso_2D
 #import structured.data.simulated.l2_2D as l2_2D
+import structured.data.simulated.l1_tv as l1_tv
 import structured.data.simulated.l1_l2_tv as l1_l2_tv
 import structured.data.simulated.l1_l2_tv_2D as l1_l2_tv_2D
 #import multiblock.start_vectors as start_vectors
@@ -1220,14 +1221,14 @@ if __name__ == "__main__":
     # Testing the new continuation
     np.random.seed(42)
 
-    tolerance = 0.0001
+    tolerance = 0.00001
     maxit = 50000
-    mu = 0.00001
+    mu = 0.0001
     alg = algorithms.FISTARegression()
 
     l = 0.61803
-    k = 2.71828
-    gamma = 3.14159
+    k = 0.0  # 2.71828
+    gamma = 1.314159
     opt = gamma
 
     px = 6
@@ -1243,6 +1244,7 @@ if __name__ == "__main__":
 
 #    X, y, beta = lasso.load(l, density=0.7, snr=100.0, M=M, e=e)
 #    X, y, beta = ridge.load(k, density=0.7, snr=100.0, M=M, e=e)
+#    X, y, beta = l1_tv.load(l, gamma, density=0.7, snr=100.0, M=M, e=e)
 #    X, y, beta = ridge_2D.load(k, density=0.7, snr=100.0, M=M, e=e,
 #                               shape=(py, px))
 #    X, y, beta = lasso_2D.load(l, density=0.7, snr=100.0, M=M, e=e,
@@ -1253,26 +1255,32 @@ if __name__ == "__main__":
     X, y, beta = l1_l2_tv.load(l, k, gamma, density=0.50, snr=100.0,
                                M=M, e=e)
 
-    vals = np.maximum(0.0, np.linspace(opt - 0.25, opt + 0.25, 25))
+    num_lin = 51
+    vals = np.maximum(0.0, np.linspace(opt - 0.25, opt + 0.25, num_lin))
     v = []
     x = []
     f = []
     start_vector = start_vectors.RandomStartVector()
     best_vec = 0
     best_val = float("inf")
+    opt_vec = 0
     for i in range(len(vals)):
         val = vals[i]
 #        model = models.Lasso(val, algorithm=alg)
 #        model = models.RidgeRegression(val, algorithm=alg)
+#        model = models.LinearRegressionTV(val, shape=(1, 1, p), mu=mu,
+#                                          algorithm=alg)
+        model = models.LinearRegressionL1TV(l, val, shape=(1, 1, p), mu=mu,
+                                            algorithm=alg)
 #        model = models.LinearRegressionL1L2(l, val, algorithm=alg)
-        model = models.RidgeRegressionL1TV(l, k, val,
-                                           shape=[1, py, px],
-                                           mu=mu, compress=False,
-                                           algorithm=alg)
+#        model = models.RidgeRegressionL1TV(l, k, val,
+#                                           shape=[1, py, px],
+#                                           mu=mu, compress=False,
+#                                           algorithm=alg)
         model.set_start_vector(start_vector)
         model.set_tolerance(tolerance)
         if i == 0:
-            model.set_max_iter(maxit * 10)
+            model.set_max_iter(maxit * 2)
         else:
             model.set_max_iter(maxit)
         model.fit(X, y)
@@ -1292,9 +1300,13 @@ if __name__ == "__main__":
             best_val = curr_val
             best_vec = copy.deepcopy(beta_)
 
+        if abs(val - opt) < (max(vals) - min(vals)) / num_lin:
+            print "Sparar beta vid ", val
+            opt_vec = copy.deepcopy(beta_)
+
     plot.subplot(2, 1, 1)
     plot.plot(x, v, '-b')
     plot.title("true: %.2f, min: %.2f" % (opt, x[np.argmin(v)]))
     plot.subplot(2, 1, 2)
-    plot.plot(beta, '-g', best_vec, '-r')
+    plot.plot(beta, '-g', opt_vec, '-r', best_vec, '-b')
     plot.show()

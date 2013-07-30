@@ -10,9 +10,11 @@ import regression
 import correlation_matrices
 
 import lasso
+import ridge
+import l1_tv
 #import l2_2D
-import l1_l2_tv
-import l1_l2_tv_2D
+#import l1_l2_tv
+#import l1_l2_tv_2D
 
 __all__ = ['regression', 'correlation_matrices',
-           'lasso', 'l2_2D', 'l1_l2_tv', 'l1_l2_tv_2D']
+           'lasso', 'ridge', 'l1_tv']

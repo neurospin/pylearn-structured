@@ -33,7 +33,7 @@ def load(l, density, snr, M, e):
 
     M : The matrix to use when building data. This matrix carries the desired
             distribution of the generated data. The generated data will be a
-            scaled version of this matrix.
+            column-scaled version of this matrix.
 
     e : The error vector e = Xb - y. This vector carries the desired
             distribution of the residual.

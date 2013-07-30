@@ -43,7 +43,7 @@ def load(l, k, gamma, density, snr, M, e):
 
     M : The matrix to use when building data. This matrix carries the desired
             distribution of the generated data. The generated data will be a
-            scaled version of this matrix.
+            column-scaled version of this matrix.
 
     e : The error vector e = Xb - y. This vector carries the desired
             distribution of the residual.
@@ -138,32 +138,33 @@ def _generate(l1, l2, gamma, density, snr, M, e):
 
         X[:, i] = alpha * M[:, i]
 
+#    b = np.dot(M.T, e)
+#    a = np.zeros((p, 1))
+#
 #    # Case 1: Positive edge
-#    a[0, 0] = (-k * beta[0, 0] - l - gamma) / b[0, 0]
-#    X[:, 0] = P[:, 0] * a[0, 0]
+#    a[0, 0] = (-l2 * beta[0, 0] - l1 - gamma) / b[0, 0]
+#    X[:, 0] = M[:, 0] * a[0, 0]
 #
 #    # Case 2 and 3: Positive neighbours left and right
 #    for i in xrange(1, ps):
-#        a[i, 0] = (-k * beta[i, 0] - l) / b[i, 0]
-#        X[:, i] = P[:, i] * a[i, 0]
+#        a[i, 0] = (-l2 * beta[i, 0] - l1) / b[i, 0]
+#        X[:, i] = M[:, i] * a[i, 0]
 #
 #    # Case 4: Positive neighbour left, zero neighbour right
-##    a[ps, 0] = (-k * beta[ps, 0] - l * U(-1, 1) - gamma * U(-2, 0)) / b[ps, 0]
-#    a[ps, 0] = (-k * beta[ps, 0] - l * U(-1, 1) - gamma * (U(-1, 1) - 1)) \
+#    a[ps, 0] = (-l2 * beta[ps, 0] - l1 * U(-1, 1) - gamma * (U(-1, 1) - 1)) \
 #                    / b[ps, 0]
-#    X[:, ps] = P[:, ps] * a[ps, 0]
+#    X[:, ps] = M[:, ps] * a[ps, 0]
 #
 #    # Case 5: Zero neighbours left and right
 #    for i in xrange(ps + 1, p - 1):
-##        a[i, 0] = (-k * beta[i, 0] - l * U(-1, 1) - gamma * U(-2, 2)) / b[i, 0]
-#        a[i, 0] = (-k * beta[i, 0] - l * U(-1, 1) - gamma * (U(-1, 1) + U(-1, 1))) \
+#        a[i, 0] = (-l2 * beta[i, 0] - l1 * U(-1, 1) - gamma * (U(-1, 1) + U(-1, 1))) \
 #                    / b[i, 0]
-#        X[:, i] = P[:, i] * a[i, 0]
+#        X[:, i] = M[:, i] * a[i, 0]
 #
 #    # Case 6: Zero edge
-#    a[p - 1, 0] = (-k * beta[p - 1, 0] - l * U(-1, 1) - gamma * U(-1, 1)) \
+#    a[p - 1, 0] = (-l2 * beta[p - 1, 0] - l1 * U(-1, 1) - gamma * U(-1, 1)) \
 #                    / b[p - 1, 0]
-#    X[:, p - 1] = P[:, p - 1] * a[p - 1, 0]
+#    X[:, p - 1] = M[:, p - 1] * a[p - 1, 0]
 
     y = np.dot(X, beta) - e
 
