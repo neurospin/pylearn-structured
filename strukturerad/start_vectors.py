@@ -20,6 +20,7 @@ class BaseStartVector(object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, shape=None, normalise=True):
+
         super(BaseStartVector, self).__init__()
 
         self.shape = shape
@@ -27,6 +28,7 @@ class BaseStartVector(object):
 
     @abc.abstractmethod
     def get_vector(self, X=None, shape=None):
+
         raise NotImplementedError('Abstract method "getVector" must be '\
                                   'specialised!')
 
@@ -34,22 +36,27 @@ class BaseStartVector(object):
 class IdentityStartVector(BaseStartVector):
 
     def __init__(self, vector, **kwargs):
+
         super(IdentityStartVector, self).__init__(**kwargs)
 
         self.vector = vector
 
     def get_vector(self, *args, **kwargs):
+
         return self.vector
 
 
 class RandomStartVector(BaseStartVector):
 
     def __init__(self, normalise=True, **kwargs):
+
         super(RandomStartVector, self).__init__(normalise=normalise, **kwargs)
 
     def get_vector(self, X=None, shape=None, axis=1):
+
         if X == None and shape == None:
             raise ValueError('A matrix X or a shape must be must be given.')
+
         if X != None:
             shape = (X.shape[axis], 1)
 
@@ -62,12 +69,16 @@ class RandomStartVector(BaseStartVector):
 
 
 class OnesStartVector(BaseStartVector):
+
     def __init__(self, normalise=True, **kwargs):
+
         super(OnesStartVector, self).__init__(normalise=normalise, **kwargs)
 
     def get_vector(self, X=None, shape=None, axis=1):
+
         if X == None and shape == None:
             raise ValueError('A matrix X or a shape must be must be given.')
+
         if X != None:
             shape = (X.shape[axis], 1)
 
@@ -86,11 +97,14 @@ class ZerosStartVector(BaseStartVector):
     may result in division by zero since the norm of this start vector is 0.
     """
     def __init__(self, **kwargs):
+
         super(ZerosStartVector, self).__init__(normalise=False, **kwargs)
 
     def get_vector(self, X=None, shape=None, axis=1):
+
         if X == None and shape == None:
             raise ValueError('A matrix X or a shape must be must be given.')
+
         if X != None:
             shape = (X.shape[axis], 1)
 
@@ -102,13 +116,16 @@ class ZerosStartVector(BaseStartVector):
 class LargestStartVector(BaseStartVector):
 
     def __init__(self, normalise=True, **kwargs):
+
         super(LargestStartVector, self).__init__(normalise=normalise, **kwargs)
 
     def get_vector(self, X, axis=1):
+
         if X == None:
             raise ValueError('A matrix X must be must be given.')
 
         idx = np.argmax(np.sum(X ** 2.0, axis=axis))
+
         if axis == 0:
             w = X[:, [idx]]  # Using column with largest sum of squares
         else:

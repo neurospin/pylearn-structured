@@ -33,7 +33,7 @@ Created on Fri Feb  8 17:24:11 2013
 import abc
 import start_vectors
 import utils
-import utils.math
+from utils import math
 from utils import warning
 
 import numpy as np
@@ -302,66 +302,70 @@ class ProximalGradientAlgorithm(BaseAlgorithm):
 class ISTARegression(ProximalGradientAlgorithm):
     """ The ISTA algorithm for regression settings.
     """
-    # TODO: Do not save number of iterations and other variables in the
-    # algorithm object
     def __init__(self, *args, **kwargs):
 
         super(ISTARegression, self).__init__(*args, **kwargs)
 
-    def run(self, X, y, g, h, smooth=False, **kwargs):
+    def run(self, X, y, g, h, smooth=False, extended_output=False, **kwargs):
 
         tscale = 0.99
         t = tscale / g.Lipschitz()
 
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
-        f_new = g.f(beta_new, smooth=smooth) + h.f(beta_new)
-        f_old = f_new
-        self.f = [f_new]
 
-        self.iterations = 1
+        if extended_output or not smooth:
+            f_new = g.f(beta_new, smooth=smooth) + h.f(beta_new)
+            f_old = f_new
+            f = []
+
+        iterations = 0
         while True:
             converged = True
 
             beta_new = h.prox(beta_old - t * g.grad(beta_old), t)
 
-            if utils.norm1(beta_old - beta_new) > self.tolerance * t:
+            if math.norm1(beta_old - beta_new) > self.tolerance * t:
                 converged = False
 
-            f_new = g.f(beta_new, smooth=smooth) + h.f(beta_new)
+            if extended_output or not smooth:
+                f_new = g.f(beta_new, smooth=smooth) + h.f(beta_new)
 
             if not smooth and f_new > f_old:  # Early stopping
                 converged = True
                 warning('Early stopping criterion triggered. Mu too large?')
             else:
                 # Save updated values
-                f_old = f_new
-                self.f.append(f_new)
-                self.iterations += 1
+                if extended_output or not smooth:
+                    f.append(f_new)
+                    f_old = f_new
+                iterations += 1
 
             beta_old = beta_new
 
             if converged:
                 break
 
-            if self.iterations >= self.max_iter:
+            if iterations >= self.max_iter:
                 warning('Maximum number of iterations reached before ' \
                         'convergence')
                 break
 
-        return beta_new
+        if extended_output:
+            output = {'f': f, 'iterations': iterations}
+            return beta_new, output
+        else:
+            return beta_new
 
 
 class FISTARegression(ISTARegression):
     """ The fast ISTA algorithm for regression.
     """
-    # TODO: Do not save number of iterations and other variables in the
-    # algorithm object
     def __init__(self, *args, **kwargs):
 
         super(FISTARegression, self).__init__(*args, **kwargs)
 
-    def run(self, X, y, g, h, smooth=False, eval_f=True, **kwargs):
+    def run(self, X, y, g, h, smooth=False, extended_output=False, **kwargs):
 
         tscale = 0.99
         t = tscale / g.Lipschitz()
@@ -369,51 +373,52 @@ class FISTARegression(ISTARegression):
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
 
-        if eval_f:
-            f_new = g.f(beta_new, smooth=smooth) + h.f(beta_new)
-            self.f = [f_new]
+        if extended_output:
+#            f_new = g.f(beta_new, smooth=smooth) + h.f(beta_new)
+            f = []
 
-        self.iterations = 1
+        iterations = 0
         while True:
             converged = True
 
-            k = float(self.iterations)
+            k = float(iterations)
             z = beta_new + ((k - 2.0) / (k + 1.0)) * (beta_new - beta_old)
             beta_old = beta_new
             beta_new = h.prox(z - t * g.grad(z), t)
 
-            if utils.norm1(z - beta_new) > self.tolerance * t:
+            if math.norm1(z - beta_new) > self.tolerance * t:
                 converged = False
 
-            if eval_f:
+            if extended_output:
                 f_new = g.f(beta_new, smooth=smooth) + h.f(beta_new)
+                f.append(f_new)
 
-                self.f.append(f_new)
-
-            self.iterations += 1
+            iterations += 1
 
             if converged:
                 break
 
-            if self.iterations >= self.max_iter:
+            if iterations >= self.max_iter:
                 warning('Maximum number of iterations reached before ' \
                         'convergence')
                 break
 
-        return beta_new
+        if extended_output:
+            output = {'f': f, 'iterations': iterations}
+            return beta_new, output
+        else:
+            return beta_new
 
 
 class MonotoneFISTARegression(ISTARegression):
     """ A monotonised version of the fast ISTA algorithm for regression.
     """
-    # TODO: Do not save number of iterations and other variables in the
-    # algorithm object
     def __init__(self, **kwargs):
 
         super(MonotoneFISTARegression, self).__init__(**kwargs)
 
-    def run(self, X, y, g, h, ista_steps=2, smooth=False, early_stopping=True,
-            **kwargs):
+    def run(self, X, y, g, h, ista_steps=2, smooth=False,
+            extended_output=False, **kwargs):
 
         tscale = 0.99
         t = tscale / g.Lipschitz()
@@ -421,15 +426,15 @@ class MonotoneFISTARegression(ISTARegression):
         beta_old = self.start_vector.get_vector(X)
         beta_new = beta_old
 
-        f_new = g.f(beta_new, smooth=smooth) + h.f(beta_new)
-        f_old = f_new
-        self.f = [f_new]
+        if extended_output or not smooth:
+            f_new = g.f(beta_new, smooth=smooth) + h.f(beta_new)
+            f = []
 
-        self.iterations = 1
+        iterations = 0
         while True:
             converged = True
 
-            k = float(self.iterations)
+            k = float(iterations)
             z = beta_new + ((k - 2.0) / (k + 1.0)) * (beta_new - beta_old)
             beta_old = beta_new
             beta_new = h.prox(z - t * g.grad(z), t)
@@ -445,41 +450,51 @@ class MonotoneFISTARegression(ISTARegression):
                     beta_old = beta_new
                     beta_new = h.prox(beta_old - t * g.grad(beta_old), t)
 
-                    f_old = f_new
-                    f_new = g.f(beta_new, smooth=smooth) + h.f(beta_new)
+                    if extended_output or not smooth:
+                        f_old = f_new
+                        f_new = g.f(beta_new, smooth=smooth) + h.f(beta_new)
 
-                    if early_stopping and f_new > f_old:  # Early stopping
+#                    if early_stopping and f_new > f_old:  # Early stopping
+                    if not smooth and f_new > f_old:  # Early stopping
                         converged = True
                         stop_early = True
                         warning('Early stopping criterion triggered. ' \
                                 'Mu too large?')
                         break  # Do not save this suboptimal point
 
-                    self.f.append(f_new)
-                    self.iterations += 1
+                    if extended_output or not smooth:
+                        f.append(f_new)
+
+                    iterations += 1
 
                 # If not early stopping, check ISTA convergence criterion
                 if not stop_early \
-                    and utils.norm1(beta_old - beta_new) > self.tolerance * t:
+                    and math.norm1(beta_old - beta_new) > self.tolerance * t:
 
                     converged = False
 
             else:  # The value of f decreased in the FISTA iteration
-                self.f.append(f_new)
-                self.iterations += 1
+                if extended_output or not smooth:
+                    f.append(f_new)
 
-                if utils.norm1(z - beta_new) > self.tolerance * t:
+                iterations += 1
+
+                if math.norm1(z - beta_new) > self.tolerance * t:
                     converged = False
 
             if converged:
                 break
 
-            if self.iterations >= self.max_iter:
+            if iterations >= self.max_iter:
                 warning('Maximum number of iterations reached before ' \
                         'convergence')
                 break
 
-        return beta_new
+        if extended_output:
+            output = {'f': f, 'iterations': iterations}
+            return beta_new, output
+        else:
+            return beta_new
 
 
 class ExcessiveGapAlgorithm(BaseAlgorithm):
@@ -521,7 +536,7 @@ class ExcessiveGapRidgeRegression(ExcessiveGapAlgorithm):
 #        self.invXXI = np.linalg.inv(np.dot(self.X.T, self.X) \
 #                                    + self.l * np.eye(self.X.shape[1]))
 
-        # USed by Woodbury
+        # Used by Woodbury
         invXXtlI = np.linalg.inv(np.dot(self.X, self.X.T) \
                                     + self.l * np.eye(self.X.shape[0]))
         self.XtinvXXtlI = np.dot(self.X.T, invXXtlI)
@@ -568,7 +583,7 @@ class ExcessiveGapRidgeRegression(ExcessiveGapAlgorithm):
             beta_new = (1.0 - tau) * beta_old + tau * _beta_hat_0(u)
             alpha = self._V(u, beta_old, L)
 
-            if utils.norm1(beta_new - beta_old) > self.tolerance:
+            if math.norm1(beta_new - beta_old) > self.tolerance:
                 converged = False
 
             f_new = g.f(beta_new) + h.f(beta_new)

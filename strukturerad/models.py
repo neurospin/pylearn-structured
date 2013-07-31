@@ -28,18 +28,14 @@ __all__ = ['ContinuationRun',
            'EGMRidgeRegressionL1TV',
           ]
 
-from sklearn.utils import check_arrays
-
 import abc
 import numpy as np
-import copy
-
-from numpy.linalg import pinv
-import utils
 
 import algorithms
 import loss_functions
 import start_vectors
+
+import utils
 
 
 class BaseModel(object):
@@ -101,7 +97,7 @@ class BaseModel(object):
         raise NotImplementedError('Abstract method "fit" must be specialised!')
 
 
-class ContinuationRun(BaseModel):
+class ContinuationFixed(BaseModel):
 
     def __init__(self, model, gaps=None, mus=None, algorithm=None,
                  *args, **kwargs):
@@ -131,8 +127,9 @@ class ContinuationRun(BaseModel):
         else:
             model.set_algorithm(algorithm)
 
-        super(ContinuationRun, self).__init__(num_comp=1, algorithm=algorithm,
-                                              *args, **kwargs)
+        super(ContinuationFixed, self).__init__(num_comp=1,
+                                                algorithm=algorithm,
+                                                *args, **kwargs)
         self.model = model
         self.gaps = gaps
         self.mus = mus
@@ -200,7 +197,7 @@ class ContinuationRun(BaseModel):
         return self
 
 
-class Continuation(BaseModel):
+class ContinuationGap(BaseModel):
 
     def __init__(self, model, iterations=100, gap=None, algorithm=None,
                  *args, **kwargs):
@@ -227,7 +224,7 @@ class Continuation(BaseModel):
         else:
             model.set_algorithm(algorithm)
 
-        super(Continuation, self).__init__(num_comp=1, algorithm=algorithm,
+        super(ContinuationGap, self).__init__(num_comp=1, algorithm=algorithm,
                                               *args, **kwargs)
 
         self.model = model
@@ -344,9 +341,27 @@ class NesterovProximalGradientMethod(BaseModel):
 #            algorithm = algorithms.FISTARegression()
             algorithm = algorithms.MonotoneFISTARegression()
 
-        super(NesterovProximalGradientMethod, self).__init__(num_comp=1,
-                                                           algorithm=algorithm,
-                                                           **kwargs)
+        super(NesterovProximalGradientMethod,
+              self).__init__(algorithm=algorithm, **kwargs)
+
+        self.set_g(loss_functions.ZeroErrorFunction())
+        self.set_h(loss_functions.ZeroErrorFunction())
+
+    def get_g(self):
+
+        return self.g
+
+    def set_g(self, g):
+
+        self.g = g
+
+    def get_h(self):
+
+        return self.h
+
+    def set_h(self, h):
+
+        self.h = h
 
     def fit(self, X, y, **kwargs):
         """Fit the model to the given data.
@@ -365,7 +380,10 @@ class NesterovProximalGradientMethod(BaseModel):
 
         self.set_data(X, y)
 
-        self._beta = self.algorithm.run(X, y, **kwargs)
+        self._beta = self.algorithm.run(X, y, self.get_g(), self.get_h(),
+                                        **kwargs)
+
+        self.free_data()
 
         return self
 
@@ -374,43 +392,23 @@ class NesterovProximalGradientMethod(BaseModel):
         return self.get_g().f(*args, **kwargs) \
                 + self.get_h().f(*args, **kwargs)
 
-    # TODO: Decide if phi(beta, alpha) should be in the general API for all
-    # Nesterov functions.
     def phi(self, beta=None, alpha=None, *args, **kwargs):
         """This function returns the associated loss function value for the
         given alpha and beta.
         """
         return self.get_g().phi(beta, alpha) + self.get_h().f(beta)
 
-#    def beta(self, alpha=None, mu=None):
-#        """Computes the beta that minimises the dual function value for the
-#        current computed alpha.
-#        """
-#        dual_model = ConstantNesterovModelCopy(self, alpha)
-##        dual_model.set_h(loss_functions.ZeroErrorFunction())
-#        if mu != None:
-#            dual_model.set_mu(mu)
-#        dual_model.fit(*self.get_data())
-#
-#        return dual_model._beta
-
     def alpha(self, beta=None, mu=None):
         """Computes the alpha that maximises the smoothed loss function for the
         current computed beta.
         """
         g = self.get_g()
-        if isinstance(g.a, loss_functions.NesterovFunction) and \
-                isinstance(g.b, loss_functions.NesterovFunction):
-            return g.alpha(beta, mu)
 
-        elif isinstance(g.a, loss_functions.NesterovFunction):
-            return g.a.alpha(beta, mu)
+        return g.alpha(beta, mu)
 
-        elif isinstance(g.b, loss_functions.NesterovFunction):
-            return g.b.alpha(beta, mu)
+    def beta(self):
 
-        else:
-            raise ValueError("The given functions must be Nesterov functions")
+        return self._beta
 
     def get_transform(self, **kwargs):
 
@@ -450,9 +448,6 @@ class NesterovProximalGradientMethod(BaseModel):
             a = f(lb)
             b = f(ub)
 
-#            print "lb:", lb, ", f(lb):", a
-#            print "ub:", ub, ", f(ub):", b
-
         bm = algorithms.BisectionMethod(max_iter=max_iter)
         bm.run(utils.AnonymousClass(f=f), lb, ub)
 
@@ -471,8 +466,6 @@ class NesterovProximalGradientMethod(BaseModel):
 
 #        ts = algorithms.TernarySearch(utils.AnonymousClass(f=f))
 #        ts.run(utils.TOLERANCE, eps / D)
-#        print "gs.iterations: ", gs.iterations
-#        print "ts.iterations: ", ts.iterations
 
         return gs.x
 
@@ -490,22 +483,6 @@ class NesterovProximalGradientMethod(BaseModel):
 
         return self.get_g().get_mu()
 
-    def get_g(self):
-
-        return self.algorithm.g
-
-    def set_g(self, g):
-
-        self.algorithm.g = g
-
-    def get_h(self):
-
-        return self.algorithm.h
-
-    def set_h(self, h):
-
-        self.algorithm.h = h
-
     def set_data(self, X, y):
 
         self.get_g().set_data(X, y)
@@ -514,9 +491,18 @@ class NesterovProximalGradientMethod(BaseModel):
 
         return self.get_g().get_data()
 
+    def free_data(self):
+
+        return self.get_g().free_data()
+
 
 class LinearRegression(NesterovProximalGradientMethod):
+    """Linear regression.
 
+    Optimises the function
+
+        f(b) = (1 / 2).||X.b - y||².
+    """
     def __init__(self, **kwargs):
 
         super(LinearRegression, self).__init__(**kwargs)
@@ -529,7 +515,7 @@ class LinearRegressionL1(LinearRegression):
 
     Optimises the function
 
-        f(b) = ||y - X.b||² + l.||b||_1,
+        f(b) = (1 / 2).||X.b - y||² + l.||b||_1,
 
     where ||.||_1 is the L1 norm constraint.
 
@@ -551,7 +537,7 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
 
     Optimises the function
 
-        f(b) = ||y - X.b||² + gamma.TV(b),
+        f(b) = (1 / 2).||X.b - y||² + gamma.TV(b),
 
     where TV(.) is the total variation constraint.
 
@@ -568,13 +554,14 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
     mask : A 1-dimensional mask representing the 3D image mask. Must be a
            list of 1s and 0s.
     """
-    def __init__(self, gamma, shape, mu=None, mask=None, **kwargs):
+    def __init__(self, gamma, mu=None, shape=None, A=None, mask=None,
+                 **kwargs):
 
         super(LinearRegressionTV, self).__init__(**kwargs)
 
-        tv = loss_functions.TotalVariation(gamma, shape=shape, mu=mu,
-                                           mask=mask)
         lr = loss_functions.LinearRegressionError()
+        tv = loss_functions.TotalVariation(gamma, mu=mu, shape=shape, A=A,
+                                           mask=mask)
 
         self.set_g(loss_functions.CombinedNesterovLossFunction(lr, tv))
 
@@ -610,7 +597,7 @@ class LinearRegressionL1TV(LinearRegressionTV):
 
     Optimises the function
 
-        f(b) = ||y - X.b||² + l.||b||_1 + gamma.TV(b),
+        f(b) = (1 / 2).||X.b - y||² + l.||b||_1 + gamma.TV(b),
 
     where ||.||_1 is the L1 norm, ||.||² is the squared L2 norm and TV(.) is
     the total variation constraint.
@@ -631,16 +618,11 @@ class LinearRegressionL1TV(LinearRegressionTV):
            list of 1s and 0s.
     """
 
-    def __init__(self, l, gamma, shape, mu=None, mask=None, **kwargs):
+    def __init__(self, l, gamma, mu=None, shape=None, A=None, mask=None,
+                 **kwargs):
 
-        super(LinearRegressionL1TV, self).__init__(gamma, shape, mu, mask,
-                                                   **kwargs)
-
-#        lr = loss_functions.LinearRegressionError()
-#        tv = loss_functions.TotalVariation(gamma, shape=shape, mu=mu,
-#                                           mask=mask)
-#
-#        self.set_g(loss_functions.CombinedNesterovLossFunction(lr, tv))
+        super(LinearRegressionL1TV, self).__init__(gamma, mu=mu, shape=shape,
+                                                   A=A, mask=mask, **kwargs)
         self.set_h(loss_functions.L1(l))
 
 
@@ -649,7 +631,7 @@ class RidgeRegression(NesterovProximalGradientMethod):
 
     Optimises the function
 
-        f(b) = (1 / 2).||y - X.b||² + (l / 2).||b||²
+        f(b) = (1 / 2).||X.b - y||² + (l / 2).||b||²
 
     Parameters
     ----------
@@ -668,7 +650,7 @@ class RidgeRegressionL1(RidgeRegression):
 
     Optimises the function
 
-        f(b) = ||y - X.b||² + l.||b||_1 + (k / 2).||b||²,
+        f(b) = (1 / 2).||X.b - y||² + l.||b||_1 + (k / 2).||b||²,
 
     where ||.||_1 is the L1 norm and ||.||² is the squared L2 norm.
 
@@ -680,7 +662,7 @@ class RidgeRegressionL1(RidgeRegression):
     """
     def __init__(self, l, k, **kwargs):
 
-        super(RidgeRegression, self).__init__(k, **kwargs)
+        super(RidgeRegressionL1, self).__init__(k, **kwargs)
 
         self.set_h(loss_functions.L1(l))
 
@@ -691,7 +673,7 @@ class RidgeRegressionTV(RidgeRegression):
 
     Optimises the function
 
-        f(b) = ||y - X.b||² + (l / 2).||b||² + gamma.TV(b),
+        f(b) = (1 / 2).||X.b - y||² + (l / 2).||b||² + gamma.TV(b),
 
     where ||.||² is the squared L2 norm and TV(.) is the total variation
     constraint.
@@ -711,14 +693,14 @@ class RidgeRegressionTV(RidgeRegression):
     mask : A 1-dimensional mask representing the 3D image mask. Must be a
            list of 1s and 0s.
     """
-    def __init__(self, l, gamma, shape, mu=None, mask=None, compress=True,
-                 **kwargs):
+    def __init__(self, l, gamma, mu=None, shape=None, A=None, mask=None,
+                 compress=True, **kwargs):
 
         super(RidgeRegressionTV, self).__init__(l, **kwargs)
 
-        tv = loss_functions.TotalVariation(gamma, shape=shape, mu=mu,
-                                           mask=mask, compress=compress)
-
+        tv = loss_functions.TotalVariation(gamma, mu=mu, shape=shape, A=A,
+                                           mask=mask, compress=compress,
+                                           **kwargs)
         rr = self.get_g()
         self.set_g(loss_functions.CombinedNesterovLossFunction(rr, tv))
 
@@ -729,7 +711,7 @@ class RidgeRegressionL1TV(RidgeRegressionTV):
 
     Optimises the function
 
-        f(b) = ||y - X.b||² + l.||b||_1 + (k / 2).||b||² + gamma.TV(b),
+        f(b) = (1 / 2).||X.b - y||² + l.||b||_1 + (k / 2).||b||² + gamma.TV(b),
 
     where ||.||_1 is the L1 norm, ||.||² is the squared L2 norm and TV is the
     total variation function.
@@ -747,11 +729,11 @@ class RidgeRegressionL1TV(RidgeRegressionTV):
     mask : A 1-dimensional mask representing the 3D image mask. Must be a
            list of 1s and 0s.
     """
-    def __init__(self, l, k, gamma, shape, mu=None, mask=None, compress=True,
-                 **kwargs):
+    def __init__(self, l, k, gamma, mu=None, shape=None, A=None, mask=None,
+                 compress=True, **kwargs):
 
-        super(RidgeRegressionL1TV, self).__init__(k, gamma, shape=shape,
-                                                  mu=mu, mask=mask,
+        super(RidgeRegressionL1TV, self).__init__(k, gamma, mu=mu, shape=shape,
+                                                  A=A, mask=mask,
                                                   compress=compress, **kwargs)
         self.set_h(loss_functions.L1(l))
 
@@ -830,19 +812,19 @@ class RidgeRegressionL1TV(RidgeRegressionTV):
 
         return self.get_g().phi(beta, alpha) + self.get_h().f(beta)
 
-    def beta(self, alpha=None, mu=None):
-        """Computes the beta that minimises the dual function value for the
-        current computed or given alpha.
-        """
-        raise ValueError("Do not call this function!")
-#        return self._rr_l1_tv.beta(alpha=alpha, mu=mu)
+#    def beta(self, alpha=None, mu=None):
+#        """Computes the beta that minimises the dual function value for the
+#        current computed or given alpha.
+#        """
+#        raise ValueError("Do not call this function!")
+##        return self._rr_l1_tv.beta(alpha=alpha, mu=mu)
 
-    def alpha(self, beta=None, mu=None):
-        """Computes the alpha that maximises the smoothed loss function for the
-        current computed beta.
-        """
-        raise ValueError("Do not call this function!")
-#        return self._rr_l1_tv.alpha(beta=beta, mu=mu)
+#    def alpha(self, beta=None, mu=None):
+#        """Computes the alpha that maximises the smoothed loss function for the
+#        current computed beta.
+#        """
+#        raise ValueError("Do not call this function!")
+##        return self._rr_l1_tv.alpha(beta=beta, mu=mu)
 
     def set_data(self, X, y):
 
