@@ -224,7 +224,7 @@ class NesterovFunction(LossFunction,
         if self.gamma < utils.TOLERANCE:
             return 0.0
 
-        if self.lambda_max == None:  # The square of the largest singular value
+        if self.lambda_max == None:  # Then square of largest singular value
             A = sparse.vstack(self.A())
             v = algorithms.SparseSVD(max_iter=100).run(A)
             us = A.dot(v)
