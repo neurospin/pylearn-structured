@@ -45,7 +45,7 @@ __all__ = ['BaseAlgorithm',
            'SparseSVD', 'FastSVD',
 
            'ProximalGradientAlgorithm',
-           'ISTARegression', 'FISTARegression', 'MonotoneFISTARegression',
+           'ISTA', 'FISTA', 'MonotoneFISTA',
 
            'ExcessiveGapAlgorithm',
            'ExcessiveGapRidgeRegression',
@@ -75,7 +75,6 @@ class BaseAlgorithm(object):
 
         self.set_max_iter(max_iter)
         self.set_tolerance(tolerance)
-        self.start_vector = start_vectors.RandomStartVector()
 
     def get_max_iter(self):
 
@@ -92,19 +91,6 @@ class BaseAlgorithm(object):
     def set_tolerance(self, tolerance):
 
         self.tolerance = tolerance
-
-    def get_start_vector(self):
-
-        return self.start_vector
-
-    def set_start_vector(self, start_vector):
-
-        if not isinstance(start_vector, start_vectors.BaseStartVector):
-
-            raise ValueError('The start vector must be an instance of ' \
-                             '"BaseStartVector"')
-
-        self.start_vector = start_vector
 
     @abc.abstractmethod
     def run(self, *X, **kwargs):
@@ -155,7 +141,7 @@ class SparseSVD(NIPALSBaseAlgorithm):
         X : The matrix to decompose
         """
         M, N = X.shape
-        p = self.start_vector.get_vector(X)
+        p = start_vectors.RandomStartVector().get_vector(X)
         Xt = X.T
         if M < N:
             K = X.dot(Xt)
@@ -243,7 +229,7 @@ class FastSVD(NIPALSBaseAlgorithm):
         elif M < N:
             Xt = X.T
             K = np.dot(X, Xt)
-            t = self.start_vector.get_vector(Xt)
+            t = start_vectors.RandomStartVector().get_vector(Xt)
             self.iterations = 0
             for it in xrange(self.max_iter):
                 t_ = t
@@ -263,7 +249,7 @@ class FastSVD(NIPALSBaseAlgorithm):
         else:
             Xt = X.T
             K = np.dot(Xt, X)
-            v = self.start_vector.get_vector(X)
+            v = start_vectors.RandomStartVector().get_vector(X)
             self.iterations = 0
             for it in xrange(self.max_iter):
                 v_ = v
@@ -294,24 +280,24 @@ class ProximalGradientAlgorithm(BaseAlgorithm):
         super(ProximalGradientAlgorithm, self).__init__(**kwargs)
 
     @abc.abstractmethod
-    def run(self, *X, **kwargs):
+    def run(self, beta, g, h, **kwargs):
 
         raise NotImplementedError('Abstract method "run" must be specialised!')
 
 
-class ISTARegression(ProximalGradientAlgorithm):
-    """ The ISTA algorithm for regression settings.
+class ISTA(ProximalGradientAlgorithm):
+    """ The Iterative Shrinkage-Thresholding Algorithm.
     """
     def __init__(self, *args, **kwargs):
 
-        super(ISTARegression, self).__init__(*args, **kwargs)
+        super(ISTA, self).__init__(*args, **kwargs)
 
-    def run(self, X, y, g, h, smooth=False, extended_output=False, **kwargs):
+    def run(self, beta, g, h, smooth=False, extended_output=False, **kwargs):
 
         tscale = 0.99
         t = tscale / g.Lipschitz()
 
-        beta_old = self.start_vector.get_vector(X)
+        beta_old = beta
         beta_new = beta_old
 
         if extended_output or not smooth:
@@ -328,18 +314,18 @@ class ISTARegression(ProximalGradientAlgorithm):
             if math.norm1(beta_old - beta_new) > self.tolerance * t:
                 converged = False
 
-            if extended_output or not smooth:
-                f_new = g.f(beta_new, smooth=smooth) + h.f(beta_new)
+#            if extended_output or not smooth:
+            f_new = g.f(beta_new, smooth=smooth) + h.f(beta_new)
 
-            if not smooth and f_new > f_old:  # Early stopping
-                converged = True
-                warning('Early stopping criterion triggered. Mu too large?')
-            else:
-                # Save updated values
-                if extended_output or not smooth:
-                    f.append(f_new)
-                    f_old = f_new
-                iterations += 1
+#            if not smooth and f_new > f_old:  # Early stopping
+#                converged = True
+#                warning('Early stopping criterion triggered. Mu too large?')
+#            else:
+            # Save updated values
+            if extended_output or not smooth:
+                f.append(f_new)
+                f_old = f_new
+            iterations += 1
 
             beta_old = beta_new
 
@@ -358,19 +344,19 @@ class ISTARegression(ProximalGradientAlgorithm):
             return beta_new
 
 
-class FISTARegression(ISTARegression):
+class FISTA(ISTA):
     """ The fast ISTA algorithm for regression.
     """
     def __init__(self, *args, **kwargs):
 
-        super(FISTARegression, self).__init__(*args, **kwargs)
+        super(FISTA, self).__init__(*args, **kwargs)
 
-    def run(self, X, y, g, h, smooth=False, extended_output=False, **kwargs):
+    def run(self, beta, g, h, smooth=False, extended_output=False, **kwargs):
 
         tscale = 0.99
         t = tscale / g.Lipschitz()
 
-        beta_old = self.start_vector.get_vector(X)
+        beta_old = beta
         beta_new = beta_old
 
         if extended_output:
@@ -410,20 +396,20 @@ class FISTARegression(ISTARegression):
             return beta_new
 
 
-class MonotoneFISTARegression(ISTARegression):
+class MonotoneFISTA(ISTA):
     """ A monotonised version of the fast ISTA algorithm for regression.
     """
     def __init__(self, **kwargs):
 
-        super(MonotoneFISTARegression, self).__init__(**kwargs)
+        super(MonotoneFISTA, self).__init__(**kwargs)
 
-    def run(self, X, y, g, h, ista_steps=2, smooth=False,
+    def run(self, beta, g, h, ista_steps=2, smooth=False,
             extended_output=False, **kwargs):
 
         tscale = 0.99
         t = tscale / g.Lipschitz()
 
-        beta_old = self.start_vector.get_vector(X)
+        beta_old = beta
         beta_new = beta_old
 
         if extended_output or not smooth:
@@ -458,6 +444,7 @@ class MonotoneFISTARegression(ISTARegression):
                     if not smooth and f_new > f_old:  # Early stopping
                         converged = True
                         stop_early = True
+                        print "f_new = %f > %f = f_old" % (f_new, f_old)
                         warning('Early stopping criterion triggered. ' \
                                 'Mu too large?')
                         break  # Do not save this suboptimal point

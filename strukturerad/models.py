@@ -7,8 +7,8 @@ The :mod:`strukturerad.models` module includes several different models.
 @license: TBD
 """
 
-__all__ = ['ContinuationRun',
-           'Continuation',
+__all__ = ['ContinuationFixed',
+           'ContinuationGap',
 
            'NesterovProximalGradientMethod',
            'LinearRegression',
@@ -42,11 +42,16 @@ class BaseModel(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, algorithm):
+    def __init__(self, algorithm, start_vector=None):
 
         super(BaseModel, self).__init__()
 
         self.algorithm = algorithm
+
+        if start_vector != None:
+            self.start_vector = start_vector
+        else:
+            self.start_vector = start_vectors.RandomStartVector()
 
     def get_max_iter(self):
 
@@ -66,11 +71,11 @@ class BaseModel(object):
 
     def get_start_vector(self):
 
-        return self.get_algorithm().get_start_vector()
+        return self.start_vector
 
     def set_start_vector(self, start_vector):
 
-        self.get_algorithm().set_start_vector(start_vector)
+        self.start_vector = start_vector
 
     def get_algorithm(self):
 
@@ -337,9 +342,9 @@ class NesterovProximalGradientMethod(BaseModel):
     def __init__(self, algorithm=None, **kwargs):
 
         if algorithm == None:
-#            algorithm = algorithms.ISTARegression()
-#            algorithm = algorithms.FISTARegression()
-            algorithm = algorithms.MonotoneFISTARegression()
+            algorithm = algorithms.ISTA()
+#            algorithm = algorithms.FISTA()
+#            algorithm = algorithms.MonotoneFISTA()
 
         super(NesterovProximalGradientMethod,
               self).__init__(algorithm=algorithm, **kwargs)
@@ -380,8 +385,12 @@ class NesterovProximalGradientMethod(BaseModel):
 
         self.set_data(X, y)
 
-        self._beta = self.algorithm.run(X, y, self.get_g(), self.get_h(),
-                                        **kwargs)
+        start_beta = self.start_vector.get_vector(X)
+        self._beta, self.output = self.algorithm.run(start_beta,
+                                                     self.get_g(),
+                                                     self.get_h(),
+                                                     extended_output=True,
+                                                     **kwargs)
 
         self.free_data()
 
@@ -495,6 +504,10 @@ class NesterovProximalGradientMethod(BaseModel):
 
         return self.get_g().free_data()
 
+    def A(self):
+
+        return self.get_g().A()
+
 
 class LinearRegression(NesterovProximalGradientMethod):
     """Linear regression.
@@ -555,13 +568,13 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
            list of 1s and 0s.
     """
     def __init__(self, gamma, mu=None, shape=None, A=None, mask=None,
-                 **kwargs):
+                 compress=True, **kwargs):
 
         super(LinearRegressionTV, self).__init__(**kwargs)
 
         lr = loss_functions.LinearRegressionError()
         tv = loss_functions.TotalVariation(gamma, mu=mu, shape=shape, A=A,
-                                           mask=mask)
+                                           mask=mask, compress=True)
 
         self.set_g(loss_functions.CombinedNesterovLossFunction(lr, tv))
 
@@ -619,10 +632,11 @@ class LinearRegressionL1TV(LinearRegressionTV):
     """
 
     def __init__(self, l, gamma, mu=None, shape=None, A=None, mask=None,
-                 **kwargs):
+                 compress=True, **kwargs):
 
         super(LinearRegressionL1TV, self).__init__(gamma, mu=mu, shape=shape,
-                                                   A=A, mask=mask, **kwargs)
+                                                   A=A, mask=mask,
+                                                   compress=True, **kwargs)
         self.set_h(loss_functions.L1(l))
 
 
@@ -737,11 +751,17 @@ class RidgeRegressionL1TV(RidgeRegressionTV):
                                                   compress=compress, **kwargs)
         self.set_h(loss_functions.L1(l))
 
-        self._l1 = loss_functions.SmoothL1(k, num_variables=np.prod(shape),
-                                           mu=1e-12, mask=mask)
-        # TODO: Reuse the A matrices from self.get_g().b
-        self._tv = loss_functions.TotalVariation(gamma, shape=shape, mu=mu,
-                                                 mask=mask, compress=False)
+        A = self.A()
+        if shape != None:
+            num_variables = np.prod(shape)
+        else:
+            num_variables = A[0].shape[1]
+        self._l1 = loss_functions.SmoothL1(l, mu=1e-12,
+                                           num_variables=num_variables,
+                                           mask=mask, compress=False)
+        self._tv = loss_functions.TotalVariation(gamma, mu=mu, shape=shape,
+                                                 A=A, mask=mask,
+                                                 compress=False)
 
     # TODO: Decide if phi(beta, alpha) should be in the general API for all
     # Nesterov functions.

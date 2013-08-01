@@ -184,6 +184,7 @@ class NesterovFunction(LossFunction,
         self._A = None  # The linear operator
         self._At = None  # The linear operator transposed
         self._lambda_max = None  # The largest eigenvalue of A'.A
+        self._num_compacts = None
 
     def f(self, beta, mu=None, **kwargs):
 
@@ -200,12 +201,24 @@ class NesterovFunction(LossFunction,
         if mu == None:
             mu = self.get_mu()
 
-        return np.dot(beta.T, grad)[0, 0] - (mu / 2.0) * alpha_sqsum
+        return self.gamma * (np.dot(beta.T, grad)[0, 0] \
+                             - (mu / 2.0) * alpha_sqsum)
 
-    def phi(self, beta, alpha):
+    def phi(self, beta, alpha, mu=None):
 
         grad = self._compute_grad(alpha)
-        return np.dot(beta.T, grad)[0, 0]
+
+        if mu == None:
+
+            return self.gamma * np.dot(beta.T, grad)[0, 0]
+
+        else:
+            alpha_sqsum = 0.0
+            for a in alpha:
+                alpha_sqsum += np.sum(a ** 2.0)
+
+            return self.gamma * (np.dot(beta.T, grad)[0, 0] \
+                                 - (mu / 2.0) * alpha_sqsum)
 
     def grad(self, beta, alpha=None, mu=None):
 
@@ -217,7 +230,7 @@ class NesterovFunction(LossFunction,
 
         grad = self._compute_grad(alpha)
 
-        return grad
+        return self.gamma * grad
 
     def Lipschitz(self, mu=None):
         """The Lipschitz constant of the gradient.
@@ -236,9 +249,9 @@ class NesterovFunction(LossFunction,
             self._lambda_max = np.sum(us ** 2.0)
 
         if mu != None:
-            return self._lambda_max / mu
+            return (self.gamma ** 2.0) * self._lambda_max / mu
         else:
-            return self._lambda_max / self.get_mu()
+            return (self.gamma ** 2.0) * self._lambda_max / self.get_mu()
 
     def A(self):
         """Returns a list of the A blocks that constitute the A matrix, the
@@ -257,7 +270,7 @@ class NesterovFunction(LossFunction,
 
         return self._At
 
-    def alpha(self, beta=None, mu=None):
+    def alpha(self, beta, mu=None):
 
         if self.gamma < utils.TOLERANCE:
             ret = []
@@ -266,8 +279,7 @@ class NesterovFunction(LossFunction,
 
             return ret
 
-        if beta != None:
-            alpha = self._compute_alpha(beta, mu)
+        alpha = self._compute_alpha(beta, mu)
 
         return alpha
 
@@ -286,11 +298,19 @@ class NesterovFunction(LossFunction,
         """
         return len(self.A())
 
+    def _count_compacts(self, A):
+
+        rowsum = np.asarray(A[0].sum(axis=1)).ravel().tolist()
+        return sum([1 for x in rowsum if x > 0.0])
+
     def num_compacts(self):
         """The smoothness gap between f and f_mu is mu * num_compacts() / 2.
 
         Note that the constant D = num_compacts() / 2.
         """
+        if self._num_compacts == None:
+            self._num_compacts = self._count_compacts(self.A())
+
         return self._num_compacts
 
     def _compute_grad(self, alpha):
@@ -315,8 +335,7 @@ class NesterovFunction(LossFunction,
                                   'specialised!')
 
     @abc.abstractmethod
-    @classmethod
-    def precompute(cls, *args, **kwargs):
+    def precompute(*args, **kwargs):
 
         raise NotImplementedError('Abstract method "precompute" must be ' \
                                   'specialised!')
@@ -458,13 +477,14 @@ class CombinedNesterovLossFunction(NesterovFunction, DataDependent):
 
     def precompute(self, *args, **kwargs):
 
-        if hasattr(self.a, 'precompute'):
-
-            self.a.precompute(*args, **kwargs)
-
-        if hasattr(self.b, 'precompute'):
-
-            self.b.precompute(*args, **kwargs)
+#        if hasattr(self.a, 'precompute'):
+#
+#            self.a.precompute(*args, **kwargs)
+#
+#        if hasattr(self.b, 'precompute'):
+#
+#            self.b.precompute(*args, **kwargs)
+        raise ValueError("Has changed. Update!")
 
     def alpha(self, *args, **kwargs):
 
@@ -624,7 +644,7 @@ class CombinedNesterovLossFunction(NesterovFunction, DataDependent):
 
         if hasattr(self.a, 'get_mu') and hasattr(self.b, 'get_mu'):
 
-            # TODO: Problematic of the mus are different ...
+            # TODO: Problematic if the mus are different ...
             return min(self.a.get_mu(), self.b.get_mu())
 
         elif hasattr(self.b, 'get_mu'):
@@ -972,6 +992,219 @@ class ElasticNet(L1L2):
         super(ElasticNet, self).__init__(l, 1.0 - l, **kwargs)
 
 
+#class TotalVariation(NesterovFunction):
+#
+#    def __init__(self, gamma, mu=None, shape=None, A=None, mask=None,
+#                 compress=True, **kwargs):
+#        """Construct a TotalVariation loss function.
+#
+#        Parameters
+#        ----------
+#        gamma : The regularisation parameter for the TV penality.
+#
+#        mu : The Nesterov function regularisation parameter. Must be provided
+#                unless you are using ContinuationRun.
+#
+#        shape : The shape of the unraveled data. This is either a integer, or a
+#                tuple. If a tuple, it represents the shape of the image. If a
+#                3D image, the shape must be a 3-tuple on the form (Z, Y, X). If
+#                a 2D image, the shape must be a 2-tuple of the form (Y, X). If
+#                a 1-tuple or an integer it represents the number of variables.
+#
+#                Equivalently, if the image is 2D, you may let the Z dimension
+#                be 1, and if the "image" is 1D, you may let both the Y and Z
+#                dimensions be 1.
+#
+#                Either shape or A must be given, but not both.
+#
+#        A : If the linear operators are known already, provide them to the
+#                constructor to create a TV object reusing those matrices. In TV
+#                it is assumed that A is a list of three elements, the matrices
+#                Ax, Ay and Az. Either shape or A must be given, but not both.
+#
+#        mask : A 1-dimensional mask representing the image mask. Must be a list
+#                or 1-dimensional array of booleans.
+#
+#        compress: The matrix A and the dual alpha is automatically pruned to
+#                speed-up computations. This is not compatible with all smoothed
+#                functions (really, only compatible with image-related
+#                functions), and may therefore be turned off. Default is True,
+#                set to False to keep all rows of A and alpha.
+#        """
+#        super(TotalVariation, self).__init__(gamma=gamma, mu=mu, **kwargs)
+#
+#        self.mask = mask
+#        self.compress = compress
+#
+#        if shape != None:
+#            if isinstance(shape, int):
+#                shape = (1, 1, shape)
+#            elif len(shape) == 1:
+#                shape = (1, 1) + tuple(shape)
+#            elif len(shape) == 2:
+#                shape = (1,) + tuple(shape)
+#
+#        if A != None:
+#            self._A = [A[0], A[1], A[2]]
+#
+#        else:
+#            self._A = self.precompute(gamma, shape, mask=mask,
+#                                      compress=compress)
+#
+#        self._At = None
+#
+#        # TODO: This is only true if zero-rows have been removed!
+#        self._num_compacts = self._A[0].shape[0]
+#
+#        if mu == None:
+#            # TODO: May be updated if we put gamma outside A!
+#            mu = max(utils.TOLERANCE,
+#                     2.0 * utils.TOLERANCE / self.num_compacts())
+#            self.set_mu(mu)
+#
+#    def f(self, beta, mu=None, smooth=True):
+#
+#        if smooth:
+#
+#            return super(TotalVariation, self).f(beta, mu)
+#
+#        else:
+#            if self.gamma < utils.TOLERANCE:
+#                return 0.0
+#
+#            A = self.A()
+#            sqsum = np.sum(np.sqrt(A[0].dot(beta) ** 2.0 + \
+#                                   A[1].dot(beta) ** 2.0 + \
+#                                   A[2].dot(beta) ** 2.0))
+#
+#            return sqsum  # Gamma is already incorporated in A
+#
+#    def project(self, alpha):
+#
+#        asx = alpha[0]
+#        asy = alpha[1]
+#        asz = alpha[2]
+#        asnorm = asx ** 2.0 + asy ** 2.0 + asz ** 2.0
+#        i = asnorm > 1.0
+#
+#        asnorm_i = asnorm[i] ** 0.5  # Square root is taken here. Faster.
+#        asx[i] = np.divide(asx[i], asnorm_i)
+#        asy[i] = np.divide(asy[i], asnorm_i)
+#        asz[i] = np.divide(asz[i], asnorm_i)
+#
+#        return [asx, asy, asz]
+#
+#    def _compute_alpha(self, beta, mu=None):
+#
+#        if mu == None:
+#            mu = self.get_mu()
+#
+#        # Compute a*
+#        A = self.A()
+#        alpha = [0] * len(A)
+#        for i in xrange(len(A)):
+#            alpha[i] = A[i].dot(beta) / mu
+#
+#        # Apply projection
+#        alpha = self.project(alpha)
+#
+#        return alpha
+#
+#    @staticmethod
+#    def precompute(gamma, shape, mask=None, compress=True):
+#
+#        def _find_mask_ind(mask, ind):
+#
+#            xshift = np.concatenate((mask[:, :, 1:], -np.ones((mask.shape[0],
+#                                                              mask.shape[1],
+#                                                              1))),
+#                                    axis=2)
+#            yshift = np.concatenate((mask[:, 1:, :], -np.ones((mask.shape[0],
+#                                                              1,
+#                                                              mask.shape[2]))),
+#                                    axis=1)
+#            zshift = np.concatenate((mask[1:, :, :], -np.ones((1,
+#                                                              mask.shape[1],
+#                                                              mask.shape[2]))),
+#                                    axis=0)
+#
+#            xind = ind[(mask - xshift) > 0]
+#            yind = ind[(mask - yshift) > 0]
+#            zind = ind[(mask - zshift) > 0]
+#
+#            return xind.flatten().tolist(), \
+#                   yind.flatten().tolist(), \
+#                   zind.flatten().tolist()
+#
+#        Z = shape[0]
+#        Y = shape[1]
+#        X = shape[2]
+#        p = X * Y * Z
+#
+#        smtype = 'csr'
+#        Ax = gamma * (sparse.eye(p, p, 1, format=smtype) \
+#                       - sparse.eye(p, p))
+#        Ay = gamma * (sparse.eye(p, p, X, format=smtype) \
+#                       - sparse.eye(p, p))
+#        Az = gamma * (sparse.eye(p, p, X * Y, format=smtype) \
+#                       - sparse.eye(p, p))
+#
+#        ind = np.reshape(xrange(p), (Z, Y, X))
+#        if mask != None:
+#            _mask = np.reshape(mask, (Z, Y, X))
+#            xind, yind, zind = _find_mask_ind(_mask, ind)
+#        else:
+#            xind = ind[:, :, -1].flatten().tolist()
+#            yind = ind[:, -1, :].flatten().tolist()
+#            zind = ind[-1, :, :].flatten().tolist()
+#
+#        for i in xrange(len(xind)):
+#            Ax.data[Ax.indptr[xind[i]]: \
+#                    Ax.indptr[xind[i] + 1]] = 0
+#        Ax.eliminate_zeros()
+#
+#        for i in xrange(len(yind)):
+#            Ay.data[Ay.indptr[yind[i]]: \
+#                    Ay.indptr[yind[i] + 1]] = 0
+#        Ay.eliminate_zeros()
+#
+##        for i in xrange(len(zind)):
+##            Az.data[Az.indptr[zind[i]]: \
+##                    Az.indptr[zind[i] + 1]] = 0
+#        Az.data[Az.indptr[zind[0]]: \
+#                Az.indptr[zind[-1] + 1]] = 0
+#        Az.eliminate_zeros()
+#
+#        # Remove rows corresponding to indices excluded in all dimensions
+#        if compress:
+#            toremove = list(set(xind).intersection(yind).intersection(zind))
+#            toremove.sort()
+#            # Remove from the end so that indices are not changed
+#            toremove.reverse()
+#            for i in toremove:
+#                utils.delete_sparse_csr_row(Ax, i)
+#                utils.delete_sparse_csr_row(Ay, i)
+#                utils.delete_sparse_csr_row(Az, i)
+#
+#        # Remove columns of A corresponding to masked-out variables
+#        if mask != None:
+#            Ax = Ax.T.tocsr()
+#            Ay = Ay.T.tocsr()
+#            Az = Az.T.tocsr()
+#            for i in reversed(xrange(p)):
+#                # TODO: Mask should be boolean!
+#                if mask[i] == 0:
+#                    utils.delete_sparse_csr_row(Ax, i)
+#                    utils.delete_sparse_csr_row(Ay, i)
+#                    utils.delete_sparse_csr_row(Az, i)
+#
+#            Ax = Ax.T
+#            Ay = Ay.T
+#            Az = Az.T
+#
+#        return [Ax, Ay, Az]
+
+
 class TotalVariation(NesterovFunction):
 
     def __init__(self, gamma, mu=None, shape=None, A=None, mask=None,
@@ -997,10 +1230,10 @@ class TotalVariation(NesterovFunction):
 
                 Either shape or A must be given, but not both.
 
-        A : If the linear operators are known already, provide them to the
-                constructor to create a TV object reusing those matrices. In TV
+        A : If the linear operator is known already, provide it to the
+                constructor to create a TV object reusing thiat matrix. In TV
                 it is assumed that A is a list of three elements, the matrices
-                Ax, Ay and Az. Either shape or A must be given, but not both.
+                Ax, Ay and Az. Either A or shape must be given, but not both.
 
         mask : A 1-dimensional mask representing the image mask. Must be a list
                 or 1-dimensional array of booleans.
@@ -1025,19 +1258,21 @@ class TotalVariation(NesterovFunction):
                 shape = (1,) + tuple(shape)
 
         if A != None:
-
             self._A = [A[0], A[1], A[2]]
 
         else:
-            self._A = self.precompute(gamma, shape, mask, compress)
+            self._A = self.precompute(shape, mask=mask, compress=compress)
 
         self._At = None
 
-        # TODO: This is only true if zero-rows have been removed!
-        self._num_compacts = self._A[0].shape[0]
+        if compress:
+            self._num_compacts = self._A[0].shape[0]
+        else:
+            # Count the number of non.zero rows
+            self._num_compacts = self._count_compacts(self._A)
 
         if mu == None:
-            # TODO: May be updated if we put gamma outside A!
+            # The lower limit on mu.
             mu = max(utils.TOLERANCE,
                      2.0 * utils.TOLERANCE / self.num_compacts())
             self.set_mu(mu)
@@ -1057,7 +1292,7 @@ class TotalVariation(NesterovFunction):
                                    A[1].dot(beta) ** 2.0 + \
                                    A[2].dot(beta) ** 2.0))
 
-            return sqsum  # Gamma is already incorporated in A
+            return self.gamma * sqsum
 
     def project(self, alpha):
 
@@ -1090,7 +1325,8 @@ class TotalVariation(NesterovFunction):
 
         return alpha
 
-    def precompute(self, gamma, shape, mask=None, compress=True):
+    @staticmethod
+    def precompute(shape, mask=None, compress=True):
 
         def _find_mask_ind(mask, ind):
 
@@ -1121,12 +1357,9 @@ class TotalVariation(NesterovFunction):
         p = X * Y * Z
 
         smtype = 'csr'
-        Ax = gamma * (sparse.eye(p, p, 1, format=smtype) \
-                       - sparse.eye(p, p))
-        Ay = gamma * (sparse.eye(p, p, X, format=smtype) \
-                       - sparse.eye(p, p))
-        Az = gamma * (sparse.eye(p, p, X * Y, format=smtype) \
-                       - sparse.eye(p, p))
+        Ax = sparse.eye(p, p, 1, format=smtype) - sparse.eye(p, p)
+        Ay = sparse.eye(p, p, X, format=smtype) - sparse.eye(p, p)
+        Az = sparse.eye(p, p, X * Y, format=smtype) - sparse.eye(p, p)
 
         ind = np.reshape(xrange(p), (Z, Y, X))
         if mask != None:
@@ -1226,17 +1459,18 @@ class SmoothL1(NesterovFunction):
             self._A = [A[0], A[1], A[2]]
 
         else:
-            self._A = self.precompute(gamma, num_variables, mask, compress)
+            self._A = self.precompute(num_variables, mask, compress)
 
         self._At = None
 
-        # TODO: This is only true if zero-rows have been removed!
-        self._num_compacts = self._A[0].shape[0]
-        # TODO: This is only true if zero-rows have not been removed!
-#        self._num_compacts = self.num_variables
+        if compress:
+            self._num_compacts = self._A[0].shape[0]
+        else:
+            # Count the number of non.zero rows
+            self._num_compacts = self._count_compacts(self._A)
 
         if mu == None:
-            # TODO: May be updated if we put gamma outside A!
+            # The lower limit on mu.
             mu = max(utils.TOLERANCE,
                      2.0 * utils.TOLERANCE / self.num_compacts())
             self.set_mu(mu)
@@ -1259,21 +1493,21 @@ class SmoothL1(NesterovFunction):
         if self.gamma < utils.TOLERANCE:
             return 0.0
 
-        if self._lambda_max == None:
+        self._lambda_max = 1.0
+#        if self._lambda_max == None:
 #            A = sparse.vstack(self.A())
 #            v = algorithms.SparseSVD(max_iter=100).run(A)
 #            us = A.dot(v)
 #            self.lambda_max = np.sum(us ** 2.0)
-
-            # TODO: May change if gamma is put outside of A
-            self._lambda_max = self.gamma ** 2.0
+#
+#            # TODO: May change if gamma is put outside of A
+#            self._lambda_max = self.gamma ** 2.0
 #        print self.lambda_max, " == ", lambda_max, "?"
-#        print "L1!!!"
 
         if mu != None:
-            return self._lambda_max / mu
+            return (self.gamma ** 2.0) * self._lambda_max / mu
         else:
-            return self._lambda_max / self.get_mu()
+            return (self.gamma ** 2.0) * self._lambda_max / self.get_mu()
 
     def project(self, alpha):
 
@@ -1292,11 +1526,10 @@ class SmoothL1(NesterovFunction):
             mu = self.get_mu()
 
         # Compute a*
-        A = self.A()
         alpha = [0]
-        # TODO: May change if gamma is put outside of A
-        alpha[0] = A[0].dot(beta) / mu
-#        alpha[0] = (self.gamma / mu) * beta
+#        A = self.A()
+#        alpha[0] = A[0].dot(beta) / mu
+        alpha[0] = (1.0 / mu) * beta
 
         # Apply projection
         alpha = self.project(alpha)
@@ -1307,14 +1540,14 @@ class SmoothL1(NesterovFunction):
 
         # Compute a*
 #        grad = self._At[0].dot(alpha[0])
-        # TODO: May change if gamma is put outside of A
-        grad = self.gamma * alpha[0]
+        grad = alpha[0]
 
         return grad
 
-    def precompute(self, gamma, num_variables, mask, compress):
+    @staticmethod
+    def precompute(num_variables, mask, compress):
 
-        A = gamma * sparse.eye(num_variables, num_variables, format='csr')
+        A = sparse.eye(num_variables, num_variables, format='csr')
 
         # Remove rows corresponding to masked-out variables
         if compress and mask != None:
