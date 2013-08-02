@@ -486,8 +486,7 @@ class LogisticRegressionError(LossFunction,
     def grad(self, beta, **kwargs):
 
         logit = np.dot(self.X, beta)
-        expt = np.exp(logit)
-        pix = np.divide(expt, expt + 1)
+        pix = 1. / (1. + np.exp(-logit))
         return -np.dot(self.X.T, self.y - pix)
 
 #    def hessian(self, beta, **kwargs):
