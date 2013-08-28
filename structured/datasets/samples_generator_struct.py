@@ -88,20 +88,33 @@ import scipy.linalg
 from scipy import ndimage
 import matplotlib.pyplot as plt
 
-def dist_euclidian(lx, ly):
-    """Euclidian distance
-    lx, ly: int
-        lx, ly the dimension of the 2D array
-    return
-        [[lx * ly] * [lx * ly]] matrix of euclidian diastances
+#def dist_euclidian(lx, ly):
+#    """Euclidian distance
+#    lx, ly: int
+#        lx, ly the dimension of the 2D array
+#    return
+#        [[lx * ly] * [lx * ly]] matrix of euclidian diastances
+#    """
+#    x_grid, y_grid = np.ogrid[0:lx, 0:ly]
+#    x_coord = x_grid + np.zeros(lx, dtype=int)
+#    y_coord = y_grid + np.zeros(ly, dtype=int)[:, np.newaxis]
+#    x_coord = x_coord.ravel()
+#    y_coord = y_coord.ravel()
+#    return np.sqrt((x_coord[np.newaxis].T - x_coord)**2 + \
+#    (y_coord[np.newaxis].T - y_coord)**2)
+
+def covmat_indices(cols):
+    """Return indices in covariance matrix given indice in X.
+    
+    Example
+    -------
+    >>> covmat_indices([1, 3])
+    (array([1, 1, 3, 3]), array([1, 3, 1, 3]))
     """
-    x_grid, y_grid = np.ogrid[0:lx, 0:ly]
-    x_coord = x_grid + np.zeros(lx, dtype=int)
-    y_coord = y_grid + np.zeros(ly, dtype=int)[:, np.newaxis]
-    x_coord = x_coord.ravel()
-    y_coord = y_coord.ravel()
-    return np.sqrt((x_coord[np.newaxis].T - x_coord)**2 + \
-    (y_coord[np.newaxis].T - y_coord)**2)
+    cols = np.asarray(cols)
+    x_coord = cols[:, np.newaxis] + np.zeros(cols.shape[0], dtype=int)
+    y_coord = cols + np.zeros(cols.shape[0], dtype=int)[:, np.newaxis]
+    return x_coord.ravel(), y_coord.ravel()
 
 
 def corr_to_coef(v_x, v_e, cov_xe, R):
@@ -244,7 +257,7 @@ def dice_five(lx, ly):
 
 ############################################################################
 ## Add objects-based variance
-def object_model(objects, X):
+def object_model(objects, Xim):
     """Add object variance: x_ki =  b_o^1/2 * o_k + (1 - b_o)^1/2 * e_i
     """
     for k in xrange(len(objects)):
@@ -253,30 +266,29 @@ def object_model(objects, X):
         if o.is_suppressor:
             continue
         # A) Add object latent variable
-        mask_o = o.get_mask()
-        if o.suppressor is not None:
-            mask_o_suppr = o.suppressor.get_mask()
+        mask_o = o.get_mask()            
         o_ik = np.random.normal(mu_o, sigma_o, y.shape[0])
         o_ik -= o_ik.mean() - mu_o
         o_ik /= o_ik.std() * sigma_o
-        X[:, mask_o] = (np.sqrt(beta_o) * o_ik + \
-                        np.sqrt(1 - beta_o) * X[:, mask_o].T).T
+        Xim[:, mask_o] = (np.sqrt(beta_o) * o_ik + \
+                        np.sqrt(1 - beta_o) * Xim[:, mask_o].T).T
         if o.suppressor is not None:
-            X[:, mask_o_suppr] = (np.sqrt(beta_o) * o_ik + \
-                       np.sqrt(1 - beta_o) * X[:, mask_o_suppr].T).T
+            mask_o_suppr = o.suppressor.get_mask()
+            Xim[:, mask_o_suppr] = (np.sqrt(beta_o) * o_ik + \
+                       np.sqrt(1 - beta_o) * Xim[:, mask_o_suppr].T).T
 #        for n in xrange(n_samples):
 #            X[n, mask_o] = np.sqrt(beta_o) * o_ik[n] + \
 #                           np.sqrt(1 - beta_o) * X[n, mask_o]
 #            if o.suppressor is not None:  # add the same latent to the suppressor
 #                X[n, mask_o_suppr] = np.sqrt(beta_o) * o_ik[n] + \
 #                                     np.sqrt(1 - beta_o) * X[n, mask_o]
-    return X
+    return Xim
 #
 #%time for n in xrange(n_samples): X3[n, mask_o] = np.sqrt(beta_o) * o_ik[n] + np.sqrt(1 - beta_o) * X3[n, mask_o]
 #%time X2[:, mask_o] = (np.sqrt(beta_o) * o_ik + np.sqrt(1 - beta_o) * X2[:, mask_o].T).T
 #
-#X2 = X_im.copy()
-#X3 = X_im.copy()
+#X2 = Xim.copy()
+#X3 = Xim.copy()
 #np.all(X2[:, m] == X3[:, m])
 #np.all(X2[:, m] == X3[:, m])
 #%time X2[:, m] = (X2[:, m].T + (beta_y * y)).T
@@ -284,7 +296,7 @@ def object_model(objects, X):
 ############################################################################
 ## Apply causal model on objects
 
-def causal_model(objects, X, y, R):
+def causal_model(objects, Xim, y, R):
     """Add predictive information: x_ki +=  b_y * y
     """
     for k in xrange(len(objects)):
@@ -300,15 +312,15 @@ def causal_model(objects, X, y, R):
         #beta_y = corr_to_coef_empirical(x=y, e=e, R=R)
         beta_y = corr_to_coef(v_x=1, v_e=1, cov_xe=0, R=R)
         o.beta_y = beta_y
-        X[:, mask_o] = (X[:, mask_o].T + (beta_y * y)).T
+        Xim[:, mask_o] = (Xim[:, mask_o].T + (beta_y * y)).T
 #        for i in xrange(n_samples):
 #            X[i, mask_o] += beta_y * y[i]
-    return X
+    return Xim
 
 ############################################################################
 ## Parameters
-n_samples=50000
-n_features=2500
+n_samples=100
+n_features=900
 R = .5
 sigma_spatial_smoothing = 1
 beta_o = .5
@@ -320,7 +332,7 @@ lx = ly = int(np.round(np.sqrt(n_features)))
 ############################################################################
 ## 1. Build images with noize => e_ij
 X = np.random.normal(mu_e, sigma_e, n_samples * lx * ly).reshape(n_samples, lx * ly)
-X_im = X.reshape(n_samples, lx, ly)
+Xim = X.reshape(n_samples, lx, ly)
 y = np.random.normal(mu_y, sigma_y, n_samples)
 y -= y.mean()
 y /= y.std()
@@ -329,8 +341,8 @@ print X.std(axis=0).mean()
 ############################################################################
 ## 1. Pixel-level noize structure: spatial smoothing
 if sigma_spatial_smoothing is not 0:
-    for i in xrange(X_im.shape[0]):
-        X_im[i, :, :] = ndimage.gaussian_filter(X_im[i, :, :],
+    for i in xrange(Xim.shape[0]):
+        Xim[i, :, :] = ndimage.gaussian_filter(Xim[i, :, :],
             sigma=sigma_spatial_smoothing)
 
 # Spatial smoothing reduced the std-dev, reset it to 1
@@ -343,11 +355,11 @@ objects = dice_five(lx, ly)
 
 ############################################################################
 ## 3. Object-level noize structure
-X_im = object_model(objects, X_im)
+Xim = object_model(objects, Xim)
 
 ############################################################################
 ## 4. Causal model
-X_im = causal_model(objects, X_im, y, R)
+Xim = causal_model(objects, Xim, y, R)
 
 ############################################################################
 ## 6. Predictive model => weight vector
@@ -356,58 +368,79 @@ X_im = causal_model(objects, X_im, y, R)
 # X'Xij = n_samples * (b_y^2 + b_o + (1 - b_o) * CovNij)
 # CovNij = RNij * sigma_e ** 2 + 2 * mu_e
 # RNij = e(-dist ** 2 / (4 * sigma_spatial_smoothing ** 2) )
-m = objects[0].get_mask()
-beta_y = objects[0].beta_y
-x_coord, y_coord = np.where(m)
-# get euclidian distances between pixel in the mask
-dist_mat = np.sqrt((x_coord[np.newaxis].T - x_coord) ** 2 + \
-    (y_coord[np.newaxis].T - y_coord) ** 2)
 
-# True correlation between noize pixels: RNij
-RNij = np.exp(-dist_mat ** 2 / (4 * sigma_spatial_smoothing ** 2))
+labels = np.zeros(lx * ly, dtype=int).reshape(lx, ly)
+label = 0
+Cov = np.zeros(X.shape[1] ** 2).reshape((X.shape[1], X.shape[1]))
+Xty = np.zeros(X.shape[1])
 
-# True cov between noize pixels: CovNij
-CovNij = RNij * sigma_e ** 2 + 2 * mu_e
+for k in xrange(len(objects)):
+    label += 1
+    io =  objects[k]
+    if io.is_suppressor:
+            continue
+    label_io = label  # label of informative object
+    mask_im_io = io.get_mask()  # mask in image of informative object
+    labels[mask_im_io] = label_io
+    mask_im = mask_im_io.copy()
+    if io.suppressor is not None:
+        label += 1
+        label_so = label  # label of suppressor object
+        mask_im_so = io.suppressor.get_mask()  # maks in image of suppressor
+        labels[mask_im_so] = label_so
+        mask_im += mask_im_so
+    x_im, y_im = np.where(mask_im)  # x and y coordinate in image of 
+    x_o_io, = np.where(labels[mask_im] == label_io)  # x coord in object space of info. object
+    # get euclidian distances between pixel in the mask
+    dist_mat = np.sqrt((x_im[np.newaxis].T - x_im) ** 2 + \
+        (y_im[np.newaxis].T - y_im) ** 2)
+    # True correlation between noize pixels: RN_k within current object k
+    RN_k = np.exp(-dist_mat ** 2 / (4 * sigma_spatial_smoothing ** 2))
+    # True cov between noize pixels: CovN_k
+    CovN_k = RN_k * sigma_e ** 2 + 2 * mu_e
+    # True cov between pixels: Cov_k
+    # Cov_k = b_y^2 + b_o + (1 - b_o) * CovN_k
+    Cov_k = beta_o + (1 - beta_o) * CovN_k
+    # Add cov caused by y in informative object
+    xy_o_cov_io = covmat_indices(x_o_io)
+    Cov_k[xy_o_cov_io] += io.beta_y ** 2
+    ## Compare with empirical cov
+    Cov_k_hat = np.cov(Xim[:, mask_im].T)
+    p1 = plt.plot(dist_mat, Cov_k_hat, "ob")
+    p2 = plt.plot(dist_mat, Cov_k, "or")
+    plt.ylabel('Pixels covariance (blue empirical/ red true)')
+    plt.xlabel('Pixels distance')
+    plt.show()
+    ## 6.2 X'y
+    #X'y = n_samples * E(X'y)
+    # X'y    = n_samples * b_y * E(y^2) if causal else 0
+    Xty_k = np.zeros(Cov_k.shape[0])
+    Xty_k[x_o_io] = n_samples * io.beta_y * (sigma_y + mu_y ** 2)
+    #Xty = np.repeat(n_samples * io.beta_y * (sigma_y + mu_y ** 2), Covij.shape[0])
+    Xty_k_hat = np.dot(Xim[:, mask_im].T, y)
+    print "Xty corr(theoretical and empirical)", np.corrcoef(Xty_k, Xty_k_hat)[0, 1]
 
-# True cov between pixels: Covij
-# Covij = b_y^2 + b_o + (1 - b_o) * CovNij
-Covij = beta_y ** 2 + beta_o + (1 - beta_o) * CovNij
-XtXij = n_samples * Covij
 
-#Compare with empirical Cov
-XtXij_hat = np.dot(X_im[:, m].T, X_im[:, m])
-p1 = plt.plot(dist_mat, XtXij_hat, "ob")
-p2 = plt.plot(dist_mat, XtXij, "or")
-plt.ylabel('Pixels covariance * n (blue empirical)')
-plt.xlabel('Pixels distance')
-plt.show()
+"""
 
-## 6.2 X'y
-#X'y = n_samples * E(X'y)
-# X'y    = n_samples * b_y * E(y^2) if causal else 0
-
-Xty = np.repeat(n_samples * beta_y * (sigma_y + mu_y ** 2), XtXij.shape[0])
-Xty_hat = np.dot(X_im[:, m].T, y)
-print "Xty theoretical and empirical", Xty.mean(), Xty_hat.mean()
-
-Xm = X_im[:, m]
-weights = np.dot(scipy.linalg.inv(XtXij), Xty)
-weights_hat = np.dot(scipy.linalg.inv(np.dot(Xm.T, Xm)), np.dot(Xm.T, y))
-#weights_hat = np.dot(scipy.linalg.pinv(X_im[:, m]), y)
+weights = np.dot(scipy.linalg.inv(Covij * (n_samples - 1)), Xty)
+weights_hat = np.dot(scipy.linalg.inv(Covij_hat * (n_samples - 1)), Xty_hat)
+#weights_hat = np.dot(scipy.linalg.pinv(Xim[:, m]), y)
 
 plt.plot(weights, weights_hat, "ob")
 plt.show()
 
-np.corrcoef(Xm, y)
     
 blank = np.zeros((lx, ly))
-blank[m] = weights
+blank[mask_im] = weights
 plt.matshow(blank, cmap=plt.cm.gray)
 plt.show()
-blank[m] = weights_hat
+blank[mask_im] = weights_hat
 plt.matshow(blank, cmap=plt.cm.gray)
 plt.show()
+"""
 
+"""
 p = 4
 x = np.zeros(p ** 2).reshape((p, p))
 x[np.diag_indices(x.shape[0])] = np.random.rand(x.shape[0])
@@ -429,6 +462,7 @@ A.setdiag(np.random.rand(1000))
 A = A.tocsr()
 
 import scipy.sparse.linalg 
+"""
 
 ############################################################################
 ## 5. Vizu
@@ -436,7 +470,8 @@ import scipy.sparse.linalg
 plt.matshow(get_objects_edges(objects), cmap=plt.cm.gray)
 plt.show()
 
-plt.matshow(X_im[0,:,:], cmap=plt.cm.gray)
+"""
+plt.matshow(Xim[0,:,:], cmap=plt.cm.gray)
 plt.show()
 
 from sklearn.metrics import r2_score
@@ -450,11 +485,11 @@ o5 = objects[4]
 o1s = o1.suppressor ## == o2
 o3s = o3.suppressor ## == o4
 
-x1 = X_im[:, o1.c_x, o1.c_y][:, np.newaxis]
-x1s = X_im[:, o1s.c_x, o1s.c_y][:, np.newaxis]
-x3 = X_im[:, o3.c_x, o3.c_y][:, np.newaxis]
-x3s = X_im[:, o3s.c_x, o3s.c_y][:, np.newaxis]
-x5 = X_im[:, o5.c_x, o5.c_y][:, np.newaxis]
+x1 = Xim[:, o1.c_x, o1.c_y][:, np.newaxis]
+x1s = Xim[:, o1s.c_x, o1s.c_y][:, np.newaxis]
+x3 = Xim[:, o3.c_x, o3.c_y][:, np.newaxis]
+x3s = Xim[:, o3s.c_x, o3s.c_y][:, np.newaxis]
+x5 = Xim[:, o5.c_x, o5.c_y][:, np.newaxis]
 
 # Correlation between y a objects
 np.corrcoef(x1.ravel(), y)[0, 1]
@@ -480,6 +515,6 @@ x = np.hstack([x1, inter])
 betas = np.dot(scipy.linalg.pinv(x), y)
 y_pred = np.dot(x, betas)
 r2_score(y, y_pred)
-
+"""
 # run pylearn-structured/structured/datasets/samples_generator_struct.py
 
