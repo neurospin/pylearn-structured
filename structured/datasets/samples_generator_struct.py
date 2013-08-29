@@ -87,6 +87,8 @@ import scipy
 import scipy.linalg
 from scipy import ndimage
 import matplotlib.pyplot as plt
+import scipy.sparse as sparse
+import scipy.sparse.linalg
 
 #def dist_euclidian(lx, ly):
 #    """Euclidian distance
@@ -150,6 +152,7 @@ def corr_to_coef(v_x, v_e, cov_xe, R):
     sol2 = (-b1 + np.sqrt(delta)) / (2 * b2)
     return np.max([sol1, sol2]) if R >= 0 else  np.min([sol1, sol2])
 
+
 def corr_to_coef_empirical(x, e, R):
     """In a linear model y = bx + e. Calculate b such corr(bx + e, x) = R.
     Parameters
@@ -171,6 +174,21 @@ def corr_to_coef_empirical(x, e, R):
     v_e = np.var(e)
     cov_xe = np.cov(x, e)[0, 1]
     return corr_to_coef(v_x, v_e, cov_xe, R)
+
+############################################################################
+## utils
+def plot_map(im):
+    fig, ax = plt.subplots()
+    cax = ax.matshow(im, cmap=plt.cm.coolwarm)
+    mx = np.abs(im).max()
+    cbar = fig.colorbar(cax, ticks=[-mx, -mx/4 -mx/2, 0, mx/2, mx/2, mx])
+    cbar.set_clim(vmin=-mx, vmax=mx)
+    return fig, ax
+
+def sinv(M):
+    lu_obj = scipy.sparse.linalg.splu(M.tocsr())
+    Minv = lu_obj.solve(np.eye(M.shape[0]))
+    return Minv
 
 ############################################################################
 ## Objects classes
@@ -294,6 +312,10 @@ def object_model(objects, Xim):
             mask_o_suppr = o.suppressor.get_mask()
             Xim[:, mask_o_suppr] = (np.sqrt(beta_o) * o_ik + \
                        np.sqrt(1 - beta_o) * Xim[:, mask_o_suppr].T).T
+#        X = Xim.reshape((Xim.shape[0], Xim.shape[1] * Xim.shape[2]))
+#        # Spatial smoothing reduced the std-dev, reset it to 1
+#        X -= X.mean(axis=0) + (mu_o + mu_e)  # Also ensure null mean
+#        X /= X.std(axis=0) * sigma_e
     return Xim
 
 
@@ -314,6 +336,106 @@ def causal_model(objects, Xim, y, R):
         Xim[:, mask_o] = (Xim[:, mask_o].T + (beta_y * y)).T
     return Xim
 
+
+def model_parameters(Xim, sigma_e, objects):
+    """Compute theoretical and empirical model parameters.
+    Parameters
+    ----------
+    Xim: array [n_samples, lx, ly]
+
+    sigma_e float
+        noize std-dev
+
+    objects: list of ObjImage
+
+    Details
+    -------
+    Estimate (X'X)^-1 X'y for each object (consider suppressor object if present)
+    CovX = b_y^2 + b_o + (1 - b_o) * CovN
+    CovN = CorN * sigma_e ** 2 + 2 * mu_e
+    CorN = e(-dist ** 2 / (4 * sigma_spatial_smoothing ** 2) )
+
+    Return
+    ------
+    CovX: array [n_features, n_features]
+        X covariance matrix
+
+    covXy: array [n_features,]
+        X, y covariance matrix
+    """
+    n_samples, lx, ly = Xim.shape
+    n_features = lx * ly
+    labels = np.zeros(n_features, dtype=int).reshape(lx, ly)
+    label = 0
+    covXy = np.zeros(n_features)
+    CovX = np.diagflat([float(sigma_e) ** 2] * n_features)
+    CovX_data = list()
+    CovX_ij = [[], []]
+    for k in xrange(len(objects)):
+        label += 1
+        io = objects[k]
+        if io.is_suppressor:
+            continue
+        label_io = label  # label of informative object
+        mask_io_im = io.get_mask()  # mask of informative object in image
+        labels[mask_io_im] = label_io
+        mask_im = mask_io_im.copy()
+        if io.suppressor is not None:
+            label += 1
+            label_so = label  # label of suppressor object
+            # mask of suppressor object in image
+            mask_so_im = io.suppressor.get_mask()
+            labels[mask_so_im] = label_so
+            mask_im += mask_so_im
+        idx_im = np.where(mask_im)  # indices of objects in image
+        # indices of informative object within mask
+        idx_io_mask, = np.where(labels[mask_im] == label_io)
+        # get euclidian distances between pixel in the mask
+        dist_mat = np.sqrt((idx_im[0][np.newaxis].T - idx_im[0]) ** 2 + \
+            (idx_im[1][np.newaxis].T - idx_im[1]) ** 2)
+        # True correlation between noize pixels: CorN_k within current object k
+        CorN_k = np.exp(-dist_mat ** 2 / (4 * sigma_spatial_smoothing ** 2))
+        # True cov between noize pixels: CovN_k
+        CovN_k = CorN_k * sigma_e ** 2 + 2 * mu_e
+        # True cov between pixels: Cov_k
+        # CovX_k = b_y^2 + b_o + (1 - b_o) * CovN_k
+        CovX_k = beta_o + (1 - beta_o) * CovN_k
+        # Add cov caused by y in informative object
+        xy_o_cov_io = covmat_indices(idx_io_mask)
+        CovX_k[xy_o_cov_io] += io.beta_y ** 2
+        ## Compare with empirical cov
+        CovX_k_hat = np.cov(Xim[:, mask_im].T)
+        if False:
+            p1 = plt.plot(dist_mat, CovX_k_hat, "ob")
+            p2 = plt.plot(dist_mat, CovX_k, "or")
+            plt.ylabel('Pixels covariance (blue empirical/ red true)')
+            plt.xlabel('Pixels distance')
+            plt.show()
+        ## 6.2 X'y
+        #X'y = n_samples * E(X'y)
+        # X'y    = n_samples * b_y * E(y^2) if causal else 0
+        covXy_k = np.zeros(CovX_k.shape[0])
+        covXy_k[idx_io_mask] = io.beta_y * (sigma_y ** 2 + mu_y ** 2)
+        covXy_k_hat = np.dot(Xim[:, mask_im].T, y) / n_samples
+        print "covXy corr(theoretical and empirical)", \
+            np.corrcoef(covXy_k, covXy_k_hat)[0, 1]
+        idx_flt, = np.where(mask_im.ravel()) # indices of pixels in flatten image
+        idx_flt_cov = covmat_indices(idx_flt)# indices of pixels in cov of flatten image
+        covXy[idx_flt] = covXy_k
+        CovX[idx_flt_cov] = CovX_k.ravel()
+        CovX_data += CovX_k.ravel().tolist()
+        CovX_ij[0] += idx_flt_cov[0].tolist()
+        CovX_ij[1] += idx_flt_cov[1].tolist()
+        CovXs = sparse.csr_matrix( (CovX_data, CovX_ij),
+                                  shape=(n_features, n_features))
+    # Add diagonal where non null
+    diag = CovXs.diagonal()
+    diag[diag == 0] = float(sigma_e) ** 2
+    CovXs.setdiag(diag)
+    print "Diff sparse non sparse", np.sum(CovXs.toarray() != CovX)
+    return CovXs, covXy
+
+
 ############################################################################
 ## Parameters
 n_samples=1000
@@ -333,14 +455,14 @@ Xim = X.reshape(n_samples, lx, ly)
 y = np.random.normal(mu_y, sigma_y, n_samples)
 y -= y.mean()
 y /= y.std()
-print X.mean(axis=0)
+#print X.mean(axis=0), X.std(axis=0)
 
 ############################################################################
 ## 1. Pixel-level noize structure: spatial smoothing
 Xim = spatial_smoothing(Xim, sigma_spatial_smoothing, mu_e, sigma_e)
 X = Xim.reshape((Xim.shape[0], Xim.shape[1]*Xim.shape[2]))
-print X.mean(axis=0)
-print y.mean()
+#print X.mean(axis=0), X.std(axis=0)
+#print y.mean()
 
 ############################################################################
 ## 2. Build Objects
@@ -349,87 +471,22 @@ objects = dice_five(lx, ly)
 ############################################################################
 ## 3. Object-level noize structure
 Xim = object_model(objects, Xim)
+#X = Xim.reshape((Xim.shape[0], Xim.shape[1]*Xim.shape[2]))
+#print X.mean(axis=0), X.std(axis=0)
 
 ############################################################################
 ## 4. Causal model
 Xim = causal_model(objects, Xim, y, R)
+#X = Xim.reshape((Xim.shape[0], Xim.shape[1]*Xim.shape[2]))
+#print X.mean(axis=0), X.std(axis=0)
 
 ############################################################################
 ## 6. Predictive model => weight vector
-# Estimate (X'X)^-1 X'y for each object (consider suppressor object if present)
-## 6.1 Covariance matrix: X'X
-# X'Xij = n_samples * (b_y^2 + b_o + (1 - b_o) * CovNij)
-# CovNij = RNij * sigma_e ** 2 + 2 * mu_e
-# RNij = e(-dist ** 2 / (4 * sigma_spatial_smoothing ** 2) )
 
-X = Xim.reshape((Xim.shape[0], Xim.shape[1]*Xim.shape[2]))
 
-labels = np.zeros(lx * ly, dtype=int).reshape(lx, ly)
-label = 0
-#Cov = np.zeros(X.shape[1] ** 2).reshape((X.shape[1], X.shape[1]))
-Xty = np.zeros(X.shape[1])
-Cov = np.diagflat([float(sigma_e) ** 2] * X.shape[1])
+CovX, covXy = model_parameters(Xim, sigma_e, objects)
 
-for k in xrange(len(objects)):
-    label += 1
-    io = objects[k]
-    if io.is_suppressor:
-        continue
-    label_io = label  # label of informative object
-    mask_io_im = io.get_mask()  # mask of informative object in image
-    labels[mask_io_im] = label_io
-    mask_im = mask_io_im.copy()
-    if io.suppressor is not None:
-        label += 1
-        label_so = label  # label of suppressor object
-        # mask of suppressor object in image
-        mask_so_im = io.suppressor.get_mask()
-        labels[mask_so_im] = label_so
-        mask_im += mask_so_im
-    idx_im = np.where(mask_im)  # indices of objects in image
-    # indices of informative object within mask
-    idx_io_mask, = np.where(labels[mask_im] == label_io)
-    # get euclidian distances between pixel in the mask
-    dist_mat = np.sqrt((idx_im[0][np.newaxis].T - idx_im[0]) ** 2 + \
-        (idx_im[1][np.newaxis].T - idx_im[1]) ** 2)
-    # True correlation between noize pixels: RN_k within current object k
-    RN_k = np.exp(-dist_mat ** 2 / (4 * sigma_spatial_smoothing ** 2))
-    # True cov between noize pixels: CovN_k
-    CovN_k = RN_k * sigma_e ** 2 + 2 * mu_e
-    # True cov between pixels: Cov_k
-    # Cov_k = b_y^2 + b_o + (1 - b_o) * CovN_k
-    Cov_k = beta_o + (1 - beta_o) * CovN_k
-    # Add cov caused by y in informative object
-    xy_o_cov_io = covmat_indices(idx_io_mask)
-    Cov_k[xy_o_cov_io] += io.beta_y ** 2
-    ## Compare with empirical cov
-    Cov_k_hat = np.cov(Xim[:, mask_im].T)
-    if False:
-        p1 = plt.plot(dist_mat, Cov_k_hat, "ob")
-        p2 = plt.plot(dist_mat, Cov_k, "or")
-        plt.ylabel('Pixels covariance (blue empirical/ red true)')
-        plt.xlabel('Pixels distance')
-        plt.show()
-    ## 6.2 X'y
-    #X'y = n_samples * E(X'y)
-    # X'y    = n_samples * b_y * E(y^2) if causal else 0
-    Xty_k = np.zeros(Cov_k.shape[0])
-    Xty_k[idx_io_mask] = n_samples * io.beta_y * (sigma_y + mu_y ** 2)
-    Xty_k_hat = np.dot(Xim[:, mask_im].T, y)
-    print "Xty corr(theoretical and empirical)", np.corrcoef(Xty_k, Xty_k_hat)[0, 1]
-    idx_flt, = np.where(mask_im.ravel()) # indices of pixels in flatten image
-    idx_flt_cov = covmat_indices(idx_flt)# indices of pixels in cov of flatten image
-    Xty[idx_flt] = Xty_k
-    Cov[idx_flt_cov] = Cov_k.ravel()
-
-def plot_map(im):
-    fig, ax = plt.subplots()
-    cax = ax.matshow(im, cmap=plt.cm.coolwarm)
-    mx = np.abs(im).max()
-    cbar = fig.colorbar(cax, ticks=[-mx, -mx/4 -mx/2, 0, mx/2, mx/2, mx])
-    cbar.set_clim(vmin=-mx, vmax=mx)
-    return fig, ax
-
+print np.allclose(scipy.linalg.inv(CovX.todense()), sinv(CovX))
 
 """
 if __name__ == '__main__':
@@ -448,15 +505,14 @@ yte = y[n_train:]
 print Xtr.shape, Xte.shape
 print ytr.shape, yte.shape
 
-
-weights = np.dot(scipy.linalg.inv(Cov * (n_samples -1)), Xty)
+weights = np.dot(sinv(CovX), covXy)
 pred = np.dot(Xte, weights)
 plot_map(im=weights.reshape((lx, ly)))
 plt.show()
 print r2_score(yte, pred), np.corrcoef(yte, pred)[0, 1]
 
 
-weights_icov = Xty / n_train
+weights_icov = covXy / CovX.diagonal()
 pred = np.dot(Xte, weights_icov)
 plot_map(im=weights_icov.reshape((lx, ly)))
 plt.show()
@@ -470,38 +526,13 @@ plt.show()
 print r2_score(yte, pred), np.corrcoef(yte, pred)[0, 1]
 
 
-weights_hat_idcov = np.dot(Xtr.T, ytr) / n_train
+weights_hat_idcov = np.dot(Xtr.T, ytr) / np.sum(Xtr ** 2, axis=0)
 pred = np.dot(Xte, weights_hat_idcov)
 plot_map(im=weights_hat_idcov.reshape((lx, ly)))
 plt.show()
 print r2_score(yte, pred), np.corrcoef(yte, pred)[0, 1]
-
-
 """
 
-"""
-p = 4
-x = np.zeros(p ** 2).reshape((p, p))
-x[np.diag_indices(x.shape[0])] = np.random.rand(x.shape[0])
-
-t = 2
-s = 0
-x[s:(s+t), s:(s+t)] = np.random.rand(t**2).reshape((t, t))
-s = 2
-x[s:(s+t), s:(s+t)] = np.random.rand(t**2).reshape((t, t))
-
-
-np.diag(x)
-
-from scipy.sparse import lil_matrix
-A = lil_matrix((1000, 1000))
-A[0, :100] = np.random.rand(100)
-A[1, 100:200] = A[0, :100]
-A.setdiag(np.random.rand(1000))
-A = A.tocsr()
-
-import scipy.sparse.linalg 
-"""
 
 ############################################################################
 ## 5. Vizu
