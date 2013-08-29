@@ -262,6 +262,18 @@ def dice_five(lx, ly):
 
 
 ############################################################################
+## Sptial smoothing
+def spatial_smoothing(Xim, sigma, mu_e, sigma_e):
+    for i in xrange(Xim.shape[0]):
+        Xim[i, :, :] = ndimage.gaussian_filter(Xim[i, :, :],
+            sigma=sigma)
+    X = Xim.reshape((Xim.shape[0], Xim.shape[1] * Xim.shape[2]))
+    # Spatial smoothing reduced the std-dev, reset it to 1
+    X -= X.mean(axis=0) + mu_e  # Also ensure null mean
+    X /= X.std(axis=0) * sigma_e
+    return Xim
+
+############################################################################
 ## Add objects-based variance
 def object_model(objects, Xim):
     """Add object variance: x_ki =  b_o^1/2 * o_k + (1 - b_o)^1/2 * e_i
@@ -321,18 +333,14 @@ Xim = X.reshape(n_samples, lx, ly)
 y = np.random.normal(mu_y, sigma_y, n_samples)
 y -= y.mean()
 y /= y.std()
+print X.mean(axis=0)
 
-print X.std(axis=0).mean()
 ############################################################################
 ## 1. Pixel-level noize structure: spatial smoothing
-if sigma_spatial_smoothing is not 0:
-    for i in xrange(Xim.shape[0]):
-        Xim[i, :, :] = ndimage.gaussian_filter(Xim[i, :, :],
-            sigma=sigma_spatial_smoothing)
-
-# Spatial smoothing reduced the std-dev, reset it to 1
-X -= X.mean(axis=0) + mu_e  # Also ensure null mean
-X /= X.std(axis=0) * sigma_e
+Xim = spatial_smoothing(Xim, sigma_spatial_smoothing, mu_e, sigma_e)
+X = Xim.reshape((Xim.shape[0], Xim.shape[1]*Xim.shape[2]))
+print X.mean(axis=0)
+print y.mean()
 
 ############################################################################
 ## 2. Build Objects
@@ -353,6 +361,8 @@ Xim = causal_model(objects, Xim, y, R)
 # X'Xij = n_samples * (b_y^2 + b_o + (1 - b_o) * CovNij)
 # CovNij = RNij * sigma_e ** 2 + 2 * mu_e
 # RNij = e(-dist ** 2 / (4 * sigma_spatial_smoothing ** 2) )
+
+X = Xim.reshape((Xim.shape[0], Xim.shape[1]*Xim.shape[2]))
 
 labels = np.zeros(lx * ly, dtype=int).reshape(lx, ly)
 label = 0
@@ -421,38 +431,50 @@ def plot_map(im):
     return fig, ax
 
 
-
+"""
+if __name__ == '__main__':
+"""
 
 """
+#import sklearn
 from sklearn.metrics import r2_score
 n_train = int(X.shape[1] / 10)
 
-weights = np.dot(scipy.linalg.inv(Cov * (n_samples - 1)), Xty)
-pred = np.dot(X[n_train:, :], weights)
+Xtr = X[:n_train, :]
+ytr = y[:n_train]
+Xte = X[n_train:, :]
+yte = y[n_train:]
+
+print Xtr.shape, Xte.shape
+print ytr.shape, yte.shape
+
+
+weights = np.dot(scipy.linalg.inv(Cov * (n_samples -1)), Xty)
+pred = np.dot(Xte, weights)
 plot_map(im=weights.reshape((lx, ly)))
 plt.show()
-print r2_score(y, pred), np.corrcoef(y, pred)[0, 1]
+print r2_score(yte, pred), np.corrcoef(yte, pred)[0, 1]
 
 
 weights_icov = Xty / n_train
-pred = np.dot(X[n_train:, :], weights_icov)
+pred = np.dot(Xte, weights_icov)
 plot_map(im=weights_icov.reshape((lx, ly)))
 plt.show()
-print r2_score(y, pred), np.corrcoef(y, pred)[0, 1]
+print r2_score(yte, pred), np.corrcoef(yte, pred)[0, 1]
 
 
-weights_hat = np.dot(scipy.linalg.pinv(X[:n_train, :]), y[:n_train])
-pred = np.dot(X[n_train:, :], weights_hat)
+weights_hat = np.dot(scipy.linalg.pinv(Xtr), ytr)
+pred = np.dot(Xte, weights_hat)
 plot_map(im=weights_hat.reshape((lx, ly)))
 plt.show()
-print r2_score(y, pred), np.corrcoef(y, pred)[0, 1]
+print r2_score(yte, pred), np.corrcoef(yte, pred)[0, 1]
 
 
-weights_hat_idcov = np.dot(X[:n_train, :].T, y[:n_train]) / n_train
-pred = np.dot(X[n_train:, :], weights_hat_idcov)
+weights_hat_idcov = np.dot(Xtr.T, ytr) / n_train
+pred = np.dot(Xte, weights_hat_idcov)
 plot_map(im=weights_hat_idcov.reshape((lx, ly)))
 plt.show()
-print r2_score(y, pred), np.corrcoef(y, pred)[0, 1]
+print r2_score(yte, pred), np.corrcoef(yte, pred)[0, 1]
 
 
 """
@@ -484,10 +506,11 @@ import scipy.sparse.linalg
 ############################################################################
 ## 5. Vizu
 
+"""
 plt.matshow(get_objects_edges(objects), cmap=plt.cm.gray)
 plt.show()
 
-"""
+
 plt.matshow(Xim[0,:,:], cmap=plt.cm.gray)
 plt.show()
 
