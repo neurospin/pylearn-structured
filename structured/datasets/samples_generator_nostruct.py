@@ -55,7 +55,7 @@ def make_classification(n_samples=100,
     ----------
 
     n_samples: int
-        nb of samples, defualt 100.
+        nb of samples, default 100.
 
     n_complementary_patterns: int
         Number of patterns made of complementary features. In those patterns

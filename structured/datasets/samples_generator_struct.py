@@ -3,83 +3,6 @@
 Created on Wed Aug  7 10:35:12 2013
 
 @author: edouard.duchesnay@cea.fr
-
-Generative model to sample input features (image) and the associated target
-variable. Provide a model of the structure between the input features for
-both noizy and informative features. The structure can be controled at pixel
-level and at object (connected component of pixels) level.
-
-
-Generative sampling model
--------------------------
-
-The signal within each pixel i and object k is a linear combination of some
-information and object-level and pixel-level noize.
-
-x_ki =  b_y * y + b_o^1/2 * o_k + (1 - b_o)^1/2 * e_i
-       < info >   <------------- noize ------------->
-                  <- object k ->   <--- pixel i ---->
-
-e_i ~ N(0, 1) is the pixel-level noize, for all pixels i in [1, n_features]
-o_k ~ N(0, 1) is the object-level noize, for all objects k in [1, n_objects]
-y   ~ N(0, 1) is the target variable
-
-Procedure: (1) Generate e_i; (2) Spatial Smoothing; (3) Add object level noize;
-(4) Add y on causal pixels.
-
-Parameters
-----------
-b_o: float
-    Controls the amount of shared noize within
-    objects. It is null outside objects. Thus (1 - b_o) control the amount of
-    pixel level noize. b_o enable the mixing between pixel and object level noize.
-
-R: float
-    Is the desire correlation between causal pixels and
-    the target y.
-
-Details
--------
-
-b_y is null outside objects. Within causal object, it is computed such that
-corr(x_ki, y) = R
-
-Moreovere the model assume that:
-var(noize) = b_o var(o_k) + (1 - b_o) var(e_ki) = 1
-cov(y, noize) = 0
-
-Predictive model
-----------------
-
-Given X = [x_ki] for all pixels i in [1, n_features], the function return
-beta = (X'X)^-1 X'y, for the OLS solution of the problem: min|y - X beta|_l2
-
-[X'X]_ij = n_sample * E(x_ki, x_lj)
-E(x_ki, x_kj) = b_y^2 + b_o + (1 - b_o) * E(e_ki, e_lj)
-                if i,j belong to the same causal object (k=l)
-              =         b_o + (1 - b_o) * E(e_ki, e_lj)
-                if i belongs to a causal object and j belongs to its suppressor
-              = is not computed in all other cases.
-
-E(e_ki, e_lj): spatial cov after spatial smoothing
-              = Rij * sigma_e^2 + 2 mu_e
-Rij: spatial correlation after spatial smoothing
-     = Rij = exp(-dist_euc^2/(4 * sigma_spatial_smoothing^2) )
-
-
-X'_i y = n_sample * E(x_ki, y)
-E(x_ki, y) = b_y * E(y^2)
-
-
-i: sample index
-k: object index
-j: pixel index
-
-1. Build images with noize => e_ij
-2. Build Objects
-3. Apply causal model for each objects
-   => add y_i beta_y + Zi Beta_z + o_ik beta_o
-4. Smooth
 """
 
 import numpy as np
@@ -327,8 +250,6 @@ def model_parameters(Xim, sigma_spatial_smoothing,
 
     Details
     -------
-    Estimate (X'X)^-1 X'y for each object (consider suppressor object if
-    present)
     CovX = b_y^2 + b_o + (1 - b_o) * CovN
     CovN = CorN * sigma_e ** 2 + 2 * mu_e
     CorN = e(-dist ** 2 / (4 * sigma_spatial_smoothing ** 2) )
@@ -422,10 +343,112 @@ def model_parameters(Xim, sigma_spatial_smoothing,
 
 ############################################################################
 ## Parameters
-def make_regression(n_samples=1000, n_features=900, R = .5,
-                    sigma_spatial_smoothing=1, beta_o = .5,
+def make_regression_struct(n_samples=100, n_features=900, R=.5,
+                    sigma_spatial_smoothing=1, beta_o=.5,
                     objects=None):
-    sigma_y = sigma_e = sigma_o = 1 # items std-dev
+    """Generate regression samples (images + target variable) with input
+    features having a covariance structure for both noize and informative
+    features. The sructure of covariance can be controled both at a pixel level
+    (spatial smoothing) and at an object level. Objects a connected component
+    of pixel sharing a covariance and carrying (or not) predictive information.
+    Object without predictive information are called suppressors. They share
+    some noize variance with another predictive object and thus can be
+    usefull to suppress unwilling noize. The function return the theoretical
+    (population based) covariance matrix of input features.
+
+    Parameters
+    ----------
+    n_samples: int
+        nb of samples, (default 100).
+
+    n_features: int
+        nb of features (default 900).
+
+    R: float
+        Is the desire correlation between causal pixels and
+        the target y.
+
+    sigma_spatial_smoothing: scalar
+        Standard deviation for Gaussian kernel (default 1).
+
+    b_o: float
+        Controls the amount of shared noize within
+        objects. It is null outside objects. Thus (1 - b_o) control the amount
+        of pixel level noize. b_o enable the mixing between pixel and object
+        level noize.
+
+    objects: list of objects
+        Objects carying information to be drawn in the image. If not provide
+        a dice with five points (object) will be drawn. Point 1, 3, 4 are
+        carying predictive information while point 2 is a suppressor of point
+        1 and point 5 is a suppressor of point 3.
+        Object should implement "get_mask()" method, a have "is_suppressor"
+        (bool) and "r" (ref to suppressor object, possibely None)
+        attributes.
+
+    Return
+    ------
+    X: array of shape [n_sample, nrows, ncols]
+        the input features such as nrows*ncols = n_features
+
+    y: array of shape [n_sample, 1]
+        the target variable.
+
+    CovX: Sparse rarray [n_features, n_features]
+        The theoretical (population based) covariance matrix of input
+        features. Warning! To keep the matrix sparse covariance outside
+        objects (in noize) is ommited. It can be easly calculated using the
+        formula: exp(-dist_euc^2/(4 * sigma_spatial_smoothing^2)) * sigma_e^2
+
+    covXy: array [n_features, 1]
+        X, y covariance vector
+
+    label: integer array of shape [nrows, ncols]
+        An image obects support in the image
+
+    Details of the generative sampling model
+    ----------------------------------------
+
+    The signal within each pixel i and object k is a linear combination of
+    some information and object-level and pixel-level noize.
+
+    x_ki =  b_y * y + b_o^1/2 * o_k + (1 - b_o)^1/2 * e_i
+           < info >   <------------- noize ------------->
+                      <- object k ->   <--- pixel i ---->
+
+    e_i ~ N(0, 1) is the pixel-level noize, for all pixels i in [1, n_features]
+    o_k ~ N(0, 1) is the object-level noize, for all objects k in [1, n_objects]
+    y   ~ N(0, 1) is the target variable
+
+    Procedure: (1) Generate e_i; (2) Spatial Smoothing; (3) Add object level noize;
+    (4) Add y on causal pixels.
+
+    b_y is null outside objects. Within causal object, it is computed such that
+    corr(x_ki, y) = R
+
+    Moreover the model assume that:
+    var(noize) = b_o var(o_k) + (1 - b_o) var(e_ki) = 1
+    cov(y, noize) = 0
+
+    Distribution parameters
+    Each image Xi follow a multivariate normal distribution: N(0, Cov(X))
+
+    Cov(X)ij = b_y^2 + b_o + (1 - b_o) * Cov(Noize)ij
+    If i and j are in the same predictive object:
+
+    Cov(X)ij =  b_o + (1 - b_o) * Cov(Noize)ij
+    If i is in a predictive object an j in its suppressor:
+
+    Cov(X)ij = b_y^2 + Cov(Noize)ij
+    If i and j are in two differents predictive objects:
+
+    Cov(X)ij = b_y^2 + Cov(Noize)ij
+    Otherwise
+
+    Cov(Noize) = Cor(Noize) * sigma_e ** 2
+    Cor(Noize) = e(-dist ** 2 / (4 * sigma_spatial_smoothing ** 2) )
+    """
+    sigma_y = sigma_e = sigma_o = 1  # items std-dev
     mu_e = mu_y = 0
     lx = ly = int(np.round(np.sqrt(n_features)))
 
@@ -460,7 +483,7 @@ def make_regression(n_samples=1000, n_features=900, R = .5,
     ##########################################################################
     ## 4. Causal model
     Xim, beta_y = causal_model(objects, Xim, y, R)
-    
+
     #X = Xim.reshape((Xim.shape[0], Xim.shape[1]*Xim.shape[2]))
     #print X.mean(axis=0), X.std(axis=0)
 
@@ -470,17 +493,25 @@ def make_regression(n_samples=1000, n_features=900, R = .5,
                      sigma_e, sigma_y,
                      beta_o, beta_y,
                      objects, y)
-    return Xim, y, CovX, covXy, labels_im
+    return Xim, y.reshape((n_samples, 1)), \
+        CovX, covXy.reshape((n_features, 1)), labels_im
 
 
 if __name__ == '__main__':
     # utils
-
-    def plot_map(plot, im):
+    def plot_map(im, plot=None):
+        if plot is None:
+            plot = plt
         #fig, ax = plt.subplots()
         cax = plot.matshow(im, cmap=plt.cm.coolwarm)
+        frame = plt.gca()
+        frame.get_xaxis().set_visible(False)
+        frame.get_yaxis().set_visible(False)
         mx = np.abs(im).max()
-        cbar = plt.colorbar(cax, ticks=[-mx, -mx/4 -mx/2, 0, mx/2, mx/2, mx])
+        k = 1
+        while (10 ** k * mx) < 1 and k<10: k+=1
+        ticks = np.array([-mx, -mx/4 -mx/2, 0, mx/2, mx/2, mx]).round(k+2)
+        cbar = plt.colorbar(cax, ticks=ticks)
         cbar.set_clim(vmin=-mx, vmax=mx)
         #return fig, ax
 
@@ -492,14 +523,14 @@ if __name__ == '__main__':
     n_samples = 1000
     n_features = 2500
     R = .5
-    Xim, y, CovX, covXy, labels = make_regression(n_samples=n_samples,
+    Xim, y, CovX, covXy, labels = make_regression_struct(n_samples=n_samples,
                                           n_features=n_features, R=R,
                                           sigma_spatial_smoothing=1,
                                           beta_o=.5, objects=None)
     _, lx, ly = Xim.shape
+#    y = y.ravel()
 
     X = Xim.reshape((n_samples, lx * ly))
-    import sklearn
     from sklearn.metrics import r2_score
     n_train = min(100, int(X.shape[1] / 10))
     Xtr = X[:n_train, :]
@@ -507,43 +538,91 @@ if __name__ == '__main__':
     Xte = X[n_train:, :]
     yte = y[n_train:]
 
-    plt.figure(figsize=(10, 10))
-    plot = plt.subplot(231)
+    plt.figure()#figsize=(10, 10))
+    plot = plt.subplot(331)
     cax = plot.matshow(labels)
     plt.title("Objects: 2 and 5 are suppressors")
 
     cor = np.dot(Xtr.T, ytr).reshape(lx, ly) / ytr.shape[0]
-    plot = plt.subplot(232)
-    plot_map(plot, cor)
-    plt.title("Corr(X, y) on training data")
+    plot = plt.subplot(332)
+    plot_map(cor, plot)
+    plt.title("Corr(X, y)")
 
-    plot = plt.subplot(233)
+    plot = plt.subplot(333)
     weights = np.dot(sinv(CovX), covXy)
     pred = np.dot(Xte, weights)
-    plot_map(plot, weights.reshape((lx, ly)))
-    plt.title("Optimal weigths. test R2=%.2f" % r2_score(yte, pred))
+    plot_map(weights.reshape((lx, ly)), plot)
+    plt.title("Optimal weigths. (R2=%.2f)" % r2_score(yte, pred))
 
-    plot = plt.subplot(234)
+    plot = plt.subplot(334)
     weights_hat = np.dot(scipy.linalg.pinv(Xtr), ytr)
     pred = np.dot(Xte, weights_hat)
-    plot_map(plot, weights_hat.reshape((lx, ly)))
-    plt.title("OLS weigths. test R2=%.2f" % r2_score(yte, pred))
+    plot_map(weights_hat.reshape((lx, ly)), plot)
+    plt.title("Pinv (R2=%.2f)" % r2_score(yte, pred))
 
-    from sklearn.linear_model import Lasso
-    from sklearn.linear_model import ElasticNet
+    from sklearn.linear_model import Lasso, LassoCV
+    from sklearn.linear_model import ElasticNet, ElasticNetCV
+    from sklearn.linear_model import Ridge, RidgeCV
 
-    alpha = 0.1
+    # Global penalization paapeter: alpha according to:
+    # ||y - Xw||^2_2 + alpha penalization
+    alpha_g = 5.
+    # Ridge ================================================================
+    # Min ||y - Xw||^2_2 + alpha ||w||^2_2
+    plot = plt.subplot(335)
+    alpha = alpha_g
+    l2 = Ridge(alpha=alpha)
+    pred = l2.fit(Xtr, ytr).predict(Xte)
+    plot_map(l2.coef_.reshape((lx, ly)), plot)
+    plt.title("L2 (R2=%.2f)" % r2_score(yte, pred))
 
-    plot = plt.subplot(235)
+    # Lasso  ================================================================
+    # Min (1 / (2 * n_samples)) * ||y - Xw||^2_2 + alpha * ||w||_1
+    alpha = alpha_g * 1. / (2. * n_train)
     lasso = Lasso(alpha=alpha)
     pred = lasso.fit(Xtr, ytr).predict(Xte)
-    plot_map(plot, lasso.coef_.reshape((lx, ly)))
-    plt.title("Lasso weigths. test R2=%.2f" % r2_score(yte, pred))
+    plot = plt.subplot(336)
+    plot_map(lasso.coef_.reshape((lx, ly)), plot)
+    plt.title("L1 (R2=%.2f)" % r2_score(yte, pred))
 
-    plot = plt.subplot(236)
-    enet = ElasticNet(alpha=alpha, l1_ratio=0.1)
+    # Enet  ================================================================
+#    Min: 1 / (2 * n_samples) * ||y - Xw||^2_2 +
+#        + alpha * l1_ratio * ||w||_1
+#        + 0.5 * alpha * (1 - l1_ratio) * ||w||^2_2
+    alpha = alpha_g * 1. / (2. * n_train)
+    l1_ratio = .01
+    enet = ElasticNet(alpha=alpha, l1_ratio=l1_ratio)
     pred = enet.fit(Xtr, ytr).predict(Xte)
-    plot_map(plot, enet.coef_.reshape((lx, ly)))
-    plt.title("ElasticNet weigths. test R2=%.2f" % r2_score(yte, pred))
-    plt.show()
+    plot = plt.subplot(337)
+    plot_map(enet.coef_.reshape((lx, ly)), plot)
+    plt.title("L1L2, 0.01 of L1. (R2=%.2f)" % r2_score(yte, pred))
+    #plt.show()
 
+    l1_ratio = .5
+    enet = ElasticNet(alpha=alpha, l1_ratio=l1_ratio)
+    pred = enet.fit(Xtr, ytr).predict(Xte)
+    plot = plt.subplot(338)
+    plot_map(enet.coef_.reshape((lx, ly)), plot)
+    plt.title("L1L2, 0.50 of L1 (R2=%.2f)" % r2_score(yte, pred))
+    #plt.show()
+
+    # TVL1L2 ===============================================================
+    import structured.models as models
+    eps = 0.01
+    px = ly
+    py = lx
+    pz = 1
+    alpha = alpha_g #Constant that multiplies the penalty terms
+    l1_ratio = .95
+    l = alpha * l1_ratio
+    k = 0.5 * alpha * (1 - l1_ratio)
+    gamma = 1 * alpha
+    pgm = models.LinearRegressionL1L2TV(l=l, k=k, gamma=gamma, shape=(pz, py, px))
+    pgm = models.ContinuationRun(pgm, tolerances=[10000 * eps, 100 * eps, eps])
+    pgm.fit(Xtr, ytr)
+    f = pgm.get_algorithm().f
+    plot = plt.subplot(339)
+    plot_map(pgm.beta.reshape(lx, ly), plot)
+    r2 = r2_score(yte, np.dot(Xte, pgm.beta).ravel())
+    plt.title("L1L2TV (R2=%.2f)" % r2)
+    plt.show()
