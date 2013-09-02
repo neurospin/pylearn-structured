@@ -713,58 +713,6 @@ class RidgeRegressionL1(RidgeRegression):
         rr = self.get_g()
         self.set_g(loss_functions.CombinedNesterovLossFunction(rr, l1))
 
-#    def alpha(self, beta):
-#
-#        return self._l1.alpha(beta)
-
-#    def compute_mu(self, eps):
-#
-#        rr = self.get_g()
-#        l1 = self._l1
-#
-#        D = l1.num_compacts() / 2.0
-#        # A contains gamma ** 2.0
-#        A = l1.Lipschitz(1.0)
-#        l = rr.Lipschitz()
-#
-#        return (-2.0 * D * A + np.sqrt((2.0 * D * A) ** 2.0 \
-#                + 4.0 * D * l * eps * A)) / (2.0 * D * l)
-#
-#    def compute_gap(self, mu):
-#
-#        rr = self.get_g()
-#        l1 = self._l1
-#
-#        D = l1.num_compacts() / 2.0
-#        # A contains gamma ** 2.0
-#        A = l1.Lipschitz(1.0)
-#        l = rr.Lipschitz()
-#
-#        return ((2.0 * mu * D * l + 2.0 * D * A) ** 2.0 \
-#                - (2.0 * D * A) ** 2.0) / (4.0 * D * l * A)
-
-#    def get_mu(self):
-#
-#        return self._l1.get_mu()
-#
-#    def set_mu(self, mu):
-#
-#        self._l1.set_mu(mu)
-#
-#    def set_data(self, X, y):
-#
-#        super(RidgeRegressionL1, self).set_data(X, y)
-#
-#        self._l1 = loss_functions.SmoothL1(self.get_h().l,
-#                                           mu=1e-12,
-#                                           num_variables=X.shape[1])
-#
-#    def free_data(self):
-#
-#        super(RidgeRegressionL1, self).free_data()
-#
-#        del self._l1
-
     def phi(self, beta=None, alpha=None, mu=None, *args, **kwargs):
         """This function returns the associated loss function value for the
         given alpha and beta.

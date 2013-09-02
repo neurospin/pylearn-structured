@@ -1533,12 +1533,16 @@ class SmoothL1(NesterovFunction):
 
         # Compute a*
         alpha = [0]
+#        if True:  # mu > utils.TOLERANCE:
 #        A = self.A()
 #        alpha[0] = A[0].dot(beta) / mu
         alpha[0] = (1.0 / mu) * beta
 
         # Apply projection
         alpha = self.project(alpha)
+#        else:  # mu <= TOLERANCE
+#
+#            alpha[0] = (-1.0 / self.gamma) * min(1.0, )
 
         return alpha
 
