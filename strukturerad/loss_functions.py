@@ -213,12 +213,14 @@ class NesterovFunction(LossFunction,
             return self.gamma * np.dot(beta.T, grad)[0, 0]
 
         else:
-            alpha_sqsum = 0.0
-            for a in alpha:
-                alpha_sqsum += np.sum(a ** 2.0)
+#            alpha_sqsum = 0.0
+#            for a in alpha:
+#                alpha_sqsum += np.sum(a ** 2.0)
 
-            return self.gamma * (np.dot(beta.T, grad)[0, 0] \
-                                 - (mu / 2.0) * alpha_sqsum)
+#            print "alpha: ", alpha_sqsum
+
+            return self.gamma * (np.dot(beta.T, grad)[0, 0])  # \
+#                                 - (mu / 2.0) * alpha_sqsum)
 
     def grad(self, beta, alpha=None, mu=None):
 
@@ -430,27 +432,30 @@ class CombinedNesterovLossFunction(NesterovFunction, DataDependent):
 
         return self.a.f(*args, **kwargs) + self.b.f(*args, **kwargs)
 
-    def phi(self, beta, alpha):
+    def phi(self, beta, alpha, *args, **kwargs):
 
         if isinstance(self.a, NesterovFunction) \
                 and isinstance(self.b, NesterovFunction):
 
             groups_a = self.a.num_groups()
 
-            return self.a.phi(beta, alpha[:groups_a]) \
-                    + self.b.phi(beta, alpha[groups_a:])
+            return self.a.phi(beta, alpha[:groups_a], *args, **kwargs) \
+                    + self.b.phi(beta, alpha[groups_a:], *args, **kwargs)
 
         elif isinstance(self.a, NesterovFunction):
 
-            return self.a.phi(beta, alpha) + self.b.f(beta)
+            return self.a.phi(beta, alpha, *args, **kwargs) \
+                    + self.b.f(beta, *args, **kwargs)
 
         elif isinstance(self.b, NesterovFunction):
 
-            return self.a.f(beta) + self.b.phi(beta, alpha)
+            return self.a.f(beta, *args, **kwargs) \
+                    + self.b.phi(beta, alpha, *args, **kwargs)
 
         else:
 
-            return self.a.f(beta) + self.b.f(beta)
+            return self.a.f(beta, *args, **kwargs) \
+                    + self.b.f(beta, *args, **kwargs)
 
     def grad(self, *args, **kwargs):
 
@@ -1453,6 +1458,7 @@ class SmoothL1(NesterovFunction):
         self.mask = mask
         self.compress = compress
         self.num_variables = num_variables
+        self.l = self.gamma
 
         if A != None:
 

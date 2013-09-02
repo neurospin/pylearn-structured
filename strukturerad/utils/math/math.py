@@ -10,7 +10,7 @@ Created on Tue Jul 30 20:55:58 2013
 import strukturerad.utils as utils
 import numpy as np
 
-__all__ = ['norm', 'norm1', 'norm0', 'sign', 'cov', 'corr']
+__all__ = ['norm', 'norm1', 'norm0', 'normInf', 'sign', 'cov', 'corr']
 
 norm = np.linalg.norm
 
@@ -21,6 +21,10 @@ def norm1(x):
 
 def norm0(x):
     return np.count_nonzero(np.absolute(x))
+
+
+def normInf(x):
+    return norm(x, ord=float('inf'))
 
 
 def sign(v):

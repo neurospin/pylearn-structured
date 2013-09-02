@@ -93,7 +93,7 @@ def _generate(l1, l2, density, snr, M, e):
     beta = np.zeros((p, 1))
     for i in xrange(p):
         if i < ps:
-            beta[i, 0] = U(0, 1) * snr / np.sqrt(ps)
+            beta[i, 0] = U(-1, 1) * snr / np.sqrt(ps)
         else:
             beta[i, 0] = 0.0
 #    beta = np.flipud(np.sort(beta, axis=0))

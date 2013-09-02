@@ -30,12 +30,14 @@ __all__ = ['ContinuationFixed',
 
 import abc
 import numpy as np
+import scipy.sparse as sparse
 
 import algorithms
 import loss_functions
 import start_vectors
 
 import utils
+import utils.math as math
 
 
 class BaseModel(object):
@@ -204,8 +206,8 @@ class ContinuationFixed(BaseModel):
 
 class ContinuationGap(BaseModel):
 
-    def __init__(self, model, iterations=100, gap=None, algorithm=None,
-                 *args, **kwargs):
+    def __init__(self, model, iterations=100, continuations=5, gap=None,
+                 algorithm=None, *args, **kwargs):
         """Performs continuation for the given model. I.e. builds
         NesterovProximalGradientMethod models with sucessively, and optimally,
         smaller values of mu and uses the output from the use of one mu as
@@ -218,6 +220,8 @@ class ContinuationGap(BaseModel):
 
         iterations : The number of iterations in each continuation.
 
+        continuations : The number of continuations.
+
         gap : The gap to use in the first continuation. Default is
                 mu = max(abs(cov(X,y))) and then
                 gap = model.compute_gap(mu).
@@ -229,12 +233,17 @@ class ContinuationGap(BaseModel):
         else:
             model.set_algorithm(algorithm)
 
-        super(ContinuationGap, self).__init__(num_comp=1, algorithm=algorithm,
+        super(ContinuationGap, self).__init__(algorithm=algorithm,
                                               *args, **kwargs)
 
         self.model = model
         self.iterations = iterations
+        self.continuations = continuations
         self.gap = gap
+
+    def beta(self):
+
+        return self._beta
 
     def get_transform(self, index=0):
 
@@ -250,13 +259,14 @@ class ContinuationGap(BaseModel):
 
     def fit(self, X, y, **kwargs):
 
-        max_iter = self.get_max_iter()
+#        max_iter = self.get_max_iter()
         self.model.set_max_iter(self.iterations)
         self.model.set_data(X, y)
         start_vector_mu = self.model.get_start_vector()
 #        start_vector_nomu = self.model.get_start_vector()
         if self.gap == None:
-            mu = max(np.max(np.abs(utils.corr(X, y))), 0.01)  # Necessary?
+            mu = max(np.max(np.abs(math.corr(X, y))), 0.01)  # Necessary?
+            self.model.set_data(X, y)
             gap_mu = self.model.compute_gap(mu)
         else:
             gap_mu = self.gap
@@ -268,10 +278,10 @@ class ContinuationGap(BaseModel):
 
         tau = 1.1
         eta = 2.0
-        mu_zero = 5e-12
+        mu_zero = 5e-10
 
         f = []
-        for i in xrange(1, max_iter + 1):
+        for i in xrange(1, self.continuations + 1):
 
 #            self.model.set_max_iter(float(self.iterations) / float(i))
 
@@ -279,33 +289,42 @@ class ContinuationGap(BaseModel):
             self.model.set_mu(mu)
             self.model.set_start_vector(start_vector_mu)
             self.model.fit(X, y, **kwargs)
-            f = f + self.model.get_algorithm().f[1:]  # Skip the first, same
+            output = self.model.output
+#            f = f + self.model.get_algorithm().f[1:]  # Skip the first, same
+            f += output['f']
             beta_old = beta_new
             beta_new = self.model.get_transform()
             start_vector_mu = start_vectors.IdentityStartVector(beta_new)
 
             self.model.set_start_vector(start_vector_mu)
-            alpha_mu = self.model.get_g().alpha()
-            gap_mu = self.model.phi(beta=beta_new, alpha=alpha_mu) \
-                        - self.model.phi(beta=None, alpha=alpha_mu)
+            self.model.set_data(X, y)
+            alpha_mu = self.model.get_g().alpha(beta_new, mu=mu)
+            a = self.model.phi(beta=beta_new, alpha=alpha_mu, mu=mu)
+            b = self.model.phi(beta=None, alpha=alpha_mu, mu=mu)
+            gap_mu = a - b
 
-            utils.debug("With mu: Continuation with mu = ",
+            utils.debug("With mu: mu = ",
                                 self.model.get_mu(), \
                     ", tolerance = ", self.model.get_tolerance(), \
-                    ", iterations = ", self.model.get_algorithm().iterations, \
+                    ", iterations = ", output['iterations'], \
                     ", gap = ", gap_mu)
 
             # With mu "very small"
-            self.model.set_mu(min(mu, mu_zero))
-            alpha_nomu = self.model.get_g().alpha(beta_new, min(mu, mu_zero))
-            gap_nomu = self.model.phi(beta=beta_new, alpha=alpha_nomu) \
-                        - self.model.phi(beta=None, alpha=alpha_nomu,
-                                         mu=min(mu, mu_zero))
+            mu_zero = min(mu, mu_zero)
+            self.model.set_mu(mu_zero)
+            self.model.set_data(X, y)
+            alpha_nomu = self.model.get_g().alpha(beta_new, mu=mu_zero)
 
-            utils.debug("No mu: Continuation with mu = ",
-                                self.model.get_mu(), \
+            a = self.model.phi(beta=beta_new, alpha=alpha_nomu, mu=mu_zero)
+            b = self.model.phi(beta=None, alpha=alpha_nomu, mu=mu_zero)
+            print "a:", a
+            print "b:", b
+            gap_nomu = a - b
+
+            utils.debug("No mu: mu = ",
+                                mu_zero, \
                     ", tolerance = ", self.model.get_tolerance(), \
-                    ", iterations = ", self.model.get_algorithm().iterations, \
+                    ", iterations = ", output['iterations'], \
                     ", gap = ", gap_nomu)
 
             if gap_nomu < self.model.get_tolerance():
@@ -316,7 +335,7 @@ class ContinuationGap(BaseModel):
 #                print "Converged in f!!"
 #                break
 
-            if utils.norm1(beta_old - beta_new) < self.model.get_tolerance():
+            if math.norm1(beta_old - beta_new) < self.model.get_tolerance():
                 print "Converged in beta!!"
                 break
 
@@ -329,10 +348,11 @@ class ContinuationGap(BaseModel):
 
         self._beta = beta_new
 
-        self.model.get_algorithm().f = f
-        self.model.get_algorithm().iterations = len(f)
+#        self.model.get_algorithm().f = f
+#        self.model.get_algorithm().iterations = len(f)
+        self.output = {'f': f, 'iterations': len(f)}
 
-        self.model.set_max_iter(max_iter)
+#        self.model.set_max_iter(max_iter)
 
         return self
 
@@ -401,11 +421,11 @@ class NesterovProximalGradientMethod(BaseModel):
         return self.get_g().f(*args, **kwargs) \
                 + self.get_h().f(*args, **kwargs)
 
-    def phi(self, beta=None, alpha=None, *args, **kwargs):
-        """This function returns the associated loss function value for the
-        given alpha and beta.
-        """
-        return self.get_g().phi(beta, alpha) + self.get_h().f(beta)
+#    def phi(self, beta=None, alpha=None, *args, **kwargs):
+#        """This function returns the associated loss function value for the
+#        given alpha and beta.
+#        """
+#        return self.get_g().phi(beta, alpha) + self.get_h().f(beta)
 
     def alpha(self, beta=None, mu=None):
         """Computes the alpha that maximises the smoothed loss function for the
@@ -428,16 +448,19 @@ class NesterovProximalGradientMethod(BaseModel):
         def f(eps):
             return self.compute_mu(eps) - mu
 
+        mu = float(mu)
         D = self.get_g().num_compacts() / 2.0
-        lb = 2.0 * D * mu
+        # mu < eps / D => eps > mu * D
+        lb = mu * D
         ub = lb * 100.0
         a = f(lb)
         b = f(ub)
 
-        # Do a binary search for the upper limit. It seems that when mu become
-        # very small (e.g. < 1e-8), the lower bound is not correct. Therefore
-        # we do a full search for both the lower and upper bounds.
+        # Do a binary search for the upper limit. Therefore we do a full
+        # search for both the lower and upper bounds.
         for i in xrange(max_iter):
+
+#            print "a:", a, ", b:", b, "lb:", lb, ", ub:", ub
 
             if a > 0.0 and b > 0.0 and a < b:
                 ub = lb
@@ -462,16 +485,17 @@ class NesterovProximalGradientMethod(BaseModel):
 
         return bm.x
 
-    def compute_mu(self, eps):
+    def compute_mu(self, eps, max_iter=100):
 
+        eps = float(eps)
         g = self.get_g()
         D = g.num_compacts() / 2.0
 
         def f(mu):
             return -(eps - mu * D) / g.Lipschitz(mu)
 
-        gs = algorithms.GoldenSectionSearch()
-        gs.run(utils.AnonymousClass(f=f), utils.TOLERANCE, eps / (2.0 * D))
+        gs = algorithms.GoldenSectionSearch(max_iter=max_iter)
+        gs.run(utils.AnonymousClass(f=f), utils.TOLERANCE, eps / D)
 
 #        ts = algorithms.TernarySearch(utils.AnonymousClass(f=f))
 #        ts.run(utils.TOLERANCE, eps / D)
@@ -585,19 +609,21 @@ class LinearRegressionTV(NesterovProximalGradientMethod):
         tv = g.b
 
         D = tv.num_compacts() / 2.0
+        # A contains gamma ** 2.0
         A = tv.Lipschitz(1.0)
         l = lr.Lipschitz()
 
         return (-2.0 * D * A + np.sqrt((2.0 * D * A) ** 2.0 \
                 + 4.0 * D * l * eps * A)) / (2.0 * D * l)
 
-    def compute_gap(self, mu, max_iter=100):
+    def compute_gap(self, mu):
 
         g = self.get_g()
         lr = g.a
         tv = g.b
 
         D = tv.num_compacts() / 2.0
+        # A contains gamma ** 2.0
         A = tv.Lipschitz(1.0)
         l = lr.Lipschitz()
 
@@ -674,11 +700,150 @@ class RidgeRegressionL1(RidgeRegression):
 
     k : The L2 parameter.
     """
-    def __init__(self, l, k, **kwargs):
+    def __init__(self, l, k, num_variables, mu=None, **kwargs):
 
         super(RidgeRegressionL1, self).__init__(k, **kwargs)
 
-        self.set_h(loss_functions.L1(l))
+#        self.set_h(loss_functions.L1(l))
+#        self._l1 = None
+
+        l1 = loss_functions.SmoothL1(l,
+                                     mu=mu,
+                                     num_variables=num_variables)
+        rr = self.get_g()
+        self.set_g(loss_functions.CombinedNesterovLossFunction(rr, l1))
+
+#    def alpha(self, beta):
+#
+#        return self._l1.alpha(beta)
+
+#    def compute_mu(self, eps):
+#
+#        rr = self.get_g()
+#        l1 = self._l1
+#
+#        D = l1.num_compacts() / 2.0
+#        # A contains gamma ** 2.0
+#        A = l1.Lipschitz(1.0)
+#        l = rr.Lipschitz()
+#
+#        return (-2.0 * D * A + np.sqrt((2.0 * D * A) ** 2.0 \
+#                + 4.0 * D * l * eps * A)) / (2.0 * D * l)
+#
+#    def compute_gap(self, mu):
+#
+#        rr = self.get_g()
+#        l1 = self._l1
+#
+#        D = l1.num_compacts() / 2.0
+#        # A contains gamma ** 2.0
+#        A = l1.Lipschitz(1.0)
+#        l = rr.Lipschitz()
+#
+#        return ((2.0 * mu * D * l + 2.0 * D * A) ** 2.0 \
+#                - (2.0 * D * A) ** 2.0) / (4.0 * D * l * A)
+
+#    def get_mu(self):
+#
+#        return self._l1.get_mu()
+#
+#    def set_mu(self, mu):
+#
+#        self._l1.set_mu(mu)
+#
+#    def set_data(self, X, y):
+#
+#        super(RidgeRegressionL1, self).set_data(X, y)
+#
+#        self._l1 = loss_functions.SmoothL1(self.get_h().l,
+#                                           mu=1e-12,
+#                                           num_variables=X.shape[1])
+#
+#    def free_data(self):
+#
+#        super(RidgeRegressionL1, self).free_data()
+#
+#        del self._l1
+
+    def phi(self, beta=None, alpha=None, mu=None, *args, **kwargs):
+        """This function returns the associated loss function value for the
+        given alpha and beta.
+
+        If alpha or beta is not given, they are computed.
+        """
+        g = self.get_g()
+        rr = g.a
+        l1 = g.b
+
+        if mu == None:
+            mu = self.get_mu()
+
+        if alpha == None:
+#            alpha = self.get_g().alpha(beta)
+            raise ValueError("w00t?!")
+
+        elif beta == None:
+            X, y = self.get_data()
+#            beta = self._beta
+
+            beta_k = self.beta()
+
+            lAa = l1.grad(beta_k, alpha=alpha, mu=mu)
+            grad_rr = rr.grad(beta_k)
+            A_l1 = sparse.vstack(l1.A())
+            alpha_corr = -grad_rr / math.normInf(grad_rr)
+            lAa_corr = l1.gamma * A_l1.dot(alpha_corr)
+            i = beta < utils.TOLERANCE
+            lAa[i] = lAa_corr[i]
+
+##            alpha_k = l1.alpha(beta_k, mu=mu_zero)
+#            rr_grad = rr.grad(beta_k)
+#            a = -rr_grad / math.normInf(rr_grad)
+#            alpha = alpha[0]
+#            i = alpha[0] < utils.TOLERANCE
+#            alpha[i] = a[i]
+#            alpha = [alpha]
+
+            if not hasattr(self, '_XtinvXXtlI'):
+                invXXtlI = np.linalg.inv(np.dot(X, X.T) \
+                                            + rr.l * np.eye(X.shape[0]))
+                self._XtinvXXtlI = np.dot(X.T, invXXtlI)
+                self._Xty = np.dot(y.T, X).T
+
+            wk_ = (self._Xty - lAa) / rr.l
+            beta = wk_ - np.dot(self._XtinvXXtlI, np.dot(X, wk_))
+
+#            return g.phi(beta, alpha, mu=mu)
+#            return rr.f(beta) + l1.phi(beta, alpha, mu=mu)
+
+#            tv = self.get_g().b
+#            Aa = tv.grad() <-- WARNING!
+#            tv = loss_functions.LinearLossFunction(Aa)
+#            dual_model = NesterovProximalGradientMethod()
+#            dual_model.set_start_vector(self.get_start_vector())
+#            dual_model.set_max_iter(self.get_max_iter())
+#            dual_model.set_g(loss_functions.CombinedNesterovLossFunction(rr,
+#                                                                         tv))
+#            dual_model.set_h(self.get_h())
+#
+#            dual_model.fit(X, y, early_stopping=False)
+#            beta = dual_model._beta
+
+#            print "diff:", np.sum((beta_ - beta) ** 2.0)
+
+#        beta_k = self.beta()
+##        lAa = l1.grad(beta_k, alpha=alpha, mu=mu)
+#        grad_rr = rr.grad(beta_k)
+##        A_l1 = sparse.vstack(l1.A())
+#        alpha_corr = -grad_rr / math.normInf(grad_rr)
+##        lAa_corr = l1.gamma * A_l1.dot(alpha_corr)
+#        i = beta < utils.TOLERANCE
+#        alpha = alpha[0]
+#        alpha[i] = alpha_corr[i]
+#        alpha = [alpha]
+
+        return g.phi(beta, alpha, mu=mu)  # + l1.f(beta)
+#        return rr.f(beta) + l1.phi(beta, alpha)
 
 
 class RidgeRegressionTV(RidgeRegression):
