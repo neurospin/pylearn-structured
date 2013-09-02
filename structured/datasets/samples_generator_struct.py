@@ -279,7 +279,11 @@ def model_parameters(Xim, sigma_spatial_smoothing,
     Dist_sel = np.sqrt((ij_im[0][np.newaxis].T - ij_im[0]) ** 2 + \
         (ij_im[1][np.newaxis].T - ij_im[1]) ** 2)
     # True correlation between noize pixels: CorN_sel
-    CorN_sel = np.exp(-Dist_sel ** 2 / (4 * sigma_spatial_smoothing ** 2))
+    if sigma_spatial_smoothing != 0:
+        CorN_sel = np.exp(-Dist_sel ** 2 / (4 * sigma_spatial_smoothing ** 2))
+    else:
+        CorN_sel = np.eye(Dist_sel.shape[0])
+    #CorN_sel = np.diag(np.diag(CorN_sel))
     # True cov between noize pixels: CovN_sel
     CovN_sel = CorN_sel * sigma_e ** 2  # + 2 * mu_e = 0
     # True cov between pixels: Cov. Depends on o_k and y
@@ -464,8 +468,9 @@ def make_regression_struct(n_samples=100, n_features=900, R=.5,
 
     ##########################################################################
     ## 1. Pixel-level noize structure: spatial smoothing
-    Xim = spatial_smoothing(Xim, sigma_spatial_smoothing, mu_e, sigma_e)
-    X = Xim.reshape((Xim.shape[0], Xim.shape[1] * Xim.shape[2]))
+    if sigma_spatial_smoothing != 0:
+        Xim = spatial_smoothing(Xim, sigma_spatial_smoothing, mu_e, sigma_e)
+        X = Xim.reshape((Xim.shape[0], Xim.shape[1] * Xim.shape[2]))
     #print X.mean(axis=0), X.std(axis=0)
     #print y.mean()
 
@@ -513,7 +518,6 @@ if __name__ == '__main__':
         ticks = np.array([-mx, -mx/4 -mx/2, 0, mx/2, mx/2, mx]).round(k+2)
         cbar = plt.colorbar(cax, ticks=ticks)
         cbar.set_clim(vmin=-mx, vmax=mx)
-        #return fig, ax
 
     def sinv(M):
         lu_obj = scipy.sparse.linalg.splu(M.tocsr())
@@ -523,13 +527,41 @@ if __name__ == '__main__':
     n_samples = 1000
     n_features = 2500
     R = .5
+    sigma_spatial_smoothing = 2
     Xim, y, CovX, covXy, labels = make_regression_struct(n_samples=n_samples,
-                                          n_features=n_features, R=R,
-                                          sigma_spatial_smoothing=1,
-                                          beta_o=.5, objects=None)
+        n_features=n_features, R=R,
+        sigma_spatial_smoothing=sigma_spatial_smoothing,
+        beta_o=.5, objects=None)
     _, lx, ly = Xim.shape
-#    y = y.ravel()
+    ## DEBUG
+    ij_im = np.where(labels !=  -1)
+    # get euclidian distances between pixel in the selection
+    Dist = np.sqrt((ij_im[0][np.newaxis].T - ij_im[0]) ** 2 + \
+        (ij_im[1][np.newaxis].T - ij_im[1]) ** 2)
+    # True correlation between noize pixels: CorN_sel
+    CovN = np.exp(-Dist ** 2 / (4 * sigma_spatial_smoothing ** 2)) \
+        * 1 ** 2
+    plt.matshow(CovN, cmap=plt.cm.coolwarm)
+    plt.colorbar()
+    plt.show()
+    plt.matshow(CovXd, cmap=plt.cm.coolwarm)
+    plt.colorbar()
+    plt.show()
+    U, s, Vh = scipy.linalg.svd(CovXd)
+    k = 10
+    Uk = U[:, s>k]
+    sk = s[s>k]
+    Vhk = Vh[s>k, :]
+    CovXinv = np.dot(Vhk.T * 1./sk, Uk.T)
+    weights = np.dot(CovXinv, covXy)
+    pred = np.dot(Xte, weights)
+    plot_map(weights.reshape((lx, ly)), plot)
+    plt.title("Optimal weigths. (R2=%.2f)" % r2_score(yte, pred))
+    plt.show()
 
+    ## DEBUG
+    CovXd = CovX.todense()
+    CovXd[CovXd==0] = CovN[CovXd==0]
     X = Xim.reshape((n_samples, lx * ly))
     from sklearn.metrics import r2_score
     n_train = min(100, int(X.shape[1] / 10))
@@ -549,7 +581,8 @@ if __name__ == '__main__':
     plt.title("Corr(X, y)")
 
     plot = plt.subplot(333)
-    weights = np.dot(sinv(CovX), covXy)
+    #weights = np.dot(sinv(CovX), covXy)
+    weights = np.dot(scipy.linalg.inv(CovXd), covXy)
     pred = np.dot(Xte, weights)
     plot_map(weights.reshape((lx, ly)), plot)
     plt.title("Optimal weigths. (R2=%.2f)" % r2_score(yte, pred))
