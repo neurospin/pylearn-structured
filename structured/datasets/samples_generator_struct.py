@@ -413,8 +413,8 @@ def make_regression_struct(n_samples=100, n_features=900, R=.5,
     o_k ~ N(0, 1) is the object-level noize, for all objects k in [1, n_objects]
     y   ~ N(0, 1) is the target variable
 
-    Procedure: (1) Generate e_i; (2) Spatial Smoothing; (3) Add object level noize;
-    (4) Add y on causal pixels.
+    Procedure: (1) Generate e_i; (2) Add object level noize;
+    (3) Add y on causal pixels; (4) Spatial Smoothing; 
 
     b_y is null outside objects. Within causal object, it is computed such that
     corr(x_ki, y) = R
@@ -443,7 +443,13 @@ def make_regression_struct(n_samples=100, n_features=900, R=.5,
     """
     sigma_y = sigma_e = sigma_o = 1  # items std-dev
     mu_e = mu_y = 0
-    nrow = ncol = int(np.round(np.sqrt(n_features)))
+    k = np.round(np.sqrt(n_features))
+    while (float(n_features) / k) != int(float(n_features) / k):
+        k -= 1
+        if k == 1:
+            raise ValueError("Could not find nrow x ncol == %i" % n_features)
+    ncol = int(k)
+    nrow = int(n_features / k)
 
     ##########################################################################
     ## 1. Build images with noize => e_ij
@@ -482,7 +488,7 @@ def make_regression_struct(n_samples=100, n_features=900, R=.5,
 #                     beta_o, beta_y,
 #                     objects, y)
     ##########################################################################
-    ## 1. Pixel-level noize structure: spatial smoothing
+    ## 5. Pixel-level noize structure: spatial smoothing
     if sigma_spatial_smoothing != 0:
         Xim = spatial_smoothing(Xim, sigma_spatial_smoothing, mu_e, sigma_e)
         #X = Xim.reshape((Xim.shape[0], Xim.shape[1] * Xim.shape[2]))
@@ -514,9 +520,9 @@ if __name__ == '__main__':
         return Minv
 
     n_samples = 1000
-    n_features = 10000#2500
+    n_features = 10000
     R = .25
-    sigma_spatial_smoothing = 1
+    sigma_spatial_smoothing = 2
     Xim, y, labels = make_regression_struct(n_samples=n_samples,
         n_features=n_features, R=R,
         sigma_spatial_smoothing=sigma_spatial_smoothing,
