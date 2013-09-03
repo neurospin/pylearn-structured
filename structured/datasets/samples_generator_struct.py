@@ -155,23 +155,23 @@ def get_objects_edges(objects):
 
 ############################################################################
 ## Objects builder
-def dice_five(lx, ly):
-    s_obj = np.floor(lx / 7)
+def dice_five(nrow, ncol):
+    s_obj = np.floor(nrow / 7)
     objects = list()
     ## corner dots
     for k in [1, 3]:
-        c_x = k * lx / 4.
-        c_y = ly / 4.
-        o_info = Dot(c_x=c_x, c_y=c_y, size=s_obj, im_x=lx, im_y=ly)
+        c_x = k * nrow / 4.
+        c_y = ncol / 4.
+        o_info = Dot(c_x=c_x, c_y=c_y, size=s_obj, im_x=nrow, im_y=ncol)
         objects.append(o_info)
-        c_y = ly - (ly / 4.)
-        o_supp = Dot(c_x=c_x, c_y=c_y, size=s_obj, im_x=lx, im_y=ly)
+        c_y = ncol - (ncol / 4.)
+        o_supp = Dot(c_x=c_x, c_y=c_y, size=s_obj, im_x=nrow, im_y=ncol)
         objects.append(o_supp)
         o_info.set_suppresor(o_supp)
     ## dot in the middle
-    c_x = lx / 2.
-    c_y = ly / 2.
-    o_info = Dot(c_x=c_x, c_y=c_y, size=s_obj, im_x=lx, im_y=ly)
+    c_x = nrow / 2.
+    c_y = ncol / 2.
+    o_info = Dot(c_x=c_x, c_y=c_y, size=s_obj, im_x=nrow, im_y=ncol)
     objects.append(o_info)
     return objects
 
@@ -194,27 +194,34 @@ def spatial_smoothing(Xim, sigma, mu_e, sigma_e):
 def object_model(objects, Xim, beta_o, sigma_o):
     """Add object variance: x_ki =  b_o^1/2 * o_k + (1 - b_o)^1/2 * e_i
     """
+    labels_im = np.zeros(Xim.shape[1:], dtype=int)  # image of objects label
+    label = 0
     for k in xrange(len(objects)):
         o = objects[k]
         #print o.is_suppressor, o.suppressor
         if o.is_suppressor:
             continue
+        label += 1
+        o.label = label
         # A) Add object latent variable
         mask_o = o.get_mask()
+        labels_im[mask_o] = o.label
         o_ik = np.random.normal(0, sigma_o, Xim.shape[0])
         o_ik -= o_ik.mean()  # - 0
         o_ik /= o_ik.std() * sigma_o
         Xim[:, mask_o] = (np.sqrt(beta_o) * o_ik + \
                         np.sqrt(1 - beta_o) * Xim[:, mask_o].T).T
         if o.suppressor is not None:
+            o.suppressor.label = -label
             mask_o_suppr = o.suppressor.get_mask()
+            labels_im[mask_o_suppr] = o.suppressor.label
             Xim[:, mask_o_suppr] = (np.sqrt(beta_o) * o_ik + \
                        np.sqrt(1 - beta_o) * Xim[:, mask_o_suppr].T).T
 #        X = Xim.reshape((Xim.shape[0], Xim.shape[1] * Xim.shape[2]))
 #        # Spatial smoothing reduced the std-dev, reset it to 1
 #        X -= X.mean(axis=0) + (mu_o + mu_e)  # Also ensure null mean
 #        X /= X.std(axis=0) * sigma_e
-    return Xim
+    return Xim, labels_im
 
 
 ############################################################################
@@ -237,11 +244,11 @@ def causal_model(objects, Xim, y, R):
 def model_parameters(Xim, sigma_spatial_smoothing,
                      sigma_e, sigma_y,
                      beta_o, beta_y,
-                     objects, y):
+                     objects, y, labels_im):
     """Compute theoretical and empirical model parameters.
     Parameters
     ----------
-    Xim: array [n_samples, lx, ly]
+    Xim: array [n_samples, nrow, ncol]
 
     sigma_e float
         noize std-dev
@@ -262,16 +269,8 @@ def model_parameters(Xim, sigma_spatial_smoothing,
     covXy: array [n_features,]
         X, y covariance matrix
     """
-    n_samples, lx, ly = Xim.shape
-    n_features = lx * ly
-    # build global mask of objects and image of objects label
-    labels_im = np.zeros((lx, ly), dtype=int)  # image of objects label
-    label = 0
-    for k in xrange(len(objects)):
-        label += 1
-        io = objects[k]
-        io.label = label
-        labels_im[io.get_mask()] = label
+    n_samples, nrow, ncol = Xim.shape
+    n_features = nrow * ncol
     mask_im = labels_im != 0
     ij_im = np.where(mask_im)  # ij of objects in image
     i_flt = np.where(mask_im.ravel())[0]  # i of objects in flatten image
@@ -342,8 +341,7 @@ def model_parameters(Xim, sigma_spatial_smoothing,
     diag = CovXs.diagonal()
     diag[diag == 0] = float(sigma_e) ** 2
     CovXs.setdiag(diag)
-    return CovXs, covXy, labels_im
-
+    return CovXs, covXy
 
 ############################################################################
 ## Parameters
@@ -398,15 +396,6 @@ def make_regression_struct(n_samples=100, n_features=900, R=.5,
     y: array of shape [n_sample, 1]
         the target variable.
 
-    CovX: Sparse rarray [n_features, n_features]
-        The theoretical (population based) covariance matrix of input
-        features. Warning! To keep the matrix sparse covariance outside
-        objects (in noize) is ommited. It can be easly calculated using the
-        formula: exp(-dist_euc^2/(4 * sigma_spatial_smoothing^2)) * sigma_e^2
-
-    covXy: array [n_features, 1]
-        X, y covariance vector
-
     label: integer array of shape [nrows, ncols]
         An image obects support in the image
 
@@ -454,34 +443,30 @@ def make_regression_struct(n_samples=100, n_features=900, R=.5,
     """
     sigma_y = sigma_e = sigma_o = 1  # items std-dev
     mu_e = mu_y = 0
-    lx = ly = int(np.round(np.sqrt(n_features)))
+    nrow = ncol = int(np.round(np.sqrt(n_features)))
 
     ##########################################################################
     ## 1. Build images with noize => e_ij
-    X = np.random.normal(mu_e, sigma_e, n_samples * lx * ly).reshape(n_samples,
-                                                                     lx * ly)
-    Xim = X.reshape(n_samples, lx, ly)
+    X = np.random.normal(mu_e, sigma_e, n_samples * nrow * ncol).reshape(n_samples,
+                                                                     nrow * ncol)
+    Xim = X.reshape(n_samples, nrow, ncol)
     y = np.random.normal(mu_y, sigma_y, n_samples)
     y -= y.mean()
     y /= y.std()
     #print X.mean(axis=0), X.std(axis=0)
 
-    ##########################################################################
-    ## 1. Pixel-level noize structure: spatial smoothing
-    if sigma_spatial_smoothing != 0:
-        Xim = spatial_smoothing(Xim, sigma_spatial_smoothing, mu_e, sigma_e)
-        X = Xim.reshape((Xim.shape[0], Xim.shape[1] * Xim.shape[2]))
+
     #print X.mean(axis=0), X.std(axis=0)
     #print y.mean()
 
     ##########################################################################
     ## 2. Build Objects
     if objects is None:
-        objects = dice_five(lx, ly)
+        objects = dice_five(nrow, ncol)
 
     ##########################################################################
     ## 3. Object-level noize structure
-    Xim = object_model(objects, Xim, beta_o, sigma_o)
+    Xim, labels = object_model(objects, Xim, beta_o, sigma_o)
     #X = Xim.reshape((Xim.shape[0], Xim.shape[1]*Xim.shape[2]))
     #print X.mean(axis=0), X.std(axis=0)
 
@@ -489,17 +474,21 @@ def make_regression_struct(n_samples=100, n_features=900, R=.5,
     ## 4. Causal model
     Xim, beta_y = causal_model(objects, Xim, y, R)
 
-    #X = Xim.reshape((Xim.shape[0], Xim.shape[1]*Xim.shape[2]))
-    #print X.mean(axis=0), X.std(axis=0)
-
+    #weights = get_optimal_weights(beta_o, beta_y, sigma_e, sigma_y, labels, objects)
+#    ##########################################################################
+#    ## 6. Compute model parameters
+#    CovX, covXy, labels_im = model_parameters(Xim, sigma_spatial_smoothing,
+#                     sigma_e, sigma_y,
+#                     beta_o, beta_y,
+#                     objects, y)
     ##########################################################################
-    ## 6. Compute model parameters
-    CovX, covXy, labels_im = model_parameters(Xim, sigma_spatial_smoothing,
-                     sigma_e, sigma_y,
-                     beta_o, beta_y,
-                     objects, y)
-    return Xim, y.reshape((n_samples, 1)), \
-        CovX, covXy.reshape((n_features, 1)), labels_im
+    ## 1. Pixel-level noize structure: spatial smoothing
+    if sigma_spatial_smoothing != 0:
+        Xim = spatial_smoothing(Xim, sigma_spatial_smoothing, mu_e, sigma_e)
+        #X = Xim.reshape((Xim.shape[0], Xim.shape[1] * Xim.shape[2]))
+    return Xim, y.reshape((n_samples, 1)), labels
+    
+#        CovX, covXy.reshape((n_features, 1)), labels_im
 
 
 if __name__ == '__main__':
@@ -525,44 +514,16 @@ if __name__ == '__main__':
         return Minv
 
     n_samples = 1000
-    n_features = 2500
-    R = .5
-    sigma_spatial_smoothing = 2
-    Xim, y, CovX, covXy, labels = make_regression_struct(n_samples=n_samples,
+    n_features = 10000#2500
+    R = .25
+    sigma_spatial_smoothing = 1
+    Xim, y, labels = make_regression_struct(n_samples=n_samples,
         n_features=n_features, R=R,
         sigma_spatial_smoothing=sigma_spatial_smoothing,
         beta_o=.5, objects=None)
-    _, lx, ly = Xim.shape
-    ## DEBUG
-    ij_im = np.where(labels !=  -1)
-    # get euclidian distances between pixel in the selection
-    Dist = np.sqrt((ij_im[0][np.newaxis].T - ij_im[0]) ** 2 + \
-        (ij_im[1][np.newaxis].T - ij_im[1]) ** 2)
-    # True correlation between noize pixels: CorN_sel
-    CovN = np.exp(-Dist ** 2 / (4 * sigma_spatial_smoothing ** 2)) \
-        * 1 ** 2
-    plt.matshow(CovN, cmap=plt.cm.coolwarm)
-    plt.colorbar()
-    plt.show()
-    plt.matshow(CovXd, cmap=plt.cm.coolwarm)
-    plt.colorbar()
-    plt.show()
-    U, s, Vh = scipy.linalg.svd(CovXd)
-    k = 10
-    Uk = U[:, s>k]
-    sk = s[s>k]
-    Vhk = Vh[s>k, :]
-    CovXinv = np.dot(Vhk.T * 1./sk, Uk.T)
-    weights = np.dot(CovXinv, covXy)
-    pred = np.dot(Xte, weights)
-    plot_map(weights.reshape((lx, ly)), plot)
-    plt.title("Optimal weigths. (R2=%.2f)" % r2_score(yte, pred))
-    plt.show()
+    _, nrow, ncol = Xim.shape
 
-    ## DEBUG
-    CovXd = CovX.todense()
-    CovXd[CovXd==0] = CovN[CovXd==0]
-    X = Xim.reshape((n_samples, lx * ly))
+    X = Xim.reshape((n_samples, nrow * ncol))
     from sklearn.metrics import r2_score
     n_train = min(100, int(X.shape[1] / 10))
     Xtr = X[:n_train, :]
@@ -570,92 +531,116 @@ if __name__ == '__main__':
     Xte = X[n_train:, :]
     yte = y[n_train:]
 
-    plt.figure()#figsize=(10, 10))
+    plt.figure()
     plot = plt.subplot(331)
-    cax = plot.matshow(labels)
-    plt.title("Objects: 2 and 5 are suppressors")
+    plot_map(np.sign(labels), plot)
+    plt.title("Objects: blue are suppressors")
 
-    cor = np.dot(Xtr.T, ytr).reshape(lx, ly) / ytr.shape[0]
+    cor = np.dot(Xtr.T, ytr).reshape(nrow, ncol) / ytr.shape[0]
     plot = plt.subplot(332)
     plot_map(cor, plot)
     plt.title("Corr(X, y)")
 
-    plot = plt.subplot(333)
-    #weights = np.dot(sinv(CovX), covXy)
-    weights = np.dot(scipy.linalg.inv(CovXd), covXy)
-    pred = np.dot(Xte, weights)
-    plot_map(weights.reshape((lx, ly)), plot)
-    plt.title("Optimal weigths. (R2=%.2f)" % r2_score(yte, pred))
-
-    plot = plt.subplot(334)
-    weights_hat = np.dot(scipy.linalg.pinv(Xtr), ytr)
-    pred = np.dot(Xte, weights_hat)
-    plot_map(weights_hat.reshape((lx, ly)), plot)
-    plt.title("Pinv (R2=%.2f)" % r2_score(yte, pred))
-
-    from sklearn.linear_model import Lasso, LassoCV
+    from sklearn.linear_model import Lasso
     from sklearn.linear_model import ElasticNet, ElasticNetCV
-    from sklearn.linear_model import Ridge, RidgeCV
+    from sklearn.linear_model import Ridge
 
     # Global penalization paapeter: alpha according to:
     # ||y - Xw||^2_2 + alpha penalization
-    alpha_g = 5.
+    alpha_g = 10.
     # Ridge ================================================================
     # Min ||y - Xw||^2_2 + alpha ||w||^2_2
-    plot = plt.subplot(335)
+    plot = plt.subplot(333)
     alpha = alpha_g
     l2 = Ridge(alpha=alpha)
     pred = l2.fit(Xtr, ytr).predict(Xte)
-    plot_map(l2.coef_.reshape((lx, ly)), plot)
+    plot_map(l2.coef_.reshape((nrow, ncol)), plot)
     plt.title("L2 (R2=%.2f)" % r2_score(yte, pred))
 
     # Lasso  ================================================================
     # Min (1 / (2 * n_samples)) * ||y - Xw||^2_2 + alpha * ||w||_1
     alpha = alpha_g * 1. / (2. * n_train)
-    lasso = Lasso(alpha=alpha)
-    pred = lasso.fit(Xtr, ytr).predict(Xte)
-    plot = plt.subplot(336)
-    plot_map(lasso.coef_.reshape((lx, ly)), plot)
-    plt.title("L1 (R2=%.2f)" % r2_score(yte, pred))
+    l1 = Lasso(alpha=alpha)
+    pred = l1.fit(Xtr, ytr).predict(Xte)
+    plot = plt.subplot(334)
+    plot_map(l1.coef_.reshape((nrow, ncol)), plot)
+    plt.title("Lasso (R2=%.2f)" % r2_score(yte, pred))
 
     # Enet  ================================================================
-#    Min: 1 / (2 * n_samples) * ||y - Xw||^2_2 +
-#        + alpha * l1_ratio * ||w||_1
-#        + 0.5 * alpha * (1 - l1_ratio) * ||w||^2_2
+    #    Min: 1 / (2 * n_samples) * ||y - Xw||^2_2 +
+    #        + alpha * l1_ratio * ||w||_1
+    #        + 0.5 * alpha * (1 - l1_ratio) * ||w||^2_2
     alpha = alpha_g * 1. / (2. * n_train)
     l1_ratio = .01
-    enet = ElasticNet(alpha=alpha, l1_ratio=l1_ratio)
-    pred = enet.fit(Xtr, ytr).predict(Xte)
-    plot = plt.subplot(337)
-    plot_map(enet.coef_.reshape((lx, ly)), plot)
-    plt.title("L1L2, 0.01 of L1. (R2=%.2f)" % r2_score(yte, pred))
+    l1l2 = ElasticNet(alpha=alpha, l1_ratio=l1_ratio)
+    pred = l1l2.fit(Xtr, ytr).predict(Xte)
+    plot = plt.subplot(335)
+    plot_map(l1l2.coef_.reshape((nrow, ncol)), plot)
+    plt.title("Elasticnet(a:%.2f, l1:%.2f) (R2=%.2f)" % (l1l2.alpha, l1l2.l1_ratio, r2_score(yte, pred)))
+
+    l1l2cv = ElasticNetCV()
+    pred = l1l2cv.fit(Xtr, ytr).predict(Xte)
+    plot = plt.subplot(336)
+    plot_map(l1l2cv.coef_.reshape((nrow, ncol)), plot)
+    plt.title("ElasticnetCV(a:%.2f, l1:%.2f) (R2=%.2f)" % (l1l2cv.alpha_, l1l2cv.l1_ratio, r2_score(yte, pred)))
+    #plt.show()
     #plt.show()
 
-    l1_ratio = .5
-    enet = ElasticNet(alpha=alpha, l1_ratio=l1_ratio)
-    pred = enet.fit(Xtr, ytr).predict(Xte)
-    plot = plt.subplot(338)
-    plot_map(enet.coef_.reshape((lx, ly)), plot)
-    plt.title("L1L2, 0.50 of L1 (R2=%.2f)" % r2_score(yte, pred))
-    #plt.show()
 
     # TVL1L2 ===============================================================
     import structured.models as models
+    def ratio2coef(alpha, tv_ratio, l1_ratio):
+        l = alpha * (1 - tv_ratio) * l1_ratio
+        k = alpha * (1 - tv_ratio) * (1 - l1_ratio) * 0.5
+        gamma = alpha * tv_ratio
+        return l, k, gamma
     eps = 0.01
-    px = ly
-    py = lx
-    pz = 1
     alpha = alpha_g #Constant that multiplies the penalty terms
-    l1_ratio = .95
-    l = alpha * l1_ratio
-    k = 0.5 * alpha * (1 - l1_ratio)
-    gamma = 1 * alpha
-    pgm = models.LinearRegressionL1L2TV(l=l, k=k, gamma=gamma, shape=(pz, py, px))
+
+    tv_ratio=.05; l1_ratio=.95
+    l, k, gamma = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
+    pgm = models.LinearRegressionL1L2TV(l=l, k=k, gamma=gamma, shape=(1, nrow, ncol))
+    pgm = models.ContinuationRun(pgm, tolerances=[10000 * eps, 100 * eps, eps])
+    pgm.fit(Xtr, ytr)
+    f = pgm.get_algorithm().f
+    plot = plt.subplot(337)
+    plot_map(pgm.beta.reshape(nrow, ncol), plot)
+    r2 = r2_score(yte, np.dot(Xte, pgm.beta).ravel())
+    plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % (alpha, tv_ratio, l1_ratio, r2))
+
+    tv_ratio=.5; l1_ratio=.95
+    l, k, gamma = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
+    pgm = models.LinearRegressionL1L2TV(l=l, k=k, gamma=gamma, shape=(1, nrow, ncol))
+    pgm = models.ContinuationRun(pgm, tolerances=[10000 * eps, 100 * eps, eps])
+    pgm.fit(Xtr, ytr)
+    f = pgm.get_algorithm().f
+    plot = plt.subplot(338)
+    plot_map(pgm.beta.reshape(nrow, ncol), plot)
+    r2 = r2_score(yte, np.dot(Xte, pgm.beta).ravel())
+    plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % (alpha, tv_ratio, l1_ratio, r2))
+
+    tv_ratio=.95; l1_ratio=.95
+    l, k, gamma = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
+    pgm = models.LinearRegressionL1L2TV(l=l, k=k, gamma=gamma, shape=(1, nrow, ncol))
     pgm = models.ContinuationRun(pgm, tolerances=[10000 * eps, 100 * eps, eps])
     pgm.fit(Xtr, ytr)
     f = pgm.get_algorithm().f
     plot = plt.subplot(339)
-    plot_map(pgm.beta.reshape(lx, ly), plot)
+    plot_map(pgm.beta.reshape(nrow, ncol), plot)
     r2 = r2_score(yte, np.dot(Xte, pgm.beta).ravel())
-    plt.title("L1L2TV (R2=%.2f)" % r2)
+    plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % (alpha, tv_ratio, l1_ratio, r2))
     plt.show()
+
+
+#    eps = 0.01
+#    alpha = alpha_g #Constant that multiplies the penalty terms
+#    l1_ratio = .95
+#    l = alpha * l1_ratio
+#    k = 0.5 * alpha * (1 - l1_ratio)
+#    gamma = 1 * alpha
+#    pgm = models.LinearRegressionL1L2TV(l=l, k=k, gamma=gamma, shape=(1, nrow, ncol))
+#    pgm = models.ContinuationRun(pgm, tolerances=[10000 * eps, 100 * eps, eps])
+#    pgm.fit(Xtr, ytr)
+
+
+# run pylearn-structured/structured/datasets/samples_generator_struct.py
