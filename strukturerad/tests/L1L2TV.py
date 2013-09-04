@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Sep  2 13:30:56 2013
+Created on Wed Sep  4 12:07:50 2013
 
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
@@ -46,29 +46,46 @@ X, y, betastar = l1_l2.load(l, k, density, snr, M, e)
 beta0 = np.random.randn(*betastar.shape)
 #beta0 = np.ones(betastar.shape)
 
-#gamma = 0.0
-#mu = 0.01
+
+class RidgeRegression(object):
+
+    def __init__(self):
+        pass
+
+    """ Function value of Ridge regression.
+    """
+    def f(self, X, y, beta, k):
+        return 0.5 * np.sum((np.dot(X, beta) - y) ** 2.0) \
+                    + 0.5 * k * np.sum(beta ** 2.0)
+
+    """ Gradient of Ridge regression
+    """
+    def grad(self, X, y, beta, k):
+        return np.dot((np.dot(X, beta) - y).T, X).T + k * beta
 
 
-# Function value of Ridge regression and L1
-def f(X, y, beta, l, k):
-    return 0.5 * np.sum((np.dot(X, beta) - y) ** 2.0) \
-                + l * np.sum(np.abs(beta)) \
-                + 0.5 * k * np.sum(beta ** 2.0)
+class L1(object):
+
+    def __init__(self):
+        pass
+
+    """ Function value of L1.
+    """
+    def f(self, beta, l):
+        return l * np.sum(np.abs(beta))
+
+    """ Proximal operator of the L1 norm
+    """
+    def prox(self, x, l):
+        return (np.abs(x) > l) * (x - l * np.sign(x - l))
 
 
-# Proximal operator of the L1 norm
-def prox(x, l):
-    return (np.abs(x) > l) * (x - l * np.sign(x - l))
-
-
-# Gradient of Ridge regression
-def grad(X, y, beta, k):
-    return np.dot((np.dot(X, beta) - y).T, X).T + k * beta
+rr = RidgeRegression()
+l1 = L1()
 
 
 # The fast iterative shrinkage threshold algorithm
-def FISTA(X, y, l, k, beta, const=None, epsilon=eps, maxit=maxit):
+def FISTA(X, y, beta, l, k, const=None, epsilon=eps, maxit=maxit):
     if const == None:
         _, s, _ = np.linalg.svd(X, full_matrices=False)
         const = np.max(s) ** 2.0 + k
@@ -104,7 +121,6 @@ def gap_function(X, y, beta, l, k):
 #    alphak = min(1.0, l / np.max(np.abs(gradbetak))) * gradbetak
     gradbetak = np.dot(X.T, np.dot(X, beta) - y) + k * beta
     alphak = -min(1.0, 1.0 / np.max(np.abs(gradbetak))) * gradbetak
-#    alphak = -sinf(gradbetak)
 
     XXkI = np.dot(X.T, X) + k * np.eye(X.shape[1])
     betahatk = np.dot(np.linalg.pinv(XXkI), np.dot(X.T, y) - l * alphak)
@@ -196,10 +212,10 @@ def conesmo(X, y, l, k, beta, eps, maxit=10*100):
     critmu = []
     it = 0
     while it < maxit:
-        (betanew, crit_, critmu_) = FISTAmu(X, y, l, k, beta, epsilon=0, maxit=50, mu=mu)
+        (betanew, crit_, critmu_) = FISTAmu(X, y, l, k, beta, epsilon=0, maxit=100, mu=mu)
         crit += crit_
         critmu += critmu_
-        it += 50
+        it += 100
         beta = betanew
         gap = gap_function(X, y, beta, l, k)
         gapmu = gap_mu_function(X, y, beta, l, k, mu)
@@ -218,10 +234,10 @@ def conesmo(X, y, l, k, beta, eps, maxit=10*100):
         print "it = maxit!"
     return (beta, gapvec, gapmuvec, mu, crit, critmu)
 
-it = 20*50
+it = 10*100
 
 t = time()
-beta, crit, critmu = FISTAmu(X, y, l, k, beta0, epsilon=eps, maxit=it, mu=0.860328859167)
+beta, crit = FISTA(X, y, l, k, beta0, epsilon=eps, maxit=it)
 print "Time:", (time() - t)
 print "beta - betastar:", np.sum((beta - betastar) ** 2.0)
 print "f(betastar) = ", f(X, y, betastar, l, k)
@@ -272,9 +288,9 @@ plot.subplot(2, 2, 3)
 plot.plot(betastar, 'g')
 plot.plot(beta, 'b')
 
-plot.subplot(2, 2, 4)
-plot.plot(gapvec, 'g')
-plot.plot(gapmuvec, 'b')
+#plot.subplot(2, 2, 4)
+#plot.plot(gapvec, 'g')
+#plot.plot(gapmuvec, 'b')
 
 plot.show()
 
