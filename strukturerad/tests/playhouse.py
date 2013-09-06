@@ -48,10 +48,10 @@ k = 0.0  # 2.71828
 gamma = 1.314159
 opt = gamma
 
-px = 6
-py = 6
-p = px * py
-n = 25
+#px = 6
+#py = 6
+p = 6#px * py
+n = 6#25
 
 alpha = 1.0
 Sigma = alpha * np.eye(p) + (1.0 - alpha) * np.ones((p, p))

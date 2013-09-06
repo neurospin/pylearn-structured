@@ -113,9 +113,8 @@ def _generate(l1, l2, gamma, density, snr, M, e):
         alpha = 0.0
 
         # L1
-        sign_beta = sign(beta[i, 0])
         if i < ps:
-            alpha += -l1 * sign_beta
+            alpha += -l1 * sign(beta[i, 0])
         else:
             alpha += -l1 * U(-1, 1)
 
