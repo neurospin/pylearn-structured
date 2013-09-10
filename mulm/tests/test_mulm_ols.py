@@ -9,10 +9,14 @@ import unittest
 import numpy as np
 from numpy.testing import assert_almost_equal
 import mulm
+import warnings
 
 class TestMULMOLS(unittest.TestCase):
 
     def test_regression(self):
+        warnings.warn("pylearn-structured/mulm is deprecated. Please use"\
+                      " https://github.com/neurospin/pylearn-mulm instead.",
+                        category=DeprecationWarning)
         X = np.array([[ 0.65755752,  0.28764865,  0.57877508,  0.90387418,  1.],
                [ 0.79048795, -1.16186096, -1.12557116, -0.61673564,  1.],
                [-0.31715617, -0.98712971, -1.01510942,  0.28110482,  1.],

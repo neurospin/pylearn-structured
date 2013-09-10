@@ -9,7 +9,7 @@ import scipy
 import numpy as np
 from sklearn.utils import safe_asarray
 from .ols import ols_stats_tcon
-
+import warnings
 
 class LinearRegression:
     """ Massiv univariate LinearRegression. Repeat linear regression for
@@ -32,6 +32,9 @@ class LinearRegression:
     >>> ss_errors = np.sum((Y - Ypred) ** 2, axis=0)
     """
     def __init__(self, **kwargs):
+        warnings.warn("pylearn-structured/mulm is deprecated. Please use"\
+                      " https://github.com/neurospin/pylearn-mulm instead.",
+                        category=DeprecationWarning)
         self.coef_ = None
 
     def fit(self, X, Y):

@@ -9,11 +9,14 @@ from scipy import stats
 import scipy
 import numpy as np
 from sklearn.utils import array2d
-
+import warnings
 
 def ols(X, Y):
     """ Massively application of Ordinary Least Square for each column of Y    
     """
+    warnings.warn("pylearn-structured/mulm is deprecated. Please use"\
+                      " https://github.com/neurospin/pylearn-mulm instead.",
+                        category=DeprecationWarning)
     betas = np.dot(scipy.linalg.pinv(X), Y)
     ss_errors = np.sum((Y - np.dot(X, betas)) ** 2, axis=0)
     return betas, ss_errors
@@ -51,6 +54,9 @@ def ols_stats_tcon(X, betas, ss_errors, contrast, pval=False):
     >>> p, t = mulm.ols_stats_tcon(X, betas, ss_errors, contrast=[1, 0, 0, 0, 0], pval=True)
     >>> p, f = mulm.ols_stats_fcon(X, betas, ss_errors, contrast=[1, 0, 0, 0, 0], pval=True)
     """
+    warnings.warn("pylearn-structured/mulm is deprecated. Please use"\
+                      " https://github.com/neurospin/pylearn-mulm instead.",
+                        category=DeprecationWarning)
     c = np.asarray(contrast)
     n = X.shape[0]
     # t = c'beta / std(c'beta)
@@ -71,6 +77,9 @@ def ols_stats_tcon(X, betas, ss_errors, contrast, pval=False):
 
 
 def ols_stats_fcon(X, betas, ss_errors, contrast, pval=False):
+    warnings.warn("pylearn-structured/mulm is deprecated. Please use"\
+                      " https://github.com/neurospin/pylearn-mulm instead.",
+                        category=DeprecationWarning)
     C1 = array2d(contrast).T
     n = X.shape[0]
     p = X.shape[1]
