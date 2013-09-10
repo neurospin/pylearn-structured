@@ -11,7 +11,9 @@ import numpy as np
 import scipy.sparse as sparse
 import strukturerad.algorithms as algorithms
 import strukturerad.utils as utils
-import strukturerad.datasets.simulated.l1_l2 as l1_l2
+#import strukturerad.datasets.simulated.l1_l2 as l1_l2
+import strukturerad.datasets.simulated.l1_l2_tv as l1_l2_tv
+import strukturerad.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
 
 from strukturerad.utils import math
 
@@ -25,29 +27,29 @@ np.random.seed(42)
 #eps = 1e-5
 #maxit = 5000
 
-px = 20
-py = 1
-pz = 1
-p = px * py * pz  # Must be even!
-n = 30
-#X = np.random.randn(n, p)
-#betastar = np.concatenate((np.zeros((p / 2, 1)),
-#                           np.random.randn(p / 2, 1)))
-#betastar = np.sort(np.abs(betastar), axis=0)
-#y = np.dot(X, betastar)
-
-e = np.random.randn(n, 1) * 0.5
-S = 0.5 * np.ones((p, p)) + 0.5 * np.eye(p, p)
-M = np.random.multivariate_normal(np.zeros(p), S, n)
-density = 0.5
-l = 3.0
-k = 0.0
-g = 1.0
-snr = 286.7992
-X, y, betastar = l1_l2.load(l, k, density, snr, M, e)
-beta0 = np.random.randn(*betastar.shape)
+#px = 20
+#py = 1
+#pz = 1
+#p = px * py * pz  # Must be even!
+#n = 30
+##X = np.random.randn(n, p)
+##betastar = np.concatenate((np.zeros((p / 2, 1)),
+##                           np.random.randn(p / 2, 1)))
+##betastar = np.sort(np.abs(betastar), axis=0)
+##y = np.dot(X, betastar)
+#
+#e = np.random.randn(n, 1) * 0.5
+#S = 0.5 * np.ones((p, p)) + 0.5 * np.eye(p, p)
+#M = np.random.multivariate_normal(np.zeros(p), S, n)
+#density = 0.5
+#l = 3.0
+#k = 0.0
+#g = 1.0
+#snr = 286.7992
+#X, y, betastar = l1_l2.load(l, k, density, snr, M, e)
+#beta0 = np.random.randn(*betastar.shape)
 #beta0 = np.ones(betastar.shape)
-mu_zero = 1e-8
+#mu_zero = 1e-8
 
 
 class RidgeRegression(object):
@@ -79,7 +81,7 @@ class RidgeRegression(object):
 class TotalVariation(object):
 
     def __init__(self, shape):
-        self._A = self.precompute(shape, mask=None, compress=True)
+        self._A = self.precompute(shape, mask=None, compress=False)
 
     """ Function value of Ridge regression.
     """
@@ -320,11 +322,6 @@ class L1(object):
         return float(l) / mu
 
 
-rr = RidgeRegression()
-l1 = L1()
-tv = TotalVariation(shape=(pz, py, px))
-
-
 # Function value of Ridge regression, L1 and TV
 def f(X, y, l, k, g, beta, mu):
     return rr.f(X, y, k, beta) + l1.f(l, beta) + tv.f(X, y, g, beta, mu)
@@ -471,42 +468,144 @@ def conesmo(X, y, l, k, beta, eps=utils.TOLERANCE, conts=10, maxit=100):
 
     return (beta, gapvec, gapmuvec, mu, crit, critmu)
 
-conts = 100
+
+np.random.seed(42)
+
+l = 0.0  # 0.61803
+k = 1.0  # 0.271828
+g = 100.0  # 3.14159
+
+px = 6
+py = 1
+pz = 1
+p = px * py * pz
+n = 6
+
+rr = RidgeRegression()
+l1 = L1()
+tv = TotalVariation(shape=(pz, py, px))
+
+a = 1.0
+Sigma = a * np.eye(p) + (1.0 - a) * np.ones((p, p))
+Mu = np.zeros(p)
+M = np.random.multivariate_normal(Mu, Sigma, n)
+e = np.random.randn(n, 1)
+
+mu_zero = 1e-8
+eps = 1e-5
+mu = (0.9 * eps / (g * p)) * 1.0
+print "mu:", mu
+conts = 10000
 maxit = 100
-mu = 1e-0
-eps = utils.TOLERANCE
 
-t = time()
+#    X, y, beta = lasso.load(l, density=0.7, snr=100.0, M=M, e=e)
+#    X, y, beta = ridge.load(k, density=0.7, snr=100.0, M=M, e=e)
+#    X, y, beta = l1_tv.load(l, gamma, density=0.7, snr=100.0, M=M, e=e)
+#    X, y, beta = ridge_2D.load(k, density=0.7, snr=100.0, M=M, e=e,
+#                               shape=(py, px))
+#    X, y, beta = lasso_2D.load(l, density=0.7, snr=100.0, M=M, e=e,
+#                               shape=(py, px))
+#    X, y, beta = l1_l2.load(l, k, density=0.7, snr=100.0, M=M, e=e)
+#    X, y, beta = l1_l2_2D.load(l, k, density=0.7, snr=100.0, M=M, e=e,
+#                               shape=(py, px))
+#X, y, betastar = l1_l2_tv.load(l, k, g, density=0.50, snr=100.0,
+#                               M=M, e=e)
+X, y, betastar = l1_l2_tvmu.load(l, k, g, density=0.50, snr=100.0, M=M, e=e,
+                                 tv=tv, mu=mu)
+
+print betastar
+for A in tv.A():
+    print A.todense()
+print tv.alpha(betastar, mu)
+print tv.Aa(tv.alpha(betastar, mu))
+
+beta0 = np.random.rand(*betastar.shape)
 step = 1.0 / Lipschitz(X, k, g, mu)
-beta, crit, critmu = FISTA(X, y, l, k, g, beta0, step, mu=mu, eps=eps, maxit=conts * maxit)
-print "Time:", (time() - t)
-print "beta - betastar:", np.sum((beta - betastar) ** 2.0)
-print "f(betastar) = ", f(X, y, l, k, g, betastar, mu=mu_zero)
-print "f(beta) = ", f(X, y, l, k, g, beta, mu=mu_zero)
-print "f(betastar, mu) = ", f(X, y, l, k, g, betastar, mu=mu)
-print "f(beta, mu) = ", f(X, y, l, k, g, beta, mu=mu)
-fstar = f(X, y, l, k, g, betastar, mu=mu_zero)
-print "err:", f(X, y, l, k, g, beta, mu=mu_zero) - fstar
 
-rand_point = np.random.randn(*betastar.shape)
-rand_point_less = betastar + 0.005 * np.random.randn(*betastar.shape)
-print "Gap at beta* = ", gap_function(X, y, k, g, betastar, mu=mu_zero)
-print "... and at a random point = ", gap_function(X, y, k, g, rand_point, mu=mu_zero)
-print "... and at a less random point = ", gap_function(X, y, k, g, rand_point_less, mu=mu_zero)
+v = []
+x = []
+fval = []
+beta_opt = 0
 
-print "Gapmu at beta* = ", gap_function(X, y, k, g, betastar, mu=mu)
-print "... and at a random point = ", gap_function(X, y, k, g, rand_point, mu=mu)
-print "... and at a less random point = ", gap_function(X, y, k, g, rand_point_less, mu=mu)
+num_lin = 25
+#ls = np.maximum(0.0, np.linspace(l - l * 0.1, l + l * 0.1, num_lin))
+#ks = np.maximum(0.0, np.linspace(k - k * 0.1, k + k * 0.1, num_lin))
+gs = np.maximum(0.0, np.linspace(g - g * 0.1, g + g * 0.1, num_lin))
+for i in range(len(gs)):
+    val = gs[i]
+    beta, crit, critmu = FISTA(X, y, l, k, val, beta0, step, mu=mu, eps=eps, maxit=conts * maxit)
+#    beta0 = beta
+
+#    print "f(betastar) = ", f(X, y, l, k, g, betastar, mu=mu_zero)
+#    print "f(beta) = ", f(X, y, l, k, g, beta, mu=mu_zero)
+#    print "f(betastar, mu) = ", f(X, y, l, k, g, betastar, mu=mu)
+#    print "f(beta, mu) = ", f(X, y, l, k, g, beta, mu=mu)
+#    fstar = f(X, y, l, k, g, betastar, mu=mu_zero)
+#    print "err:", f(X, y, l, k, g, beta, mu=mu_zero) - fstar
+
+    curr_val = np.sum((beta - betastar) ** 2.0)
+    f_ = f(X, y, l, k, val, beta, mu=mu)
+
+    print "rr:", rr.f(X, y, k, beta)
+    print "l1:", l1.f(l, beta)
+    print "tv:", tv.f(X, y, g, beta, mu)
+
+    v.append(curr_val)
+    x.append(val)
+    fval.append(f_)
+
+    if curr_val <= min(v):
+        beta_opt = beta
+
+    print "true = %.5f => %.7f" % (val, curr_val)
+
+print "best  f:", f(X, y, l, k, g, betastar, mu=mu)
+print "found f:", f(X, y, l, k, g, beta_opt, mu=mu)
+print "least f:", min(fval)
 
 plot.subplot(2, 1, 1)
-plot.loglog(range(1, len(crit) + 1), crit, '-b')
-plot.loglog(np.asarray([1, len(crit) - 1]), np.asarray([fstar, fstar]), '--g')
-plot.title("Function value")
-
+plot.plot(x, v, '-b')
+plot.title("true: %.5f, min: %.5f" % (g, x[np.argmin(v)]))
 plot.subplot(2, 1, 2)
-plot.plot(betastar, 'g')
-plot.plot(beta, 'b')
+plot.plot(betastar, '-g', beta_opt, '-r')
 plot.show()
+
+#conts = 100
+#maxit = 100
+#mu = 1e-0
+#eps = utils.TOLERANCE
+#
+#t = time()
+#step = 1.0 / Lipschitz(X, k, g, mu)
+#beta, crit, critmu = FISTA(X, y, l, k, g, beta0, step, mu=mu, eps=eps, maxit=conts * maxit)
+#print "Time:", (time() - t)
+#print "beta - betastar:", np.sum((beta - betastar) ** 2.0)
+#print "f(betastar) = ", f(X, y, l, k, g, betastar, mu=mu_zero)
+#print "f(beta) = ", f(X, y, l, k, g, beta, mu=mu_zero)
+#print "f(betastar, mu) = ", f(X, y, l, k, g, betastar, mu=mu)
+#print "f(beta, mu) = ", f(X, y, l, k, g, beta, mu=mu)
+#fstar = f(X, y, l, k, g, betastar, mu=mu_zero)
+#print "err:", f(X, y, l, k, g, beta, mu=mu_zero) - fstar
+#
+#rand_point = np.random.randn(*betastar.shape)
+#rand_point_less = betastar + 0.005 * np.random.randn(*betastar.shape)
+#print "Gap at beta* = ", gap_function(X, y, k, g, betastar, mu=mu_zero)
+#print "... and at a random point = ", gap_function(X, y, k, g, rand_point, mu=mu_zero)
+#print "... and at a less random point = ", gap_function(X, y, k, g, rand_point_less, mu=mu_zero)
+#
+#print "Gapmu at beta* = ", gap_function(X, y, k, g, betastar, mu=mu)
+#print "... and at a random point = ", gap_function(X, y, k, g, rand_point, mu=mu)
+#print "... and at a less random point = ", gap_function(X, y, k, g, rand_point_less, mu=mu)
+#
+#plot.subplot(2, 1, 1)
+#plot.loglog(range(1, len(crit) + 1), crit, '-b')
+#plot.loglog(np.asarray([1, len(crit) - 1]), np.asarray([fstar, fstar]), '--g')
+#plot.title("Function value")
+#
+#plot.subplot(2, 1, 2)
+#plot.plot(betastar, 'g')
+#plot.plot(beta, 'b')
+#plot.show()
 
 #t = time()
 #beta, gapvec, gapmuvec, mu, crit, critmu = conesmo(X, y, l, k, beta0, eps, conts=conts, maxit=maxit)
