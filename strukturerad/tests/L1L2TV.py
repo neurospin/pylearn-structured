@@ -492,7 +492,7 @@ M = np.random.multivariate_normal(Mu, Sigma, n)
 e = np.random.randn(n, 1)
 
 mu_zero = 1e-8
-eps = 1e-5
+eps = 1e-6
 mu = (0.9 * eps / (g * p)) * 1.0
 print "mu:", mu
 conts = 10000
@@ -533,7 +533,19 @@ num_lin = 25
 gs = np.maximum(0.0, np.linspace(g - g * 0.1, g + g * 0.1, num_lin))
 for i in range(len(gs)):
     val = gs[i]
-    beta, crit, critmu = FISTA(X, y, l, k, val, beta0, step, mu=mu, eps=eps, maxit=conts * maxit)
+    beta = beta0
+    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*100000.0, eps=eps, maxit=1000)
+    print "f:", f(X, y, l, k, val, beta, mu=mu)
+    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*10000.0, eps=eps, maxit=1000)
+    print "f:", f(X, y, l, k, val, beta, mu=mu)
+    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*1000.0, eps=eps, maxit=1000)
+    print "f:", f(X, y, l, k, val, beta, mu=mu)
+    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*100.0, eps=eps, maxit=1000)
+    print "f:", f(X, y, l, k, val, beta, mu=mu)
+    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*10.0, eps=eps, maxit=1000)
+    print "f:", f(X, y, l, k, val, beta, mu=mu)
+    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu, eps=eps, maxit=conts * maxit)
+    print "f:", f(X, y, l, k, val, beta, mu=mu)
 #    beta0 = beta
 
 #    print "f(betastar) = ", f(X, y, l, k, g, betastar, mu=mu_zero)
