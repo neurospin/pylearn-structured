@@ -971,6 +971,10 @@ class TotalVariation(NesterovFunction):
                yind.flatten().tolist(), \
                zind.flatten().tolist()
 
+    @staticmethod
+    def build_As_from_shape(shape):
+        pass
+
     def precompute(self, shape):
 
         Z = shape[0]
