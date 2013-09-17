@@ -14,6 +14,7 @@ import strukturerad.utils as utils
 #import strukturerad.datasets.simulated.l1_l2 as l1_l2
 import strukturerad.datasets.simulated.l1_l2_tv as l1_l2_tv
 import strukturerad.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
+import strukturerad.datasets.simulated.l1_l2_tv_2D as l1_l2_tv_2D
 
 from strukturerad.utils import math
 
@@ -469,17 +470,26 @@ def conesmo(X, y, l, k, beta, eps=utils.TOLERANCE, conts=10, maxit=100):
     return (beta, gapvec, gapmuvec, mu, crit, critmu)
 
 
+def U(a, b):
+    t = max(a, b)
+    a = float(min(a, b))
+    b = float(t)
+    return (np.random.rand() * (b - a)) + a
+
+
 np.random.seed(42)
 
 l = 0.0  # 0.61803
-k = 1.0  # 0.271828
-g = 100.0  # 3.14159
+k = 0.5  # 0.271828
+g = 0.9  # 3.14159
 
+#print "2d tv: g=100, mu=1e-6, conts=10000*100"
 px = 6
-py = 1
+py = 6
 pz = 1
 p = px * py * pz
-n = 6
+shape=(py, px)
+n = 25
 
 rr = RidgeRegression()
 l1 = L1()
@@ -490,12 +500,13 @@ Sigma = a * np.eye(p) + (1.0 - a) * np.ones((p, p))
 Mu = np.zeros(p)
 M = np.random.multivariate_normal(Mu, Sigma, n)
 e = np.random.randn(n, 1)
+density=0.25
 
 mu_zero = 1e-8
-eps = 1e-6
+eps = 1e-5
 mu = (0.9 * eps / (g * p)) * 1.0
 print "mu:", mu
-conts = 10000
+conts = 1000
 maxit = 100
 
 #    X, y, beta = lasso.load(l, density=0.7, snr=100.0, M=M, e=e)
@@ -510,14 +521,81 @@ maxit = 100
 #                               shape=(py, px))
 #X, y, betastar = l1_l2_tv.load(l, k, g, density=0.50, snr=100.0,
 #                               M=M, e=e)
-X, y, betastar = l1_l2_tvmu.load(l, k, g, density=0.50, snr=100.0, M=M, e=e,
-                                 tv=tv, mu=mu)
+
+#X, y, betastar = l1_l2_tvmu.load(l, k, g, density=density, snr=100.0, M=M, e=e,
+#                                 tv=tv, mu=mu)
+
+snr = 100.0
+
+ps = int(round(p * density))
+beta1D = np.zeros((p, 1))
+for i in xrange(p):
+    if i < ps:
+        beta1D[i, 0] = U(0, 1) * snr / np.sqrt(ps)
+    else:
+        beta1D[i, 0] = 0.0
+
+beta1D = np.flipud(np.sort(beta1D, axis=0))
+
+p = M.shape[1]
+px = shape[1]
+py = shape[0]
+#print "p:", p, ", px:", px, ", py:", py
+#print "density * p:", density * p
+s = np.sqrt(density * p / (px * py))
+#print "s:", s
+part = s * s * px * py / p
+#print "part:", part
+pys = int(round(py * s))
+pxs = int(round(px * s))
+# Search for better approximation of px and py
+best_x = 0
+best_y = 0
+best = float("inf")
+for i in xrange(-2, 3):
+    for j in xrange(-2, 3):
+        diff = abs(((pys + i) * (pxs + j) / float(p)) - part)
+        if diff < best:
+            best = diff
+            best_x = j
+            best_y = i
+#        print "%f = diff < best = %f, px = %d, py = %d" \
+#                % (diff, best, (pys + i), (pxs + j))
+pys += best_y
+pxs += best_x
+
+print "pxs:", pxs
+print "pys:", pys
+print "px:", px
+print "py:", py
+
+beta2D = np.zeros((py, px))
+for i in xrange(py):
+    for j in xrange(px):
+        if i >= pys or j >= pxs:
+            beta2D[i, j] = 0.0
+        else:
+            beta2D[i, j] = U(0, 1) * snr / np.sqrt(pys * pxs)
+beta2D = np.fliplr(np.sort(np.flipud(np.sort(beta2D, axis=0)), axis=1))
+beta2D = np.reshape(beta2D, (p, 1))
+
+betastar = beta2D
+print betastar
+#tv_grad = tv.grad(g, betastar, mu)
+Aa = tv.Aa(tv.alpha(betastar, mu))
+X, y = l1_l2_tvmu.load(l, k, g, betastar, M, e, Aa)
+
+#X, y, betastar = l1_l2_tv_2D.load(l, k, g, density=density, snr=100.0,
+#                                  M=M, e=e, shape=(py, px))
+
+#X, y, betastar = l1_l2_tv.load(l, k, g, density=density, snr=100.0, M=M, e=e)
 
 print betastar
 for A in tv.A():
     print A.todense()
 print tv.alpha(betastar, mu)
 print tv.Aa(tv.alpha(betastar, mu))
+print tv.grad(g, betastar, mu)
 
 beta0 = np.random.rand(*betastar.shape)
 step = 1.0 / Lipschitz(X, k, g, mu)
@@ -534,9 +612,9 @@ gs = np.maximum(0.0, np.linspace(g - g * 0.1, g + g * 0.1, num_lin))
 for i in range(len(gs)):
     val = gs[i]
     beta = beta0
-    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*100000.0, eps=eps, maxit=1000)
+    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*100000.0, eps=eps, maxit=10000)
     print "f:", f(X, y, l, k, val, beta, mu=mu)
-    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*10000.0, eps=eps, maxit=1000)
+    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*10000.0, eps=eps, maxit=10000)
     print "f:", f(X, y, l, k, val, beta, mu=mu)
     beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*1000.0, eps=eps, maxit=1000)
     print "f:", f(X, y, l, k, val, beta, mu=mu)
@@ -546,7 +624,7 @@ for i in range(len(gs)):
     print "f:", f(X, y, l, k, val, beta, mu=mu)
     beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu, eps=eps, maxit=conts * maxit)
     print "f:", f(X, y, l, k, val, beta, mu=mu)
-#    beta0 = beta
+    beta0 = beta
 
 #    print "f(betastar) = ", f(X, y, l, k, g, betastar, mu=mu_zero)
 #    print "f(beta) = ", f(X, y, l, k, g, beta, mu=mu_zero)
@@ -575,10 +653,15 @@ print "best  f:", f(X, y, l, k, g, betastar, mu=mu)
 print "found f:", f(X, y, l, k, g, beta_opt, mu=mu)
 print "least f:", min(fval)
 
-plot.subplot(2, 1, 1)
+plot.subplot(3, 1, 1)
 plot.plot(x, v, '-b')
 plot.title("true: %.5f, min: %.5f" % (g, x[np.argmin(v)]))
-plot.subplot(2, 1, 2)
+
+plot.subplot(3, 1, 2)
+plot.plot(x, fval, '-b')
+plot.title("true: %.5f, min: %.5f" % (g, x[np.argmin(fval)]))
+
+plot.subplot(3, 1, 3)
 plot.plot(betastar, '-g', beta_opt, '-r')
 plot.show()
 

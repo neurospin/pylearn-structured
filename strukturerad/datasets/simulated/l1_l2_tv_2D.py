@@ -120,6 +120,11 @@ def _generate(l, k, gamma, density, snr, M, e, shape):
     pys += best_y
     pxs += best_x
 
+    print "pxs:", pxs
+    print "pys:", pys
+    print "px:", px
+    print "py:", py
+
     sqrt2 = np.sqrt(2.0)
 
 #    print abs((pys * pxs / float(p)) - part)
