@@ -32,6 +32,8 @@ def load(l, k, g, beta, M, e, Aa):
 
     g : The total variation regularisation parameter.
 
+    beta : The regression vector to generate data from.
+
     M : The matrix to use when building data. This matrix carries the desired
             distribution of the generated data. The generated data will be a
             column-scaled version of this matrix.
