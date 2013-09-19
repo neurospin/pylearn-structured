@@ -485,11 +485,11 @@ g = 0.9  # 3.14159
 
 #print "2d tv: g=100, mu=1e-6, conts=10000*100"
 px = 6
-py = 1
+py = 6
 pz = 1
 p = px * py * pz
 shape=(py, px)
-n = 5
+n = 25
 
 rr = RidgeRegression()
 l1 = L1()
@@ -500,11 +500,12 @@ Sigma = a * np.eye(p) + (1.0 - a) * np.ones((p, p))
 Mu = np.zeros(p)
 M = np.random.multivariate_normal(Mu, Sigma, n)
 e = np.random.randn(n, 1)
-density=0.5
+density=0.25
 
 mu_zero = 1e-8
 eps = 1e-3
-mu = (0.9 * eps / (g * p)) * 1.0
+#mu = (0.9 * eps / (g * p)) * 1.0
+mu = 1e-5
 print "mu:", mu
 conts = 1000
 maxit = 100
@@ -579,12 +580,15 @@ for i in xrange(py):
 beta2D = np.fliplr(np.sort(np.flipud(np.sort(beta2D, axis=0)), axis=1))
 beta2D = np.reshape(beta2D, (p, 1))
 
-betastar = beta1D
+#betastar = beta1D
+betastar = beta2D
 print betastar
 #tv_grad = tv.grad(g, betastar, mu)
 Aa = tv.Aa(tv.alpha(betastar, mu))
 #X, y = l1_l2_tvmu.load(l, k, g, betastar, M, e, Aa)
-X, y = l1_l2_tv.load(l, k, g, betastar, M, e)
+#X, y = l1_l2_tv.load(l, k, g, betastar, M, e)
+X, y = l1_l2_tv_2D.load(l, k, g, betastar, M, e, shape)
+
 
 #X, y, betastar = l1_l2_tv_2D.load(l, k, g, density=density, snr=100.0,
 #                                  M=M, e=e, shape=(py, px))
@@ -635,7 +639,7 @@ for i in range(len(gs)):
 #    print "err:", f(X, y, l, k, g, beta, mu=mu_zero) - fstar
 
     curr_val = np.sum((beta - betastar) ** 2.0)
-    f_ = f(X, y, l, k, val, beta, mu=mu)
+    f_ = f(X, y, l, k, g, beta, mu=mu)
 
     print "rr:", rr.f(X, y, k, beta)
     print "l1:", l1.f(l, beta)

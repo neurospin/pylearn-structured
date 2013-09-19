@@ -91,8 +91,8 @@ def load(l, k, g, beta, M, e, shape):
 
 def _generate(l, k, gamma, beta, M, e, shape):
 
-    l = float(l)
-    k = float(k)
+    l1 = float(l)
+    l2 = float(k)
     gamma = float(gamma)
 #    density = float(density)
 #    snr = float(snr)
@@ -124,6 +124,9 @@ def _generate(l, k, gamma, beta, M, e, shape):
 #    print "px:", px
 #    print "py:", py
 
+    pys = 3
+    pxs = 3
+
     sqrt2 = np.sqrt(2.0)
 
 #    print abs((pys * pxs / float(p)) - part)
@@ -140,7 +143,7 @@ def _generate(l, k, gamma, beta, M, e, shape):
 #    #    sign_b = np.sign(b)
 #    #    abs_b = np.abs(b)
 #    M = M[:, ind[:, 0]]
-#
+
 #    beta = np.zeros((py, px))
 #    for i in xrange(py):
 #        for j in xrange(px):
@@ -149,6 +152,7 @@ def _generate(l, k, gamma, beta, M, e, shape):
 #            else:
 #                beta[i, j] = U(0, 1) * snr / np.sqrt(pys * pxs)
 #    beta = np.fliplr(np.sort(np.flipud(np.sort(beta, axis=0)), axis=1))
+    beta = np.reshape(beta, (py, px))
 
     X = np.zeros(M.shape)
     a = np.zeros((p, 1))
@@ -167,11 +171,13 @@ def _generate(l, k, gamma, beta, M, e, shape):
     i, j = 0, 0
     k = i * px + j
     print "(", i, j, ") == ", k
-    Mte = b[k, 0]
+#    Mte = b[k, 0]
+    Mte = np.dot(M[:, k].T, e)
+    print "beta:", beta
     grad = (2.0 * beta[i, j] - (beta[i + 1, j] + beta[i, j + 1])) \
             / np.sqrt((beta[i + 1, j] - beta[i, j]) ** 2.0 \
                     + (beta[i, j + 1] - beta[i, j]) ** 2.0)
-    a[k, 0] = (-k * beta[i, j] - l - gamma * grad) / Mte
+    a[k, 0] = (-l2 * beta[i, j] - l1 - gamma * grad) / Mte
     X[:, k] = M[:, k] * a[k, 0]
 
     Mat[i, j] = 1
@@ -189,14 +195,15 @@ def _generate(l, k, gamma, beta, M, e, shape):
     for j in xrange(1, pxs):
         k = i * px + j
         print "(", i, j, ") == ", k
-        Mte = b[k, 0]
+#        Mte = b[k, 0]
+        Mte = np.dot(M[:, k].T, e)
         grad = (2.0 * beta[i, j] - (beta[i + 1, j] + beta[i, j + 1])) \
                  / np.sqrt((beta[i + 1, j] - beta[i, j]) ** 2.0 \
                          + (beta[i, j + 1] - beta[i, j]) ** 2.0) \
              + (beta[i, j] - beta[i, j - 1]) \
                  / np.sqrt((beta[i + 1, j - 1] - beta[i, j - 1]) ** 2.0 \
                          + (beta[i, j] - beta[i, j - 1]) ** 2.0)
-        a[k, 0] = (-k * beta[i, j] - l - gamma * grad) / Mte
+        a[k, 0] = (-l2 * beta[i, j] - l1 - gamma * grad) / Mte
         X[:, k] = M[:, k] * a[k, 0]
 
         Mat[i, j] = 2
@@ -214,12 +221,13 @@ def _generate(l, k, gamma, beta, M, e, shape):
     j = pxs
     k = i * px + j
     print "(", i, j, ") == ", k
-    Mte = b[k, 0]
+#    Mte = b[k, 0]
+    Mte = np.dot(M[:, k].T, e)
     subgrad = sqrt2 * U(-1, 1)
     grad = (beta[i, j] - beta[i, j - 1]) \
              / np.sqrt((beta[i + 1, j - 1] - beta[i, j - 1]) ** 2.0 \
                      + (beta[i, j] - beta[i, j - 1]) ** 2.0)
-    a[k, 0] = (-k * beta[i, j] - l * U(-1, 1) - gamma * (subgrad + grad)) \
+    a[k, 0] = (-l2 * beta[i, j] - l1 * U(-1, 1) - gamma * (subgrad + grad)) \
             / Mte
     X[:, k] = M[:, k] * a[k, 0]
 
@@ -238,9 +246,10 @@ def _generate(l, k, gamma, beta, M, e, shape):
     for j in xrange(pxs + 1, px - 1):
         k = i * px + j
         print "(", i, j, ") == ", k
-        Mte = b[k, 0]
+#        Mte = b[k, 0]
+        Mte = np.dot(M[:, k].T, e)
         subgrad = sqrt2 * U(-1, 1) + U(-1, 1)
-        a[k, 0] = (-k * beta[i, j] - l * U(-1, 1) - gamma * subgrad) / Mte
+        a[k, 0] = (-l2 * beta[i, j] - l1 * U(-1, 1) - gamma * subgrad) / Mte
         X[:, k] = M[:, k] * a[k, 0]
 
         Mat[i, j] = 4
@@ -258,9 +267,10 @@ def _generate(l, k, gamma, beta, M, e, shape):
     j = px - 1
     k = i * px + j
     print "(", i, j, ") == ", k
-    Mte = b[k, 0]
+#    Mte = b[k, 0]
+    Mte = np.dot(M[:, k].T, e)
     subgrad = U(-1, 1) + U(-1, 1)
-    a[k, 0] = (-k * beta[i, j] - l * U(-1, 1) - gamma * subgrad) / Mte
+    a[k, 0] = (-l2 * beta[i, j] - l1 * U(-1, 1) - gamma * subgrad) / Mte
     X[:, k] = M[:, k] * a[k, 0]
 
     Mat[i, j] = 5
@@ -285,14 +295,15 @@ def _generate(l, k, gamma, beta, M, e, shape):
     for i in xrange(1, pys):
         k = i * px + j
         print "(", i, j, ") == ", k
-        Mte = b[k, 0]
+#        Mte = b[k, 0]
+        Mte = np.dot(M[:, k].T, e)
         grad = (2.0 * beta[i, j] - (beta[i + 1, j] + beta[i, j + 1])) \
                  / np.sqrt((beta[i + 1, j] - beta[i, j]) ** 2.0 \
                          + (beta[i, j + 1] - beta[i, j]) ** 2.0) \
              + (beta[i, j] - beta[i - 1, j]) \
                  / np.sqrt((beta[i, j] - beta[i - 1, j]) ** 2.0 \
                          + (beta[i - 1, j + 1] - beta[i - 1, j]) ** 2.0)
-        a[k, 0] = (-k * beta[i, j] - l - gamma * grad) / Mte
+        a[k, 0] = (-l2 * beta[i, j] - l1 - gamma * grad) / Mte
         X[:, k] = M[:, k] * a[k, 0]
 
         Mat[i, j] = 2
@@ -310,12 +321,13 @@ def _generate(l, k, gamma, beta, M, e, shape):
     j = 0
     k = i * px + j
     print "(", i, j, ") == ", k
-    Mte = b[k, 0]
+#    Mte = b[k, 0]
+    Mte = np.dot(M[:, k].T, e)
     subgrad = sqrt2 * U(-1, 1)
     grad = (beta[i, j] - beta[i - 1, j]) \
              / np.sqrt((beta[i, j] - beta[i - 1, j]) ** 2.0 \
                      + (beta[i - 1, j + 1] - beta[i - 1, j]) ** 2.0)
-    a[k, 0] = (-k * beta[i, j] - l * U(-1, 1) - gamma * (subgrad + grad)) \
+    a[k, 0] = (-l2 * beta[i, j] - l1 * U(-1, 1) - gamma * (subgrad + grad)) \
             / Mte
     X[:, k] = M[:, k] * a[k, 0]
 
@@ -334,9 +346,10 @@ def _generate(l, k, gamma, beta, M, e, shape):
     for i in xrange(pys + 1, px - 1):
         k = i * px + j
         print "(", i, j, ") == ", k
-        Mte = b[k, 0]
+#        Mte = b[k, 0]
+        Mte = np.dot(M[:, k].T, e)
         subgrad = sqrt2 * U(-1, 1) + U(-1, 1)
-        a[k, 0] = (-k * beta[i, j] - l * U(-1, 1) - gamma * subgrad) / Mte
+        a[k, 0] = (-l2 * beta[i, j] - l1 * U(-1, 1) - gamma * subgrad) / Mte
         X[:, k] = M[:, k] * a[k, 0]
 
         Mat[i, j] = 4
@@ -354,9 +367,10 @@ def _generate(l, k, gamma, beta, M, e, shape):
     j = 0
     k = i * px + j
     print "(", i, j, ") == ", k
-    Mte = b[k, 0]
+#    Mte = b[k, 0]
+    Mte = np.dot(M[:, k].T, e)
     subgrad = U(-1, 1) + U(-1, 1)
-    a[k, 0] = (-k * beta[i, j] - l * U(-1, 1) - gamma * subgrad) / Mte
+    a[k, 0] = (-l2 * beta[i, j] - l1 * U(-1, 1) - gamma * subgrad) / Mte
     X[:, k] = M[:, k] * a[k, 0]
 
     Mat[i, j] = 5
@@ -374,7 +388,8 @@ def _generate(l, k, gamma, beta, M, e, shape):
         for j in xrange(1, pxs):
             k = i * px + j
             print "(", i, j, ") == ", k
-            Mte = b[k, 0]
+#            Mte = b[k, 0]
+            Mte = np.dot(M[:, k].T, e)
             grad = (2.0 * beta[i, j] - (beta[i + 1, j] + beta[i, j + 1])) \
                      / np.sqrt((beta[i + 1, j] - beta[i, j]) ** 2.0 \
                              + (beta[i, j + 1] - beta[i, j]) ** 2.0) \
@@ -384,7 +399,7 @@ def _generate(l, k, gamma, beta, M, e, shape):
                  + (beta[i, j] - beta[i, j - 1]) \
                      / np.sqrt((beta[i + 1, j - 1] - beta[i, j - 1]) ** 2.0 \
                              + (beta[i, j] - beta[i, j - 1]) ** 2.0)
-            a[k, 0] = (-k * beta[i, j] - l - gamma * grad) / Mte
+            a[k, 0] = (-l2 * beta[i, j] - l1 - gamma * grad) / Mte
             X[:, k] = M[:, k] * a[k, 0]
 
             Mat[i, j] = 6
@@ -409,12 +424,13 @@ def _generate(l, k, gamma, beta, M, e, shape):
     for i in xrange(1, pys):
         k = i * px + j
         print "(", i, j, ") == ", k
-        Mte = b[k, 0]
+#        Mte = b[k, 0]
+        Mte = np.dot(M[:, k].T, e)
         subgrad = sqrt2 * U(-1, 1) + U(-1, 1)
         grad = (beta[i, j] - beta[i, j - 1]) \
                  / np.sqrt((beta[i + 1, j - 1] - beta[i, j - 1]) ** 2.0 \
                          + (beta[i, j] - beta[i, j - 1]) ** 2.0)
-        a[k, 0] = (-k * beta[i, j] - l * U(-1, 1) \
+        a[k, 0] = (-l2 * beta[i, j] - l1 * U(-1, 1) \
                    - gamma * (subgrad + grad)) / Mte
         X[:, k] = M[:, k] * a[k, 0]
 
@@ -433,12 +449,13 @@ def _generate(l, k, gamma, beta, M, e, shape):
     for j in xrange(1, pxs):
         k = i * px + j
         print "(", i, j, ") == ", k
-        Mte = b[k, 0]
+#        Mte = b[k, 0]
+        Mte = np.dot(M[:, k].T, e)
         subgrad = sqrt2 * U(-1, 1) + U(-1, 1)
         grad = (beta[i, j] - beta[i - 1, j]) \
                  / np.sqrt((beta[i, j] - beta[i - 1, j]) ** 2.0 \
                          + (beta[i - 1, j + 1] - beta[i - 1, j]) ** 2.0)
-        a[k, 0] = (-k * beta[i, j] - l * U(-1, 1) \
+        a[k, 0] = (-l2 * beta[i, j] - l1 * U(-1, 1) \
                    - gamma * (subgrad + grad)) / Mte
         X[:, k] = M[:, k] * a[k, 0]
 
@@ -464,9 +481,10 @@ def _generate(l, k, gamma, beta, M, e, shape):
         for j in xrange(pxs + 1, px - 1):
             k = i * px + j
             print "(", i, j, ") == ", k
-            Mte = b[k, 0]
+#            Mte = b[k, 0]
+            Mte = np.dot(M[:, k].T, e)
             subgrad = sqrt2 * U(-1, 1) + U(-1, 1) + U(-1, 1)
-            a[k, 0] = (-k * beta[i, j] - l * U(-1, 1) - gamma * subgrad) \
+            a[k, 0] = (-l2 * beta[i, j] - l1 * U(-1, 1) - gamma * subgrad) \
                     / Mte
             X[:, k] = M[:, k] * a[k, 0]
 
@@ -506,9 +524,10 @@ def _generate(l, k, gamma, beta, M, e, shape):
     for i in xrange(1, py - 1):
         k = i * px + j
         print "(", i, j, ") == ", k
-        Mte = b[k, 0]
+#        Mte = b[k, 0]
+        Mte = np.dot(M[:, k].T, e)
         subgrad = U(-1, 1) + U(-1, 1) + U(-1, 1)
-        a[k, 0] = (-k * beta[i, j] - l * U(-1, 1) - gamma * subgrad) / Mte
+        a[k, 0] = (-l2 * beta[i, j] - l1 * U(-1, 1) - gamma * subgrad) / Mte
         X[:, k] = M[:, k] * a[k, 0]
 
         Mat[i, j] = 9
@@ -528,9 +547,10 @@ def _generate(l, k, gamma, beta, M, e, shape):
         for j in xrange(1, pxs):
             k = i * px + j
             print "(", i, j, ") == ", k
-            Mte = b[k, 0]
+#            Mte = b[k, 0]
+            Mte = np.dot(M[:, k].T, e)
             subgrad = sqrt2 * U(-1, 1) + U(-1, 1) + U(-1, 1)
-            a[k, 0] = (-k * beta[i, j] - l * U(-1, 1) - gamma * subgrad) \
+            a[k, 0] = (-l2 * beta[i, j] - l1 * U(-1, 1) - gamma * subgrad) \
                     / Mte
             X[:, k] = M[:, k] * a[k, 0]
 
@@ -556,9 +576,10 @@ def _generate(l, k, gamma, beta, M, e, shape):
     for j in xrange(1, px - 1):
         k = i * px + j
         print "(", i, j, ") == ", k
-        Mte = b[k, 0]
+#        Mte = b[k, 0]
+        Mte = np.dot(M[:, k].T, e)
         subgrad = U(-1, 1) + U(-1, 1) + U(-1, 1)
-        a[k, 0] = (-k * beta[i, j] - l * U(-1, 1) - gamma * subgrad) / Mte
+        a[k, 0] = (-l2 * beta[i, j] - l1 * U(-1, 1) - gamma * subgrad) / Mte
         X[:, k] = M[:, k] * a[k, 0]
 
         Mat[i, j] = 9
@@ -597,9 +618,10 @@ def _generate(l, k, gamma, beta, M, e, shape):
         for j in xrange(pxs, px - 1):
             k = i * px + j
             print "(", i, j, ") == ", k
-            Mte = b[k, 0]
+#            Mte = b[k, 0]
+            Mte = np.dot(M[:, k].T, e)
             subgrad = sqrt2 * U(-1, 1) + U(-1, 1) + U(-1, 1)
-            a[k, 0] = (-k * beta[i, j] - l * U(-1, 1) - gamma * subgrad) \
+            a[k, 0] = (-l2 * beta[i, j] - l1 * U(-1, 1) - gamma * subgrad) \
                     / Mte
             X[:, k] = M[:, k] * a[k, 0]
 
@@ -618,13 +640,16 @@ def _generate(l, k, gamma, beta, M, e, shape):
     j = px - 1
     k = i * px + j
     print "(", i, j, ") == ", k
-    Mte = b[k, 0]
+#    Mte = b[k, 0]
+    Mte = np.dot(M[:, k].T, e)
     subgrad = U(-1, 1) + U(-1, 1)
-    a[k, 0] = (-k * beta[i, j] - l * U(-1, 1) - gamma * subgrad) / Mte
+    a[k, 0] = (-l2 * beta[i, j] - l1 * U(-1, 1) - gamma * subgrad) / Mte
     X[:, k] = M[:, k] * a[k, 0]
 
     Mat[i, j] = 5
     print Mat
+
+    print "alpha[*] = ", a
 
     beta = np.reshape(beta, (p, 1))
     y = np.dot(X, beta) - e
@@ -634,11 +659,12 @@ def _generate(l, k, gamma, beta, M, e, shape):
 #        Y[:, ind[i, 0]] = M[:, i]
 #
 #    return Y, y, beta
-    return X, y, beta
+    return X, y
 
 
 def U(a, b):
-    t = max(a, b)
-    a = float(min(a, b))
-    b = float(t)
-    return (np.random.rand() * (b - a)) + a
+#    t = max(a, b)
+#    a = float(min(a, b))
+#    b = float(t)
+#    return (np.random.rand() * (b - a)) + a
+    return 0.0

@@ -137,6 +137,8 @@ def _generate(l1, l2, gamma, beta, M, e, Aa):
 
         X[:, i] = alpha * M[:, i]
 
+        print "alpha[", i, "] = ", alpha
+
     y = np.dot(X, beta) - e
 
     return X, y
