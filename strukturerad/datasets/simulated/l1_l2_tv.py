@@ -103,7 +103,6 @@ def _generate(l1, l2, gamma, beta, M, e):
 #        else:
 #            beta[i, 0] = 0.0
 #    beta = np.flipud(np.sort(beta, axis=0))
-    ps = 3
 
     X = np.zeros(M.shape)
     for i in xrange(p):
@@ -122,21 +121,24 @@ def _generate(l1, l2, gamma, beta, M, e):
         alpha += -l2 * beta[i, 0]
 
         # TV
-        if i == 0:  # Case 1: Positive edge
+        if i == 0:  # Case 1: Positive edge (left-most edge) [?][x>0][+]
             alpha += -gamma * 1.0
-        elif i < ps:  # Case 2 and 3: Positive neighbours left and right
-#        elif i < p - 1 and abs(beta[i-1, 0]) > utils.TOLERANCE \
-#                   and abs(beta[i+1, 0]) > utils.TOLERANCE:
+#        elif i < ps:  # Case 2 and 3: All neighbours positive [+][x>0][+]
+        elif i < p - 1 and abs(beta[i-1, 0]) > utils.TOLERANCE \
+                       and abs(beta[i, 0]) > utils.TOLERANCE \
+                       and abs(beta[i+1, 0]) > utils.TOLERANCE:
             alpha += -gamma * 0.0
-        elif i == ps:  # Case 4: Positive neighbour left, zero neighbour right
-#        elif i < p - 1 and abs(beta[i-1, 0]) > utils.TOLERANCE \
-#                   and abs(beta[i+1, 0]) <= utils.TOLERANCE:
+#        elif i == ps:  # Case 4: Positive left, zero right [+][x=0][0]
+        elif i < p - 1 and abs(beta[i-1, 0]) > utils.TOLERANCE \
+                       and abs(beta[i, 0]) <= utils.TOLERANCE \
+                       and abs(beta[i+1, 0]) <= utils.TOLERANCE:
             alpha += -gamma * -1.0#(U(-1, 1) - 1.0)
-        elif i < p - 1:  # Case 5: Zero neighbours left and right [0][x][0]
-#        elif i < p - 1 and abs(beta[i-1, 0]) <= utils.TOLERANCE \
-#                   and abs(beta[i+1, 0]) <= utils.TOLERANCE:
+#        elif i < p - 1:  # Case 5: Zero neighbours left and right [0][x=0][0]
+        elif i < p - 1 and abs(beta[i-1, 0]) <= utils.TOLERANCE \
+                       and abs(beta[i, 0]) <= utils.TOLERANCE \
+                       and abs(beta[i+1, 0]) <= utils.TOLERANCE:
             alpha += -gamma * 0.0#(U(-1, 1) + U(-1, 1))
-        elif i == p - 1:  # Case 6: Zero edge
+        elif i == p - 1:  # Case 6: Zero edge (right-most edge) [0][x=0][?]
             alpha += -gamma * 0.0#U(-1, 1)
 
         alpha /= Mte

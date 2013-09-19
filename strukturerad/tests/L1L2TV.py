@@ -606,7 +606,7 @@ x = []
 fval = []
 beta_opt = 0
 
-num_lin = 25
+num_lin = 13
 #ls = np.maximum(0.0, np.linspace(l - l * 0.1, l + l * 0.1, num_lin))
 #ks = np.maximum(0.0, np.linspace(k - k * 0.1, k + k * 0.1, num_lin))
 gs = np.maximum(0.0, np.linspace(g - g * 0.1, g + g * 0.1, num_lin))
