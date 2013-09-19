@@ -50,7 +50,7 @@ np.random.seed(42)
 #X, y, betastar = l1_l2.load(l, k, density, snr, M, e)
 #beta0 = np.random.randn(*betastar.shape)
 #beta0 = np.ones(betastar.shape)
-#mu_zero = 1e-8
+mu_zero = 1e-10
 
 
 class RidgeRegression(object):
@@ -278,12 +278,25 @@ class TotalVariation(object):
 class L1(object):
 
     def __init__(self):
-        pass
+        self._A = None
 
     """ Function value of L1.
     """
-    def f(self, l, beta):
-        return l * np.sum(np.abs(beta))
+    def f(self, l, beta, mu=0.0):
+
+        if mu > 0.0:
+            alpha = self.alpha(beta, mu)
+            return l * (np.dot(alpha[0].T, beta)[0, 0] \
+                    - 0.5 * mu * np.sum(alpha[0] ** 2.0))
+        else:
+            return l * np.sum(np.abs(beta))
+
+#    def grad(self, beta):
+
+    def A(self, p=None):
+        if self._A == None:
+            self._A = sparse.eye(p, p)
+        return self._A
 
     def phi(self, l, beta, alpha, mu):
 #        return l * np.dot(alpha.T, beta)[0, 0]
@@ -296,10 +309,6 @@ class L1(object):
         return (np.abs(x) > l) * (x - l * np.sign(x - l))
 
     ### Methods for the dual formulation ###
-
-#    def fmu(self, beta, alpha, l, mu):
-#        return l * (np.dot(alpha.T, beta)[0, 0] \
-#                - 0.5 * mu * np.sum(alpha ** 2.0))
 
     def alpha(self, beta, mu):
 
@@ -345,7 +354,11 @@ def prox(l, x):
     return l1.prox(l, x)
 
 
-def betahat(X, y, k, g, beta, alpha=None, Aalpha=None):
+def project(a):
+    return tv.project(a)
+
+
+def betahat(X, y, k, g, alpha=None, Aalpha=None):
 
     XXkI = np.dot(X.T, X) + k * np.eye(X.shape[1])
     if alpha != None:
@@ -356,30 +369,47 @@ def betahat(X, y, k, g, beta, alpha=None, Aalpha=None):
     return betahatk
 
 
-def gap_function(X, y, k, g, beta, mu):
+def alphahat(beta, mu):
 
+    return tv.alpha(beta, mu)
+
+
+def gap(X, y, l, k, g, beta, mu):
+
+#    Al1 = l1.A(beta.shape[0])
+#    Atv = tv.A()
+
+    P = rr.f(X, y, k, beta) + l1.f(l, beta, mu_zero) + tv.f(X, y, g, beta, mu)
+
+    alphal1 = l1.alpha(beta, mu_zero)
+    alphatv = tv.alpha(beta, mu)
+
+    
+
+    D = rr.f(X, y, k, beta)
+
+##    alphak = tv.alpha(beta, mu)
+##
+###    gradbetak = rr.grad(X, y, k, beta)
+###    i = np.abs(beta) < utils.TOLERANCE
+###    alphak[i] = (-1.0 / l) * gradbetak[i]
+##
+##    betahatk = betahat(X, y, k, g, beta, alphak)
+#
 #    alphak = tv.alpha(beta, mu)
+#    Aak = tv.Aa(alphak)
 #
-##    gradbetak = rr.grad(X, y, k, beta)
-##    i = np.abs(beta) < utils.TOLERANCE
-##    alphak[i] = (-1.0 / l) * gradbetak[i]
+#    Aa = -(1.0 / g) * rr.grad(X, y, k, beta)
+#    i = np.abs(beta) < utils.TOLERANCE
+#    Aak[i] = Aa[i]
 #
-#    betahatk = betahat(X, y, k, g, beta, alphak)
-
-    alphak = tv.alpha(beta, mu)
-    Aak = tv.Aa(alphak)
-
-    Aa = -(1.0 / g) * rr.grad(X, y, k, beta)
-    i = np.abs(beta) < utils.TOLERANCE
-    Aak[i] = Aa[i]
-
-#    betahatk = betahat(X, y, k, g, beta, alphak)
-    betahatk = betahat(X, y, k, g, beta, Aalpha=Aak)
-
-    return phi(X, y, k, g, beta, alphak, mu) \
-         - phi(X, y, k, g, betahatk, alphak, mu)
-#    return phi(X, y, l, k, g, beta, alphak) \
-#         - phi(X, y, l, k, g, betahatk, alphak)
+##    betahatk = betahat(X, y, k, g, beta, alphak)
+#    betahatk = betahat(X, y, k, g, beta, Aalpha=Aak)
+#
+#    return phi(X, y, k, g, beta, alphak, mu) \
+#         - phi(X, y, k, g, betahatk, alphak, mu)
+##    return phi(X, y, l, k, g, beta, alphak) \
+##         - phi(X, y, l, k, g, betahatk, alphak)
 
 
 def Lipschitz(X, k, g, mu):
@@ -430,7 +460,36 @@ def FISTA(X, y, l, k, g, beta, step, mu,
     return (betanew, crit, critmu)
 
 
-def conesmo(X, y, l, k, beta, eps=utils.TOLERANCE, conts=10, maxit=100):
+def CONESTA(X, y, l, k, g, beta, mu0, mumin=utils.TOLERANCE, tau=0.5,
+            eps0=1.0, eps=utils.TOLERANCE, conts=10, maxit=100,
+            dynamic=True):
+
+    mu = [mu0]
+    t = []
+    tmin = 1.0 / Lipschitz(X, k, g, mumin)
+    beta_old = beta
+
+    k = 0
+    while True:
+        t.append(1.0 / Lipschitz(X, k, g, mu[k]))
+        (beta_new, _, _) = FISTA(X, y, l, k, g, beta_old, t[k], mu[k],
+                                 eps=0, maxit=maxit)
+
+        mumin = min(mumin, mu[k])
+        tmin = min(tmin, t[k])
+        beta_tilde = prox(tmin * l, beta_new - tmin * grad(X, y, k, g,
+                                                           beta_new, mumin))
+
+        if utils.norm(beta_new - beta_tilde) < tmin * eps:
+            return beta_new
+
+        if dynamic:
+            alpha = alphahat(beta, mu)
+            G = gap()
+
+    maxg = 0.0
+    for i in xrange():
+    mu[0] = 0.9 * 
 
     lambdamax = Lipschitz(X, l, k)
     mu = np.max(np.abs(math.corr(X, y)))
@@ -445,7 +504,7 @@ def conesmo(X, y, l, k, beta, eps=utils.TOLERANCE, conts=10, maxit=100):
     it = 0
     while it < conts * maxit:
         step = 1.0 / Lipschitz(X, l, k, mu)
-        (betanew, crit_, critmu_) = FISTAmu(X, y, l, k, beta, step, epsilon=0, maxit=maxit, mu=mu)
+        (betanew, crit_, critmu_) = FISTA(X, y, l, k, beta, step, epsilon=0, maxit=maxit, mu=mu)
         crit += crit_
         critmu += critmu_
         beta = betanew
