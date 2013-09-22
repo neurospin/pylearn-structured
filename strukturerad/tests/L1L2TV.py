@@ -488,8 +488,8 @@ def CONESTA(X, y, l, k, g, beta, mu0, mumin=utils.TOLERANCE, tau=0.5,
             G = gap()
 
     maxg = 0.0
-    for i in xrange():
-    mu[0] = 0.9 * 
+#    for i in xrange():
+#    mu[0] = 0.9 * 
 
     lambdamax = Lipschitz(X, l, k)
     mu = np.max(np.abs(math.corr(X, y)))
@@ -563,10 +563,10 @@ density=0.25
 
 mu_zero = 1e-8
 eps = 1e-3
-#mu = (0.9 * eps / (g * p)) * 1.0
-mu = 1e-5
+mu = 0.9 * eps / p
+#mu = 1e-4
 print "mu:", mu
-conts = 1000
+conts = 10
 maxit = 100
 
 #    X, y, beta = lasso.load(l, density=0.7, snr=100.0, M=M, e=e)
@@ -654,10 +654,10 @@ X, y = l1_l2_tv_2D.load(l, k, g, betastar, M, e, shape)
 
 #X, y, betastar = l1_l2_tv.load(l, k, g, density=density, snr=100.0, M=M, e=e)
 
-print betastar
-for A in tv.A():
-    print A.todense()
-print tv.alpha(betastar, mu)
+#print betastar
+#for A in tv.A():
+#    print A.todense()
+#print tv.alpha(betastar, mu)
 print tv.Aa(tv.alpha(betastar, mu))
 print tv.grad(g, betastar, mu)
 

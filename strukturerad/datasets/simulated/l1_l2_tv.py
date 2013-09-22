@@ -104,6 +104,10 @@ def _generate(l1, l2, gamma, beta, M, e):
 #            beta[i, 0] = 0.0
 #    beta = np.flipud(np.sort(beta, axis=0))
 
+    u = [0] * p
+    for i in xrange(p):
+        u[i] = U(-1, 1)
+
     X = np.zeros(M.shape)
     for i in xrange(p):
         Mte = np.dot(M[:, i].T, e)
@@ -132,14 +136,14 @@ def _generate(l1, l2, gamma, beta, M, e):
         elif i < p - 1 and abs(beta[i-1, 0]) > utils.TOLERANCE \
                        and abs(beta[i, 0]) <= utils.TOLERANCE \
                        and abs(beta[i+1, 0]) <= utils.TOLERANCE:
-            alpha += -gamma * -1.0#(U(-1, 1) - 1.0)
+            alpha += -gamma * (-1.0 - u[i+1])
 #        elif i < p - 1:  # Case 5: Zero neighbours left and right [0][x=0][0]
         elif i < p - 1 and abs(beta[i-1, 0]) <= utils.TOLERANCE \
                        and abs(beta[i, 0]) <= utils.TOLERANCE \
                        and abs(beta[i+1, 0]) <= utils.TOLERANCE:
-            alpha += -gamma * 0.0#(U(-1, 1) + U(-1, 1))
+            alpha += -gamma * (u[i] - u[i+1])
         elif i == p - 1:  # Case 6: Zero edge (right-most edge) [0][x=0][?]
-            alpha += -gamma * 0.0#U(-1, 1)
+            alpha += -gamma * u[i]
 
         alpha /= Mte
 

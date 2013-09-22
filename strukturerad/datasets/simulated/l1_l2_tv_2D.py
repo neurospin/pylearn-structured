@@ -157,31 +157,130 @@ def _generate(l, k, gamma, beta, M, e, shape):
     X = np.zeros(M.shape)
     a = np.zeros((p, 1))
 
+    u = [0] * p
+    for i in xrange(p):
+        u[i] = U(-1, 1)
+
 #    np.set_printoptions(threshold=100000)
     Mat = np.zeros(shape)
 
-    # Case 1: Top-left corner
-    # -----------------------
-    # [00][0+][  ](  )(  )(  )
-    # [+0][  ][  ](  )(  )(  )
-    # [  ][  ][  ](  )(  )(  )
-    # (  )(  )(  )(  )(  )(  )
-    # (  )(  )(  )(  )(  )(  )
-    # (  )(  )(  )(  )(  )(  )
-    i, j = 0, 0
-    k = i * px + j
-    print "(", i, j, ") == ", k
-#    Mte = b[k, 0]
-    Mte = np.dot(M[:, k].T, e)
-    print "beta:", beta
-    grad = (2.0 * beta[i, j] - (beta[i + 1, j] + beta[i, j + 1])) \
-            / np.sqrt((beta[i + 1, j] - beta[i, j]) ** 2.0 \
-                    + (beta[i, j + 1] - beta[i, j]) ** 2.0)
-    a[k, 0] = (-l2 * beta[i, j] - l1 - gamma * grad) / Mte
-    X[:, k] = M[:, k] * a[k, 0]
+    X = np.zeros(M.shape)
+    for i in xrange(1):#py):
+        for j in xrange(1):#px):
+            k = i * px + j
+            Mte = np.dot(M[:, k].T, e)
 
-    Mat[i, j] = 1
-    print Mat
+            alpha = 0.0
+
+            # L1
+            if abs(beta[i, 0]) > utils.TOLERANCE:
+                alpha += -l1 * sign(beta[i, j])
+            else:
+                alpha += -l1 * U(-1, 1)
+
+            # L2
+            alpha += -l2 * beta[i, j]
+
+            # TV
+            if i == 0 and j == 0:
+                # Case 1: Top-left corner
+                # -----------------------
+                # [00][0+][  ](  )(  )(  )
+                # [+0][  ][  ](  )(  )(  )
+                # [  ][  ][  ](  )(  )(  )
+                # (  )(  )(  )(  )(  )(  )
+                # (  )(  )(  )(  )(  )(  )
+                # (  )(  )(  )(  )(  )(  )
+                grad = (2.0 * beta[i, j] - (beta[i + 1, j] + beta[i, j + 1])) \
+                        / np.sqrt((beta[i + 1, j] - beta[i, j]) ** 2.0 \
+                                + (beta[i, j + 1] - beta[i, j]) ** 2.0)
+                alpha += -gamma * grad
+
+                print "(", i, j, ") == ", k
+                Mat[i, j] = 1
+                print Mat
+
+                a[k, 0] = alpha
+
+#            elif i == 0 and j > 0 and j < px - 1 \
+#                    and abs(beta[i, j]) >= utils.TOLERANCE \
+#                    and abs(beta[i, j - 1]) >= utils.TOLERANCE \
+#                    and abs(beta[i + 1, j - 1]) >= utils.TOLERANCE \
+#                    and abs(beta[i + 1, j]) >= utils.TOLERANCE:
+#                # Case 2a: Top row on positive side.
+#                # ---------------------------------
+#                # [0-][00][0+](  )(  )(  )    [  ][0-][00](0+)(  )(  )
+#                # [+-][+0][  ](  )(  )(  )    [  ][+-][+0](  )(  )(  )
+#                # [  ][  ][  ](  )(  )(  )    [  ][  ][  ](  )(  )(  )
+#                # (  )(  )(  )(  )(  )(  )    (  )(  )(  )(  )(  )(  )
+#                # (  )(  )(  )(  )(  )(  )    (  )(  )(  )(  )(  )(  )
+#                # (  )(  )(  )(  )(  )(  )    (  )(  )(  )(  )(  )(  )
+#                grad = (2.0 * beta[i, j] - (beta[i + 1, j] + beta[i, j + 1])) \
+#                         / np.sqrt((beta[i + 1, j] - beta[i, j]) ** 2.0 \
+#                                 + (beta[i, j + 1] - beta[i, j]) ** 2.0) \
+#                     + (beta[i, j] - beta[i, j - 1]) \
+#                         / np.sqrt((beta[i + 1, j - 1] - beta[i, j - 1]) ** 2.0 \
+#                                 + (beta[i, j] - beta[i, j - 1]) ** 2.0)
+#                alpha += -gamma * grad
+#
+#                print "(", i, j, ") == ", k
+#                Mat[i, j] = 2
+#                print Mat
+#
+#                a[k, 0] = alpha
+
+#            elif i == 0 and j > 0 and j < px - 1 \
+#                    and 
+#                # Case 3: First zero on top row.
+#                # -----------------------
+#                # [  ][  ][0-](00)(0+)(  )
+#                # [  ][  ][+-](+0)(  )(  )
+#                # [  ][  ][  ](  )(  )(  )
+#                # (  )(  )(  )(  )(  )(  )
+#                # (  )(  )(  )(  )(  )(  )
+#                # (  )(  )(  )(  )(  )(  )
+#                i = 0
+#                j = pxs
+#                k = i * px + j
+#                print "(", i, j, ") == ", k
+#            #    Mte = b[k, 0]
+#                Mte = np.dot(M[:, k].T, e)
+#                subgrad = sqrt2 * U(-1, 1)
+#                grad = (beta[i, j] - beta[i, j - 1]) \
+#                         / np.sqrt((beta[i + 1, j - 1] - beta[i, j - 1]) ** 2.0 \
+#                                 + (beta[i, j] - beta[i, j - 1]) ** 2.0)
+#                a[k, 0] = (-l2 * beta[i, j] - l1 * U(-1, 1) - gamma * (subgrad + grad)) \
+#                        / Mte
+#                X[:, k] = M[:, k] * a[k, 0]
+#            
+#                Mat[i, j] = 3
+#                print Mat
+
+            alpha /= Mte
+            X[:, i] = alpha * M[:, i]
+
+#    # Case 1: Top-left corner
+#    # -----------------------
+#    # [00][0+][  ](  )(  )(  )
+#    # [+0][  ][  ](  )(  )(  )
+#    # [  ][  ][  ](  )(  )(  )
+#    # (  )(  )(  )(  )(  )(  )
+#    # (  )(  )(  )(  )(  )(  )
+#    # (  )(  )(  )(  )(  )(  )
+#    i, j = 0, 0
+#    k = i * px + j
+#    print "(", i, j, ") == ", k
+##    Mte = b[k, 0]
+#    Mte = np.dot(M[:, k].T, e)
+#    print "beta:", beta
+#    grad = (2.0 * beta[i, j] - (beta[i + 1, j] + beta[i, j + 1])) \
+#            / np.sqrt((beta[i + 1, j] - beta[i, j]) ** 2.0 \
+#                    + (beta[i, j + 1] - beta[i, j]) ** 2.0)
+#    a[k, 0] = (-l2 * beta[i, j] - l1 - gamma * grad) / Mte
+#    X[:, k] = M[:, k] * a[k, 0]
+#
+#    Mat[i, j] = 1
+#    print Mat
 
     # Case 2a: Top row on positive side.
     # ---------------------------------
@@ -667,4 +766,12 @@ def U(a, b):
 #    a = float(min(a, b))
 #    b = float(t)
 #    return (np.random.rand() * (b - a)) + a
-    return 0.0
+    return 0
+
+def sign(x):
+    if x > 0:
+        return 1.0
+    elif x < 0:
+        return -1.0
+    else:
+        return 0.0
