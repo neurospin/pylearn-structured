@@ -183,6 +183,20 @@ class TotalVariation(object):
 
         return float(g) * lmax / mu
 
+    def D(self):
+        return self._A[0].shape[0]
+
+    def mu(self, beta):
+
+        SS = 0
+        A = self.A()
+        for i in xrange(len(A)):
+            SS += A[i].dot(beta) ** 2.0
+
+        anorm = np.sqrt(SS)
+
+        return np.max(anorm)
+
     @staticmethod
     def precompute(shape, mask=None, compress=True):
 
@@ -278,6 +292,7 @@ class TotalVariation(object):
 class L1(object):
 
     def __init__(self):
+
         self._A = None
 
     """ Function value of L1.
@@ -291,24 +306,39 @@ class L1(object):
         else:
             return l * np.sum(np.abs(beta))
 
-#    def grad(self, beta):
-
-    def A(self, p=None):
-        if self._A == None:
-            self._A = sparse.eye(p, p)
-        return self._A
-
     def phi(self, l, beta, alpha, mu):
-#        return l * np.dot(alpha.T, beta)[0, 0]
+
         return l * (np.dot(alpha[0].T, beta)[0, 0] \
-                - 0.5 * mu * np.sum(alpha[0] ** 2.0))
+                - (mu / 2.0) * np.sum(alpha[0] ** 2.0))
 
     """ Proximal operator of the L1 norm
     """
     def prox(self, l, x):
+
         return (np.abs(x) > l) * (x - l * np.sign(x - l))
 
     ### Methods for the dual formulation ###
+
+    def grad(self, l, beta, mu):
+
+        alpha = self.alpha(beta, mu)
+
+        A = self.A(beta.shape[0])
+        grad = A[0].T.dot(alpha[0])
+        for i in xrange(1, len(A)):
+            grad += A[i].T.dot(alpha[i])
+
+        return l * grad
+
+    def A(self, p=None):
+
+        if self._A == None:
+            self._A = sparse.eye(p, p)
+        return [self._A]
+
+    def Aa(self, alpha):
+
+        return alpha[0]
 
     def alpha(self, beta, mu):
 
@@ -358,58 +388,36 @@ def project(a):
     return tv.project(a)
 
 
-def betahat(X, y, k, g, alpha=None, Aalpha=None):
+def betahat(X, y, k, gAalpha):
 
     XXkI = np.dot(X.T, X) + k * np.eye(X.shape[1])
-    if alpha != None:
-        betahatk = np.dot(np.linalg.pinv(XXkI), np.dot(X.T, y) - g * tv.Aa(alpha))
-    else:
-        betahatk = np.dot(np.linalg.pinv(XXkI), np.dot(X.T, y) - g * Aalpha)
+    beta = np.dot(np.linalg.pinv(XXkI), np.dot(X.T, y) - gAalpha)
 
-    return betahatk
-
-
-def alphahat(beta, mu):
-
-    return tv.alpha(beta, mu)
+    return beta
 
 
 def gap(X, y, l, k, g, beta, mu):
 
-#    Al1 = l1.A(beta.shape[0])
-#    Atv = tv.A()
+    alpha_l1 = l1.alpha(beta, mu_zero)
+    alpha_tv = tv.alpha(beta, mu)
 
-    P = rr.f(X, y, k, beta) + l1.f(l, beta, mu_zero) + tv.f(X, y, g, beta, mu)
+    P = rr.f(X, y, k, beta) \
+      + l1.phi(l, beta, alpha_l1, mu_zero) \
+      + tv.phi(X, y, g, beta, alpha_tv, mu)
 
-    alphal1 = l1.alpha(beta, mu_zero)
-    alphatv = tv.alpha(beta, mu)
+    Aa_l1 = l1.Aa(alpha_l1)
+    Aa_tv = tv.Aa(alpha_tv)
 
-    
+    gAa_l1 = l * Aa_l1
+    gAa_tv = g * Aa_tv
+    gAa = gAa_l1 + gAa_tv
+    beta_hat = betahat(X, y, k, gAa)
 
-    D = rr.f(X, y, k, beta)
+    D = rr.f(X, y, k, beta_hat) \
+      + l1.phi(l, beta_hat, alpha_l1, mu_zero) \
+      + tv.phi(X, y, g, beta_hat, alpha_tv, mu)
 
-##    alphak = tv.alpha(beta, mu)
-##
-###    gradbetak = rr.grad(X, y, k, beta)
-###    i = np.abs(beta) < utils.TOLERANCE
-###    alphak[i] = (-1.0 / l) * gradbetak[i]
-##
-##    betahatk = betahat(X, y, k, g, beta, alphak)
-#
-#    alphak = tv.alpha(beta, mu)
-#    Aak = tv.Aa(alphak)
-#
-#    Aa = -(1.0 / g) * rr.grad(X, y, k, beta)
-#    i = np.abs(beta) < utils.TOLERANCE
-#    Aak[i] = Aa[i]
-#
-##    betahatk = betahat(X, y, k, g, beta, alphak)
-#    betahatk = betahat(X, y, k, g, beta, Aalpha=Aak)
-#
-#    return phi(X, y, k, g, beta, alphak, mu) \
-#         - phi(X, y, k, g, betahatk, alphak, mu)
-##    return phi(X, y, l, k, g, beta, alphak) \
-##         - phi(X, y, l, k, g, betahatk, alphak)
+    return P - D
 
 
 def Lipschitz(X, k, g, mu):
@@ -419,25 +427,13 @@ def Lipschitz(X, k, g, mu):
         return rr.Lipschitz(X, k)
 
 
-# L1
-#def mu_plus(l, p, lmax, epsilon):
-#    return (-p * l ** 2.0 + np.sqrt((p * l ** 2.0) ** 2.0 \
-#            + 2.0 * p * epsilon * lmax * l ** 2.0)) / (p * lmax * l)
-
-# TV
-def mu_plus(eps, g, D, lmaxX, lmaxA):
-    return (-2.0 * (g ** 2.0) * lmaxA * D \
-            + np.sqrt((2.0 * (g ** 2.0) * lmaxA * D) ** 2.0 \
-                       + 4.0 * (g ** 2.0) * lmaxX * D * eps * lmaxA)) \
-           / (2.0 * g * lmaxX * D)
+def mu_opt(eps, g, D, lmaxX, lmaxA):
+    return (-D * g * lmaxA + np.sqrt((D * g * lmaxA) ** 2.0 \
+                + D * lmaxX * eps * g * lmaxA)) / (D * lmaxX)
 
 
-#def sinf(u):
-#    unorm = np.abs(u)
-#    i = unorm > 1.0
-#    unorm_i = unorm[i]
-#    u[i] = np.divide(u[i], unorm_i)
-#    return u
+def eps_opt(mu, g, D, lmaxX, lmaxA):
+    return (2.0 * D * g * lmaxA * mu + D * lmaxX * mu ** 2.0) / (g * lmaxA)
 
 
 # The fast iterative shrinkage threshold algorithm
@@ -454,7 +450,7 @@ def FISTA(X, y, l, k, g, beta, step, mu,
         betanew = prox(step * l, z - step * grad(X, y, k, g, z, mu))
         crit.append(f(X, y, l, k, g, betanew, mu=mu_zero))
         critmu.append(f(X, y, l, k, g, beta, mu=mu))
-        if math.norm1(betanew - z) < eps * step:
+        if math.norm(betanew - z) < eps * step:
             break
 
     return (betanew, crit, critmu)
@@ -469,64 +465,47 @@ def CONESTA(X, y, l, k, g, beta, mu0, mumin=utils.TOLERANCE, tau=0.5,
     tmin = 1.0 / Lipschitz(X, k, g, mumin)
     beta_old = beta
 
-    k = 0
-    while True:
-        t.append(1.0 / Lipschitz(X, k, g, mu[k]))
-        (beta_new, _, _) = FISTA(X, y, l, k, g, beta_old, t[k], mu[k],
-                                 eps=0, maxit=maxit)
+    lmaxX = rr.Lipschitz(X, k)
 
-        mumin = min(mumin, mu[k])
-        tmin = min(tmin, t[k])
+    i = 0
+    while True:
+        t.append(1.0 / Lipschitz(X, k, g, mu[i]))
+        (beta_new, _, _) = FISTA(X, y, l, k, g, beta_old, t[i], mu[i],
+                                 eps=0, maxit=maxit)
+        beta_old = beta_new
+
+        mumin = min(mumin, mu[i])
+        tmin = min(tmin, t[i])
         beta_tilde = prox(tmin * l, beta_new - tmin * grad(X, y, k, g,
                                                            beta_new, mumin))
 
-        if utils.norm(beta_new - beta_tilde) < tmin * eps:
+        if math.norm(beta_new - beta_tilde) < tmin * eps:
             return beta_new
+        else:
+            print "norm = ", math.norm(beta_new - beta_tilde), " >= ", tmin * eps
+
+        if i >= conts:
+            return beta_new
+        else:
+            print "i:", i
 
         if dynamic:
-            alpha = alphahat(beta, mu)
-            G = gap()
-
-    maxg = 0.0
-#    for i in xrange():
-#    mu[0] = 0.9 * 
-
-    lambdamax = Lipschitz(X, l, k)
-    mu = np.max(np.abs(math.corr(X, y)))
-    print "start mu:", mu, ", eps:", eps, ", conts:", conts, "maxit:", maxit
-
-    gap = gap_function(X, y, k, beta)
-    gapvec = [gap]
-    gapmu = gap_mu_function(X, y, l, k, beta, mu)
-    gapmuvec = [gapmu]
-    crit = []
-    critmu = []
-    it = 0
-    while it < conts * maxit:
-        step = 1.0 / Lipschitz(X, l, k, mu)
-        (betanew, crit_, critmu_) = FISTA(X, y, l, k, beta, step, epsilon=0, maxit=maxit, mu=mu)
-        crit += crit_
-        critmu += critmu_
-        beta = betanew
-        gap = gap_function(X, y, k, beta)
-        gapmu = gap_mu_function(X, y, l, k, beta, mu)
-        gapvec.append(gap)
-        gapmuvec.append(gapmu)
-        if gap < eps:
-            print "gap:", gap, ", eps:", eps
-            print "Gap < epsilon!"
-            break
-        if gap < gapmu / 2.0:
-            mu = mu / 2.0
+            G = gap(X, y, l, k, g, beta_new, mu[i])
+            print "Gap:", G
+            G = abs(G)
+            lmaxA = tv.Lipschitz(g, mu[i])
+            mu_new = min(mu[i], mu_opt(G, g, tv.D(), lmaxX, lmaxA))
+            mu.append(max(mumin, mu_new))
         else:
-            mu = min(mu, mu_plus(l, X.shape[1], lambdamax, gap))
+            lmaxA = tv.Lipschitz(g, mu[i])
+            mu_new = mu_opt(eps0 * tau ** (i + 1), g, tv.D(), lmaxX, lmaxA)
+            mu.append(max(mumin, mu_new))
 
-        it += maxit
+        print "mu:", mu[i + 1]
 
-    if it >= conts * maxit:
-        print "it = maxit!"
+        i = i + 1
 
-    return (beta, gapvec, gapmuvec, mu, crit, critmu)
+    return beta_new
 
 
 def U(a, b):
@@ -544,11 +523,11 @@ g = 0.9  # 3.14159
 
 #print "2d tv: g=100, mu=1e-6, conts=10000*100"
 px = 6
-py = 6
+py = 1
 pz = 1
 p = px * py * pz
 shape=(py, px)
-n = 25
+n = 5
 
 rr = RidgeRegression()
 l1 = L1()
@@ -559,7 +538,7 @@ Sigma = a * np.eye(p) + (1.0 - a) * np.ones((p, p))
 Mu = np.zeros(p)
 M = np.random.multivariate_normal(Mu, Sigma, n)
 e = np.random.randn(n, 1)
-density=0.25
+density=0.5
 
 mu_zero = 1e-8
 eps = 1e-3
@@ -568,22 +547,6 @@ mu = 0.9 * eps / p
 print "mu:", mu
 conts = 10
 maxit = 100
-
-#    X, y, beta = lasso.load(l, density=0.7, snr=100.0, M=M, e=e)
-#    X, y, beta = ridge.load(k, density=0.7, snr=100.0, M=M, e=e)
-#    X, y, beta = l1_tv.load(l, gamma, density=0.7, snr=100.0, M=M, e=e)
-#    X, y, beta = ridge_2D.load(k, density=0.7, snr=100.0, M=M, e=e,
-#                               shape=(py, px))
-#    X, y, beta = lasso_2D.load(l, density=0.7, snr=100.0, M=M, e=e,
-#                               shape=(py, px))
-#    X, y, beta = l1_l2.load(l, k, density=0.7, snr=100.0, M=M, e=e)
-#    X, y, beta = l1_l2_2D.load(l, k, density=0.7, snr=100.0, M=M, e=e,
-#                               shape=(py, px))
-#X, y, betastar = l1_l2_tv.load(l, k, g, density=0.50, snr=100.0,
-#                               M=M, e=e)
-
-#X, y, betastar = l1_l2_tvmu.load(l, k, g, density=density, snr=100.0, M=M, e=e,
-#                                 tv=tv, mu=mu)
 
 snr = 100.0
 
@@ -639,25 +602,15 @@ for i in xrange(py):
 beta2D = np.fliplr(np.sort(np.flipud(np.sort(beta2D, axis=0)), axis=1))
 beta2D = np.reshape(beta2D, (p, 1))
 
-#betastar = beta1D
-betastar = beta2D
+betastar = beta1D
+#betastar = beta2D
 print betastar
 #tv_grad = tv.grad(g, betastar, mu)
 Aa = tv.Aa(tv.alpha(betastar, mu))
 #X, y = l1_l2_tvmu.load(l, k, g, betastar, M, e, Aa)
-#X, y = l1_l2_tv.load(l, k, g, betastar, M, e)
-X, y = l1_l2_tv_2D.load(l, k, g, betastar, M, e, shape)
+X, y = l1_l2_tv.load(l, k, g, betastar, M, e)
+#X, y = l1_l2_tv_2D.load(l, k, g, betastar, M, e, shape)
 
-
-#X, y, betastar = l1_l2_tv_2D.load(l, k, g, density=density, snr=100.0,
-#                                  M=M, e=e, shape=(py, px))
-
-#X, y, betastar = l1_l2_tv.load(l, k, g, density=density, snr=100.0, M=M, e=e)
-
-#print betastar
-#for A in tv.A():
-#    print A.todense()
-#print tv.alpha(betastar, mu)
 print tv.Aa(tv.alpha(betastar, mu))
 print tv.grad(g, betastar, mu)
 
@@ -673,31 +626,34 @@ num_lin = 13
 #ls = np.maximum(0.0, np.linspace(l - l * 0.1, l + l * 0.1, num_lin))
 #ks = np.maximum(0.0, np.linspace(k - k * 0.1, k + k * 0.1, num_lin))
 gs = np.maximum(0.0, np.linspace(g - g * 0.1, g + g * 0.1, num_lin))
+beta = beta0
 for i in range(len(gs)):
     val = gs[i]
-    beta = beta0
-    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*100000.0, eps=eps, maxit=10000)
-    print "f:", f(X, y, l, k, val, beta, mu=mu)
-    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*10000.0, eps=eps, maxit=10000)
-    print "f:", f(X, y, l, k, val, beta, mu=mu)
-    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*1000.0, eps=eps, maxit=1000)
-    print "f:", f(X, y, l, k, val, beta, mu=mu)
-    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*100.0, eps=eps, maxit=1000)
-    print "f:", f(X, y, l, k, val, beta, mu=mu)
-    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*10.0, eps=eps, maxit=1000)
-    print "f:", f(X, y, l, k, val, beta, mu=mu)
-    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu, eps=eps, maxit=conts * maxit)
-    print "f:", f(X, y, l, k, val, beta, mu=mu)
-    beta0 = beta
+#    beta = beta0
+#    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*100000.0, eps=eps, maxit=10000)
+#    print "f:", f(X, y, l, k, val, beta, mu=mu)
+#    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*10000.0, eps=eps, maxit=10000)
+#    print "f:", f(X, y, l, k, val, beta, mu=mu)
+#    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*1000.0, eps=eps, maxit=1000)
+#    print "f:", f(X, y, l, k, val, beta, mu=mu)
+#    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*100.0, eps=eps, maxit=1000)
+#    print "f:", f(X, y, l, k, val, beta, mu=mu)
+#    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*10.0, eps=eps, maxit=1000)
+#    print "f:", f(X, y, l, k, val, beta, mu=mu)
+#    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu, eps=eps, maxit=conts * maxit)
+#    print "f:", f(X, y, l, k, val, beta, mu=mu)
+#    beta0 = beta
 
-#    print "f(betastar) = ", f(X, y, l, k, g, betastar, mu=mu_zero)
-#    print "f(beta) = ", f(X, y, l, k, g, beta, mu=mu_zero)
-#    print "f(betastar, mu) = ", f(X, y, l, k, g, betastar, mu=mu)
-#    print "f(beta, mu) = ", f(X, y, l, k, g, beta, mu=mu)
-#    fstar = f(X, y, l, k, g, betastar, mu=mu_zero)
-#    print "err:", f(X, y, l, k, g, beta, mu=mu_zero) - fstar
+    mu_start = 0.9 * tv.mu(beta)
+    beta = CONESTA(X, y, l, k, val, beta, mu_start, mumin=mu_zero, tau=0.5,
+            eps0=1.0, eps=utils.TOLERANCE, conts=conts, maxit=maxit,
+            dynamic=True)
+
+#    print "FISTA:  ", f(X, y, l, k, g, beta, mu=mu)
+#    print "CONESTA:", f(X, y, l, k, g, beta_test, mu=mu)
 
     curr_val = np.sum((beta - betastar) ** 2.0)
+    print "curr_val: ", curr_val
     f_ = f(X, y, l, k, g, beta, mu=mu)
 
     print "rr:", rr.f(X, y, k, beta)
@@ -710,6 +666,7 @@ for i in range(len(gs)):
 
     if curr_val <= min(v):
         beta_opt = beta
+#        beta_test_opt = beta_test
 
     print "true = %.5f => %.7f" % (val, curr_val)
 
@@ -727,6 +684,7 @@ plot.title("true: %.5f, min: %.5f" % (g, x[np.argmin(fval)]))
 
 plot.subplot(3, 1, 3)
 plot.plot(betastar, '-g', beta_opt, '-r')
+#plot.plot(betastar, '-g', beta_opt, '-r', beta_test_opt, '--b')
 plot.show()
 
 #conts = 100
