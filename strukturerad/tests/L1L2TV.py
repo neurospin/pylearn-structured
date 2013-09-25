@@ -50,7 +50,7 @@ np.random.seed(42)
 #X, y, betastar = l1_l2.load(l, k, density, snr, M, e)
 #beta0 = np.random.randn(*betastar.shape)
 #beta0 = np.ones(betastar.shape)
-mu_zero = 1e-10
+mu_zero = 1e-16
 
 
 class RidgeRegression(object):
@@ -411,9 +411,9 @@ def gap(X, y, l, k, g, beta, mu):
     Aa_l1 = l1.Aa(alpha_l1)
     Aa_tv = tv.Aa(alpha_tv)
 
-    gAa_l1 = l * Aa_l1
+    lAa_l1 = l * Aa_l1
     gAa_tv = g * Aa_tv
-    gAa = gAa_l1 + gAa_tv
+    gAa = lAa_l1 + gAa_tv
     beta_hat = betahat(X, y, k, gAa)
 
     D = rr.f(X, y, k, beta_hat) \
@@ -445,54 +445,69 @@ def FISTA(X, y, l, k, g, beta, step, mu,
 
     z = betanew = betaold = beta
 
-    crit = [f(X, y, l, k, g, beta, mu=mu)]
+    crit = []  # f(X, y, l, k, g, beta, mu=mu)]
     for i in xrange(1, maxit + 1):
         z = betanew + ((i - 2.0) / (i + 1.0)) * (betanew - betaold)
         betaold = betanew
         betanew = prox(step * l, z - step * grad(X, y, k, g, z, mu))
+
         crit.append(f(X, y, l, k, g, betanew, mu=mu))
+
         if math.norm(betanew - z) < eps * step:
             break
 
     return (betanew, crit)
 
 
-def CONESTA(X, y, l, k, g, beta, mu0, mumin=utils.TOLERANCE, tau=0.5,
-            eps0=1.0, eps=utils.TOLERANCE, conts=10, maxit=100,
+def CONESTA(X, y, l, k, g, beta, mu0, mumin=utils.TOLERANCE, sigma=1.1,
+            tau=0.5, eps0=1.0, eps=utils.TOLERANCE, conts=50, maxit=1000,
             dynamic=True):
 
     mu = [mu0]
     print "mu:", mu[0]
     t = []
     tmin = 1.0 / Lipschitz(X, k, g, mumin)
-    beta_new = beta
 
     lmaxX = rr.Lipschitz(X, k)
+
+    fval = []
+    Gval = []
 
     i = 0
     while True:
         t.append(1.0 / Lipschitz(X, k, g, mu[i]))
-        beta_old = beta_new
-        (beta_new, _) = FISTA(X, y, l, k, g, beta_old, t[i], mu[i],
-                                 eps=0, maxit=maxit)
+        lmaxA = tv.Lipschitz(g, mu[i])
+        eps_plus = eps_opt(mu[i], g, tv.D(), lmaxX, lmaxA)
+        print "eps_plus: ", eps_plus
+        (beta, crit) = FISTA(X, y, l, k, g, beta, t[i], mu[i],
+                             eps=eps_plus, maxit=maxit)
+        print "crit: ", crit[-1]
+        print "it: ", len(crit)
+        fval.append(crit)
 
         mumin = min(mumin, mu[i])
         tmin = min(tmin, t[i])
-        beta_tilde = prox(tmin * l, beta_new - tmin * grad(X, y, k, g,
-                                                           beta_new, mumin))
+        beta_tilde = prox(tmin * l, beta - tmin * grad(X, y, k, g,
+                                                       beta, mumin))
 
-        if math.norm(beta_new - beta_tilde) < tmin * eps:
-            return beta_new
+        if math.norm(beta - beta_tilde) < tmin * eps:
+            break
 
         if i >= conts:
-            return beta_new
-        else:
-            print "i:", i
+            break
+#        else:
+#            print "i:", i
 
         if dynamic:
-            G = gap(X, y, l, k, g, beta_new, mu[i])
+            G = gap(X, y, l, k, g, beta, mu[i])
+#            G = 1.0 / (i + 1)
             print "Gap:", G
-            G = abs(G)
+            G = abs(G) / sigma
+
+            if G <= utils.TOLERANCE and mu[i] <= utils.TOLERANCE:
+                break
+
+            Gval.append(G)
             lmaxA = tv.Lipschitz(g, mu[i])
             mu_new = min(mu[i], mu_opt(G, g, tv.D(), lmaxX, lmaxA))
             mu.append(max(mumin, mu_new))
@@ -505,7 +520,7 @@ def CONESTA(X, y, l, k, g, beta, mu0, mumin=utils.TOLERANCE, tau=0.5,
 
         i = i + 1
 
-    return beta_new
+    return (beta, fval, Gval)
 
 
 def U(a, b):
@@ -517,7 +532,7 @@ def U(a, b):
 
 np.random.seed(42)
 
-l = 0.0  # 0.61803
+l = 0.5  # 0.61803
 k = 0.5  # 0.271828
 g = 0.9  # 3.14159
 
@@ -525,7 +540,7 @@ px = 6
 py = 1
 pz = 1
 p = px * py * pz
-shape=(py, px)
+shape=(pz, py, px)
 n = 5
 
 rr = RidgeRegression()
@@ -539,13 +554,13 @@ M = np.random.multivariate_normal(Mu, Sigma, n)
 e = np.random.randn(n, 1)
 density=0.5
 
-mu_zero = 1e-8
-eps = 1e-3
+#mu_zero = 1e-8
+eps = 1e-4
 mu = 0.9 * eps / p
 #mu = 1e-4
 print "mu:", mu
-conts = 10
-maxit = 100
+conts = 200
+maxit = 10000
 
 snr = 100.0
 
@@ -560,8 +575,8 @@ for i in xrange(p):
 beta1D = np.flipud(np.sort(beta1D, axis=0))
 
 p = M.shape[1]
-px = shape[1]
-py = shape[0]
+#px = shape[1]
+#py = shape[0]
 #print "p:", p, ", px:", px, ", py:", py
 #print "density * p:", density * p
 s = np.sqrt(density * p / (px * py))
@@ -599,6 +614,8 @@ for i in xrange(py):
         else:
             beta2D[i, j] = U(0, 1) * snr / np.sqrt(pys * pxs)
 beta2D = np.fliplr(np.sort(np.flipud(np.sort(beta2D, axis=0)), axis=1))
+print p
+print beta2D.shape
 beta2D = np.reshape(beta2D, (p, 1))
 
 betastar = beta1D
@@ -607,8 +624,9 @@ print betastar
 #tv_grad = tv.grad(g, betastar, mu)
 Aa = tv.Aa(tv.alpha(betastar, mu))
 #X, y = l1_l2_tvmu.load(l, k, g, betastar, M, e, Aa)
-X, y = l1_l2_tv.load(l, k, g, betastar, M, e)
+#X, y = l1_l2_tv.load(l, k, g, betastar, M, e)
 #X, y = l1_l2_tv_2D.load(l, k, g, betastar, M, e, shape)
+X, y = l1_l2_tv.load(l, k, g, betastar, M, e, snr)
 
 print tv.Aa(tv.alpha(betastar, mu))
 print tv.grad(g, betastar, mu)
@@ -629,24 +647,25 @@ gs = np.maximum(0.0, np.linspace(g - g * 0.1, g + g * 0.1, num_lin))
 for i in range(len(gs)):
     val = gs[i]
 #    beta = beta0
-#    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*100000.0, eps=eps, maxit=10000)
+#    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu*100000.0, eps=eps, maxit=10000)
 #    print "f:", f(X, y, l, k, val, beta, mu=mu)
-#    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*10000.0, eps=eps, maxit=10000)
+#    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu*10000.0, eps=eps, maxit=10000)
 #    print "f:", f(X, y, l, k, val, beta, mu=mu)
-#    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*1000.0, eps=eps, maxit=1000)
+#    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu*1000.0, eps=eps, maxit=1000)
 #    print "f:", f(X, y, l, k, val, beta, mu=mu)
-#    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*100.0, eps=eps, maxit=1000)
+#    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu*100.0, eps=eps, maxit=1000)
 #    print "f:", f(X, y, l, k, val, beta, mu=mu)
-#    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu*10.0, eps=eps, maxit=1000)
+#    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu*10.0, eps=eps, maxit=1000)
 #    print "f:", f(X, y, l, k, val, beta, mu=mu)
-#    beta, crit, critmu = FISTA(X, y, l, k, val, beta, step, mu=mu, eps=eps, maxit=conts * maxit)
+#    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu, eps=eps, maxit=conts * maxit)
 #    print "f:", f(X, y, l, k, val, beta, mu=mu)
 #    beta0 = beta
 
     mu_start = 0.9 * tv.mu(beta0)
-    beta = CONESTA(X, y, l, k, val, beta0, mu_start, mumin=mu_zero, tau=0.5,
-            eps0=1.0, eps=utils.TOLERANCE, conts=conts, maxit=maxit,
-            dynamic=True)
+    (beta, fval_, Gval_) = CONESTA(X, y, l, k, val, beta0,
+                                 mu_start, mumin=mu_zero, tau=0.5,
+                                 eps0=1.0, eps=utils.TOLERANCE,
+                                 conts=conts, maxit=maxit, dynamic=True)
 
 #    print "FISTA:  ", f(X, y, l, k, g, beta, mu=mu)
 #    print "CONESTA:", f(X, y, l, k, g, beta_test, mu=mu)
@@ -665,6 +684,8 @@ for i in range(len(gs)):
 
     if curr_val <= min(v):
         beta_opt = beta
+        fbest = fval_
+        Gbest = Gval_
 #        beta_test_opt = beta_test
 
     print "true = %.5f => %.7f" % (val, curr_val)
@@ -673,17 +694,29 @@ print "best  f:", f(X, y, l, k, g, betastar, mu=mu)
 print "found f:", f(X, y, l, k, g, beta_opt, mu=mu)
 print "least f:", min(fval)
 
-plot.subplot(3, 1, 1)
+plot.subplot(3, 2, 1)
 plot.plot(x, v, '-b')
 plot.title("true: %.5f, min: %.5f" % (g, x[np.argmin(v)]))
 
-plot.subplot(3, 1, 2)
+plot.subplot(3, 2, 3)
 plot.plot(x, fval, '-b')
 plot.title("true: %.5f, min: %.5f" % (g, x[np.argmin(fval)]))
 
-plot.subplot(3, 1, 3)
+plot.subplot(3, 2, 5)
 plot.plot(betastar, '-g', beta_opt, '-r')
 #plot.plot(betastar, '-g', beta_opt, '-r', beta_test_opt, '--b')
+
+plot.subplot(3, 2, 2)
+print fbest
+fbest = sum(fbest, [])
+print fbest
+plot.plot(fbest, '-b')
+
+plot.subplot(3, 2, 4)
+print Gbest
+#Gbest = sum(Gbest, [])
+plot.plot(Gbest, '-b')
+
 plot.show()
 
 #conts = 100

@@ -9,8 +9,79 @@ Created on Tue Jul 16 12:32:00 2013
 __all__ = ['load']
 
 import numpy as np
-import structured.utils as utils
-import structured.algorithms as algorithms
+#import strukturerad.utils as utils
+
+TOLERANCE = 5e-8
+
+
+def grad_L1(beta):
+    p = beta.shape[0]
+
+    grad = np.zeros((p, 1))
+    for i in range(p):
+        if beta[i, 0] > TOLERANCE:
+            grad[i, 0] = 1.0
+        elif beta[i, 0] < -TOLERANCE:
+            grad[i, 0] = -1.0
+        else:
+            grad[i, 0] = U(-1, 1)
+
+    return grad
+
+
+def grad_L2(beta):
+
+    return beta
+
+
+def grad_norm2(beta):
+
+    norm_beta = norm2(beta)
+    if norm_beta > TOLERANCE:
+        return beta / norm_beta
+    else:
+        D = beta.shape[0]
+        u = (np.random.rand(D, 1) * 2.0) - 1.0
+        norm_u = norm2(u)
+        a = np.random.rand()
+        return u * (a / norm_u)
+
+
+def grad_TV(beta, shape):
+
+    p = np.prod(shape)
+    D = len(shape)
+
+    grad = np.zeros((p, 1))
+    for i in range(p):
+        Ai = np.zeros((D, p))
+        for d in range(D):
+            if i < p:
+                b = np.prod([shape[-j] for j in range(1, d + 1)])
+                if b + i < p:
+                    Ai[d, i] = -1
+                    Ai[d, b + i] = 1
+
+        gradnorm2 = grad_norm2(np.dot(Ai, beta))
+#        print "Ai.T:", Ai.T
+#        print "grad_norm2:", gradnorm2
+#        print "Ai.T grad_norm2:", np.dot(Ai.T, gradnorm2)
+        grad += np.dot(Ai.T, gradnorm2)
+#        print "grad:", grad
+
+    return grad
+
+
+def norm2(x):
+
+    return np.sqrt(np.sum(x ** 2.0))
+
+
+def U(a, b):
+    t = max(a, b)
+    a = float(min(a, b))
+    b = float(t)
+    return (np.random.rand() * (b - a)) + a
 
 
 def load(l, k, g, beta, M, e, snr, shape=None):
@@ -94,104 +165,34 @@ def _generate(l, k, g, beta, M, e, shape):
     l = float(l)
     k = float(k)
     g = float(g)
-    print "gamma:", g
     p = np.prod(shape)
 
-    A = np.zeros((3 * p, p))
+    gradL1 = grad_L1(beta)
+    gradL2 = grad_L2(beta)
+    gradTV = grad_TV(beta, shape)
 
-    Ax = np.eye(p, p, 1) - np.eye(p, p)
-    Ay = np.eye(p, p, shape[-1]) - np.eye(p, p)
-    Az = np.eye(p, p, shape[-2] * shape[-1]) - np.eye(p, p)
+#    print l * gradL1
+#    print k
+#    print gradL2
+#    print k * gradL2
+#    print g * gradTV
+
+    alpha = -(l * gradL1 + k * gradL2 + g * gradTV)
+#    alpha = np.divide(alpha, np.dot(M.T, e))
+
+#    print "alpha: ", alpha
 
     X = np.zeros(M.shape)
     for i in xrange(p):
         Mte = np.dot(M[:, i].T, e)
-
-        alpha = 0.0
-
-        # L1
-#        if i < ps:
-        if abs(beta[i, 0]) > utils.TOLERANCE:
-            alpha += -l1 * sign(beta[i, 0])
-        else:
-            alpha += -l1 * U(-1, 1)
-
-        # L2
-        alpha += -l2 * beta[i, 0]
-
-        # TV
-        if i == 0:  # Case 1: Positive edge (left-most edge) [?][x>0][+]
-            alpha += -gamma * 1.0
-#        elif i < ps:  # Case 2 and 3: All neighbours positive [+][x>0][+]
-        elif i < p - 1 and abs(beta[i-1, 0]) > utils.TOLERANCE \
-                       and abs(beta[i, 0]) > utils.TOLERANCE \
-                       and abs(beta[i+1, 0]) > utils.TOLERANCE:
-            alpha += -gamma * 0.0
-#        elif i == ps:  # Case 4: Positive left, zero right [+][x=0][0]
-        elif i < p - 1 and abs(beta[i-1, 0]) > utils.TOLERANCE \
-                       and abs(beta[i, 0]) <= utils.TOLERANCE \
-                       and abs(beta[i+1, 0]) <= utils.TOLERANCE:
-            alpha += -gamma * (-1.0 - u[i+1])
-#        elif i < p - 1:  # Case 5: Zero neighbours left and right [0][x=0][0]
-        elif i < p - 1 and abs(beta[i-1, 0]) <= utils.TOLERANCE \
-                       and abs(beta[i, 0]) <= utils.TOLERANCE \
-                       and abs(beta[i+1, 0]) <= utils.TOLERANCE:
-            alpha += -gamma * (u[i] - u[i+1])
-        elif i == p - 1:  # Case 6: Zero edge (right-most edge) [0][x=0][?]
-            alpha += -gamma * u[i]
-
-        alpha /= Mte
-
-        X[:, i] = alpha * M[:, i]
-
-#    b = np.dot(M.T, e)
-#    a = np.zeros((p, 1))
-#
-#    # Case 1: Positive edge
-#    a[0, 0] = (-l2 * beta[0, 0] - l1 - gamma) / b[0, 0]
-#    X[:, 0] = M[:, 0] * a[0, 0]
-#
-#    # Case 2 and 3: Positive neighbours left and right
-#    for i in xrange(1, ps):
-#        a[i, 0] = (-l2 * beta[i, 0] - l1) / b[i, 0]
-#        X[:, i] = M[:, i] * a[i, 0]
-#
-#    # Case 4: Positive neighbour left, zero neighbour right
-#    a[ps, 0] = (-l2 * beta[ps, 0] - l1 * U(-1, 1) - gamma * (U(-1, 1) - 1)) \
-#                    / b[ps, 0]
-#    X[:, ps] = M[:, ps] * a[ps, 0]
-#
-#    # Case 5: Zero neighbours left and right
-#    for i in xrange(ps + 1, p - 1):
-#        a[i, 0] = (-l2 * beta[i, 0] - l1 * U(-1, 1) - gamma * (U(-1, 1) + U(-1, 1))) \
-#                    / b[i, 0]
-#        X[:, i] = M[:, i] * a[i, 0]
-#
-#    # Case 6: Zero edge
-#    a[p - 1, 0] = (-l2 * beta[p - 1, 0] - l1 * U(-1, 1) - gamma * U(-1, 1)) \
-#                    / b[p - 1, 0]
-#    X[:, p - 1] = M[:, p - 1] * a[p - 1, 0]
+        X[:, i] = M[:, i] * (alpha[i, 0] / Mte)
 
     y = np.dot(X, beta) - e
 
     return X, y
 
 
-def U(a, b):
-#    t = max(a, b)
-#    a = float(min(a, b))
-#    b = float(t)
-#    return (np.random.rand() * (b - a)) + a
-    return 0.0
 
-
-def sign(x):
-    if x > 0:
-        return 1.0
-    elif x < 0:
-        return -1.0
-    else:
-        return 0.0
 
 
 #def load(l, k, g, beta, M, e):
@@ -288,6 +289,7 @@ def sign(x):
 #    u = [0] * p
 #    for i in xrange(p):
 #        u[i] = U(-1, 1)
+#    print u
 #
 #    X = np.zeros(M.shape)
 #    for i in xrange(p):
@@ -328,6 +330,8 @@ def sign(x):
 #
 #        alpha /= Mte
 #
+#        print "alpha[", i, "] = ", alpha
+#
 #        X[:, i] = alpha * M[:, i]
 #
 ##    b = np.dot(M.T, e)
@@ -364,11 +368,11 @@ def sign(x):
 #
 #
 #def U(a, b):
-##    t = max(a, b)
-##    a = float(min(a, b))
-##    b = float(t)
-##    return (np.random.rand() * (b - a)) + a
-#    return 0.0
+#    t = max(a, b)
+#    a = float(min(a, b))
+#    b = float(t)
+#    return (np.random.rand() * (b - a)) + a
+##    return 0.0
 #
 #
 #def sign(x):
