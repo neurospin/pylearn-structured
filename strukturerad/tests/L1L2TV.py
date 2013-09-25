@@ -82,6 +82,7 @@ class RidgeRegression(object):
 class TotalVariation(object):
 
     def __init__(self, shape):
+
         self._A = self.precompute(shape, mask=None, compress=False)
 
     """ Function value of Ridge regression.
@@ -91,23 +92,23 @@ class TotalVariation(object):
         if g < utils.TOLERANCE:
             return 0.0
 
-        if mu > 0.0:
-            alpha = self.alpha(beta, mu)
-            Aa = self.Aa(alpha)
+#        if mu > 0.0:
+        alpha = self.alpha(beta, mu)
+        Aa = self.Aa(alpha)
 
-            alpha_sqsum = 0.0
-            for a in alpha:
-                alpha_sqsum += np.sum(a ** 2.0)
+        alpha_sqsum = 0.0
+        for a in alpha:
+            alpha_sqsum += np.sum(a ** 2.0)
 
-            return g * (np.dot(Aa.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum)
+        return g * (np.dot(Aa.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum)
 
-        else:
-            A = self.A()
-            sqsum = np.sum(np.sqrt(A[0].dot(beta) ** 2.0 + \
-                                   A[1].dot(beta) ** 2.0 + \
-                                   A[2].dot(beta) ** 2.0))
-
-            return g * sqsum
+#        else:
+#            A = self.A()
+#            sqsum = np.sum(np.sqrt(A[0].dot(beta) ** 2.0 + \
+#                                   A[1].dot(beta) ** 2.0 + \
+#                                   A[2].dot(beta) ** 2.0))
+#
+#            return g * sqsum
 
     def phi(self, X, y, g, beta, alpha, mu):
 
@@ -133,9 +134,11 @@ class TotalVariation(object):
         return g * grad
 
     def A(self):
+
         return self._A
 
     def Aa(self, alpha):
+
         A = self.A()
         Aa = A[0].T.dot(alpha[0])
         for i in xrange(1, len(A)):
@@ -302,7 +305,7 @@ class L1(object):
         if mu > 0.0:
             alpha = self.alpha(beta, mu)
             return l * (np.dot(alpha[0].T, beta)[0, 0] \
-                    - 0.5 * mu * np.sum(alpha[0] ** 2.0))
+                    - (mu / 2.0) * np.sum(alpha[0] ** 2.0))
         else:
             return l * np.sum(np.abs(beta))
 
@@ -367,11 +370,11 @@ def f(X, y, l, k, g, beta, mu):
     return rr.f(X, y, k, beta) + l1.f(l, beta) + tv.f(X, y, g, beta, mu)
 
 
-# Dual function value of Ridge regression and smoothed L1
-def phi(X, y, k, g, beta, alpha, mu):
-    if alpha == None:
-        alpha = tv.alpha(beta, mu)
-    return rr.phi(X, y, k, beta) + tv.phi(X, y, g, beta, alpha, mu)
+## Dual function value of Ridge regression and smoothed L1
+#def phi(X, y, k, g, beta, alpha, mu):
+#    if alpha == None:
+#        alpha = tv.alpha(beta, mu)
+#    return rr.phi(X, y, k, beta) + tv.phi(X, y, g, beta, alpha, mu)
 
 
 # Gradient of Ridge regression + TV
@@ -384,8 +387,8 @@ def prox(l, x):
     return l1.prox(l, x)
 
 
-def project(a):
-    return tv.project(a)
+#def project(a):
+#    return tv.project(a)
 
 
 def betahat(X, y, k, gAalpha):
@@ -442,18 +445,16 @@ def FISTA(X, y, l, k, g, beta, step, mu,
 
     z = betanew = betaold = beta
 
-    crit = [f(X, y, l, k, g, beta, mu=mu_zero)]
-    critmu = [f(X, y, l, k, g, beta, mu=mu)]
+    crit = [f(X, y, l, k, g, beta, mu=mu)]
     for i in xrange(1, maxit + 1):
         z = betanew + ((i - 2.0) / (i + 1.0)) * (betanew - betaold)
         betaold = betanew
         betanew = prox(step * l, z - step * grad(X, y, k, g, z, mu))
-        crit.append(f(X, y, l, k, g, betanew, mu=mu_zero))
-        critmu.append(f(X, y, l, k, g, beta, mu=mu))
+        crit.append(f(X, y, l, k, g, betanew, mu=mu))
         if math.norm(betanew - z) < eps * step:
             break
 
-    return (betanew, crit, critmu)
+    return (betanew, crit)
 
 
 def CONESTA(X, y, l, k, g, beta, mu0, mumin=utils.TOLERANCE, tau=0.5,
@@ -461,18 +462,19 @@ def CONESTA(X, y, l, k, g, beta, mu0, mumin=utils.TOLERANCE, tau=0.5,
             dynamic=True):
 
     mu = [mu0]
+    print "mu:", mu[0]
     t = []
     tmin = 1.0 / Lipschitz(X, k, g, mumin)
-    beta_old = beta
+    beta_new = beta
 
     lmaxX = rr.Lipschitz(X, k)
 
     i = 0
     while True:
         t.append(1.0 / Lipschitz(X, k, g, mu[i]))
-        (beta_new, _, _) = FISTA(X, y, l, k, g, beta_old, t[i], mu[i],
-                                 eps=0, maxit=maxit)
         beta_old = beta_new
+        (beta_new, _) = FISTA(X, y, l, k, g, beta_old, t[i], mu[i],
+                                 eps=0, maxit=maxit)
 
         mumin = min(mumin, mu[i])
         tmin = min(tmin, t[i])
@@ -481,8 +483,6 @@ def CONESTA(X, y, l, k, g, beta, mu0, mumin=utils.TOLERANCE, tau=0.5,
 
         if math.norm(beta_new - beta_tilde) < tmin * eps:
             return beta_new
-        else:
-            print "norm = ", math.norm(beta_new - beta_tilde), " >= ", tmin * eps
 
         if i >= conts:
             return beta_new
@@ -521,7 +521,6 @@ l = 0.0  # 0.61803
 k = 0.5  # 0.271828
 g = 0.9  # 3.14159
 
-#print "2d tv: g=100, mu=1e-6, conts=10000*100"
 px = 6
 py = 1
 pz = 1
@@ -626,7 +625,7 @@ num_lin = 13
 #ls = np.maximum(0.0, np.linspace(l - l * 0.1, l + l * 0.1, num_lin))
 #ks = np.maximum(0.0, np.linspace(k - k * 0.1, k + k * 0.1, num_lin))
 gs = np.maximum(0.0, np.linspace(g - g * 0.1, g + g * 0.1, num_lin))
-beta = beta0
+#beta = beta0
 for i in range(len(gs)):
     val = gs[i]
 #    beta = beta0
@@ -644,8 +643,8 @@ for i in range(len(gs)):
 #    print "f:", f(X, y, l, k, val, beta, mu=mu)
 #    beta0 = beta
 
-    mu_start = 0.9 * tv.mu(beta)
-    beta = CONESTA(X, y, l, k, val, beta, mu_start, mumin=mu_zero, tau=0.5,
+    mu_start = 0.9 * tv.mu(beta0)
+    beta = CONESTA(X, y, l, k, val, beta0, mu_start, mumin=mu_zero, tau=0.5,
             eps0=1.0, eps=utils.TOLERANCE, conts=conts, maxit=maxit,
             dynamic=True)
 
