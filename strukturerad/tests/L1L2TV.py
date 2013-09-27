@@ -15,6 +15,7 @@ import strukturerad.utils as utils
 import strukturerad.datasets.simulated.l1_l2_tv as l1_l2_tv
 import strukturerad.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
 import strukturerad.datasets.simulated.l1_l2_tv_2D as l1_l2_tv_2D
+import strukturerad.datasets.simulated.l1mu_l2_tvmu as l1mu_l2_tvmu
 
 from strukturerad.utils import math
 
@@ -300,14 +301,9 @@ class L1(object):
 
     """ Function value of L1.
     """
-    def f(self, l, beta, mu=0.0):
+    def f(self, l, beta):
 
-        if mu > 0.0:
-            alpha = self.alpha(beta, mu)
-            return l * (np.dot(alpha[0].T, beta)[0, 0] \
-                    - (mu / 2.0) * np.sum(alpha[0] ** 2.0))
-        else:
-            return l * np.sum(np.abs(beta))
+        return l * np.sum(np.abs(beta))
 
     def phi(self, l, beta, alpha, mu):
 
@@ -390,10 +386,10 @@ def betahat(X, y, k, gAalpha):
 
 def gap(X, y, l, k, g, beta, mu):
 
-    alpha_l1 = l1.alpha(beta, mu_zero)
+    alpha_l1 = l1.alpha(beta, mu)
     alpha_tv = tv.alpha(beta, mu)
 
-#      + l1.phi(l, beta, alpha_l1, mu_zero) \
+#      + l1.phi(l, beta, alpha_l1, mu) \
     P = rr.f(X, y, k, beta) \
       + l1.f(l, beta) \
       + tv.phi(X, y, g, beta, alpha_tv, mu)
@@ -407,7 +403,7 @@ def gap(X, y, l, k, g, beta, mu):
     beta_hat = betahat(X, y, k, gAa)
     print "beta_hat:", beta_hat
 
-#      + l1.phi(l, beta_hat, alpha_l1, mu_zero) \
+#      + l1.phi(l, beta_hat, alpha_l1, mu) \
     D = rr.f(X, y, k, beta_hat) \
       + l1.f(l, beta_hat) \
       + tv.phi(X, y, g, beta_hat, alpha_tv, mu)
@@ -617,11 +613,14 @@ betastar = beta1D
 #betastar = beta2D
 print betastar
 #tv_grad = tv.grad(g, betastar, mu)
-Aa = tv.Aa(tv.alpha(betastar, mu))
+#Aa = tv.Aa(tv.alpha(betastar, mu))
 #X, y = l1_l2_tvmu.load(l, k, g, betastar, M, e, Aa)
 #X, y = l1_l2_tv.load(l, k, g, betastar, M, e)
 #X, y = l1_l2_tv_2D.load(l, k, g, betastar, M, e, shape)
-X, y = l1_l2_tv.load(l, k, g, betastar, M, e, snr)
+#X, y = l1_l2_tv.load(l, k, g, betastar, M, e, snr)
+Aa_l1 = l1.Aa(l1.alpha(betastar, mu_zero))
+Aa_tv = tv.Aa(tv.alpha(betastar, mu_zero))
+X, y = l1mu_l2_tvmu.load(l, k, g, betastar, M, e, Aa_l1, Aa_tv)
 
 print tv.Aa(tv.alpha(betastar, mu))
 print tv.grad(g, betastar, mu)
@@ -630,82 +629,107 @@ print "err:", np.sum((np.dot(X, betastar) - y) ** 2.0)
 print "e  :", np.sum(e ** 2.0)
 print "Xb :", np.sum(np.dot(X, betastar) ** 2.0)
 print "y  :", np.sum(y ** 2.0)
-G = gap(X, y, l, k, g, betastar, 1e+3)
-print "gap: ", G
-G = gap(X, y, l, k, g, betastar, 1e-2)
-print "gap: ", G
-G = gap(X, y, l, k, g, betastar, 1e-1)
-print "gap: ", G
-G = gap(X, y, l, k, g, betastar, 1e-0)
-print "gap: ", G
-G = gap(X, y, l, k, g, betastar, 1e-1)
-print "gap: ", G
-G = gap(X, y, l, k, g, betastar, 1e-2)
-print "gap: ", G
-G = gap(X, y, l, k, g, betastar, mu_zero)
-print "gap: ", G
+mus = [1e+3, 1e+2, 1e+1, 1e+0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, mu_zero]
+for mu_ in mus:
+    G = gap(X, y, l, k, g, betastar, mu_)
+    print "mu:", mu_, ", gap: ", G
 
 
-beta_hat = betastar
+#beta_hat = betastar
+#mu = mu_zero
+#
+#alpha_l1 = l1.alpha(beta_hat, mu)
+#print "alpha_l1:", alpha_l1
+#alpha_tv = tv.alpha(beta_hat, mu)
+#print "alpha_tv:", alpha_tv
+#
+#gAa = g * tv.Aa(alpha_tv)
+#print "gAa: ", gAa
+#
+#print "f(betastar)   = ", rr.f(X, y, k, betastar) \
+#                      + l1.f(l, betastar) \
+#                      + tv.phi(X, y, g, betastar, alpha_tv, mu)
+#
+#print "phi(betastar) = ", rr.f(X, y, k, betastar) \
+#                      + l1.phi(l, betastar, alpha_l1, mu) \
+#                      + tv.phi(X, y, g, betastar, alpha_tv, mu)
+#
+#print "diff: ", 0.5 * mu * np.sum((alpha_l1[0] ** 2.0))
+#
+#
+##        + l1.phi(l, beta, alpha_l1, mu) \
+#def fun(beta, alpha_tv, mu):
+#    val = rr.f(X, y, k, beta) \
+#        + l1.f(l, beta) \
+#        + tv.phi(X, y, g, beta, alpha_tv, mu)
+#
+#    return val
+#
+#P = fun(beta_hat, alpha_tv, mu)
+#
+#t = 1.0 / Lipschitz(X, k, g, mu)
+#print "t:", t
+#print "l:", l
+#print "k:", k
+#print "g:", g
+#beta_old = beta_new = betastar + 0.001 * np.random.rand(*betastar.shape)
+#
+#for i in range(1, 10000):
+#    z = beta_new + ((i - 2.0) / (i + 1.0)) * (beta_new - beta_old)
+#    beta_old = beta_new
+#
+#    alpha_tv = tv.alpha(beta_old, mu)
+#    gAa = g * tv.Aa(alpha_tv)
+#
+#    beta_new = l1.prox(l * t, z - t * (rr.grad(X, y, k, z) + gAa))
+#
+#    D = fun(beta_new, alpha_tv, mu)
+#
+#    if i % 1000 == 0:
+#        print "P:", P
+#        print "D:", D
+#        print "P - D: ", P - D
+#        print "grad:", np.linalg.norm(np.dot(X.T, np.dot(X, beta_new) - y) + k * beta_new + gAa)
+#
+#beta_hat = beta_new
+#
+##beta_min = np.dot(np.linalg.pinv(X), y)
+##print "min:", np.sum((np.dot(X, beta_min) - y) ** 2.0)
+#print beta_hat
+#print "Gap: ", P - D
+#
+#G = gap(X, y, l, k, g, betastar, mu_zero / 100.0)
+#print "gap: ", G
+
+beta = betastar
 mu = mu_zero
 
-alpha_l1 = l1.alpha(beta_hat, mu)
-print "alpha_l1:", alpha_l1
-alpha_tv = tv.alpha(beta_hat, mu)
-print "alpha_tv:", alpha_tv
+alpha_l1 = l1.alpha(beta, mu)
+alpha_tv = tv.alpha(beta, mu)
 
-gAa = g * tv.Aa(alpha_tv)
-print "gAa: ", gAa
+#  + l1.f(l, beta) \
+P = rr.f(X, y, k, beta) \
+  + l1.phi(l, beta, alpha_l1, mu) \
+  + tv.phi(X, y, g, beta, alpha_tv, mu)
 
-print "f(betastar)   = ", rr.f(X, y, k, betastar) \
-                      + l1.f(l, betastar) \
-                      + tv.phi(X, y, g, betastar, alpha_tv, mu)
+Aa_l1 = l1.Aa(alpha_l1)
+Aa_tv = tv.Aa(alpha_tv)
 
-print "phi(betastar) = ", rr.f(X, y, k, betastar) \
-                      + l1.phi(l, betastar, alpha_l1, mu) \
-                      + tv.phi(X, y, g, betastar, alpha_tv, mu)
+lAa_l1 = l * Aa_l1
+gAa_tv = g * Aa_tv
+gAa = lAa_l1 + gAa_tv
 
+XXkI = np.dot(X.T, X) + k * np.eye(X.shape[1])
+beta_hat = np.dot(np.linalg.inv(XXkI), np.dot(X.T, y) - gAa)
+#beta_hat = betahat(X, y, k, gAa)
+print "beta_hat:", beta_hat
 
-def fun(beta, alpha_l1, alpha_tv, mu):
-    val = rr.f(X, y, k, beta) \
-        + l1.phi(l, beta, alpha_l1, mu) \
-        + tv.phi(X, y, g, beta, alpha_tv, mu)
+#  + l1.f(l, beta_hat) \
+D = rr.f(X, y, k, beta_hat) \
+  + l1.phi(l, beta_hat, alpha_l1, mu) \
+  + tv.phi(X, y, g, beta_hat, alpha_tv, mu)
 
-    return val
-
-P = fun(beta_hat, alpha_l1, alpha_tv, mu)
-
-t = 1.0 / Lipschitz(X, k, g, mu)
-print "t:", t
-print "l:", l
-print "k:", k
-print "g:", g
-beta_old = beta_new = beta_hat
-for i in range(1, 100000):
-    z = beta_new + ((i - 2.0) / (i + 1.0)) * (beta_new - beta_old)
-    beta_old = beta_new
-    beta_new = l1.prox(l * t, z - t * (rr.grad(X, y, k, z) + gAa))
-
-    D = fun(beta_new, alpha_l1, alpha_tv, mu)
-
-    if i % 10000 == 0:
-        print "P:", P
-        print "D:", D
-        print "P - D: ", P - D
-        print "grad:", np.linalg.norm(np.dot(X.T, np.dot(X, beta_new) - y) + k * beta_new + gAa)
-
-beta_hat = beta_new
-
-#beta_min = np.dot(np.linalg.pinv(X), y)
-#print "min:", np.sum((np.dot(X, beta_min) - y) ** 2.0)
-print beta_hat
-print "Gap: ", P - D
-
-G = gap(X, y, l, k, g, betastar, mu_zero / 100.0)
-print "gap: ", G
-
-
-
+print "new gap:", P - D
 
 
 
