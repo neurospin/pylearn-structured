@@ -384,38 +384,63 @@ def betahat(X, y, k, gAalpha):
     return beta
 
 
-def gap(X, y, l, k, g, beta, mu):
+def gap(X, y, l, k, g, beta, mu, smooth_l1=False, maxit=100):
 
-    alpha_l1 = l1.alpha(beta, mu)
     alpha_tv = tv.alpha(beta, mu)
 
-#      + l1.phi(l, beta, alpha_l1, mu) \
-    P = rr.f(X, y, k, beta) \
-      + l1.f(l, beta) \
-      + tv.phi(X, y, g, beta, alpha_tv, mu)
+    if smooth_l1:
+        alpha_l1 = l1.alpha(beta, mu)
 
-    Aa_l1 = l1.Aa(alpha_l1)
-    Aa_tv = tv.Aa(alpha_tv)
+        P = rr.f(X, y, k, beta) \
+          + l1.phi(l, beta, alpha_l1, mu) \
+          + tv.phi(X, y, g, beta, alpha_tv, mu)
 
-    lAa_l1 = l * Aa_l1
-    gAa_tv = g * Aa_tv
-    gAa = lAa_l1 + gAa_tv
-    beta_hat = betahat(X, y, k, gAa)
-    print "beta_hat:", beta_hat
+        Aa_l1 = l1.Aa(alpha_l1)
+        Aa_tv = tv.Aa(alpha_tv)
 
-#      + l1.phi(l, beta_hat, alpha_l1, mu) \
-    D = rr.f(X, y, k, beta_hat) \
-      + l1.f(l, beta_hat) \
-      + tv.phi(X, y, g, beta_hat, alpha_tv, mu)
+        lAa_l1 = l * Aa_l1
+        gAa_tv = g * Aa_tv
+        gAa = lAa_l1 + gAa_tv
+        beta_hat = betahat(X, y, k, gAa)
+
+        D = rr.f(X, y, k, beta_hat) \
+          + l1.phi(l, beta_hat, alpha_l1, mu) \
+          + tv.phi(X, y, g, beta_hat, alpha_tv, mu)
+
+    else:
+        gAa = g * tv.Aa(alpha_tv)
+
+        P = rr.f(X, y, k, beta) \
+          + l1.f(l, beta) \
+          + tv.phi(X, y, g, beta, alpha_tv, mu)
+
+        t = 1.0 / Lipschitz(X, k, g, mu)
+        beta_old = beta_new = beta
+        # TODO: Use function FISTA instead!!
+        for i in range(1, maxit):
+            z = beta_new + ((i - 2.0) / (i + 1.0)) * (beta_new - beta_old)
+            beta_old = beta_new
+
+            beta_new = l1.prox(l * t, z - t * (rr.grad(X, y, k, z) + \
+                                               tv.grad(g, z, mu)))
+
+            D = rr.f(X, y, k, beta_new) \
+              + l1.f(l, beta_new) \
+              + tv.phi(X, y, g, beta_new, alpha_tv, mu)
+
+#            if i % (maxit / 100) == 0:
+#                print "P:", P
+#                print "D:", D
+#                print "P - D: ", P - D
+#                print "grad:", np.linalg.norm(np.dot(X.T, np.dot(X, beta_new) - y) + k * beta_new + gAa)
+#        print beta_new
 
     return P - D
 
 
 def Lipschitz(X, k, g, mu):
-    if mu > 0.0:
-        return rr.Lipschitz(X, k) + tv.Lipschitz(g, mu)
-    else:
-        return rr.Lipschitz(X, k)
+
+    return rr.Lipschitz(X, k) + tv.Lipschitz(g, mu)
 
 
 def mu_opt(eps, g, D, lmaxX, lmaxA):
@@ -550,7 +575,7 @@ density=0.5
 eps = 1e-3
 mu = 0.9 * (2.0 * eps / p)
 print "mu:", mu
-conts = 1000
+conts = 10
 maxit = 1000
 
 snr = 100.0
@@ -617,10 +642,10 @@ print betastar
 #X, y = l1_l2_tvmu.load(l, k, g, betastar, M, e, Aa)
 #X, y = l1_l2_tv.load(l, k, g, betastar, M, e)
 #X, y = l1_l2_tv_2D.load(l, k, g, betastar, M, e, shape)
-#X, y = l1_l2_tv.load(l, k, g, betastar, M, e, snr)
-Aa_l1 = l1.Aa(l1.alpha(betastar, mu_zero))
-Aa_tv = tv.Aa(tv.alpha(betastar, mu_zero))
-X, y = l1mu_l2_tvmu.load(l, k, g, betastar, M, e, Aa_l1, Aa_tv)
+X, y = l1_l2_tv.load(l, k, g, betastar, M, e, snr)
+#Aa_l1 = l1.Aa(l1.alpha(betastar, mu_zero))
+#Aa_tv = tv.Aa(tv.alpha(betastar, mu_zero))
+#X, y = l1mu_l2_tvmu.load(l, k, g, betastar, M, e, Aa_l1, Aa_tv)
 
 print tv.Aa(tv.alpha(betastar, mu))
 print tv.grad(g, betastar, mu)
@@ -631,7 +656,7 @@ print "Xb :", np.sum(np.dot(X, betastar) ** 2.0)
 print "y  :", np.sum(y ** 2.0)
 mus = [1e+3, 1e+2, 1e+1, 1e+0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, mu_zero]
 for mu_ in mus:
-    G = gap(X, y, l, k, g, betastar, mu_)
+    G = gap(X, y, l, k, g, betastar, mu_, maxit=100)
     print "mu:", mu_, ", gap: ", G
 
 
@@ -701,131 +726,135 @@ for mu_ in mus:
 #G = gap(X, y, l, k, g, betastar, mu_zero / 100.0)
 #print "gap: ", G
 
-beta = betastar
-mu = mu_zero
-
-alpha_l1 = l1.alpha(beta, mu)
-alpha_tv = tv.alpha(beta, mu)
-
-#  + l1.f(l, beta) \
-P = rr.f(X, y, k, beta) \
-  + l1.phi(l, beta, alpha_l1, mu) \
-  + tv.phi(X, y, g, beta, alpha_tv, mu)
-
-Aa_l1 = l1.Aa(alpha_l1)
-Aa_tv = tv.Aa(alpha_tv)
-
-lAa_l1 = l * Aa_l1
-gAa_tv = g * Aa_tv
-gAa = lAa_l1 + gAa_tv
-
-XXkI = np.dot(X.T, X) + k * np.eye(X.shape[1])
-beta_hat = np.dot(np.linalg.inv(XXkI), np.dot(X.T, y) - gAa)
-#beta_hat = betahat(X, y, k, gAa)
-print "beta_hat:", beta_hat
-
-#  + l1.f(l, beta_hat) \
-D = rr.f(X, y, k, beta_hat) \
-  + l1.phi(l, beta_hat, alpha_l1, mu) \
-  + tv.phi(X, y, g, beta_hat, alpha_tv, mu)
-
-print "new gap:", P - D
 
 
 
 
+#beta = betastar
+#mu = mu_zero
+#
+#alpha_l1 = l1.alpha(beta, mu)
+#alpha_tv = tv.alpha(beta, mu)
+#
+##  + l1.f(l, beta) \
+#P = rr.f(X, y, k, beta) \
+#  + l1.phi(l, beta, alpha_l1, mu) \
+#  + tv.phi(X, y, g, beta, alpha_tv, mu)
+#
+#Aa_l1 = l1.Aa(alpha_l1)
+#Aa_tv = tv.Aa(alpha_tv)
+#
+#lAa_l1 = l * Aa_l1
+#gAa_tv = g * Aa_tv
+#gAa = lAa_l1 + gAa_tv
+#
+#XXkI = np.dot(X.T, X) + k * np.eye(X.shape[1])
+#beta_hat = np.dot(np.linalg.inv(XXkI), np.dot(X.T, y) - gAa)
+##beta_hat = betahat(X, y, k, gAa)
+#print "beta_hat:", beta_hat
+#
+##  + l1.f(l, beta_hat) \
+#D = rr.f(X, y, k, beta_hat) \
+#  + l1.phi(l, beta_hat, alpha_l1, mu) \
+#  + tv.phi(X, y, g, beta_hat, alpha_tv, mu)
+#
+#print "new gap:", P - D
 
 
-#beta0 = np.random.rand(*betastar.shape)
-#step = 1.0 / Lipschitz(X, k, g, mu)
-#
-#v = []
-#x = []
-#fval = []
-#beta_opt = 0
-#
-#num_lin = 13
-##ls = np.maximum(0.0, np.linspace(l - l * 0.1, l + l * 0.1, num_lin))
-##ks = np.maximum(0.0, np.linspace(k - k * 0.1, k + k * 0.1, num_lin))
-#gs = np.maximum(0.0, np.linspace(g - g * 0.1, g + g * 0.1, num_lin))
-#beta = beta0
-#from time import time
-#t__ = time()
-#for i in range(len(gs)):
-#    val = gs[i]
-##    beta = beta0
-##    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu*100000.0, eps=eps, maxit=10000)
-##    print "f:", f(X, y, l, k, val, beta, mu=mu)
-##    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu*10000.0, eps=eps, maxit=10000)
-##    print "f:", f(X, y, l, k, val, beta, mu=mu)
-##    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu*1000.0, eps=eps, maxit=1000)
-##    print "f:", f(X, y, l, k, val, beta, mu=mu)
-##    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu*100.0, eps=eps, maxit=1000)
-##    print "f:", f(X, y, l, k, val, beta, mu=mu)
-##    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu*10.0, eps=eps, maxit=1000)
-##    print "f:", f(X, y, l, k, val, beta, mu=mu)
-##    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu, eps=eps, maxit=conts * maxit)
-##    print "f:", f(X, y, l, k, val, beta, mu=mu)
-##    beta0 = beta
-#
-#    (beta, fval_, Gval_) = CONESTA(X, y, l, k, val, beta,
-#                                   mumin=mu_zero, sigma=1.0, tau=0.5,
-#                                   eps=utils.TOLERANCE,
-#                                   conts=conts, maxit=maxit, dynamic=False)
-#
-##    print "FISTA:  ", f(X, y, l, k, g, beta, mu=mu)
-##    print "CONESTA:", f(X, y, l, k, g, beta_test, mu=mu)
-#
-#    curr_val = np.sum((beta - betastar) ** 2.0)
-#    print "curr_val: ", curr_val
-#    f_ = f(X, y, l, k, g, beta, mu=mu)
-#
-#    print "rr:", rr.f(X, y, k, beta)
-#    print "l1:", l1.f(l, beta)
-#    print "tv:", tv.f(X, y, g, beta, mu)
-#
-#    v.append(curr_val)
-#    x.append(val)
-#    fval.append(f_)
-#
-#    if curr_val <= min(v):
-#        beta_opt = beta
-#        fbest = fval_
-#        Gbest = Gval_
-##        beta_test_opt = beta_test
-#
-#    print "true = %.5f => %.7f" % (val, curr_val)
-#
-#print "time:", (time() - t__)
-#
-#print "best  f:", f(X, y, l, k, g, betastar, mu=mu)
-#print "found f:", f(X, y, l, k, g, beta_opt, mu=mu)
-#print "least f:", min(fval)
-#
-#plot.subplot(3, 2, 1)
-#plot.plot(x, v, '-b')
-#plot.title("true: %.5f, min: %.5f" % (g, x[np.argmin(v)]))
-#
-#plot.subplot(3, 2, 3)
-#plot.plot(x, fval, '-b')
-#plot.title("true: %.5f, min: %.5f" % (g, x[np.argmin(fval)]))
-#
-#plot.subplot(3, 2, 5)
-#plot.plot(betastar, '-g', beta_opt, '-r')
-##plot.plot(betastar, '-g', beta_opt, '-r', beta_test_opt, '--b')
-#
-#plot.subplot(3, 2, 2)
-#print fbest
-#fbest = sum(fbest, [])
-#print fbest
-#plot.plot(fbest, '-b')
-#
-#plot.subplot(3, 2, 4)
-#print Gbest
-##Gbest = sum(Gbest, [])
-#plot.plot(Gbest, '-b')
-#
-#plot.show()
+
+
+
+beta0 = np.random.rand(*betastar.shape)
+step = 1.0 / Lipschitz(X, k, g, mu)
+
+v = []
+x = []
+fval = []
+beta_opt = 0
+
+num_lin = 13
+#ls = np.maximum(0.0, np.linspace(l - l * 0.1, l + l * 0.1, num_lin))
+#ks = np.maximum(0.0, np.linspace(k - k * 0.1, k + k * 0.1, num_lin))
+gs = np.maximum(0.0, np.linspace(g - g * 0.1, g + g * 0.1, num_lin))
+beta = beta0
+beta, _ = FISTA(X, y, l, k, g, beta, step, mu=mu, eps=eps, maxit=1000)
+from time import time
+t__ = time()
+for i in range(len(gs)):
+    val = gs[i]
+#    beta = beta0
+#    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu*100000.0, eps=eps, maxit=10000)
+#    print "f:", f(X, y, l, k, val, beta, mu=mu)
+#    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu*10000.0, eps=eps, maxit=10000)
+#    print "f:", f(X, y, l, k, val, beta, mu=mu)
+#    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu*1000.0, eps=eps, maxit=1000)
+#    print "f:", f(X, y, l, k, val, beta, mu=mu)
+#    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu*100.0, eps=eps, maxit=1000)
+#    print "f:", f(X, y, l, k, val, beta, mu=mu)
+#    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu*10.0, eps=eps, maxit=1000)
+#    print "f:", f(X, y, l, k, val, beta, mu=mu)
+#    beta, crit = FISTA(X, y, l, k, val, beta, step, mu=mu, eps=eps, maxit=conts * maxit)
+#    print "f:", f(X, y, l, k, val, beta, mu=mu)
+#    beta0 = beta
+
+    (beta, fval_, Gval_) = CONESTA(X, y, l, k, val, beta,
+                                   mumin=mu_zero, sigma=1.0, tau=0.5,
+                                   eps=utils.TOLERANCE,
+                                   conts=conts, maxit=maxit, dynamic=True)
+
+#    print "FISTA:  ", f(X, y, l, k, g, beta, mu=mu)
+#    print "CONESTA:", f(X, y, l, k, g, beta_test, mu=mu)
+
+    curr_val = np.sum((beta - betastar) ** 2.0)
+    print "curr_val: ", curr_val
+    f_ = f(X, y, l, k, g, beta, mu=mu)
+
+    print "rr:", rr.f(X, y, k, beta)
+    print "l1:", l1.f(l, beta)
+    print "tv:", tv.f(X, y, g, beta, mu)
+
+    v.append(curr_val)
+    x.append(val)
+    fval.append(f_)
+
+    if curr_val <= min(v):
+        beta_opt = beta
+        fbest = fval_
+        Gbest = Gval_
+#        beta_test_opt = beta_test
+
+    print "true = %.5f => %.7f" % (val, curr_val)
+
+print "time:", (time() - t__)
+
+print "best  f:", f(X, y, l, k, g, betastar, mu=mu)
+print "found f:", f(X, y, l, k, g, beta_opt, mu=mu)
+print "least f:", min(fval)
+
+plot.subplot(3, 2, 1)
+plot.plot(x, v, '-b')
+plot.title("true: %.5f, min: %.5f" % (g, x[np.argmin(v)]))
+
+plot.subplot(3, 2, 3)
+plot.plot(x, fval, '-b')
+plot.title("true: %.5f, min: %.5f" % (g, x[np.argmin(fval)]))
+
+plot.subplot(3, 2, 5)
+plot.plot(betastar, '-g', beta_opt, '-r')
+#plot.plot(betastar, '-g', beta_opt, '-r', beta_test_opt, '--b')
+
+plot.subplot(3, 2, 2)
+print fbest
+fbest = sum(fbest, [])
+print fbest
+plot.plot(fbest, '-b')
+
+plot.subplot(3, 2, 4)
+print Gbest
+#Gbest = sum(Gbest, [])
+plot.plot(Gbest, '-b')
+
+plot.show()
 
 
 
