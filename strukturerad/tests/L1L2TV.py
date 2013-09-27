@@ -393,8 +393,9 @@ def gap(X, y, l, k, g, beta, mu):
     alpha_l1 = l1.alpha(beta, mu_zero)
     alpha_tv = tv.alpha(beta, mu)
 
+#      + l1.phi(l, beta, alpha_l1, mu_zero) \
     P = rr.f(X, y, k, beta) \
-      + l1.phi(l, beta, alpha_l1, mu_zero) \
+      + l1.f(l, beta) \
       + tv.phi(X, y, g, beta, alpha_tv, mu)
 
     Aa_l1 = l1.Aa(alpha_l1)
@@ -406,8 +407,9 @@ def gap(X, y, l, k, g, beta, mu):
     beta_hat = betahat(X, y, k, gAa)
     print "beta_hat:", beta_hat
 
+#      + l1.phi(l, beta_hat, alpha_l1, mu_zero) \
     D = rr.f(X, y, k, beta_hat) \
-      + l1.phi(l, beta_hat, alpha_l1, mu_zero) \
+      + l1.f(l, beta_hat) \
       + tv.phi(X, y, g, beta_hat, alpha_tv, mu)
 
     return P - D
@@ -644,63 +646,62 @@ G = gap(X, y, l, k, g, betastar, mu_zero)
 print "gap: ", G
 
 
-beta = betastar
-
-alpha_tv = tv.alpha(beta, mu)
-
-P = rr.f(X, y, k, beta) \
-  + l1.f(l, beta) \
-  + tv.phi(X, y, g, beta, alpha_tv, mu)
-
-gAa = g * tv.Aa(alpha_tv)
-
-beta_hat = beta
-
-def D(beta, alpha_l1, alpha_tv):
-    D = rr.f(X, y, k, beta) \
-      + l1.phi(l, beta, alpha_l1, mu_zero) \
-      + tv.phi(X, y, g, beta, alpha_tv, mu)
-
-#    D = rr.f(X, y, k, beta=beta_hat) \
-#      + l1.f(l, beta_hat) \
-#      + tv.phi(X, y, g, beta_hat, alpha_tv, mu)
-
-    return D
-
-print "D:", D
-print "grad:", np.linalg.norm(np.dot(X.T, np.dot(X, beta_hat) - y) + k * beta_hat + gAa)
-
+beta_hat = betastar
 mu = mu_zero
 
-#t = 1.0 / rr.Lipschitz(X, k)
+alpha_l1 = l1.alpha(beta_hat, mu)
+print "alpha_l1:", alpha_l1
+alpha_tv = tv.alpha(beta_hat, mu)
+print "alpha_tv:", alpha_tv
+
+gAa = g * tv.Aa(alpha_tv)
+print "gAa: ", gAa
+
+print "f(betastar)   = ", rr.f(X, y, k, betastar) \
+                      + l1.f(l, betastar) \
+                      + tv.phi(X, y, g, betastar, alpha_tv, mu)
+
+print "phi(betastar) = ", rr.f(X, y, k, betastar) \
+                      + l1.phi(l, betastar, alpha_l1, mu) \
+                      + tv.phi(X, y, g, betastar, alpha_tv, mu)
+
+
+def fun(beta, alpha_l1, alpha_tv, mu):
+    val = rr.f(X, y, k, beta) \
+        + l1.phi(l, beta, alpha_l1, mu) \
+        + tv.phi(X, y, g, beta, alpha_tv, mu)
+
+    return val
+
+P = fun(beta_hat, alpha_l1, alpha_tv, mu)
+
 t = 1.0 / Lipschitz(X, k, g, mu)
 print "t:", t
 print "l:", l
 print "k:", k
 print "g:", g
-for i in range(10000000):
-    beta_hat = l1.prox(l * t, beta_hat - t * (rr.grad(X, y, k, beta_hat) + gAa))
+beta_old = beta_new = beta_hat
+for i in range(1, 100000):
+    z = beta_new + ((i - 2.0) / (i + 1.0)) * (beta_new - beta_old)
+    beta_old = beta_new
+    beta_new = l1.prox(l * t, z - t * (rr.grad(X, y, k, z) + gAa))
 
-#    D = np.sum((np.dot(X, beta_hat) - y) ** 2.0)
-    D = rr.f(X, y, k, beta=beta_hat) \
-      + l1.f(l, beta_hat) \
-      + tv.phi(X, y, g, beta_hat, alpha_tv, mu)
+    D = fun(beta_new, alpha_l1, alpha_tv, mu)
 
-    if i % 100000 == 0:
+    if i % 10000 == 0:
+        print "P:", P
         print "D:", D
-        print "grad:", np.linalg.norm(np.dot(X.T, np.dot(X, beta_hat) - y) + k * beta_hat + gAa)
-#    print "beta: ", beta_hat.T
-
-#    print rr.f(X, y, k, beta) - rr.f(X, y, k, beta_hat)
-
         print "P - D: ", P - D
+        print "grad:", np.linalg.norm(np.dot(X.T, np.dot(X, beta_new) - y) + k * beta_new + gAa)
+
+beta_hat = beta_new
 
 #beta_min = np.dot(np.linalg.pinv(X), y)
 #print "min:", np.sum((np.dot(X, beta_min) - y) ** 2.0)
 print beta_hat
 print "Gap: ", P - D
 
-G = gap(X, y, l, k, g, betastar, mu_zero)
+G = gap(X, y, l, k, g, betastar, mu_zero / 100.0)
 print "gap: ", G
 
 
