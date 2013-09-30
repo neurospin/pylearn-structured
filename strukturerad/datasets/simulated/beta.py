@@ -37,7 +37,6 @@ def rand(shape, density=1.0, rng=utils.RandomUniform(0, 1).rand,
 
     p = np.prod(shape)
     ps = int(density * p + 0.5)
-    print ps
 
     beta = rng(p)
     beta[ps:] = 0.0
