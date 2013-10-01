@@ -65,11 +65,15 @@ def load(l, k, g, beta, M, e, snr=None, shape=None):
         def f(x):
             X, y = _generate(l, k, g, x * beta, M, e, shape)
 
-            print "snr = %.5f = %.5f = |X.b| / |e| = %.5f / %.5f" \
-                   % (snr, np.linalg.norm(np.dot(X, beta)) / np.linalg.norm(e),
-                      np.linalg.norm(np.dot(X, beta)), np.linalg.norm(e))
+            print "norm(beta) = ", np.linalg.norm(beta)
+            print "norm(Xbeta) = ", np.linalg.norm(np.dot(X, beta))
+            print "norm(e) = ", np.linalg.norm(e)
 
-            return (np.linalg.norm(np.dot(X, beta)) / np.linalg.norm(e)) - snr
+            print "snr = %.5f = %.5f = |X.b| / |e| = %.5f / %.5f" \
+                   % (snr, np.linalg.norm(np.dot(X, x * beta)) / np.linalg.norm(e),
+                      np.linalg.norm(np.dot(X, x * beta)), np.linalg.norm(e))
+
+            return (np.linalg.norm(np.dot(X, x * beta)) / np.linalg.norm(e)) - snr
 
         snr = bisection_method(f, low=0.0, high=snr, maxiter=30)
 
