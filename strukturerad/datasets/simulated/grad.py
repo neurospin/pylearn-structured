@@ -12,7 +12,8 @@ from utils import TOLERANCE
 from utils import U
 from utils import norm2
 
-__all__ = ['grad_L1', 'grad_L2', 'grad_norm2', 'grad_TV', 'grad_TVmu']
+__all__ = ['grad_L1', 'grad_L1mu', 'grad_L2', 'grad_norm2',
+           'grad_TV', 'grad_TVmu']
 
 
 def grad_L1(beta):
@@ -29,6 +30,16 @@ def grad_L1(beta):
             grad[i, 0] = U(-1, 1)
 
     return grad
+
+
+def grad_L1mu(beta, mu):
+
+    alpha = (1.0 / mu) * beta
+    asnorm = np.abs(alpha)
+    i = asnorm > 1.0
+    alpha[i] = np.divide(alpha[i], asnorm[i])
+
+    return alpha
 
 
 def grad_L2(beta):

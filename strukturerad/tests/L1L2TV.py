@@ -18,6 +18,7 @@ import strukturerad.datasets.simulated.l1mu_l2_tvmu as l1mu_l2_tvmu
 
 import strukturerad.datasets.simulated.beta as generate_beta
 from strukturerad.datasets.simulated.grad import grad_TVmu
+from strukturerad.datasets.simulated.grad import grad_L1mu
 
 from strukturerad.utils import math
 
@@ -596,6 +597,9 @@ X, y, betastar = l1_l2_tvmu.load(l, k, g, betastar, M, e, mu, snr, shape)
 #Aa_tv = tv.Aa(tv.alpha(betastar, mu_zero))
 #Aa_ = grad_TVmu(betastar, shape, mu)
 #X, y = l1mu_l2_tvmu.load(l, k, g, betastar, M, e, Aa_l1, Aa_tv)
+
+#Aa_l1 = l1.Aa(l1.alpha(betastar, mu_zero))
+#Aa_ = grad_L1mu(np.reshape(betastar, (p, 1)), mu)
 
 #print "err:", np.sum((np.dot(X, betastar) - y) ** 2.0)
 #print "e  :", np.sum(e ** 2.0)
