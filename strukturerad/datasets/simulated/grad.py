@@ -67,18 +67,41 @@ def grad_TV(beta, shape):
 
     grad = np.zeros((p, 1))
     for i in range(p):
-        Ai = np.zeros((D, p))
-        for d in range(D):
-            if i < p:
-                b = np.prod([shape[-j] for j in range(1, d + 1)])
-                if b + i < p:
-                    Ai[d, i] = -1
-                    Ai[d, b + i] = 1
+#        Ai = np.zeros((D, p))
+#        for d in range(D):
+#            if i < p:
+#                b = np.prod([shape[-j] for j in range(1, d + 1)])
+#                if b + i < p:
+#                    Ai[d, i] = -1
+#                    Ai[d, b + i] = 1
+
+        Ai = _generate_Ai(i, p, D, shape)
+
+        print "i:", i, "Ai:\n", Ai
 
         gradnorm2 = grad_norm2(np.dot(Ai, beta))
         grad += np.dot(Ai.T, gradnorm2)
 
     return grad
+
+
+def _generate_Ai(i, p, D, shape):
+
+    Ai = np.zeros((D, p))
+    for d in xrange(D - 1, -1, -1):
+        if d == D - 1:
+            x = i % shape[d]
+            if x + 1 < shape[d]:
+                Ai[D - d - 1, i] = -1
+                Ai[D - d - 1, i + 1] = 1
+        else:
+            b = np.prod(shape[d + 1:])
+            y = int(i / b)
+            if y + 1 < shape[d]:
+                Ai[D - d - 1, i] = -1
+                Ai[D - d - 1, i + b] = 1
+
+    return Ai
 
 
 def grad_TVmu(beta, shape, mu):
@@ -88,13 +111,10 @@ def grad_TVmu(beta, shape, mu):
 
     grad = np.zeros((p, 1))
     for i in range(p):
-        Ai = np.zeros((D, p))
-        for d in range(D):
-            if i < p:
-                b = np.prod([shape[-j] for j in range(1, d + 1)])
-                if b + i < p:
-                    Ai[d, i] = -1
-                    Ai[d, b + i] = 1
+
+        Ai = _generate_Ai(i, p, D, shape)
+
+        print "i:", i, "Ai:\n", Ai
 
         alphai = np.dot(Ai, beta) / mu
         anorm = np.sqrt(np.sum(alphai ** 2.0))

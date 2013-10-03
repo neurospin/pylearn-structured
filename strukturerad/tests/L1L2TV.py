@@ -198,15 +198,19 @@ class RidgeRegression(object):
 
 
 class L1(object):
+    """The proximal operator of the L1 loss function
 
-    def __init__(self, l):
+        f(x) = l * ||x||_1,
 
-        self._A = None
+    where ||x||_1 is the L1 loss function.
+    """
+    def __init__(self, l, p):
+
         self.l = float(l)
 
     """ Function value of L1.
     """
-    def f(self, beta):
+    def f(self, beta, mu=None):
 
         return self.l * np.sum(np.abs(beta))
 
@@ -218,9 +222,35 @@ class L1(object):
 
         return (np.abs(x) > l) * (x - l * np.sign(x - l))
 
-    ### Methods for the dual formulation ###
+
+class SmoothedL1(object):
+    """The proximal operator of the smoothed L1 loss function
+
+        f(x) = l * L1mu(x),
+
+    where L1mu(x) is the smoothed L1 loss function.
+    """
+    def __init__(self, l, p):
+
+        self.l = float(l)
+        self._p = p
+        self._A = None
+
+    """ Function value of L1.
+    """
+    def f(self, beta, mu):
+
+        if self.l < TOLERANCE:
+            return 0.0
+
+        alpha = self.alpha(beta, mu)
+
+        return self.phi(beta, alpha, mu)
 
     def phi(self, beta, alpha, mu):
+
+        if self.l < TOLERANCE:
+            return 0.0
 
         return self.l * (np.dot(alpha[0].T, beta)[0, 0] \
                             - (mu / 2.0) * np.sum(alpha[0] ** 2.0))
@@ -229,21 +259,17 @@ class L1(object):
 
         alpha = self.alpha(beta, mu)
 
-        A = self.A(beta.shape[0])
-        grad = A[0].T.dot(alpha[0])
-        for i in xrange(1, len(A)):
-            grad += A[i].T.dot(alpha[i])
-
-        return self.l * grad
+        return self.l * alpha[0]
 
     def Lipschitz(self, mu):
 
-        return self.l / mu
+        return self.l ** 2.0 / mu
 
-    def A(self, p=None):
+    def A(self):
 
         if self._A == None:
-            self._A = sparse.eye(p, p)
+            self._A = sparse.eye(self.p, self.p)
+
         return [self._A]
 
     def Aa(self, alpha):
@@ -283,20 +309,31 @@ class TotalVariation(object):
 
         self.g = float(g)
         self._A = self.precompute(shape, mask=None, compress=False)
+        print "TV._A:", self._A[0].todense()
+        print self._A[1].todense()
+        print self._A[2].todense()
         self._lambda_max = None
 
     """ Function value of Ridge regression.
     """
-    def f(self, X, y, beta, mu):
+    def f(self, beta, mu=0.0):
 
         if self.g < TOLERANCE:
             return 0.0
 
-        alpha = self.alpha(beta, mu)
-
-        return self.phi(beta, alpha, mu)
+        if abs(mu) >= TOLERANCE:
+            alpha = self.alpha(beta, mu)
+            return self.phi(beta, alpha, mu)
+        else:
+            A = self.A()
+            return self.g * np.sum(np.sqrt(A[0].dot(beta) ** 2.0 + \
+                                           A[1].dot(beta) ** 2.0 + \
+                                           A[2].dot(beta) ** 2.0))
 
     def phi(self, beta, alpha, mu):
+
+        if self.g < TOLERANCE:
+            return 0.0
 
         Aa = self.Aa(alpha)
 
@@ -304,31 +341,31 @@ class TotalVariation(object):
         for a in alpha:
             alpha_sqsum += np.sum(a ** 2.0)
 
-        return self.g * (np.dot(Aa.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum)
+        return self.g * (np.dot(Aa.T, beta)[0, 0] \
+                            - (mu / 2.0) * alpha_sqsum)
 
-    """ Gradient of Total variation
+    """ Gradient of Total variation.
     """
     def grad(self, beta, mu):
 
-        alpha = self.alpha(beta, mu)
+        if self.g < TOLERANCE:
+            return 0.0
 
-        A = self.A()
-        grad = A[0].T.dot(alpha[0])
-        for i in xrange(1, len(A)):
-            grad += A[i].T.dot(alpha[i])
+        alpha = self.alpha(beta, mu)
+        grad = self.Aa(alpha)
 
         return self.g * grad
 
-    def Lipschitz(self, mu, max_iter=100):
+    def Lipschitz(self, mu, max_iter=10):
 
         if self.g < TOLERANCE:
             return 0.0
 
         lmaxA = self.lambda_max(mu, max_iter=max_iter)
 
-        return self.g * lmaxA / mu
+        return self.g ** 2.0 * lmaxA / mu
 
-    def lambda_max(self, mu, max_iter=100):
+    def lambda_max(self, mu, max_iter=10):
 
         # Note that we can save the state here since lmax(A) does not change.
         if self._lambda_max == None:
@@ -391,9 +428,7 @@ class TotalVariation(object):
         for i in xrange(len(A)):
             SS += A[i].dot(beta) ** 2.0
 
-        anorm = np.sqrt(SS)
-
-        return np.max(anorm)
+        return np.max(np.sqrt(SS))
 
     @staticmethod
     def precompute(shape, mask=None, compress=True):
@@ -547,6 +582,7 @@ class L1TV(object):
 
     def project(self, vec):
 
+#        vec = [alpha_l1, alpha_tvx, alpha_tvy, alpha_tvz]
         return self.l1.project(vec[0]) \
              + self.tv.project(vec[1:])
 
@@ -565,7 +601,7 @@ class OLSL2_L1_TV(object):
     def __init__(self, l, k, g, shape, smooth_l1=False):
 
         self.rr = RidgeRegression(k)
-        self.l1 = L1(l)
+        self.l1 = L1(l, np.prod(shape))
         self.tv = TotalVariation(g, shape=shape)
         self._smooth_l1 = smooth_l1
 
@@ -766,13 +802,14 @@ class OLSL2_SmoothedL1TV(object):
 
         A = self.h.A()
 
+        g = [self.h.l1.l, self.h.tv.g, self.h.tv.g, self.h.tv.g]
         u_new = [0] * len(u)
         for i in xrange(len(u)):
-            u_new[i] = u[i]
-            if L >= utils.TOLERANCE:
-                u_new[i] += A[i].dot(beta) / L
-            else:
-                u_new[i] += np.ones(u[i].shape) * 9999999.9  # Large <tm>
+            u_new[i] = u[i] + g[i] * A[i].dot(beta) / L
+
+#            if L >= utils.TOLERANCE:
+#            else:
+#                u_new[i] += np.ones(u[i].shape) * 9.9e8  # Large <tm>
 
         return self.h.project(u_new)
 
@@ -780,11 +817,136 @@ class OLSL2_SmoothedL1TV(object):
     """
     def betahat(self, X, y, alpha):
 
-        k = self.g.k
-
         grad = self.h.gAa(alpha)
 
-        XXkI = np.dot(X.T, X) + k * np.eye(X.shape[1])
+        XXkI = np.dot(X.T, X) + self.g.k * np.eye(X.shape[1])
+        beta = np.dot(np.linalg.inv(XXkI), np.dot(X.T, y) - grad)
+
+        return beta
+
+    #    # Used by Woodbury
+    #    invXXtlI = np.linalg.inv(np.dot(self.X, self.X.T) \
+    #                                + self.l * np.eye(self.X.shape[0]))
+    #    self.XtinvXXtlI = np.dot(self.X.T, invXXtlI)
+    #    self.Aa = np.zeros((self.X.shape[1], 1))
+
+
+class OLSL2_SmoothedL1(object):
+
+    def __init__(self, l, k, p):
+
+        self.g = RidgeRegression(k)
+        self.h = L1(l, p)
+
+    """ Function value of Ridge regression, L1 and TV.
+    """
+    def f(self, X, y, beta, mu):
+
+        return self.g.f(X, y, beta) \
+             + self.h.f(beta, mu)
+
+    """ Gradient of the differentiable part with Ridge regression + TV.
+    """
+    def grad(self, X, y, beta, mu):
+
+        return self.g.grad(X, y, beta) \
+             + self.h.grad(beta, mu)
+
+    def Lipschitz(self, X, mu):
+
+        return self.g.Lipschitz(X) + self.h.Lipschitz(mu)
+
+    """ Proximal operator of the L1 norm.
+    """
+    def prox(self, beta, factor=1.0):
+
+        return self.l1.prox(beta, factor)
+
+    def mu(self, beta):
+
+        return self.h.mu(beta)
+
+    def V(self, u, beta, L):
+
+        A = self.h.A()
+
+        g = [self.h.l]
+        u_new = [0] * len(u)
+        for i in xrange(len(u)):
+            u_new[i] = u[i] + g[i] * A[i].dot(beta) / L
+
+#            if L >= utils.TOLERANCE:
+#            else:
+#                u_new[i] += np.ones(u[i].shape) * 9.9e8  # Large <tm>
+
+        return self.h.project(u_new)
+
+    """ Returns the beta that minimises the dual function.
+    """
+    def betahat(self, X, y, alpha):
+
+        grad = self.h.l * self.h.Aa(alpha)
+
+        XXkI = np.dot(X.T, X) + self.g.k * np.eye(X.shape[1])
+        beta = np.dot(np.linalg.inv(XXkI), np.dot(X.T, y) - grad)
+
+        return beta
+
+    #    # Used by Woodbury
+    #    invXXtlI = np.linalg.inv(np.dot(self.X, self.X.T) \
+    #                                + self.l * np.eye(self.X.shape[0]))
+    #    self.XtinvXXtlI = np.dot(self.X.T, invXXtlI)
+    #    self.Aa = np.zeros((self.X.shape[1], 1))
+
+
+class OLSL2_TV(object):
+
+    def __init__(self, k, g, shape):
+
+        self.g = RidgeRegression(k)
+        self.h = TotalVariation(g, shape)
+
+    """ Function value of Ridge regression and TV.
+    """
+    def f(self, X, y, beta, mu):
+
+        return self.g.f(X, y, beta) \
+             + self.h.f(beta, mu)
+
+    """ Gradient of the differentiable part with Ridge regression + TV.
+    """
+    def grad(self, X, y, beta, mu):
+
+        return self.g.grad(X, y, beta) \
+             + self.h.grad(beta, mu)
+
+    def Lipschitz(self, X, mu):
+
+        return self.g.Lipschitz(X) \
+             + self.h.Lipschitz(mu)
+
+    def mu(self, beta):
+
+        return self.h.mu(beta)
+
+    def V(self, u, beta, L):
+
+        A = self.h.A()
+
+        g = [self.h.g, self.h.g, self.h.g]
+        u_new = [0] * len(u)
+        for i in xrange(len(u)):
+            u_new[i] = u[i] + g[i] * A[i].dot(beta) / L
+
+        return self.h.project(u_new)
+
+    """ Returns the beta that minimises the dual function.
+    """
+    def betahat(self, X, y, alpha):
+
+        grad = self.h.g * self.h.Aa(alpha)
+
+        XXkI = np.dot(X.T, X) + self.g.k * np.eye(X.shape[1])
         beta = np.dot(np.linalg.inv(XXkI), np.dot(X.T, y) - grad)
 
         return beta
@@ -897,41 +1059,43 @@ def ExcessiveGapMethod(X, y, function, eps=TOLERANCE, maxit=MAX_ITER):
     for i in xrange(len(A)):
         u[i] = np.zeros((A[i].shape[0], 1))
 
-    L = function.h.Lipschitz(1.0) / function.g.lambda_min(X)
+#   L = (l²lmax(AtA) + g²lmax(AtA)) / (lmin(XtX) + k)
+    L = function.h.Lipschitz(1.0, max_iter=1000) / function.g.lambda_min(X)
 
     mu = [L]
     beta = [function.betahat(X, y, u)]  # u is zero here
-    alpha = function.V(u, beta[-1], L)  # u is zero here
+    alpha = function.V(u, beta[0], L)  # u is zero here
 
-    f = [function.g.f(X, y, beta[-1]) + function.h.f(beta[-1], mu[-1])]
+    f = [function.g.f(X, y, beta[0]) + function.h.f(beta[0], mu[0])]
 
     k = 0
     while True:
         tau = 2.0 / (float(k) + 3.0)
 
-        alpha_hat = function.h.alpha(beta[-1], mu[-1])
+        alpha_hat = function.h.alpha(beta[k], mu[k])
         for i in xrange(len(alpha_hat)):
             u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
 
-        mu.append((1.0 - tau) * mu[-1])
+        mu.append((1.0 - tau) * mu[k])
         betahat = function.betahat(X, y, u)
-        beta.append((1.0 - tau) * beta[-1] + tau * betahat)
+        beta.append((1.0 - tau) * beta[k] + tau * betahat)
         alpha = function.V(u, betahat, L)  # Now beta^{(k)} is at -2!
 
-        if mu[-1] * function.h.D() < eps:
+        if mu[k] * function.h.D() < eps:
             break
 
         if k >= maxit - 1:
             break
+
+        f.append(function.g.f(X, y, beta[k + 1]) + function.h.f(beta[k + 1], 1e-8))#mu[k + 1]))
 
         k = k + 1
 
 #        if math.norm1(beta_new - beta_old) > self.tolerance:
 #            break
 
-        f.append(function.g.f(X, y, beta[-1]) + function.h.f(beta[-1], mu[-1]))
-
     print "mu * D: ", mu[-1] * function.h.D()
+    print "mu:", mu[-1]
 
     return (beta[-1], f)
 
@@ -949,19 +1113,21 @@ def ExcessiveGapMethod(X, y, function, eps=TOLERANCE, maxit=MAX_ITER):
 
 np.random.seed(42)
 
-l = 0.5  # 0.61803
-k = 0.5  # 0.271828
+l = 0.0  # 0.61803
+k = 1.0  # 0.271828
 g = 1.0  # 3.14159
 
-px = 6
+px = 1
 py = 6
-pz = 1
+pz = 6
 shape = (pz, py, px)
 p = np.prod(shape)
 n = 25
 
-function_conesta = OLSL2_L1_TV(l, k, g, shape=shape)
-function_egm = OLSL2_SmoothedL1TV(l, k, g, shape=shape)
+#function_conesta = OLSL2_L1_TV(l, k, g, shape=shape)
+#function_egm = OLSL2_SmoothedL1TV(l, k, g, shape=shape)
+#function_egm = OLSL2_SmoothedL1(l, k, p=np.prod(shape))
+function_egm = OLSL2_TV(k, g, shape=shape)
 
 a = 1.0
 Sigma = a * np.eye(p) + (1.0 - a) * np.ones((p, p))
@@ -973,26 +1139,29 @@ density = 0.5
 eps = 1e-4
 mu = 0.9 * (2.0 * eps / p)
 print "mu:", mu
-conts = 20
-maxit = 1000
+conts = 10
+maxit = 100
 
 snr = 100.0
 
 betastar = generate_beta.rand(shape, density=density, sort=True)
+#betastar = np.random.rand(*shape).reshape((p, 1))
 print betastar
 
-X, y, betastar = l1mu_l2_tvmu.load(l, k, g, betastar, M, e, mu_zero, snr,
-                                   shape)
+#X, y, betastar = l1mu_l2_tvmu.load(l, k, g, betastar, M, e, mu_zero, snr,
+#                                   shape)
+X, y, betastar = l1_l2_tv.load(l, k, g, betastar, M, e, snr, shape)
 
 beta_egm, f_egm = ExcessiveGapMethod(X, y, function_egm,
-                                     eps=TOLERANCE, maxit=10000)
+                                     eps=eps, maxit=conts * maxit)
 
 print np.sqrt(((np.reshape(beta_egm, shape) - np.reshape(betastar, shape)) ** 2.0))
 
-print "err: ", (function_egm.f(X, y, beta_egm, mu=mu) \
-              - function_egm.f(X, y, betastar, mu=mu))
-print "best  f:", function_egm.f(X, y, betastar, mu=mu)
-print "found f:", function_egm.f(X, y, beta_egm, mu=mu)
+print "err: ", (function_egm.f(X, y, beta_egm, mu=0.0) \
+              - function_egm.f(X, y, betastar, mu=0.0))
+f_star = function_egm.f(X, y, betastar, mu=0.0)
+print "best  f:", f_star
+print "found f:", function_egm.f(X, y, beta_egm, mu=0.0)
 
 plot.subplot(2, 1, 1)
 plot.plot(betastar, '-g', beta_egm, '-r')
@@ -1000,6 +1169,7 @@ plot.title("True $\\beta^*$ (green) and EGM $\\beta^{(k)}$ (red)")
 
 plot.subplot(2, 1, 2)
 plot.plot(f_egm,  '-b')
+plot.plot([0, len(f_egm)-1], [f_star, f_star], 'g')
 plot.title("Function value of EGM as a function of iteration number")
 
 plot.show()
