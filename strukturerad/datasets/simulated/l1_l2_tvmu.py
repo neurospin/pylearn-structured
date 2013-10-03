@@ -46,7 +46,13 @@ def load(l, k, g, beta, M, e, mu, snr=None, shape=None):
 
     mu : The Nesterov smoothing regularisation parameter.
 
-    snr : Signal to noise ratio between model and residual.
+    snr : Signal-to-noise ratio between model and residual.
+
+    shape : The underlying dimension of the regression vector, beta. E.g. the
+            beta may represent an underlying 3D image. In that case the shape
+            is a three-tuple with dimensions (Z, Y, X). If shape is not
+            provided, the shape is set to (p,) where p is the dimension of
+            beta.
 
     Returns
     -------
@@ -67,11 +73,17 @@ def load(l, k, g, beta, M, e, mu, snr=None, shape=None):
         def f(x):
             X, y = _generate(l, k, g, x * beta, M, e, mu, shape)
 
-            print "snr = %.5f = %.5f = |X.b| / |e| = %.5f / %.5f" \
-                   % (snr, np.linalg.norm(np.dot(X, beta)) / np.linalg.norm(e),
-                      np.linalg.norm(np.dot(X, beta)), np.linalg.norm(e))
+#            print "norm(beta) = ", np.linalg.norm(beta)
+#            print "norm(Xbeta) = ", np.linalg.norm(np.dot(X, beta))
+#            print "norm(e) = ", np.linalg.norm(e)
 
-            return (np.linalg.norm(np.dot(X, beta)) / np.linalg.norm(e)) - snr
+            print "snr = %.5f = %.5f = |X.b| / |e| = %.5f / %.5f" \
+                   % (snr, np.linalg.norm(np.dot(X, x * beta)) \
+                                           / np.linalg.norm(e),
+                      np.linalg.norm(np.dot(X, x * beta)), np.linalg.norm(e))
+
+            return (np.linalg.norm(np.dot(X, x * beta)) / np.linalg.norm(e)) \
+                        - snr
 
         snr = bisection_method(f, low=0.0, high=snr, maxiter=30)
 

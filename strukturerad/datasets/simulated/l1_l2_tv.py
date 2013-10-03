@@ -38,13 +38,19 @@ def load(l, k, g, beta, M, e, snr=None, shape=None):
     beta : The regression vector to generate data from.
 
     M : The matrix to use when building data. This matrix carries the desired
-            distribution of the generated data. The generated data will be a
-            column-scaled version of this matrix.
+            correlation structure of the generated data. The generated data
+            will be a column-scaled version of this matrix.
 
     e : The error vector e = Xb - y. This vector carries the desired
             distribution of the residual.
 
-    snr : Signal to noise ratio between model and residual.
+    snr : Signal-to-noise ratio between model and residual.
+
+    shape : The underlying dimension of the regression vector, beta. E.g. the
+            beta may represent an underlying 3D image. In that case the shape
+            is a three-tuple with dimensions (Z, Y, X). If shape is not
+            provided, the shape is set to (p,) where p is the dimension of
+            beta.
 
     Returns
     -------
@@ -70,10 +76,12 @@ def load(l, k, g, beta, M, e, snr=None, shape=None):
             print "norm(e) = ", np.linalg.norm(e)
 
             print "snr = %.5f = %.5f = |X.b| / |e| = %.5f / %.5f" \
-                   % (snr, np.linalg.norm(np.dot(X, x * beta)) / np.linalg.norm(e),
+                   % (snr, np.linalg.norm(np.dot(X, x * beta)) \
+                                           / np.linalg.norm(e),
                       np.linalg.norm(np.dot(X, x * beta)), np.linalg.norm(e))
 
-            return (np.linalg.norm(np.dot(X, x * beta)) / np.linalg.norm(e)) - snr
+            return (np.linalg.norm(np.dot(X, x * beta)) / np.linalg.norm(e)) \
+                        - snr
 
         snr = bisection_method(f, low=0.0, high=snr, maxiter=30)
 

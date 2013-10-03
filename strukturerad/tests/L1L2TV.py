@@ -9,16 +9,15 @@ Created on Wed Sep  4 12:07:50 2013
 
 import numpy as np
 import scipy.sparse as sparse
-import strukturerad.algorithms as algorithms
+#import strukturerad.algorithms as algorithms
 import strukturerad.utils as utils
+from strukturerad.utils import math
 
 import strukturerad.datasets.simulated.l1_l2_tv as l1_l2_tv
 import strukturerad.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
 import strukturerad.datasets.simulated.l1mu_l2_tvmu as l1mu_l2_tvmu
 
 import strukturerad.datasets.simulated.beta as generate_beta
-
-from strukturerad.utils import math
 
 from time import time
 import matplotlib.pyplot as plot
@@ -84,6 +83,65 @@ def FastSVD(X, max_iter=100, start_vector=None):
     return v
 
 
+def FastSparseSVD(X, max_iter=100, start_vector=None):
+    """A kernel SVD implementation for sparse CSR matrices.
+
+    This is usually faster than np.linalg.svd when density < 20% and when
+    M << N or N << M (at least one order of magnitude). When M = N >= 10000 it
+    is faster when the density < 1% and always faster regardless of density
+    when M = N < 10000.
+
+    These are ballpark estimates that may differ on your computer.
+
+    Arguments:
+    ---------
+    X : The matrix to decompose
+
+    Returns:
+    -------
+    v : The right singular vector.
+    """
+    M, N = X.shape
+    # TODO: Use module for this!
+    p = np.random.rand(X.shape[1], 1)
+#    p = start_vectors.RandomStartVector().get_vector(X)
+    if M < N:
+        Xt = X.T
+        K = X.dot(Xt)
+        t = X.dot(p)
+        for it in xrange(max_iter):
+            t_ = t
+            t = K.dot(t_)
+            t /= np.sqrt(np.sum(t_ ** 2.0))
+
+            if (np.sum((t_ - t) ** 2.0)) < TOLERANCE:
+                break
+
+        p = Xt.dot(t)
+        normp = np.sqrt(np.sum(p ** 2.0))
+        # Is the solution significantly different from zero (or TOLERANCE)?
+        if normp >= TOLERANCE:
+            p /= normp
+        else:
+            p = np.zeros(p.shape) / np.sqrt(p.shape[0])
+
+    else:
+        K = X.T.dot(X)
+        for it in xrange(max_iter):
+            p_ = p
+            p = K.dot(p_)
+            normp = np.sqrt(np.sum(p ** 2.0))
+            if normp > TOLERANCE:
+                p /= normp
+            else:
+                p = np.zeros(p.shape) / np.sqrt(p.shape[0])
+
+            if (np.sum((p_ - p) ** 2.0)) < TOLERANCE:
+                break
+
+    return p
+
+
 class RidgeRegression(object):
 
     def __init__(self, k):
@@ -110,12 +168,6 @@ class RidgeRegression(object):
 
         return np.dot(X.T, np.dot(X, beta) - y) + self.k * beta
 
-    ### Methods for the dual formulation ###
-
-    def phi(self, X, y, beta):
-
-        return self.f(X, y, self.k, beta)
-
     def Lipschitz(self, X):
 
         return self.lambda_max(X)
@@ -137,6 +189,12 @@ class RidgeRegression(object):
             self._lambda_min = np.min(s) ** 2.0
 
         return self._lambda_min + self.k
+
+    ### Methods for the dual formulation ###
+
+    def phi(self, X, y, beta):
+
+        return self.f(X, y, self.k, beta)
 
 
 class L1(object):
@@ -225,23 +283,18 @@ class TotalVariation(object):
 
         self.g = float(g)
         self._A = self.precompute(shape, mask=None, compress=False)
-        self._lmaxA = None
+        self._lambda_max = None
 
     """ Function value of Ridge regression.
     """
     def f(self, X, y, beta, mu):
 
-        if self.g < utils.TOLERANCE:
+        if self.g < TOLERANCE:
             return 0.0
 
         alpha = self.alpha(beta, mu)
-        Aa = self.Aa(alpha)
 
-        alpha_sqsum = 0.0
-        for a in alpha:
-            alpha_sqsum += np.sum(a ** 2.0)
-
-        return self.g * (np.dot(Aa.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum)
+        return self.phi(beta, alpha, mu)
 
     def phi(self, beta, alpha, mu):
 
@@ -266,19 +319,25 @@ class TotalVariation(object):
 
         return self.g * grad
 
-    def Lipschitz(self, mu):
+    def Lipschitz(self, mu, max_iter=100):
 
-        if self.g < utils.TOLERANCE:
+        if self.g < TOLERANCE:
             return 0.0
 
-        # Note that we can do this here since lmaxA does not change.
-        if self._lmaxA == None:
-            A = sparse.vstack(self.A())
-            v = algorithms.SparseSVD(max_iter=100).run(A)
-            us = A.dot(v)
-            self._lmaxA = np.sum(us ** 2.0)
+        lmaxA = self.lambda_max(mu, max_iter=max_iter)
 
-        return self.g * self._lmaxA / mu
+        return self.g * lmaxA / mu
+
+    def lambda_max(self, mu, max_iter=100):
+
+        # Note that we can save the state here since lmax(A) does not change.
+        if self._lambda_max == None:
+            A = sparse.vstack(self.A())
+            v = FastSparseSVD(X, max_iter=max_iter)
+            us = A.dot(v)
+            self._lambda_max = np.sum(us ** 2.0)
+
+        return self._lambda_max
 
     def A(self):
 
@@ -436,6 +495,8 @@ class L1TV(object):
         self.l1 = L1(l)
         self.tv = TotalVariation(g, shape)
 
+        self._lambda_max = None
+
     def f(self, beta, mu):
 
         alpha_l1 = self.l1.alpha(beta, mu)
@@ -457,6 +518,17 @@ class L1TV(object):
 
         return self.l1.Lipschitz(mu) \
              + self.tv.Lipschitz(mu)
+
+    def lambda_max(self, mu, max_iter=100):
+
+        # Note that we can save the state here since lmax(A) does not change.
+        if self._lambda_max == None:
+            A = sparse.vstack(self.A())
+            v = FastSparseSVD(X, max_iter=max_iter)
+            us = A.dot(v)
+            self._lambda_max = np.sum(us ** 2.0)
+
+        return self._lambda_max
 
     def A(self):
 
@@ -627,13 +699,11 @@ class OLSL2_L1_TV(object):
               + self.tv.phi(beta_hat, alpha_tv, mu)
 
         else:
-            gAa = self.tv.g * self.tv.Aa(alpha_tv)
-
             P = self.rr.f(X, y, beta) \
               + self.l1.f(beta) \
               + self.tv.phi(beta, alpha_tv, mu)
 
-            t = 1.0 / rrl1tv.Lipschitz(X, mu)
+            t = 1.0 / self.Lipschitz(X, mu)
             beta_old = beta_new = beta
             # TODO: Use function FISTA instead!!
             for i in xrange(1, maxit):
@@ -755,7 +825,7 @@ def CONESTA(X, y, function, beta, mumin=utils.TOLERANCE, sigma=1.1,
 
 #    mu = [mu0]
 #    print "mu:", mu[0]
-    mu = [0.9 * function.mu(beta0)]
+    mu = [0.9 * function.mu(beta)]
     print "mu:", mu[0]
     eps0 = function.eps_opt(mu[0], X)
     print "eps:", eps0
@@ -844,8 +914,9 @@ def ExcessiveGapMethod(X, y, function, eps=TOLERANCE, maxit=MAX_ITER):
             u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
 
         mu.append((1.0 - tau) * mu[-1])
-        beta.append((1.0 - tau) * beta[-1] + tau * function.betahat(X, y, u))
-        alpha = function.V(u, beta[-2], L)  # Now beta^{(k)} is at -2!
+        betahat = function.betahat(X, y, u)
+        beta.append((1.0 - tau) * beta[-1] + tau * betahat)
+        alpha = function.V(u, betahat, L)  # Now beta^{(k)} is at -2!
 
         if mu[-1] * function.h.D() < eps:
             break
@@ -910,16 +981,18 @@ snr = 100.0
 betastar = generate_beta.rand(shape, density=density, sort=True)
 print betastar
 
-X, y, betastar = l1_l2_tv.load(l, k, g, betastar, M, e, snr, shape)
+X, y, betastar = l1mu_l2_tvmu.load(l, k, g, betastar, M, e, mu_zero, snr,
+                                   shape)
 
-beta_egm, f_egm = \
-             ExcessiveGapMethod(X, y, function_egm, eps=TOLERANCE, maxit=100000)
+beta_egm, f_egm = ExcessiveGapMethod(X, y, function_egm,
+                                     eps=TOLERANCE, maxit=10000)
 
-print np.sum((beta_egm - betastar) ** 2.0)
+print np.sqrt(((np.reshape(beta_egm, shape) - np.reshape(betastar, shape)) ** 2.0))
 
+print "err: ", (function_egm.f(X, y, beta_egm, mu=mu) \
+              - function_egm.f(X, y, betastar, mu=mu))
 print "best  f:", function_egm.f(X, y, betastar, mu=mu)
 print "found f:", function_egm.f(X, y, beta_egm, mu=mu)
-print "least f:", min(f_egm)
 
 plot.subplot(2, 1, 1)
 plot.plot(betastar, '-g', beta_egm, '-r')
