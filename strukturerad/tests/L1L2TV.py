@@ -1094,8 +1094,8 @@ def ExcessiveGapMethod(X, y, function, eps=TOLERANCE, maxit=MAX_ITER):
 #        if math.norm1(beta_new - beta_old) > self.tolerance:
 #            break
 
-    print "mu * D: ", mu[-1] * function.h.D()
     print "mu:", mu[-1]
+    print "mu * D: %.6f" % (mu[-1] * function.h.D())
 
     return (beta[-1], f)
 
@@ -1117,9 +1117,9 @@ l = 0.0  # 0.61803
 k = 1.0  # 0.271828
 g = 1.0  # 3.14159
 
-px = 4
-py = 3
-pz = 2
+px = 6
+py = 6
+pz = 1
 shape = (pz, py, px)
 p = np.prod(shape)
 n = 25
@@ -1155,9 +1155,9 @@ X, y, betastar = l1_l2_tv.load(l, k, g, betastar, M, e, snr, shape)
 beta_egm, f_egm = ExcessiveGapMethod(X, y, function_egm,
                                      eps=eps, maxit=conts * maxit)
 
-print np.sqrt(((np.reshape(beta_egm, shape) - np.reshape(betastar, shape)) ** 2.0))
+#print np.sqrt(((np.reshape(beta_egm, shape) - np.reshape(betastar, shape)) ** 2.0))
 
-print "err: ", (function_egm.f(X, y, beta_egm, mu=0.0) \
+print "err   : %.6f" % (function_egm.f(X, y, beta_egm, mu=0.0) \
               - function_egm.f(X, y, betastar, mu=0.0))
 f_star = function_egm.f(X, y, betastar, mu=0.0)
 print "best  f:", f_star

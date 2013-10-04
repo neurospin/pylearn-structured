@@ -156,7 +156,7 @@ maxit = 1000
 
 
 def f(X, Y, w, c, l, k):
-    return -0.5 * np.dot(np.dot(X, w).T, np.dot(Y, c))[0, 0] \
+    return -np.dot(np.dot(X, w).T, np.dot(Y, c))[0, 0] \
             + 0.5 * l * (np.dot(w.T, w)[0, 0] - 1.0) \
             + 0.5 * k * (np.dot(c.T, c)[0, 0] - 1.0)
 
@@ -188,19 +188,21 @@ w = np.random.rand(X.shape[1], 1)
 w = w / np.linalg.norm(w)
 c = np.random.rand(Y.shape[1], 1)
 c = c / np.linalg.norm(c)
-l = k = 1000.0
+l = k = 699.055
 
 print "f före:", f(X, Y, w, c, l, k)
-for i in range(10):
+for i in range(100):
 #    grad_x = grad(X, Y, w, c, l)
     grad_x = -np.dot(X.T, np.dot(Y, c)) + l * w
     print "|grad_x|:", np.linalg.norm(grad_x)
 #    t_ = step(f, grad, X, Y, w, c, l, k)
-    t_ = 0.0001
+    t_ = 0.001
     w_ = w - t_ * grad_x
-    print "w'w:", np.dot(w_.T, w_)
 #    w_ = w_ / np.linalg.norm(w_)
+    print "w'w:", np.dot(w_.T, w_)
     print "t:", t_, ", f:", f(X, Y, w_, c, l, k)
+
+    w = w_
 
     print
 
@@ -209,13 +211,12 @@ for i in range(10):
     grad_y = -np.dot(Y.T, np.dot(X, w)) + k * c
     print "|grad_y|:", np.linalg.norm(grad_y)
 #    t_ = step(f, grad, Y, X, c, w, k, l)
-    t_ = 0.0001
+    t_ = 0.001
     c_ = c - t_ * grad_y
-    print "c'c:", np.dot(c_.T, c_)
 #    c_ = c_ / np.linalg.norm(c_)
+    print "c'c:", np.dot(c_.T, c_)
     print "t:", t_, ", f:", f(X, Y, w, c_, l, k)
 
-    w = w_
     c = c_
 
     print
@@ -235,7 +236,7 @@ w = np.dot(X.T, u)
 w = w / np.linalg.norm(w)
 t = np.dot(X, w)
 
-print "cov:", -0.5 * np.dot(t.T, u)[0, 0]
+print "cov:", -np.dot(t.T, u)[0, 0]
 
 #t = step(f, grad, X, Y, w, c)
 #print "t:", t
