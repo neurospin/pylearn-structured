@@ -60,10 +60,64 @@ def grad_norm2(beta):
         return u * (a / norm_u)
 
 
+def _generate_A(shape):
+
+    D = len(shape)
+    p = np.prod(shape)
+    dims = shape + (1,)
+    A = [0] * D
+    for i in xrange(D - 1, -1, -1):
+        shift = np.prod(dims[i + 1:])
+        A[D - i - 1] = np.eye(p, p, shift) - np.eye(p, p)
+
+    # Only works for up to 3 dimensions ...
+    ind = np.reshape(xrange(p), shape)
+    xind = ind[:, :, -1].flatten().tolist()
+    yind = ind[:, -1, :].flatten().tolist()
+    zind = ind[-1, :, :].flatten().tolist()
+
+    for i in xind:
+        A[0][i, :] = 0
+    for i in yind:
+        A[1][i, :] = 0
+    for i in zind:
+        A[2][i, :] = 0
+
+    return A
+
+
+def _generate_Ai(i, A, shape):
+
+    D = len(shape)
+    v = []
+    for k in xrange(D):
+        v.append(A[k][i, :])
+
+    Ai = np.vstack(v)
+
+#    Ai = np.zeros((D, p))
+#    for d in xrange(D - 1, -1, -1):
+#        if d == D - 1:
+#            x = i % shape[d]
+#            if x + 1 < shape[d]:
+#                Ai[D - d - 1, i] = -1
+#                Ai[D - d - 1, i + 1] = 1
+#        else:
+#            b = np.prod(shape[d + 1:])
+#            y = int(i / b)
+#            if y + 1 < shape[d]:
+#                Ai[D - d - 1, i] = -1
+#                Ai[D - d - 1, i + b] = 1
+
+    return Ai
+
+
 def grad_TV(beta, shape):
 
     p = np.prod(shape)
-    D = len(shape)
+#    D = len(shape)
+
+    A = _generate_A(shape)
 
     grad = np.zeros((p, 1))
     for i in range(p):
@@ -75,7 +129,7 @@ def grad_TV(beta, shape):
 #                    Ai[d, i] = -1
 #                    Ai[d, b + i] = 1
 
-        Ai = _generate_Ai(i, p, D, shape)
+        Ai = _generate_Ai(i, A, shape)
 
         print "i:", i, "Ai:\n", Ai
 
@@ -85,34 +139,17 @@ def grad_TV(beta, shape):
     return grad
 
 
-def _generate_Ai(i, p, D, shape):
-
-    Ai = np.zeros((D, p))
-    for d in xrange(D - 1, -1, -1):
-        if d == D - 1:
-            x = i % shape[d]
-            if x + 1 < shape[d]:
-                Ai[D - d - 1, i] = -1
-                Ai[D - d - 1, i + 1] = 1
-        else:
-            b = np.prod(shape[d + 1:])
-            y = int(i / b)
-            if y + 1 < shape[d]:
-                Ai[D - d - 1, i] = -1
-                Ai[D - d - 1, i + b] = 1
-
-    return Ai
-
-
 def grad_TVmu(beta, shape, mu):
 
     p = np.prod(shape)
-    D = len(shape)
+#    D = len(shape)
+
+    A = _generate_A(shape)
 
     grad = np.zeros((p, 1))
     for i in range(p):
 
-        Ai = _generate_Ai(i, p, D, shape)
+        Ai = _generate_Ai(i, A, shape)
 
         print "i:", i, "Ai:\n", Ai
 

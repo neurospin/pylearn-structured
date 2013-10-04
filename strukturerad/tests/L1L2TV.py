@@ -321,7 +321,7 @@ class TotalVariation(object):
         if self.g < TOLERANCE:
             return 0.0
 
-        if abs(mu) >= TOLERANCE:
+        if mu > TOLERANCE:
             alpha = self.alpha(beta, mu)
             return self.phi(beta, alpha, mu)
         else:
@@ -1087,7 +1087,7 @@ def ExcessiveGapMethod(X, y, function, eps=TOLERANCE, maxit=MAX_ITER):
         if k >= maxit - 1:
             break
 
-        f.append(function.g.f(X, y, beta[k + 1]) + function.h.f(beta[k + 1], 1e-8))#mu[k + 1]))
+        f.append(function.g.f(X, y, beta[k + 1]) + function.h.f(beta[k + 1], TOLERANCE))#mu[k + 1]))
 
         k = k + 1
 
@@ -1117,9 +1117,9 @@ l = 0.0  # 0.61803
 k = 1.0  # 0.271828
 g = 1.0  # 3.14159
 
-px = 1
-py = 6
-pz = 6
+px = 4
+py = 3
+pz = 2
 shape = (pz, py, px)
 p = np.prod(shape)
 n = 25
