@@ -70,7 +70,7 @@ def _generate_A(shape):
         shift = np.prod(dims[i + 1:])
         A[D - i - 1] = np.eye(p, p, shift) - np.eye(p, p)
 
-    # Only works for up to 3 dimensions ...
+    # TODO: Only works for up to 3 dimensions ...
     ind = np.reshape(xrange(p), shape)
     xind = ind[:, :, -1].flatten().tolist()
     yind = ind[:, -1, :].flatten().tolist()
@@ -131,7 +131,11 @@ def grad_TV(beta, shape):
 
         Ai = _generate_Ai(i, A, shape)
 
-        print "i:", i, "Ai:\n", Ai
+#        print "i:", i, "Ai:\n", np.reshape(Ai[0, :] + Ai[1, :] + Ai[2, :],
+#                                           shape)
+#        print "i:", i, "Ai:\n", np.reshape(Ai[0, :], shape)
+#        print np.reshape(Ai[1, :], shape)
+#        print np.reshape(Ai[2, :], shape)
 
         gradnorm2 = grad_norm2(np.dot(Ai, beta))
         grad += np.dot(Ai.T, gradnorm2)
@@ -150,8 +154,6 @@ def grad_TVmu(beta, shape, mu):
     for i in range(p):
 
         Ai = _generate_Ai(i, A, shape)
-
-        print "i:", i, "Ai:\n", Ai
 
         alphai = np.dot(Ai, beta) / mu
         anorm = np.sqrt(np.sum(alphai ** 2.0))

@@ -175,18 +175,28 @@ class RidgeRegression(object):
     def lambda_max(self, X):
 
         if self._lambda_max == None:
-            _, s, _ = np.linalg.svd(X, full_matrices=False)
+            s = np.linalg.svd(X, full_matrices=False, compute_uv=False)
+
             self._lambda_max = np.max(s) ** 2.0
-            self._lambda_min = np.min(s) ** 2.0
+
+            if len(s) < X.shape[1]:
+                self._lambda_min = 0.0
+            else:
+                self._lambda_min = np.min(s) ** 2.0
 
         return self._lambda_max + self.k
 
     def lambda_min(self, X):
 
         if self._lambda_min == None:
-            _, s, _ = np.linalg.svd(X, full_matrices=False)
+            s = np.linalg.svd(X, full_matrices=False, compute_uv=False)
+
             self._lambda_max = np.max(s) ** 2.0
-            self._lambda_min = np.min(s) ** 2.0
+
+            if len(s) < X.shape[1]:
+                self._lambda_min = 0.0
+            else:
+                self._lambda_min = np.min(s) ** 2.0
 
         return self._lambda_min + self.k
 
@@ -309,9 +319,9 @@ class TotalVariation(object):
 
         self.g = float(g)
         self._A = self.precompute(shape, mask=None, compress=False)
-        print "TV._A:", self._A[0].todense()
-        print self._A[1].todense()
-        print self._A[2].todense()
+#        print "TV._A:", self._A[0].todense()
+#        print self._A[1].todense()
+#        print self._A[2].todense()
         self._lambda_max = None
 
     """ Function value of Ridge regression.
@@ -363,6 +373,7 @@ class TotalVariation(object):
 
         lmaxA = self.lambda_max(mu, max_iter=max_iter)
 
+#        print "Lipschitz:", self.g ** 2.0 * lmaxA / mu
         return self.g ** 2.0 * lmaxA / mu
 
     def lambda_max(self, mu, max_iter=10):
@@ -370,7 +381,7 @@ class TotalVariation(object):
         # Note that we can save the state here since lmax(A) does not change.
         if self._lambda_max == None:
             A = sparse.vstack(self.A())
-            v = FastSparseSVD(X, max_iter=max_iter)
+            v = FastSparseSVD(A, max_iter=max_iter)
             us = A.dot(v)
             self._lambda_max = np.sum(us ** 2.0)
 
@@ -920,6 +931,10 @@ class OLSL2_TV(object):
         return self.g.grad(X, y, beta) \
              + self.h.grad(beta, mu)
 
+    def prox(self, x, factor):
+
+        return x
+
     def Lipschitz(self, X, mu):
 
         return self.g.Lipschitz(X) \
@@ -1060,15 +1075,17 @@ def ExcessiveGapMethod(X, y, function, eps=TOLERANCE, maxit=MAX_ITER):
         u[i] = np.zeros((A[i].shape[0], 1))
 
 #   L = (l²lmax(AtA) + g²lmax(AtA)) / (lmin(XtX) + k)
-    L = function.h.Lipschitz(1.0, max_iter=1000) / function.g.lambda_min(X)
+    L = function.h.Lipschitz(1.0, max_iter=100) / function.g.lambda_min(X)
 
     mu = [L]
     beta = [function.betahat(X, y, u)]  # u is zero here
     alpha = function.V(u, beta[0], L)  # u is zero here
 
-    f = [function.g.f(X, y, beta[0]) + function.h.f(beta[0], mu[0])]
-
     k = 0
+
+    f = [function.g.f(X, y, beta[0]) + function.h.f(beta[0], mu[0])]
+    ulim = [4.0 * L * function.h.D() / ((k + 1.0) * (k + 2.0))]  # mu[0] * function.h.D()
+
     while True:
         tau = 2.0 / (float(k) + 3.0)
 
@@ -1079,7 +1096,7 @@ def ExcessiveGapMethod(X, y, function, eps=TOLERANCE, maxit=MAX_ITER):
         mu.append((1.0 - tau) * mu[k])
         betahat = function.betahat(X, y, u)
         beta.append((1.0 - tau) * beta[k] + tau * betahat)
-        alpha = function.V(u, betahat, L)  # Now beta^{(k)} is at -2!
+        alpha = function.V(u, betahat, L)
 
         if mu[k] * function.h.D() < eps:
             break
@@ -1087,7 +1104,10 @@ def ExcessiveGapMethod(X, y, function, eps=TOLERANCE, maxit=MAX_ITER):
         if k >= maxit - 1:
             break
 
-        f.append(function.g.f(X, y, beta[k + 1]) + function.h.f(beta[k + 1], TOLERANCE))#mu[k + 1]))
+        f.append(function.g.f(X, y, beta[k + 1]) + function.h.f(beta[k + 1],
+                 TOLERANCE))  # mu[k + 1]))
+#        ulim.append(mu[k + 1] * function.h.D())
+        ulim.append(4.0 * L * function.h.D() / ((k + 1.0) * (k + 2.0)))
 
         k = k + 1
 
@@ -1097,7 +1117,7 @@ def ExcessiveGapMethod(X, y, function, eps=TOLERANCE, maxit=MAX_ITER):
     print "mu:", mu[-1]
     print "mu * D: %.6f" % (mu[-1] * function.h.D())
 
-    return (beta[-1], f)
+    return (beta[-1], f, ulim)
 
 #def _beta_hat_0_2(self, alpha):
 #    """ Ridge regression using the Woodbury formula.
@@ -1119,7 +1139,7 @@ g = 1.0  # 3.14159
 
 px = 6
 py = 6
-pz = 1
+pz = 6
 shape = (pz, py, px)
 p = np.prod(shape)
 n = 25
@@ -1134,13 +1154,14 @@ Sigma = a * np.eye(p) + (1.0 - a) * np.ones((p, p))
 Mu = np.zeros(p)
 M = np.random.multivariate_normal(Mu, Sigma, n)
 e = np.random.randn(n, 1)
+e = e / math.norm(e)
 density = 0.5
 
 eps = 1e-4
 mu = 0.9 * (2.0 * eps / p)
 print "mu:", mu
 conts = 10
-maxit = 100
+maxit = 1000
 
 snr = 100.0
 
@@ -1152,25 +1173,36 @@ print betastar
 #                                   shape)
 X, y, betastar = l1_l2_tv.load(l, k, g, betastar, M, e, snr, shape)
 
-beta_egm, f_egm = ExcessiveGapMethod(X, y, function_egm,
-                                     eps=eps, maxit=conts * maxit)
+beta_egm, f_egm, ulim = ExcessiveGapMethod(X, y, function_egm,
+                                           eps=eps, maxit=conts * maxit)
 
-#print np.sqrt(((np.reshape(beta_egm, shape) - np.reshape(betastar, shape)) ** 2.0))
+step = 1.0 / function_egm.Lipschitz(X, mu)
+beta_fista, f_fista = FISTA(X, y, function_egm,
+                            np.random.rand(*betastar.shape), step, mu=mu,
+                            eps=eps, maxit=conts * maxit * 100)
 
-print "err   : %.6f" % (function_egm.f(X, y, beta_egm, mu=0.0) \
-              - function_egm.f(X, y, betastar, mu=0.0))
-f_star = function_egm.f(X, y, betastar, mu=0.0)
-print "best  f:", f_star
-print "found f:", function_egm.f(X, y, beta_egm, mu=0.0)
+best_f = function_egm.f(X, y, betastar, mu=0.0)
+found_f = function_egm.f(X, y, beta_egm, mu=0.0)
+fista_f = function_egm.f(X, y, beta_fista, mu=0.0)
+print "err    : %.6f" % (found_f - best_f)
+print "best  f:", best_f
+print "egm   f:", found_f
+print "fista f:", fista_f
 
-plot.subplot(2, 1, 1)
-plot.plot(betastar, '-g', beta_egm, '-r')
+plot.subplot(3, 1, 1)
+plot.plot(betastar + 0.01, '-g', beta_egm, '-r', beta_fista, '.-k')
 plot.title("True $\\beta^*$ (green) and EGM $\\beta^{(k)}$ (red)")
 
-plot.subplot(2, 1, 2)
+plot.subplot(3, 1, 2)
 plot.plot(f_egm,  '-b')
-plot.plot([0, len(f_egm)-1], [f_star, f_star], 'g')
+plot.plot([0, len(f_egm) - 1], [best_f, best_f], 'g')
 plot.title("Function value of EGM as a function of iteration number")
+
+plot.subplot(3, 1, 3)
+err = [f_egm[i] - best_f for i in range(len(f_egm))]
+plot.plot(err, '-r')
+plot.plot(ulim, '-g')
+plot.title("Error at $k$th iteration and theoretical upper bound on the error")
 
 plot.show()
 
