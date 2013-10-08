@@ -248,14 +248,17 @@ class SmoothedL1(object):
 
     """ Function value of L1.
     """
-    def f(self, beta, mu):
+    def f(self, beta, mu=0.0):
 
         if self.l < TOLERANCE:
             return 0.0
 
-        alpha = self.alpha(beta, mu)
+        if mu == 0.0:
+            return self.l * np.sum(np.abs(beta))
+        else:
+            alpha = self.alpha(beta, mu)
 
-        return self.phi(beta, alpha, mu)
+            return self.phi(beta, alpha, mu)
 
     def phi(self, beta, alpha, mu):
 
@@ -303,7 +306,7 @@ class SmoothedL1(object):
 
         return [a]
 
-    def D(self):
+    def M(self):
 
         A = self.A()
         return A[0].shape[0] / 2.0
@@ -428,7 +431,7 @@ class TotalVariation(object):
 
         return [ax, ay, az]
 
-    def D(self):
+    def M(self):
 
         return self._A[0].shape[0] / 2.0
 
@@ -955,6 +958,185 @@ class OLSL2_TV(object):
 
         return self.h.project(u_new)
 
+#    def V(self, u, beta, L):
+#
+#        return self.h.V(u, beta, L)
+
+    """ Returns the beta that minimises the dual function.
+    """
+    def betahat(self, X, y, alpha):
+
+        grad = self.h.g * self.h.Aa(alpha)
+
+        XXkI = np.dot(X.T, X) + self.g.k * np.eye(X.shape[1])
+        beta = np.dot(np.linalg.inv(XXkI), np.dot(X.T, y) - grad)
+
+        return beta
+
+    #    # Used by Woodbury
+    #    invXXtlI = np.linalg.inv(np.dot(self.X, self.X.T) \
+    #                                + self.l * np.eye(self.X.shape[0]))
+    #    self.XtinvXXtlI = np.dot(self.X.T, invXXtlI)
+    #    self.Aa = np.zeros((self.X.shape[1], 1))
+
+
+class Smoothed_L1TV(object):
+
+    def __init__(self, l, g, shape):
+
+        self.p = np.prod(shape)
+        self.l1 = SmoothedL1(l, self.p)
+        self.tv = TotalVariation(g, shape)
+
+        self._lambda_max = None
+
+    def f(self, beta, mu=0.0):
+
+#        alpha_l1 = self.l1.alpha(beta, mu)
+#        alpha_tv = self.tv.alpha(beta, mu)
+#        return self.l1.phi(beta, alpha_l1, mu) \
+#             + self.tv.phi(beta, alpha_tv, mu)
+        return self.l1.f(beta, mu) \
+             + self.tv.f(beta, mu)
+
+    def phi(self, beta, alpha, mu):
+
+        return self.l1.phi(beta, alpha[0], mu) \
+             + self.tv.phi(beta, alpha[1:], mu)
+
+#    def grad(self, beta, mu):
+#
+#        return self.l1.grad(beta, mu) \
+#             + self.tv.grad(beta, mu)
+
+#    def grad(self, alpha):
+#
+#        return self.l1.l * self.l1.Aa(alpha[0]) \
+#             + self.tv.g * self.tv.Aa(alpha[1:])
+
+    def Lipschitz(self, mu):
+
+        return self.l1.l * self.l1.Lipschitz(mu) \
+             + self.tv.g * self.tv.Lipschitz(mu)
+
+#    def lambda_max(self, mu, max_iter=10):
+#
+#        # Note that we can save the state here since lmax(A) does not change.
+#        if self._lambda_max == None:
+#            A = sparse.vstack(self.A())
+#            v = FastSparseSVD(X, max_iter=max_iter)
+#            us = A.dot(v)
+#            self._lambda_max = np.sum(us ** 2.0)
+#
+#        return self._lambda_max
+
+    def A(self):
+
+        A = self.l1.A() + self.tv.A()
+
+        A[0] = self.l1.l * A[0]
+        A[1] = self.l1.g * A[1]
+        A[2] = self.l1.g * A[2]
+        A[3] = self.l1.g * A[3]
+
+        return A
+
+#    def gAa(self, alpha):
+#
+#        return self.l1.l * self.l1.Aa(alpha[0]) \
+#             + self.tv.g * self.tv.Aa(alpha[1:])
+
+    def alpha(self, beta, mu, project=True):
+
+        A = self.A()
+
+        a = [0] * len(A)
+        a[0] = (self.l1.l / mu) * A[0].dot(beta)
+        a[1] = (self.l1.g / mu) * A[1].dot(beta)
+        a[2] = (self.l1.g / mu) * A[2].dot(beta)
+        a[3] = (self.l1.g / mu) * A[3].dot(beta)
+
+        if project:
+            return self.project(a)
+        else:
+            return a
+
+    def project(self, a):
+
+        return self.l1.project(a[0]) \
+             + self.tv.project(a[1:])
+
+    def M(self):
+
+        return self.l1.M() \
+             + self.tv.M()
+
+#    def mu(self, beta):
+#
+#        return max(self.l1.mu(beta), self.tv.mu(beta))
+
+    def V(self, u, beta, L):
+
+#        A = self.h.A()
+        a = self.alpha(beta, 1.0, project=False)
+
+        u_new = [0] * len(u)
+        for i in xrange(len(u)):
+#            u_new[i] = u[i] + g[i] * A[i].dot(beta) / L
+            u_new[i] = u[i] + a[i] / L
+
+        return self.project(u_new)
+
+
+class OLSL2_Smoothed_L1TV(object):
+
+    def __init__(self, k, g, shape):
+
+        self.g = RidgeRegression(k)
+        self.h = TotalVariation(g, shape)
+
+    """ Function value of Ridge regression and TV.
+    """
+    def f(self, X, y, beta, mu):
+
+        return self.g.f(X, y, beta) \
+             + self.h.f(beta, mu)
+
+    """ Gradient of the differentiable part with Ridge regression + TV.
+    """
+    def grad(self, X, y, beta, mu):
+
+        return self.g.grad(X, y, beta) \
+             + self.h.grad(beta, mu)
+
+    def prox(self, x, factor):
+
+        return x
+
+    def Lipschitz(self, X, mu):
+
+        return self.g.Lipschitz(X) \
+             + self.h.Lipschitz(mu)
+
+    def mu(self, beta):
+
+        return self.h.mu(beta)
+
+#    def V(self, u, beta, L):
+#
+#        A = self.h.A()
+#
+#        g = [self.h.g, self.h.g, self.h.g]
+#        u_new = [0] * len(u)
+#        for i in xrange(len(u)):
+#            u_new[i] = u[i] + g[i] * A[i].dot(beta) / L
+#
+#        return self.h.project(u_new)
+
+    def V(self, u, beta, L):
+
+        return self.h.V(u, beta, L)
+
     """ Returns the beta that minimises the dual function.
     """
     def betahat(self, X, y, alpha):
@@ -1135,7 +1317,7 @@ np.random.seed(42)
 
 l = 0.0  # 0.61803
 k = 1.0  # 0.271828
-g = 1.0  # 3.14159
+g = 10.0  # 3.14159
 
 px = 6
 py = 6
@@ -1179,7 +1361,7 @@ beta_egm, f_egm, ulim = ExcessiveGapMethod(X, y, function_egm,
 step = 1.0 / function_egm.Lipschitz(X, mu)
 beta_fista, f_fista = FISTA(X, y, function_egm,
                             np.random.rand(*betastar.shape), step, mu=mu,
-                            eps=eps, maxit=conts * maxit * 100)
+                            eps=eps, maxit=conts * maxit * 10)
 
 best_f = function_egm.f(X, y, betastar, mu=0.0)
 found_f = function_egm.f(X, y, beta_egm, mu=0.0)
