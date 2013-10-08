@@ -1179,7 +1179,7 @@ beta_egm, f_egm, ulim = ExcessiveGapMethod(X, y, function_egm,
 step = 1.0 / function_egm.Lipschitz(X, mu)
 beta_fista, f_fista = FISTA(X, y, function_egm,
                             np.random.rand(*betastar.shape), step, mu=mu,
-                            eps=eps, maxit=conts * maxit * 100)
+                            eps=eps, maxit=conts * maxit)
 
 best_f = function_egm.f(X, y, betastar, mu=0.0)
 found_f = function_egm.f(X, y, beta_egm, mu=0.0)
