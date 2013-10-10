@@ -355,12 +355,13 @@ class TotalVariation(object):
 
     """ Gradient of Total variation.
     """
-    def grad(self, beta, mu):
+    def grad(self, beta, mu, alpha=None):
 
         if self.g < TOLERANCE:
             return 0.0
 
-        alpha = self.alpha(beta, mu)
+        if alpha == None:
+            alpha = self.alpha(beta, mu)
         grad = self.Aa(alpha)
 
         return self.g * grad
@@ -601,13 +602,7 @@ class OLSL2_L1_TV(object):
 #
 #        return beta
 
-    #    # Used by Woodbury
-    #    invXXtlI = np.linalg.inv(np.dot(self.X, self.X.T) \
-    #                                + self.l * np.eye(self.X.shape[0]))
-    #    self.XtinvXXtlI = np.dot(self.X.T, invXXtlI)
-    #    self.Aa = np.zeros((self.X.shape[1], 1))
-
-    def gap(self, X, y, beta, mu, max_iter=100):
+    def gap(self, X, y, beta, mu, eps=utils.TOLERANCE, max_iter=100):
 
         alpha = self.tv.alpha(beta, mu)
 
@@ -637,24 +632,22 @@ class OLSL2_L1_TV(object):
 
         t = 1.0 / self.Lipschitz(X, mu)
         beta_old = beta_new = beta
+
         # TODO: Use the FISTA function instead!!
         for i in xrange(1, max_iter):
             z = beta_new + ((i - 2.0) / (i + 1.0)) * (beta_new - beta_old)
             beta_old = beta_new
 
             beta_new = self.prox(z - t * (self.rr.grad(X, y, z) \
-                                        + self.tv.grad(z, mu)), t)
+                                        + self.tv.grad(z, mu, alpha)), t)
 
             D = self.rr.f(X, y, beta_new) \
               + self.l1.f(beta_new) \
               + self.tv.phi(beta_new, alpha, mu)
 
-#            if i % (maxit / 100) == 0:
-#                print "P:", P
-#                print "D:", D
-#                print "P - D: ", P - D
-#                print "grad:", np.linalg.norm(np.dot(X.T, np.dot(X, beta_new) - y) + k * beta_new + gAa)
-#        print beta_new
+            if (1.0 / t) * math.norm(beta_new - z) < eps and P - D >= 0:
+                print "Broke after %d iterations" % (i,)
+                break
 
         return P - D
 
@@ -810,37 +803,37 @@ class OLSL2_SmoothedL1TV(object):
         grad += self.h.tv.g * A[2].T.dot(alpha[2])
         grad += self.h.tv.g * A[3].T.dot(alpha[3])
 
-        XXkI = np.dot(X.T, X) + self.g.k * np.eye(X.shape[1])
-        beta = np.dot(np.linalg.inv(XXkI), np.dot(X.T, y) - grad)
+#        XXkI = np.dot(X.T, X) + self.g.k * np.eye(X.shape[1])
+
+        Xty_grad = (np.dot(X.T, y) - grad) / self.g.k
+
+#        t = time()
+#        XXkI = np.dot(X.T, X)
+#        index = np.arange(min(XXkI.shape))
+#        XXkI[index, index] += self.g.k
+#        invXXkI = np.linalg.inv(XXkI)
+#        print "t:", time() - t
+#        beta = np.dot(invXXkI, Xty_grad)
+
+#        t = time()
+        XXtkI = np.dot(X, X.T)
+        index = np.arange(min(XXtkI.shape))
+        XXtkI[index, index] += self.g.k
+        invXXtkI = np.linalg.inv(XXtkI)
+        beta = (Xty_grad - np.dot(X.T, np.dot(invXXtkI, np.dot(X, Xty_grad))))
+#        print "t:", time() - t
 
         return beta
-
-    #    # Used by Woodbury
-    #    invXXtlI = np.linalg.inv(np.dot(self.X, self.X.T) \
-    #                                + self.l * np.eye(self.X.shape[0]))
-    #    self.XtinvXXtlI = np.dot(self.X.T, invXXtlI)
-    #    self.Aa = np.zeros((self.X.shape[1], 1))
-
-#def _beta_hat_0_2(self, alpha):
-#    """ Ridge regression using the Woodbury formula.
-#    """
-#    self.Aa *= 0
-#    for i in xrange(len(alpha)):
-#        self.Aa += self.At[i].dot(alpha[i])
-##        wk = (self.Xty - self.Aa / 2.0) / self.l
-#    wk = (self.Xty - self.Aa) / self.l
-#
-#    return wk - np.dot(self.XtinvXXtlI, np.dot(self.X, wk))
 
 
 # The fast iterative shrinkage threshold algorithm
 def FISTA(X, y, function, beta, step, mu,
-          eps=utils.TOLERANCE, maxit=utils.MAX_ITER):
+          eps=utils.TOLERANCE, max_iter=utils.MAX_ITER):
 
     z = betanew = betaold = beta
 
     crit = []
-    for i in xrange(1, maxit + 1):
+    for i in xrange(1, max_iter + 1):
         z = betanew + ((i - 2.0) / (i + 1.0)) * (betanew - betaold)
         betaold = betanew
         betanew = function.prox(z - step * function.grad(X, y, z, mu), step)
@@ -870,10 +863,10 @@ def CONESTA(X, y, function, beta, mumin=utils.TOLERANCE, sigma=1.0, tau=0.5,
     i = 0
     while True:
         t.append(1.0 / function.Lipschitz(X, mu[i], max_iter=100))
-        eps_plus = function.eps_opt(mu[i], X)
+        eps_plus = max(eps, function.eps_opt(mu[i], X))
         print "eps_plus: ", eps_plus
         (beta, crit) = FISTA(X, y, function, beta, t[i], mu[i],
-                             eps=eps_plus, maxit=maxit)
+                             eps=eps_plus, max_iter=max_iter)
         print "crit: ", crit[-1]
         print "it: ", len(crit)
         f.append(crit)
@@ -888,19 +881,20 @@ def CONESTA(X, y, function, beta, mumin=utils.TOLERANCE, sigma=1.0, tau=0.5,
             break
 
         if dynamic:
-            G = function.gap(X, y, beta, mu[i], max_iter=100)
-            print "Gap:", G
-            G = abs(G) / sigma
-
-            if G <= utils.TOLERANCE and mu[i] <= utils.TOLERANCE:
-                break
-
-            Gval.append(G)
-            mu_new = min(mu[i], function.mu_opt(G, X))
-            mu.append(max(mumin, mu_new))
+            G = function.gap(X, y, beta, mu[i],
+                             eps=eps_plus, max_iter=max_iter)
         else:
-            mu_new = function.mu_opt(eps0 * tau ** (i + 1), X)
-            mu.append(max(mumin, mu_new))
+            G = eps0 * tau ** (i + 1)
+
+        G = abs(G) / sigma
+
+        if G <= utils.TOLERANCE and mu[i] <= utils.TOLERANCE:
+            break
+
+        Gval.append(G)
+        mu_new = min(mu[i], function.mu_opt(G, X))
+        mu.append(max(mumin, mu_new))
+#        mu.append(mu_new)
 
         print "mu:", mu[i + 1]
 
@@ -909,7 +903,7 @@ def CONESTA(X, y, function, beta, mumin=utils.TOLERANCE, sigma=1.0, tau=0.5,
     return (beta, f, Gval)
 
 
-def ExcessiveGapMethod(X, y, function, eps=TOLERANCE, maxit=MAX_ITER):
+def ExcessiveGapMethod(X, y, function, eps=TOLERANCE, max_iter=MAX_ITER):
     """ The excessive gap method for strongly convex functions.
 
     Parameters
@@ -925,56 +919,47 @@ def ExcessiveGapMethod(X, y, function, eps=TOLERANCE, maxit=MAX_ITER):
     for i in xrange(len(A)):
         u[i] = np.zeros((A[i].shape[0], 1))
 
-#   L = (l²lmax(AtA) + g²lmax(AtA)) / (lmin(XtX) + k)
-#    L = function.Lipschitz(1.0, max_iter=100) / function.g.lambda_min(X)
     L = function.Lipschitz(X, 1.0, max_iter=100)
 
     mu = [L]
-    beta = [function.betahat(X, y, u)]  # u is zero here
-    alpha = function.V(u, beta[0], L)  # u is zero here
+    beta0 = function.betahat(X, y, u)  # u is zero here
+    beta = beta0
+    alpha = function.V(u, beta, L)  # u is zero here
 
     k = 0
 
-#    f = [function.g.f(X, y, beta[0]) + function.h.f(beta[0], mu[0])]
     f = []  # function.f(X, y, beta[0], mu[0])]
-    ulim = [4.0 * L * function.h.M() / ((k + 1.0) * (k + 2.0))]  # mu[0] * function.h.D()
+    # mu[0] * function.h.D()
+    ulim = [4.0 * L * function.h.M() / ((k + 1.0) * (k + 2.0))]
 
     while True:
         tau = 2.0 / (float(k) + 3.0)
 
-        alpha_hat = function.h.alpha(beta[k], mu[k])
+        alpha_hat = function.h.alpha(beta, mu[k])
         for i in xrange(len(alpha_hat)):
             u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
 
         mu.append((1.0 - tau) * mu[k])
         betahat = function.betahat(X, y, u)
-        beta.append((1.0 - tau) * beta[k] + tau * betahat)
+        beta = ((1.0 - tau) * beta + tau * betahat)
         alpha = function.V(u, betahat, L)
 
-        if mu[k] * function.h.M() < eps or k >= maxit:
+        if mu[k] * function.h.M() < eps or k >= max_iter:
             break
 
-#        f.append(function.g.f(X, y, beta[k + 1]) + function.h.f(beta[k + 1],
-#                 TOLERANCE))  # mu[k + 1]))
-        f.append(function.f(X, y, beta[k + 1], TOLERANCE))
+        f.append(function.f(X, y, beta, TOLERANCE))
 #        ulim.append(mu[k + 1] * function.h.D())
         ulim.append(4.0 * L * function.h.M() / ((k + 1.0) * (k + 2.0)))
 
         k = k + 1
 
-#        if math.norm1(beta_new - beta_old) > self.tolerance:
-#            break
-
-    print "mu:", mu[-1]
-    print "mu * M: %.6f" % (mu[-1] * function.h.M())
-
-    return (beta[-1], f, ulim)
+    return (beta, f, ulim, beta0)
 
 
 np.random.seed(42)
 
-k = 1.0  # 0.271828
-l = 0.0  # 0.61803
+k = 0.5  # 0.271828
+l = 0.5  # 0.61803
 g = 10.0  # 3.14159
 
 px = 6
@@ -984,12 +969,8 @@ shape = (pz, py, px)
 p = np.prod(shape)
 n = 25
 
-#function_conesta = OLSL2_L1_TV(l, k, g, shape=shape)
-#function_egm = OLSL2_SmoothedL1TV(l, k, g, shape=shape)
-#function_egm = OLSL2_SmoothedL1(l, k, p=np.prod(shape))
 function_egm = OLSL2_SmoothedL1TV(k, l, g, shape)
 function_pgm = OLSL2_L1_TV(k, l, g, shape)
-#function_test = OLSL2_TV(k, g, shape=shape)
 
 a = 1.0
 Sigma = a * np.eye(p) + (1.0 - a) * np.ones((p, p))
@@ -999,11 +980,11 @@ e = np.random.randn(n, 1)
 e = e / math.norm(e)
 density = 0.5
 
-eps = 1e-4
+eps = 1e-3
 mu = 0.9 * (2.0 * eps / p)
 print "mu:", mu
-conts = 10
-maxit = 1000
+conts = 20
+maxit = 2500
 
 snr = 100.0
 
@@ -1011,32 +992,33 @@ betastar = generate_beta.rand(shape, density=density, sort=True)
 #betastar = np.random.rand(*shape).reshape((p, 1))
 #print betastar
 
-betastart = np.random.rand(*betastar.shape)
+#betastart = np.random.rand(*betastar.shape)
 
-#X, y, betastar = l1mu_l2_tvmu.load(l, k, g, betastar, M, e, mu_zero, snr,
-#                                   shape)
 X, y, betastar = l1_l2_tv.load(l, k, g, betastar, M, e, snr, shape)
 
 t = time()
-beta_egm, f_egm, ulim = ExcessiveGapMethod(X, y, function_egm,
-                                           eps=eps, maxit=conts * maxit)
+beta_egm, f_egm, ulim, betastart = ExcessiveGapMethod(X, y, function_egm,
+                                                  eps=eps,
+                                                  max_iter=conts * maxit)
 print "time:", time() - t
 
 #step = 1.0 / (function_test.g.Lipschitz(X) \
 #            + function_test.h.Lipschitz(mu, max_iter=100))
-t = time()
-step = 1.0 / function_pgm.Lipschitz(X, mu, max_iter=100)
-beta_fista, f_fista = FISTA(X, y, function_pgm,
-                            betastart, step, mu=mu,
-                            eps=eps, maxit=conts * maxit * 10)
-print "time:", time() - t
+#t = time()
+#step = 1.0 / function_pgm.Lipschitz(X, mu, max_iter=100)
+#beta_fista, f_fista = FISTA(X, y, function_pgm,
+#                            betastart, step, mu=mu,
+#                            eps=eps, max_iter=conts * maxit * 10)
+#print "time:", time() - t
+beta_fista = betastart
+f_fista = [0, 0]
 
 t = time()
 (beta_conesta, f_conesta, G_conesta) = CONESTA(X, y, function_pgm, betastart,
-                                               mumin=mu_zero, sigma=5.0,
+                                               mumin=mu_zero, sigma=1.0,
                                                tau=0.5, dynamic=True,
-                                               eps=utils.TOLERANCE,
-                                               conts=conts, max_iter=maxit * 9)
+                                               eps=eps,
+                                               conts=conts, max_iter=maxit)
 print "time:", time() - t
 
 best_f = function_egm.f(X, y, betastar, mu=0.0)
