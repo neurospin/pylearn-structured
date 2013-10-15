@@ -19,6 +19,7 @@ import numpy as np
 
 import structured.utils as utils
 from structured.utils import math
+from time import time
 
 __all = ['FastSVD', 'FastSparseSVD', 'FISTA', 'CONESTA', 'ExcessiveGapMethod']
 
@@ -140,58 +141,73 @@ def FISTA(X, y, function, beta, step, mu,
     """
     z = betanew = betaold = beta
 
+    t = []
     f = []
     for i in xrange(1, max_iter + 1):
+        tm = time()
+
         z = betanew + ((i - 2.0) / (i + 1.0)) * (betanew - betaold)
         betaold = betanew
         betanew = function.prox(z - step * function.grad(X, y, z, mu), step)
 
-        f.append(function.f(X, y, betanew, mu=mu))
+        t.append(time() - tm)
+#        f.append(function.f(X, y, betanew, mu=mu))
+        f.append(function.f(X, y, betanew, mu=0.0))
 
         if math.norm(betanew - z) < eps * step:
             break
 
-    return (betanew, f)
+    return (betanew, f, t)
 
 
-def CONESTA(X, y, function, beta, mumin=utils.TOLERANCE, sigma=1.0, tau=0.5,
-            dynamic=True, eps=utils.TOLERANCE, conts=50, max_iter=1000):
+def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
+            sigma=1.0, tau=0.5, dynamic=True,
+            eps=utils.TOLERANCE, conts=50, max_iter=1000):
 
-    mu = [0.9 * function.mu(beta)]
-#    print "mu:", mu[0]
+    if mu_start != None:
+        mu = [mu_start]
+    else:
+        mu = [0.9 * function.mu(beta)]
+    print "mu:", mu[0]
     eps0 = function.eps_opt(mu[0], X)
 #    print "eps:", eps0
 
-    t = []
     tmin = 1.0 / function.Lipschitz(X, mumin, max_iter=100)
 
+    t = []
     f = []
     Gval = []
+#    beta_hat = beta
 
     i = 0
     while True:
-        t.append(1.0 / function.Lipschitz(X, mu[i], max_iter=100))
-        eps_plus = max(eps, function.eps_opt(mu[i], X))
+        step = 1.0 / function.Lipschitz(X, mu[i], max_iter=100)
+#        eps_plus = max(eps, function.eps_opt(mu[i], X))
+        eps_plus = function.eps_opt(mu[i], X)
         print "eps_plus: ", eps_plus
-        (beta, crit) = FISTA(X, y, function, beta, t[i], mu[i],
-                             eps=eps_plus, max_iter=max_iter)
-#        print "crit: ", crit[-1]
-#        print "it: ", len(crit)
-        f.append(crit)
+        (beta, crit, tm) = FISTA(X, y, function, beta, step, mu[i],
+                                 eps=eps_plus, max_iter=max_iter)
+        print "Fista did iterations=", len(crit)
+        t = t + tm
+        f = f + crit
 
         mumin = min(mumin, mu[i])
-        tmin = min(tmin, t[i])
+        tmin = min(tmin, step)
         beta_tilde = function.prox(beta - tmin * function.grad(X, y,
                                                                beta, mumin),
                                    tmin)
 
         if (1.0 / tmin) * math.norm(beta - beta_tilde) < eps or i >= conts:
+            print "%f < %f" % ((1. / tmin) * math.norm(beta - beta_tilde), eps)
+            print "%d >= %d" % (i, conts)
             break
 
         if dynamic:
 #            G = function.gap(X, y, beta, mumin,
             G = function.gap(X, y, beta, mu[i],
-                             eps=eps_plus, max_iter=max_iter)
+                                       eps=eps_plus, max_iter=max_iter)
+#            G, beta_hat = function.gap(X, y, beta, beta_hat, mumin,
+#                                       eps=eps_plus, max_iter=max_iter)
         else:
             G = eps0 * tau ** (i + 1)
 
@@ -203,6 +219,7 @@ def CONESTA(X, y, function, beta, mumin=utils.TOLERANCE, sigma=1.0, tau=0.5,
 
         Gval.append(G)
         mu_new = min(mu[i], function.mu_opt(G, X))
+        print "mu_opt: ", mu_new
         mu.append(max(mumin, mu_new))
 #        mu.append(mu_new)
 
@@ -210,7 +227,7 @@ def CONESTA(X, y, function, beta, mumin=utils.TOLERANCE, sigma=1.0, tau=0.5,
 
         i = i + 1
 
-    return (beta, f, mu, Gval)
+    return (beta, f, t, mu, Gval)
 
 
 def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
@@ -229,7 +246,7 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
     for i in xrange(len(A)):
         u[i] = np.zeros((A[i].shape[0], 1))
 
-    L = function.Lipschitz(X, 1.0, max_iter=10000)
+    L = function.Lipschitz(X, 1.0, max_iter=1000)
     mu = [L]
     beta0 = function.betahat(X, y, u)  # u is zero here
     beta = beta0
@@ -237,11 +254,14 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
 
     k = 0
 
+    t = []
     f = []  # function.f(X, y, beta[0], mu[0])]
     # mu[0] * function.h.D()
     ulim = [4.0 * L * function.h.M() / ((k + 1.0) * (k + 2.0))]
 
     while True:
+        tm = time()
+
         tau = 2.0 / (float(k) + 3.0)
 
         alpha_hat = function.h.alpha(beta, mu[k])
@@ -253,13 +273,14 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
         beta = ((1.0 - tau) * beta + tau * betahat)
         alpha = function.V(u, betahat, L)
 
-        if mu[k] * function.h.M() < eps or k >= max_iter:
-            break
-
-        f.append(function.f(X, y, beta, utils.TOLERANCE))
+        t.append(time() - tm)
+        f.append(function.f(X, y, beta, mu=0.0))  # utils.TOLERANCE))
 #        ulim.append(mu[k + 1] * function.h.D())
         ulim.append(4.0 * L * function.h.M() / ((k + 1.0) * (k + 2.0)))
 
+        if mu[k] * function.h.M() < eps / 15.0 or k >= max_iter:
+            break
+
         k = k + 1
 
-    return (beta, f, mu, ulim, beta0)
+    return (beta, f, t, mu, ulim, beta0)

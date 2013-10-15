@@ -514,6 +514,15 @@ class OLSL2_L1_TV(object):
           + self.tv.phi(beta, alpha, mu)
 
         t = 1.0 / self.Lipschitz(X, mu)
+
+        # We cannot use beta here, since we may stop too early, however, we
+        # still want to be close to beta. Thus, we add a small error (1 %) to
+        # the start vector.
+#        norm_beta = np.sum(beta ** 2.0)
+#        rand_err = np.random.rand(*beta.shape)
+#        rand_err /= math.norm(rand_err)
+#        beta_old = beta_new = beta + 0.001 * norm_beta * rand_err
+
         beta_old = beta_new = beta
 
         # TODO: Use the FISTA function instead!!
@@ -528,7 +537,8 @@ class OLSL2_L1_TV(object):
               + self.l1.f(beta_new) \
               + self.tv.phi(beta_new, alpha, mu)
 
-            if (1.0 / t) * math.norm(beta_new - z) < eps and P - D >= 0:
+            if (1.0 / t) * math.norm(beta_new - z) < eps and P - D >= 0 \
+                    and i > 1000:
                 print "Broke after %d iterations" % (i,)
                 break
 

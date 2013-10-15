@@ -53,11 +53,11 @@ def ConstantCorrelation(p=[100], rho=[0.05], delta=0.10, eps=0.5):
            of the noise. The noise is approximately normally distributed with
            mean
 
-               delta * rho_min
+               delta * min(rho)
 
            and variance
 
-               (eps * (1 - max(rho))) ** 2.0 / 100.
+               (eps * (1 - max(rho))) ** 2.0 / 10.
 
            You can thus control the noise by this parameter, but note that you
            must have
@@ -74,7 +74,7 @@ def ConstantCorrelation(p=[100], rho=[0.05], delta=0.10, eps=0.5):
 
     K = len(rho)
 
-    M = 100  # Dim. of noise space. uu approx ~N(0, 1 / M)
+    M = 10  # Dim. of noise space. uu approx ~N(0, 1 / M)
     N = 0
     rho_min = min(rho)
     rho_max = max(rho)
@@ -84,10 +84,12 @@ def ConstantCorrelation(p=[100], rho=[0.05], delta=0.10, eps=0.5):
     for k in xrange(K):
         N += p[k]
 
-#    u = np.random.rand(M, N)
-#    u /= np.sqrt(np.sum(u ** 2.0, axis=0))  # Normailse
-#    uu = np.dot(u.T, u)  # ~N(0, 1 / M)
-    uu = np.random.randn(M, N) / (M ** 2.0)
+    u = np.random.randn(M, N)
+#    u = (np.random.rand(M, N) * 2.0) - 1.0
+    u /= np.sqrt(np.sum(u ** 2.0, axis=0))  # Normalise
+    uu = np.dot(u.T, u)  # ~N(0, 1 / M)
+    uu[uu > 1.0] = 1.0
+    uu[uu < -1.0] = -1.0
 
     S = delta + eps * uu
 
@@ -141,7 +143,7 @@ def ToeplitzCorrelation(p=[100], rho=[0.05], eps=0.5):
            distribution of the noise. The noise is approximately normally
            distributed with zero mean and variance
 
-               (eps * (1.0 - max(rho)) / (1.0 + max(rho))) ** 2.0 / 100.
+               (eps * (1.0 - max(rho)) / (1.0 + max(rho))) ** 2.0 / 10.
 
            You can thus control the noise by this parameter, but note that you
            must have
@@ -158,12 +160,13 @@ def ToeplitzCorrelation(p=[100], rho=[0.05], eps=0.5):
 
     K = len(rho)
 
-    M = 100  # Dim. of noise space. uu approx ~N(0, 1 / M)
+    M = 10  # Dim. of noise space. uu approx ~N(0, 1 / M)
     N = sum(p)
     rho_max = max(rho)
     eps = eps * (1.0 - rho_max) / (1.0 + rho_max)
 
     u = np.random.randn(M, N)
+#    u = (np.random.rand(M, N) * 2.0) - 1.0
     u /= np.sqrt(np.sum(u ** 2.0, axis=0))  # Normalise
     uu = np.dot(u.T, u)  # ~N(0, 1 / M)
 
