@@ -187,7 +187,7 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
         print "eps_plus: ", eps_plus
         (beta, crit, tm) = FISTA(X, y, function, beta, step, mu[i],
                                  eps=eps_plus, max_iter=max_iter)
-        print "Fista did iterations=", len(crit)
+        print "FISTA did iterations=", len(crit)
         t = t + tm
         f = f + crit
 
