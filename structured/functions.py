@@ -258,7 +258,7 @@ class TotalVariation(object):
 
         return self.g * lmaxA / mu
 
-    def lambda_max(self, mu, max_iter=10):
+    def lambda_max(self, mu, max_iter=100):
 
         # Note that we can save the state here since lmax(A) does not change.
         if self._lambda_max == None:
@@ -545,62 +545,79 @@ class SmoothedL1TV(object):
 
     def __init__(self, l, g, shape):
 
-        self.l1 = SmoothedL1(l, np.prod(shape))
-        self.tv = TotalVariation(g, shape)
+#        self.l1 = SmoothedL1(l, np.prod(shape))
+#        self.tv = TotalVariation(g, shape)
+
+        self.l = l
+        self.g = g
+
+        self._p = np.prod(shape)
+
+        Atv = TotalVariation.precompute(shape, mask=None, compress=False)
+        self._A = [l * sparse.eye(self._p, self._p),
+                   g * Atv[0],
+                   g * Atv[1],
+                   g * Atv[2]]
 
         self._lambda_max = None
 
+    """ Function value of Ridge regression.
+    """
     def f(self, beta, mu=0.0):
 
-        return self.l1.f(beta, mu) \
-             + self.tv.f(beta, mu)
+        if self.l < utils.TOLERANCE and self.g < utils.TOLERANCE:
+            return 0.0
+
+        if mu > utils.TOLERANCE:
+            alpha = self.alpha(beta, mu)
+            return self.phi(beta, alpha, mu)
+        else:
+            A = self.A()
+            return math.norm1(A[0].dot(beta)) + \
+                   np.sum(np.sqrt(A[1].dot(beta) ** 2.0 + \
+                                  A[2].dot(beta) ** 2.0 + \
+                                  A[3].dot(beta) ** 2.0))
 
     def phi(self, beta, alpha, mu):
 
-        return self.l1.phi(beta, alpha[0], mu) \
-             + self.tv.phi(beta, alpha[1:], mu)
+        if self.l < utils.TOLERANCE and self.g < utils.TOLERANCE:
+            return 0.0
 
-#    def grad(self, beta, mu):
+        Aa = self.A(alpha=alpha)
+
+        alpha_sqsum = 0.0
+        for a in alpha:
+            alpha_sqsum += np.sum(a ** 2.0)
+
+        return np.dot(Aa.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum
+
+#    def Lipschitz(self, max_iter=100):
 #
-#        return self.l1.grad(beta, mu) \
-#             + self.tv.grad(beta, mu)
+#        return self.lambda_max(max_iter=max_iter)
 
-#    def grad(self, alpha):
-#
-#        return self.l1.l * self.l1.Aa(alpha[0]) \
-#             + self.tv.g * self.tv.Aa(alpha[1:])
+    def lambda_max(self, max_iter=100):
 
-    def Lipschitz(self, mu, max_iter=100):
+        # Note that we can save the state here since lmax(A) does not change.
+        if self._lambda_max == None:
+            A = sparse.vstack(self.A())
+            v = algorithms.FastSparseSVD(A, max_iter=max_iter)
+            us = A.dot(v)
+            self._lambda_max = np.sum(us ** 2.0)
 
-        return self.l1.l * self.l1.Lipschitz(mu) \
-             + self.tv.g * self.tv.Lipschitz(mu, max_iter=max_iter)
-
-#    def lambda_max(self, mu, max_iter=10):
-#
-#        # Note that we can save the state here since lmax(A) does not change.
-#        if self._lambda_max == None:
-#            A = sparse.vstack(self.A())
-#            v = FastSparseSVD(X, max_iter=max_iter)
-#            us = A.dot(v)
-#            self._lambda_max = np.sum(us ** 2.0)
-#
-#        return self._lambda_max
+        return self._lambda_max
 
     def A(self):
 
-#        A = self.l1.A() + self.tv.A()
-#
-#        A[0] *= self.l1.l
-#        A[1] *= self.l1.g
-#        A[2] *= self.l1.g
-#        A[3] *= self.l1.g
+        return self._A
 
-        return self.l1.A() + self.tv.A()
+    def Aa(self, alpha):
 
-#    def gAa(self, alpha):
-#
-#        return self.l1.l * self.l1.Aa(alpha[0]) \
-#             + self.tv.g * self.tv.Aa(alpha[1:])
+        A = self.A()
+        Aa = A[0].T.dot(alpha[0])
+        for i in xrange(1, len(A)):
+            Aa += A[i].T.dot(alpha[i])
+
+        return Aa
 
     def alpha(self, beta, mu):
 
@@ -608,45 +625,42 @@ class SmoothedL1TV(object):
 
         a = [0] * len(A)
 
-        a[0] = (self.l1.l / mu) * A[0].dot(beta)
-        a[1] = (self.tv.g / mu) * A[1].dot(beta)
-        a[2] = (self.tv.g / mu) * A[2].dot(beta)
-        a[3] = (self.tv.g / mu) * A[3].dot(beta)
+        a[0] = (1.0 / mu) * A[0].dot(beta)
+        a[1] = (1.0 / mu) * A[1].dot(beta)
+        a[2] = (1.0 / mu) * A[2].dot(beta)
+        a[3] = (1.0 / mu) * A[3].dot(beta)
 
         return self.project(a)
 
     def project(self, a):
 
-        return self.l1.project(a[:1]) \
-             + self.tv.project(a[1:])
+        # L1
+        al1 = a[0]
+        anorm_l1 = np.abs(al1)
+        i_l1 = anorm_l1 > 1.0
+        anorm_l1_i = anorm_l1[i_l1]
+        al1[i_l1] = np.divide(al1[i_l1], anorm_l1_i)
+
+        # TV
+        ax = a[1]
+        ay = a[2]
+        az = a[3]
+        anorm_tv = ax ** 2.0 + ay ** 2.0 + az ** 2.0
+        i_tv = anorm_tv > 1.0
+
+        anorm_tv_i = anorm_tv[i_tv] ** 0.5  # Square root is taken here. Faster.
+        ax[i_tv] = np.divide(ax[i_tv], anorm_tv_i)
+        ay[i_tv] = np.divide(ay[i_tv], anorm_tv_i)
+        az[i_tv] = np.divide(az[i_tv], anorm_tv_i)
+
+        return [al1, ax, ay, az]
 
     def M(self):
 
-        return self.l1.M() \
-             + self.tv.M()
-
-#    def mu(self, beta):
-#
-#        return max(self.l1.mu(beta), self.tv.mu(beta))
-
-    def V(self, u, beta, L):
-
-#        a = self.alpha(beta, 1.0, project=False)
-
         A = self.A()
-        a = [0] * len(A)
-        a[0] = (self.l1.l / L) * A[0].dot(beta)
-        a[1] = (self.tv.g / L) * A[1].dot(beta)
-        a[2] = (self.tv.g / L) * A[2].dot(beta)
-        a[3] = (self.tv.g / L) * A[3].dot(beta)
 
-        u_new = [0] * len(u)
-        for i in xrange(len(u)):
-#            u_new[i] = u[i] + g[i] * A[i].dot(beta) / L
-#            u_new[i] = u[i] + a[i] / L
-            u_new[i] = u[i] + a[i]
-
-        return self.project(u_new)
+        return (A[0].shape[0] / 2.0) \
+             + (A[1].shape[0] / 2.0)
 
 
 class OLSL2_SmoothedL1TV(object):
@@ -673,94 +687,36 @@ class OLSL2_SmoothedL1TV(object):
         return self.g.f(X, y, beta) \
              + self.h.f(beta, mu)
 
-#    """ Gradient of the differentiable part with Ridge regression + TV.
-#    """
-#    def grad(self, X, y, beta, mu):
-#
-#        return self.g.grad(X, y, beta) \
-#             + self.h.grad(beta, mu)
+    def Lipschitz(self, X, max_iter=100):
 
-    def Lipschitz(self, X, mu, max_iter=100):
-
-#        from time import time
-#        import scipy.sparse as sparse
-#
-#        t = time()
-#        A = self.h.A()
-#        A = (self.h.l1.l * A[0],
-#             self.h.tv.g * A[1],
-#             self.h.tv.g * A[2],
-#             self.h.tv.g * A[3])
-#        A = np.array(sparse.vstack(A).todense())
-#        s = np.linalg.svd(A, full_matrices=False, compute_uv=False)
-#        lmaxA = np.max(s) ** 2.0
-#        print "lmaxA:", lmaxA, ", time:", time() - t
-#
-#        t = time()
-#        A = self.h.A()
-#        A = (self.h.l1.l * A[0],
-#             self.h.tv.g * A[1],
-#             self.h.tv.g * A[2],
-#             self.h.tv.g * A[3])
-#        A = np.array(sparse.vstack(A).todense())
-#        v = algorithms.FastSVD(A, max_iter=1000)
-#        us = A.dot(v)
-#        lmaxA_ = np.sum(us ** 2.0)
-#        print "lmaxA_:", lmaxA_, ", time:", time() - t
-
-#        t_ = np.random.rand(A.shape[0], 1)
-#        for i in range(1000):
-#            t = t_
-#            p = np.dot(A.T, t)
-#            p /= math.norm(p)
-#            t_ = np.dot(A, p)
-#        t = t_
-#        lmaxA_ = np.sum(t ** 2.0)
-#        print "lmaxA_:", lmaxA_
-
-#        t = time()
-#        A = self.h.A()
-#        A = (self.h.l1.l * A[0],
-#             self.h.tv.g * A[1],
-#             self.h.tv.g * A[2],
-#             self.h.tv.g * A[3])
-#        A = sparse.vstack(A)
-#        v = algorithms.FastSparseSVD(A, max_iter=1000)
-#        us = A.dot(v)
-#        lmaxA = np.sum(us ** 2.0)
-#        print "lmaxA:", lmaxA, ", time:", time() - t
-
-#        print "mu:", mu
-#        print "self.h.Lipschitz(mu, max_iter=100):", \
-#                self.h.Lipschitz(mu, max_iter=100)
-#        print "self.h.Lipschitz(mu, max_iter=1000):", \
-#                self.h.Lipschitz(mu, max_iter=1000)
-#        print "self.h.Lipschitz(mu, max_iter=10000):", \
-#                self.h.Lipschitz(mu, max_iter=10000)
-#        print "same:", self.h.l1.l * self.h.l1.Lipschitz(mu) \
-#                     + self.h.tv.g * self.h.tv.Lipschitz(mu, max_iter=max_iter)
-#        print "lmaxA:", lmaxA
-#        print "self.g.lambda_min(X): ", self.g.lambda_min(X)
-#        return lmaxA / self.g.lambda_min(X)
-        return self.h.Lipschitz(mu, max_iter=max_iter) / self.g.lambda_min(X)
-
-#    def mu(self, beta):
-#
-#        return self.h.mu(beta)
+        print "self.h.lambda_max(max_iter=max_iter):", self.h.lambda_max(max_iter=max_iter)
+        print "self.g.lambda_min(X):", self.g.lambda_min(X)
+        return self.h.lambda_max(max_iter=max_iter) / self.g.lambda_min(X)
 
     def V(self, u, beta, L):
 
-        return self.h.V(u, beta, L)
+        A = self.h.A()
+        a = [0] * len(A)
+        a[0] = (1.0 / L) * A[0].dot(beta)
+        a[1] = (1.0 / L) * A[1].dot(beta)
+        a[2] = (1.0 / L) * A[2].dot(beta)
+        a[3] = (1.0 / L) * A[3].dot(beta)
+
+        u_new = [0] * len(u)
+        for i in xrange(len(u)):
+            u_new[i] = u[i] + a[i]
+
+        return self.h.project(u_new)
 
     """ Returns the beta that minimises the dual function.
     """
     def betahat(self, X, y, alpha):
 
         A = self.h.A()
-        grad = self.h.l1.l * A[0].T.dot(alpha[0])
-        grad += self.h.tv.g * A[1].T.dot(alpha[1])
-        grad += self.h.tv.g * A[2].T.dot(alpha[2])
-        grad += self.h.tv.g * A[3].T.dot(alpha[3])
+        grad = A[0].T.dot(alpha[0])
+        grad += A[1].T.dot(alpha[1])
+        grad += A[2].T.dot(alpha[2])
+        grad += A[3].T.dot(alpha[3])
 
 #        XXkI = np.dot(X.T, X) + self.g.k * np.eye(X.shape[1])
 

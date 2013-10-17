@@ -249,9 +249,9 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
     for i in xrange(len(A)):
         u[i] = np.zeros((A[i].shape[0], 1))
 
-    L = function.Lipschitz(X, 1.0, max_iter=10000)
+    L = function.Lipschitz(X, max_iter=10000)
 #    L_ = function.Lipschitz(X, 1.0, max_iter=10000)
-#    print "L:", L
+    print "L:", L
 #    print "L_:", L_
     mu = [L]
     beta0 = function.betahat(X, y, u)  # u is zero here
@@ -289,5 +289,8 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
             break
 
         k = k + 1
+
+    print "L:", L
+    print "mu[-1]:", mu[-1]
 
     return (beta, f, t, mu, ulim, beta0)
