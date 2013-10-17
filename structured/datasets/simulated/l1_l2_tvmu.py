@@ -85,7 +85,7 @@ def load(l, k, g, beta, M, e, mu, snr=None, shape=None):
             return (np.linalg.norm(np.dot(X, x * beta)) / np.linalg.norm(e)) \
                         - snr
 
-        snr = bisection_method(f, low=0.0, high=snr, maxiter=30)
+        snr = bisection_method(f, low=0.0, high=np.sqrt(snr), maxiter=30)
 
         beta = beta * snr
 

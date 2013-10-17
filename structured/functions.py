@@ -167,9 +167,9 @@ class SmoothedL1(object):
 
         return [self._A]
 
-    def Aa(self, alpha):
-
-        return alpha[0]
+#    def Aa(self, alpha):
+#
+#        return alpha[0]
 
     def alpha(self, beta, mu):
 
@@ -423,6 +423,10 @@ class OLSL2_L1_TV(object):
         self.l1 = L1(l)
         self.tv = TotalVariation(g, shape=shape)
 
+    def reset(self):
+
+        self.rr.reset()
+
     """ Function value of Ridge regression, L1 and TV.
     """
     def f(self, X, y, beta, mu):
@@ -515,14 +519,6 @@ class OLSL2_L1_TV(object):
 
         t = 1.0 / self.Lipschitz(X, mu)
 
-        # We cannot use beta here, since we may stop too early, however, we
-        # still want to be close to beta. Thus, we add a small error (1 %) to
-        # the start vector.
-#        norm_beta = np.sum(beta ** 2.0)
-#        rand_err = np.random.rand(*beta.shape)
-#        rand_err /= math.norm(rand_err)
-#        beta_old = beta_new = beta + 0.001 * norm_beta * rand_err
-
         beta_old = beta_new = beta
 
         # TODO: Use the FISTA function instead!!
@@ -538,7 +534,7 @@ class OLSL2_L1_TV(object):
               + self.tv.phi(beta_new, alpha, mu)
 
             if (1.0 / t) * math.norm(beta_new - z) < eps and P - D >= 0 \
-                    and i > 1000:
+                    and i > 100:
                 print "Broke after %d iterations" % (i,)
                 break
 
@@ -660,6 +656,16 @@ class OLSL2_SmoothedL1TV(object):
         self.g = RidgeRegression(k)
         self.h = SmoothedL1TV(l, g, shape)
 
+        self.reset()
+
+    def reset(self):
+
+        self.g.reset()
+#        self.h.reset()
+
+        self._Xy = None
+        self._XtinvXXtkI = None
+
     """ Function value of Ridge regression and TV.
     """
     def f(self, X, y, beta, mu):
@@ -676,6 +682,66 @@ class OLSL2_SmoothedL1TV(object):
 
     def Lipschitz(self, X, mu, max_iter=100):
 
+#        from time import time
+#        import scipy.sparse as sparse
+#
+#        t = time()
+#        A = self.h.A()
+#        A = (self.h.l1.l * A[0],
+#             self.h.tv.g * A[1],
+#             self.h.tv.g * A[2],
+#             self.h.tv.g * A[3])
+#        A = np.array(sparse.vstack(A).todense())
+#        s = np.linalg.svd(A, full_matrices=False, compute_uv=False)
+#        lmaxA = np.max(s) ** 2.0
+#        print "lmaxA:", lmaxA, ", time:", time() - t
+#
+#        t = time()
+#        A = self.h.A()
+#        A = (self.h.l1.l * A[0],
+#             self.h.tv.g * A[1],
+#             self.h.tv.g * A[2],
+#             self.h.tv.g * A[3])
+#        A = np.array(sparse.vstack(A).todense())
+#        v = algorithms.FastSVD(A, max_iter=1000)
+#        us = A.dot(v)
+#        lmaxA_ = np.sum(us ** 2.0)
+#        print "lmaxA_:", lmaxA_, ", time:", time() - t
+
+#        t_ = np.random.rand(A.shape[0], 1)
+#        for i in range(1000):
+#            t = t_
+#            p = np.dot(A.T, t)
+#            p /= math.norm(p)
+#            t_ = np.dot(A, p)
+#        t = t_
+#        lmaxA_ = np.sum(t ** 2.0)
+#        print "lmaxA_:", lmaxA_
+
+#        t = time()
+#        A = self.h.A()
+#        A = (self.h.l1.l * A[0],
+#             self.h.tv.g * A[1],
+#             self.h.tv.g * A[2],
+#             self.h.tv.g * A[3])
+#        A = sparse.vstack(A)
+#        v = algorithms.FastSparseSVD(A, max_iter=1000)
+#        us = A.dot(v)
+#        lmaxA = np.sum(us ** 2.0)
+#        print "lmaxA:", lmaxA, ", time:", time() - t
+
+#        print "mu:", mu
+#        print "self.h.Lipschitz(mu, max_iter=100):", \
+#                self.h.Lipschitz(mu, max_iter=100)
+#        print "self.h.Lipschitz(mu, max_iter=1000):", \
+#                self.h.Lipschitz(mu, max_iter=1000)
+#        print "self.h.Lipschitz(mu, max_iter=10000):", \
+#                self.h.Lipschitz(mu, max_iter=10000)
+#        print "same:", self.h.l1.l * self.h.l1.Lipschitz(mu) \
+#                     + self.h.tv.g * self.h.tv.Lipschitz(mu, max_iter=max_iter)
+#        print "lmaxA:", lmaxA
+#        print "self.g.lambda_min(X): ", self.g.lambda_min(X)
+#        return lmaxA / self.g.lambda_min(X)
         return self.h.Lipschitz(mu, max_iter=max_iter) / self.g.lambda_min(X)
 
 #    def mu(self, beta):
@@ -698,7 +764,10 @@ class OLSL2_SmoothedL1TV(object):
 
 #        XXkI = np.dot(X.T, X) + self.g.k * np.eye(X.shape[1])
 
-        Xty_grad = (np.dot(X.T, y) - grad) / self.g.k
+        if self._Xy == None:
+            self._Xy = np.dot(X.T, y)
+
+        Xty_grad = (self._Xy - grad) / self.g.k
 
 #        t = time()
 #        XXkI = np.dot(X.T, X)
@@ -709,11 +778,14 @@ class OLSL2_SmoothedL1TV(object):
 #        beta = np.dot(invXXkI, Xty_grad)
 
 #        t = time()
-        XXtkI = np.dot(X, X.T)
-        index = np.arange(min(XXtkI.shape))
-        XXtkI[index, index] += self.g.k
-        invXXtkI = np.linalg.inv(XXtkI)
-        beta = (Xty_grad - np.dot(X.T, np.dot(invXXtkI, np.dot(X, Xty_grad))))
+        if self._XtinvXXtkI == None:
+            XXtkI = np.dot(X, X.T)
+            index = np.arange(min(XXtkI.shape))
+            XXtkI[index, index] += self.g.k
+            invXXtkI = np.linalg.inv(XXtkI)
+            self._XtinvXXtkI = np.dot(X.T, invXXtkI)
+
+        beta = (Xty_grad - np.dot(self._XtinvXXtkI, np.dot(X, Xty_grad)))
 #        print "t:", time() - t
 
         return beta

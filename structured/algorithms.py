@@ -19,7 +19,10 @@ import numpy as np
 
 import structured.utils as utils
 from structured.utils import math
-from time import time
+from time import time, clock
+
+#time_func = time
+time_func = clock
 
 __all = ['FastSVD', 'FastSparseSVD', 'FISTA', 'CONESTA', 'ExcessiveGapMethod']
 
@@ -44,26 +47,26 @@ def FastSVD(X, max_iter=100, start_vector=None):
         _, _, V = np.linalg.svd(X, full_matrices=True)
         v = V[[0], :].T
     elif M < N:
-        Xt = X.T
-        K = np.dot(X, Xt)
+        K = np.dot(X, X.T)
         # TODO: Use module for this!
         t = np.random.rand(X.shape[0], 1)
 #        t = start_vectors.RandomStartVector().get_vector(Xt)
         for it in xrange(max_iter):
             t_ = t
             t = np.dot(K, t_)
-            t /= np.sqrt(np.sum(t_ ** 2.0))
+            t /= np.sqrt(np.sum(t ** 2.0))
 
             if np.sqrt(np.sum((t_ - t) ** 2.0)) < utils.TOLERANCE:
                 break
 
-        v = np.dot(Xt, t)
+        v = np.dot(X.T, t)
         v /= np.sqrt(np.sum(v ** 2.0))
 
     else:
         K = np.dot(X.T, X)
         # TODO: Use module for this!
         v = np.random.rand(X.shape[1], 1)
+        v /= math.norm(v)
 #        v = start_vectors.RandomStartVector().get_vector(X)
         for it in xrange(max_iter):
             v_ = v
@@ -95,44 +98,39 @@ def FastSparseSVD(X, max_iter=100, start_vector=None):
     v : The right singular vector.
     """
     M, N = X.shape
-    # TODO: Use module for this!
-    p = np.random.rand(X.shape[1], 1)
-#    p = start_vectors.RandomStartVector().get_vector(X)
     if M < N:
-        Xt = X.T
-        K = X.dot(Xt)
-        t = X.dot(p)
+        K = X.dot(X.T)
+#        t = X.dot(p)
+        # TODO: Use module for this!
+        t = np.random.rand(X.shape[0], 1)
         for it in xrange(max_iter):
             t_ = t
             t = K.dot(t_)
-            t /= np.sqrt(np.sum(t_ ** 2.0))
+            t /= np.sqrt(np.sum(t ** 2.0))
 
-            if np.sum((t_ - t) ** 2.0) < utils.TOLERANCE:
+            a = float(np.sqrt(np.sum((t_ - t) ** 2.0)))
+            if a < utils.TOLERANCE:
                 break
 
-        p = Xt.dot(t)
-        normp = np.sqrt(np.sum(p ** 2.0))
-        # Is the solution significantly different from zero (or TOLERANCE)?
-        if normp >= utils.TOLERANCE:
-            p /= normp
-        else:
-            p = np.zeros(p.shape) / np.sqrt(p.shape[0])
+        v = X.T.dot(t)
+        v /= np.sqrt(np.sum(v ** 2.0))
 
     else:
         K = X.T.dot(X)
+        # TODO: Use module for this!
+        v = np.random.rand(X.shape[1], 1)
+        v /= math.norm(v)
+#        v = start_vectors.RandomStartVector().get_vector(X)
         for it in xrange(max_iter):
-            p_ = p
-            p = K.dot(p_)
-            normp = np.sqrt(np.sum(p ** 2.0))
-            if normp > utils.TOLERANCE:
-                p /= normp
-            else:
-                p = np.zeros(p.shape) / np.sqrt(p.shape[0])
+            v_ = v
+            v = K.dot(v_)
+            v /= np.sqrt(np.sum(v ** 2.0))
 
-            if np.sum((p_ - p) ** 2.0) < utils.TOLERANCE:
+            a = float(np.sqrt(np.sum((v_ - v) ** 2.0)))
+            if a < utils.TOLERANCE:
                 break
 
-    return p
+    return v
 
 
 def FISTA(X, y, function, beta, step, mu,
@@ -144,13 +142,13 @@ def FISTA(X, y, function, beta, step, mu,
     t = []
     f = []
     for i in xrange(1, max_iter + 1):
-        tm = time()
+        tm = time_func()
 
         z = betanew + ((i - 2.0) / (i + 1.0)) * (betanew - betaold)
         betaold = betanew
         betanew = function.prox(z - step * function.grad(X, y, z, mu), step)
 
-        t.append(time() - tm)
+        t.append(time_func() - tm)
 #        f.append(function.f(X, y, betanew, mu=mu))
         f.append(function.f(X, y, betanew, mu=0.0))
 
@@ -169,10 +167,11 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
     else:
         mu = [0.9 * function.mu(beta)]
     print "mu:", mu[0]
-    eps0 = function.eps_opt(mu[0], X)
+    max_eps = 10000.0
+    eps0 = min(max_eps, function.eps_opt(mu[0], X))
 #    print "eps:", eps0
 
-    tmin = 1.0 / function.Lipschitz(X, mumin, max_iter=100)
+    tmin = 1.0 / function.Lipschitz(X, mumin, max_iter=1000)
 
     t = []
     f = []
@@ -181,15 +180,14 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
 
     i = 0
     while True:
+        stop = False
+
         step = 1.0 / function.Lipschitz(X, mu[i], max_iter=100)
-#        eps_plus = max(eps, function.eps_opt(mu[i], X))
-        eps_plus = function.eps_opt(mu[i], X)
+        eps_plus = min(max_eps, function.eps_opt(mu[i], X))
         print "eps_plus: ", eps_plus
         (beta, crit, tm) = FISTA(X, y, function, beta, step, mu[i],
                                  eps=eps_plus, max_iter=max_iter)
         print "FISTA did iterations=", len(crit)
-        t = t + tm
-        f = f + crit
 
         mumin = min(mumin, mu[i])
         tmin = min(tmin, step)
@@ -200,24 +198,29 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
         if (1.0 / tmin) * math.norm(beta - beta_tilde) < eps or i >= conts:
             print "%f < %f" % ((1. / tmin) * math.norm(beta - beta_tilde), eps)
             print "%d >= %d" % (i, conts)
-            break
+            stop = True
 
+        gap_time = time_func()
         if dynamic:
-#            G = function.gap(X, y, beta, mumin,
             G = function.gap(X, y, beta, mu[i],
-                                       eps=eps_plus, max_iter=max_iter)
-#            G, beta_hat = function.gap(X, y, beta, beta_hat, mumin,
-#                                       eps=eps_plus, max_iter=max_iter)
+                             eps=eps_plus, max_iter=max_iter)
         else:
             G = eps0 * tau ** (i + 1)
-
         G = abs(G) / sigma
         print "Gap:", G
 
-        if G <= utils.TOLERANCE and mu[i] <= utils.TOLERANCE:
+        gap_time = time_func() - gap_time
+        print "gap_time:", gap_time
+
+#        tm = [tm[j] + gap_time for j in xrange(len(tm))]
+        tm[-1] += gap_time
+        t = t + tm
+        f = f + crit
+        Gval.append(G)
+
+        if G <= utils.TOLERANCE and mu[i] <= utils.TOLERANCE or stop:
             break
 
-        Gval.append(G)
         mu_new = min(mu[i], function.mu_opt(G, X))
         print "mu_opt: ", mu_new
         mu.append(max(mumin, mu_new))
@@ -246,7 +249,10 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
     for i in xrange(len(A)):
         u[i] = np.zeros((A[i].shape[0], 1))
 
-    L = function.Lipschitz(X, 1.0, max_iter=1000)
+    L = function.Lipschitz(X, 1.0, max_iter=10000)
+#    L_ = function.Lipschitz(X, 1.0, max_iter=10000)
+#    print "L:", L
+#    print "L_:", L_
     mu = [L]
     beta0 = function.betahat(X, y, u)  # u is zero here
     beta = beta0
@@ -260,7 +266,7 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
     ulim = [4.0 * L * function.h.M() / ((k + 1.0) * (k + 2.0))]
 
     while True:
-        tm = time()
+        tm = time_func()
 
         tau = 2.0 / (float(k) + 3.0)
 
@@ -269,16 +275,17 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
             u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
 
         mu.append((1.0 - tau) * mu[k])
+        print "mu[k+1] = %f = (1 - %f) * %f" % (mu[-1], tau, mu[-2])
         betahat = function.betahat(X, y, u)
-        beta = ((1.0 - tau) * beta + tau * betahat)
+        beta = (1.0 - tau) * beta + tau * betahat
         alpha = function.V(u, betahat, L)
 
-        t.append(time() - tm)
+        t.append(time_func() - tm)
         f.append(function.f(X, y, beta, mu=0.0))  # utils.TOLERANCE))
 #        ulim.append(mu[k + 1] * function.h.D())
         ulim.append(4.0 * L * function.h.M() / ((k + 1.0) * (k + 2.0)))
 
-        if mu[k] * function.h.M() < eps / 15.0 or k >= max_iter:
+        if mu[k] * function.h.M() < eps / 1.0 or k >= max_iter:
             break
 
         k = k + 1
