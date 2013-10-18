@@ -103,7 +103,7 @@ class L1(object):
 
     """ Function value of L1.
     """
-    def f(self, beta, mu=None):
+    def f(self, beta):
 
         return self.l * np.sum(np.abs(beta))
 
@@ -489,7 +489,9 @@ class OLSL2_L1_TV(object):
 #
 #        return beta
 
-    def gap(self, X, y, beta, mu, eps=utils.TOLERANCE, max_iter=100):
+    def gap(self, X, y, beta, beta_hat, mu,
+            eps=utils.TOLERANCE,
+            max_iter=100, min_iter=10, init_iter=1000):
 
         alpha = self.tv.alpha(beta, mu)
 
@@ -519,26 +521,44 @@ class OLSL2_L1_TV(object):
 
         t = 1.0 / self.Lipschitz(X, mu)
 
-        beta_old = beta_new = beta
+        if beta_hat == None:
+            min_iter = init_iter
+            beta_hat = beta
+
+        beta_old = beta_new = beta_hat
+        computed = False
 
         # TODO: Use the FISTA function instead!!
-        for i in xrange(1, max_iter):
+        for i in xrange(1, max(min_iter, max_iter) + 1):
+
             z = beta_new + ((i - 2.0) / (i + 1.0)) * (beta_new - beta_old)
             beta_old = beta_new
 
             beta_new = self.prox(z - t * (self.rr.grad(X, y, z) \
                                         + self.tv.grad(z, mu, alpha)), t)
 
+            if (1.0 / t) * math.norm(beta_new - z) < eps \
+                    and i >= min_iter:
+
+                D = self.rr.f(X, y, beta_new) \
+                  + self.l1.f(beta_new) \
+                  + self.tv.phi(beta_new, alpha, mu)
+                computed = True
+
+                if P - D >= 0:
+                    break
+            else:
+                computed = False
+
+        print "GAP did iterations =", i
+
+        # Avoid evaluating the dual function if not necessary
+        if not computed:
             D = self.rr.f(X, y, beta_new) \
               + self.l1.f(beta_new) \
               + self.tv.phi(beta_new, alpha, mu)
 
-            if (1.0 / t) * math.norm(beta_new - z) < eps and P - D >= 0 \
-                    and i > 100:
-                print "Broke after %d iterations" % (i,)
-                break
-
-        return P - D
+        return P - D, beta_new
 
 
 class SmoothedL1TV(object):
@@ -583,7 +603,7 @@ class SmoothedL1TV(object):
         if self.l < utils.TOLERANCE and self.g < utils.TOLERANCE:
             return 0.0
 
-        Aa = self.A(alpha=alpha)
+        Aa = self.Aa(alpha)
 
         alpha_sqsum = 0.0
         for a in alpha:
@@ -689,8 +709,6 @@ class OLSL2_SmoothedL1TV(object):
 
     def Lipschitz(self, X, max_iter=100):
 
-        print "self.h.lambda_max(max_iter=max_iter):", self.h.lambda_max(max_iter=max_iter)
-        print "self.g.lambda_min(X):", self.g.lambda_min(X)
         return self.h.lambda_max(max_iter=max_iter) / self.g.lambda_min(X)
 
     def V(self, u, beta, L):
