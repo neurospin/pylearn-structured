@@ -136,11 +136,11 @@ class SmoothedL1(object):
         if self.l < utils.TOLERANCE:
             return 0.0
 
-        if mu == 0.0:
-            return self.l * np.sum(np.abs(beta))
-        else:
+        if mu > 0.0:
             alpha = self.alpha(beta, mu)
             return self.phi(beta, alpha, mu)
+        else:
+            return self.l * np.sum(np.abs(beta))
 
     def phi(self, beta, alpha, mu):
 
@@ -213,7 +213,7 @@ class TotalVariation(object):
         if self.g < utils.TOLERANCE:
             return 0.0
 
-        if mu > utils.TOLERANCE:
+        if mu > 0.0:
             alpha = self.alpha(beta, mu)
             return self.phi(beta, alpha, mu)
         else:
@@ -579,6 +579,10 @@ class SmoothedL1TV(object):
                    g * Atv[1],
                    g * Atv[2]]
 
+        self.reset()
+
+    def reset(self):
+
         self._lambda_max = None
 
     """ Function value of Ridge regression.
@@ -588,7 +592,7 @@ class SmoothedL1TV(object):
         if self.l < utils.TOLERANCE and self.g < utils.TOLERANCE:
             return 0.0
 
-        if mu > utils.TOLERANCE:
+        if mu > 0.0:
             alpha = self.alpha(beta, mu)
             return self.phi(beta, alpha, mu)
         else:
@@ -610,10 +614,6 @@ class SmoothedL1TV(object):
             alpha_sqsum += np.sum(a ** 2.0)
 
         return np.dot(Aa.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum
-
-#    def Lipschitz(self, max_iter=100):
-#
-#        return self.lambda_max(max_iter=max_iter)
 
     def lambda_max(self, max_iter=100):
 
@@ -695,7 +695,7 @@ class OLSL2_SmoothedL1TV(object):
     def reset(self):
 
         self.g.reset()
-#        self.h.reset()
+        self.h.reset()
 
         self._Xy = None
         self._XtinvXXtkI = None
@@ -709,7 +709,9 @@ class OLSL2_SmoothedL1TV(object):
 
     def Lipschitz(self, X, max_iter=100):
 
-        return self.h.lambda_max(max_iter=max_iter) / self.g.lambda_min(X)
+        a = self.h.lambda_max(max_iter=max_iter)
+        b = self.g.lambda_min(X)
+        return a / b
 
     def V(self, u, beta, L):
 
