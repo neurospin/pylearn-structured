@@ -101,11 +101,16 @@ def _generate(l, k, g, beta, M, e, shape):
     gradTV = grad_TV(beta, shape)
 
     alpha = -(l * gradL1 + k * gradL2 + g * gradTV)
+    print "max:", np.max(np.abs(alpha))
+    print "div:", np.min(np.abs(np.dot(M.T, e)))
+    print "mat:", np.max(np.sum(M ** 2.0))
     alpha = np.divide(alpha, np.dot(M.T, e))
+    print "max:", np.max(np.abs(alpha))
 
     X = np.zeros(M.shape)
     for i in xrange(p):
         X[:, i] = M[:, i] * alpha[i, 0]
+    print "mat:", np.max(np.sum(X ** 2.0))
 
     y = np.dot(X, beta) - e
 

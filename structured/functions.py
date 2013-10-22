@@ -17,9 +17,10 @@ Created on Mon Apr 22 10:54:29 2013
 
 import numpy as np
 import scipy.sparse as sparse
+import math
 
 import structured.utils as utils
-from structured.utils import math
+#import structured.utils.math as utils.math
 import structured.algorithms as algorithms
 
 __all__ = ['RidgeRegression', 'L1', 'SmoothedL1', 'TotalVariation']
@@ -203,6 +204,8 @@ class TotalVariation(object):
     def __init__(self, g, shape):
 
         self.g = float(g)
+        self.p = np.prod(shape)
+        self.shape = shape
         self._A = self.precompute(shape, mask=None, compress=False)
         self._lambda_max = None
 
@@ -249,7 +252,7 @@ class TotalVariation(object):
 
         return self.g * grad
 
-    def Lipschitz(self, mu, max_iter=10):
+    def Lipschitz(self, mu, max_iter=1000):
 
         if self.g < utils.TOLERANCE:
             return 0.0
@@ -258,14 +261,39 @@ class TotalVariation(object):
 
         return self.g * lmaxA / mu
 
-    def lambda_max(self, mu, max_iter=100):
+    def lambda_max(self, mu, max_iter=1000):
+
+#        # Note that we can save the state here since lmax(A) does not change.
+#        if self._lambda_max == None:
+#            A = sparse.vstack(self.A())
+#            v = algorithms.FastSparseSVD(A, max_iter=max_iter)
+#            us = A.dot(v)
+#            self._lambda_max = np.sum(us ** 2.0)
 
         # Note that we can save the state here since lmax(A) does not change.
+        if len(self.shape) == 3 \
+            and self.shape[0] == 1 and self.shape[1] == 1:
+
+#            lmaxTV = 2.0 * (1.0 - cos(float(self._p) * pi \
+#                                                 / float(self._p + 1)))
+            lmaxTV = 2.0 * (1.0 - math.cos(float(self.p - 1) * math.pi \
+                                                 / float(self.p)))
+            _lambda_max = lmaxTV * self.g ** 2.0 + self.l ** 2.0
+            print "lambda_max:", _lambda_max
+
         if self._lambda_max == None:
-            A = sparse.vstack(self.A())
+
+#            A = sparse.vstack(self.A())
+#            v = algorithms.FastSparseSVD(A, max_iter=max_iter)
+#            us = A.dot(v)
+#            self._lambda_max = np.sum(us ** 2.0)
+
+            A = sparse.vstack(self.A()[1:])
             v = algorithms.FastSparseSVD(A, max_iter=max_iter)
             us = A.dot(v)
-            self._lambda_max = np.sum(us ** 2.0)
+            self._lambda_max = np.sum(us ** 2.0) + self.l ** 2.0
+
+        print "lambda_max:", self._lambda_max
 
         return self._lambda_max
 
@@ -442,7 +470,7 @@ class OLSL2_L1_TV(object):
         return self.rr.grad(X, y, beta) \
              + self.tv.grad(beta, mu)
 
-    def Lipschitz(self, X, mu, max_iter=100):
+    def Lipschitz(self, X, mu, max_iter=1000):
 
         return self.rr.Lipschitz(X) \
              + self.tv.Lipschitz(mu, max_iter=max_iter)
@@ -537,7 +565,7 @@ class OLSL2_L1_TV(object):
             beta_new = self.prox(z - t * (self.rr.grad(X, y, z) \
                                         + self.tv.grad(z, mu, alpha)), t)
 
-            if (1.0 / t) * math.norm(beta_new - z) < eps \
+            if (1.0 / t) * utils.math.norm(beta_new - z) < eps \
                     and i >= min_iter:
 
                 D = self.rr.f(X, y, beta_new) \
@@ -572,6 +600,7 @@ class SmoothedL1TV(object):
         self.g = g
 
         self._p = np.prod(shape)
+        self._shape = shape
 
         Atv = TotalVariation.precompute(shape, mask=None, compress=False)
         self._A = [l * sparse.eye(self._p, self._p),
@@ -597,7 +626,7 @@ class SmoothedL1TV(object):
             return self.phi(beta, alpha, mu)
         else:
             A = self.A()
-            return math.norm1(A[0].dot(beta)) + \
+            return utils.math.norm1(A[0].dot(beta)) + \
                    np.sum(np.sqrt(A[1].dot(beta) ** 2.0 + \
                                   A[2].dot(beta) ** 2.0 + \
                                   A[3].dot(beta) ** 2.0))
@@ -615,14 +644,29 @@ class SmoothedL1TV(object):
 
         return np.dot(Aa.T, beta)[0, 0] - (mu / 2.0) * alpha_sqsum
 
-    def lambda_max(self, max_iter=100):
+    def lambda_max(self, max_iter=1000):
 
         # Note that we can save the state here since lmax(A) does not change.
-        if self._lambda_max == None:
-            A = sparse.vstack(self.A())
+        if len(self._shape) == 3 \
+            and self._shape[0] == 1 and self._shape[1] == 1:
+
+#            lmaxTV = 2.0 * (1.0 - cos(float(self._p) * pi \
+#                                                 / float(self._p + 1)))
+            lmaxTV = 2.0 * (1.0 - math.cos(float(self._p - 1) * math.pi \
+                                                 / float(self._p)))
+            self._lambda_max = lmaxTV * self.g ** 2.0 + self.l ** 2.0
+
+        elif self._lambda_max == None:
+
+#            A = sparse.vstack(self.A())
+#            v = algorithms.FastSparseSVD(A, max_iter=max_iter)
+#            us = A.dot(v)
+#            self._lambda_max = np.sum(us ** 2.0)
+
+            A = sparse.vstack(self.A()[1:])
             v = algorithms.FastSparseSVD(A, max_iter=max_iter)
             us = A.dot(v)
-            self._lambda_max = np.sum(us ** 2.0)
+            self._lambda_max = np.sum(us ** 2.0) + self.l ** 2.0
 
         return self._lambda_max
 
@@ -668,7 +712,7 @@ class SmoothedL1TV(object):
         anorm_tv = ax ** 2.0 + ay ** 2.0 + az ** 2.0
         i_tv = anorm_tv > 1.0
 
-        anorm_tv_i = anorm_tv[i_tv] ** 0.5  # Square root is taken here. Faster.
+        anorm_tv_i = anorm_tv[i_tv] ** 0.5  # Square root taken here. Faster.
         ax[i_tv] = np.divide(ax[i_tv], anorm_tv_i)
         ay[i_tv] = np.divide(ay[i_tv], anorm_tv_i)
         az[i_tv] = np.divide(az[i_tv], anorm_tv_i)
@@ -707,7 +751,7 @@ class OLSL2_SmoothedL1TV(object):
         return self.g.f(X, y, beta) \
              + self.h.f(beta, mu)
 
-    def Lipschitz(self, X, max_iter=100):
+    def Lipschitz(self, X, max_iter=1000):
 
         a = self.h.lambda_max(max_iter=max_iter)
         b = self.g.lambda_min(X)

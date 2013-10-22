@@ -253,28 +253,26 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
         u[i] = np.zeros((A[i].shape[0], 1))
 
     # L = lambda_max(A'A) / (lambda_min(X'X) + k)
-    L = function.Lipschitz(X, max_iter=10000000)
-#    L = function.h.lambda_max(max_iter=100000)
+#    L = function.Lipschitz(X, max_iter=1000000)
+    L = function.Lipschitz(X, max_iter=1000000)
     print "L:", L
+
     mu = [2.0 * L]
     beta0 = function.betahat(X, y, u)  # u is zero here
-    print "beta0: ", math.norm(beta0)
     beta = beta0
     alpha = function.V(u, beta, L)  # u is zero here
-    print "alpha: ", math.norm(alpha)
 
-    print "f  :", function.g.f(X, y, beta) + function.h.f(beta, mu[0])
-    print "phi:", function.g.f(X, y, beta) + function.h.phi(beta, alpha, mu=0.0)
+#    print "f  :", function.g.f(X, y, beta) + function.h.f(beta, mu[0])
+#    print "phi:", function.g.f(X, y, beta) + function.h.phi(beta, alpha, mu=0.0)
 
     t = []
-    f = []  # function.f(X, y, beta[0], mu[0])]
-    # mu[0] * function.h.D()
+    f = []
     ulim = []
 
     k = 0
 
-    _f = []
-    _phi = []
+#    _f = []
+#    _phi = []
 
     while True:
         tm = time_func()
@@ -290,16 +288,14 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
         beta = (1.0 - tau) * beta + tau * betahat
         alpha = function.V(u, betahat, L)
 
-        _f.append(function.g.f(X, y, beta) + function.h.f(beta, mu[k+1]))
-        _phi.append(function.g.f(X, y, betahat) + function.h.phi(betahat, alpha, mu=0.0))
+#        _f.append(function.g.f(X, y, beta) + function.h.f(beta, mu[k+1]))
+#        _phi.append(function.g.f(X, y, betahat) + function.h.phi(betahat, alpha, mu=0.0))
 
         t.append(time_func() - tm)
-        f.append(function.f(X, y, beta, mu=0.0))  # utils.TOLERANCE))
-#        ulim.append(4.0 * L * function.h.M() / ((k + 1.0) * (k + 2.0)))
-#        ulim.append(2.0 * function.h.M() * mu[0] / ((float(k) + 1.0) * (float(k) + 2.0)))
-        ulim.append(mu[k + 1] * function.h.M())
+        f.append(function.f(X, y, beta, mu=0.0))
+        ulim.append(2.0 * function.h.M() * mu[0] / ((float(k) + 1.0) * (float(k) + 2.0)))
+#        ulim.append(mu[k + 1] * function.h.M())
 
-#        if mu[k] * function.h.M() < eps / 1.0 or k >= max_iter:
         if ulim[-1] < eps or k >= max_iter:
             break
 
@@ -308,11 +304,11 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
     print "L:", L
     print "mu[-1]:", mu[-1]
 
-    import matplotlib.pyplot as plot
-    plot.plot([_f[i] - f_star for i in xrange(len(_f))], 'r')
-    plot.plot([_phi[i] - f_star for i in xrange(len(_phi))], 'g')
-    plot.plot([f[i] - f_star for i in xrange(len(f))])
-    plot.plot(ulim, '-.r')
-    plot.show()
+#    import matplotlib.pyplot as plot
+#    plot.plot([_f[i] - f_star for i in xrange(len(_f))], 'r')
+#    plot.plot([_phi[i] - f_star for i in xrange(len(_phi))], 'g')
+#    plot.plot([f[i] - f_star for i in xrange(len(f))])
+#    plot.plot(ulim, '-.r')
+#    plot.show()
 
     return (beta, f, t, mu, ulim, beta0)
