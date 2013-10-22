@@ -18,7 +18,7 @@ PATH = "./structured/"
 OUTPUT = "./TODO"
 
 RE_PY_FILE = re.compile(".*\.py$")
-RE_TODO = re.compile("^[ \t]*#[ \t]*TODO:.*$")
+RE_TODO = re.compile("^[ \t]*#[ \t]*TODO:.*$")  # TODO: Allow code before TODO
 RE_COMMENT = re.compile("^[ \t]*#.*$")
 
 

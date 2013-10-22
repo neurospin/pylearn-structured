@@ -2,7 +2,7 @@
 import numpy as np
 import utils
 
-from sklearn.utils.testing import assert_array_almost_equal
+#from sklearn.utils.testing import assert_array_almost_equal
 
 #from nose.tools import assert_equal
 #from nose.tools import assert_not_equal
@@ -19,7 +19,8 @@ from sklearn.utils.testing import assert_array_almost_equal
 #from numpy.testing import assert_array_less
 
 
-__all__ = ['assert_array_almost_equal', 'fleiss_kappa', 'orth_matrix',
+#'assert_array_almost_equal', 
+__all__ = ['fleiss_kappa', 'orth_matrix',
            'check_ortho']
            #"assert_equal", "assert_not_equal", "assert_raises", "raises",
 #           "with_setup", "assert_true", "assert_false", "assert_almost_equal",

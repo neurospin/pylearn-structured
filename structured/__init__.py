@@ -3,20 +3,17 @@
 The :mod:`structured` module includes several different structured machine
 learning models for one, two or more blocks of data.
 
-@author: Tommy Löfstedt <tommy.loefstedt@cea.fr>
+@author:  Tommy Löfstedt
+@email:   tommy.loefstedt@cea.fr
+@license: TBD.
 """
 
-import models
 import algorithms
-import preprocess
-import prox_ops
-# TODO: Remove prox_ops, and/or move relevant parts to loss_functions.
-import tests
+import datasets
+import functions
 import utils
-import loss_functions
 import start_vectors
 
-__version__ = '0.0.9'
+__version__ = '0.0.99'
 
-__all__ = ['models', 'prox_ops', 'algorithms', 'preprocess',
-           'tests', 'utils', 'loss_functions', 'start_vectors']
+__all__ = ['algorithms', 'datasets', 'functions', 'utils', 'start_vectors']

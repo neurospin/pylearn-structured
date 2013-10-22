@@ -2,23 +2,24 @@
 
 ./structured/algorithms.py:
 --------------------------
-477: # TODO: Add Schäfer and Strimmer's method here if tau == None!
+48: # TODO: Use module for this!
 
-./structured/loss_functions.py:
-------------------------------
-712: # TODO: Make __getattr__ and __setattr__ handle all the fields of the
-713: #       Nesterov function in order to avoid keeping references here as
-714: #       well!
+64: # TODO: Use module for this!
 
-849: # TODO: This is only true if zero-rows have been removed!
+97: # TODO: Use module for this!
 
-1050: # TODO: This is only true if zero-rows have been removed!
+./structured/functions.py:
+-------------------------
+405: # TODO: Mask should be boolean!
 
-./structured/modes.py:
----------------------
-47: # TODO: Ok with division here?
+519: # TODO: Use the FISTA function instead!!
 
-./structured/models.py:
-----------------------
-1197: # TODO: Potentially error prone since algorithms are not stateless!
+./structured/data/simulated/l1_l2_tv_2D.py:
+------------------------------------------
+132: # TODO: This is suboptimal. Not all of the most correlated variables
+133: # will be in the positive quadrant.
+
+./structured/datasets/simulated/grad.py:
+---------------------------------------
+73: # TODO: Only works for up to 3 dimensions ...
 
