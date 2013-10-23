@@ -443,9 +443,15 @@ class OLSL2_L1_TV(object):
         self.l1 = L1(l)
         self.tv = TotalVariation(g, shape=shape)
 
+        self.reset()
+
     def reset(self):
 
         self.rr.reset()
+
+        self._Xty = None
+        self._invXXkI = None
+        self._XtinvXXtkI = None
 
     """ Function value of Ridge regression, L1 and TV.
     """
@@ -477,6 +483,10 @@ class OLSL2_L1_TV(object):
 
         return self.tv.mu(beta)
 
+    def M(self):
+
+        return self.tv.M()
+
     def mu_opt(self, eps, X):
 
         gM = self.tv.g * self.tv.M()
@@ -494,91 +504,116 @@ class OLSL2_L1_TV(object):
 
         return (2.0 * gM * gA2 * mu + gM * Lg * mu ** 2.0) / gA2
 
-#    """ Returns the beta that minimises the dual function.
-#    """
-#    def betahat(self, X, y, alpha):
-#
-#        l = self.l1.l
-#        k = self.rr.k
-#        g = self.tv.g
-#        grad_l1 = l * self.l1.Aa(alpha[0])
-#        grad_tv = g * self.tv.Aa(alpha[1:])
-#
-#        XXkI = np.dot(X.T, X) + k * np.eye(X.shape[1])
-#        beta = np.dot(np.linalg.inv(XXkI), np.dot(X.T, y) - grad_l1 - grad_tv)
-#
-#        return beta
+    def eps_max(self, mu):
+
+        gM = self.tv.g * self.tv.M()
+
+        return mu * gM
+
+    """ Returns the dual variable of a smoothed L1 penalty.
+    """
+    def _l1_project(self, a):
+
+        anorm = np.abs(a)
+        i = anorm > 1.0
+        anorm_i = anorm[i]
+        a[i] = np.divide(a[i], anorm_i)
+
+        return a
+
+    """ Returns the beta that minimises the dual function.
+    """
+    def _beta_hat(self, X, y, betak, alphak, mu):
+
+        if self._Xty == None:
+            self._Xty = np.dot(X.T, y)
+
+        Ata_tv = self.tv.g * self.tv.Aa(alphak)
+        Ata_l1 = self.l1.l * self._l1_project(betak / utils.TOLERANCE)
+        v = (self._Xty - Ata_tv - Ata_l1)
+
+        shape = X.shape
+
+        if shape[0] > shape[1]:  # If n > p
+
+            # Ridge solution
+            if self._invXXkI == None:
+                XtXkI = np.dot(X.T, X)
+                index = np.arange(min(XtXkI.shape))
+                XtXkI[index, index] += self.rr.k
+                self._invXXkI = np.linalg.inv(XtXkI)
+
+            beta_hat = np.dot(self._invXXkI, v)
+
+        else:  # If p > n
+            # Ridge solution using the Woodbury matrix identity:
+            if self._XtinvXXtkI == None:
+                XXtkI = np.dot(X, X.T)
+                index = np.arange(min(XXtkI.shape))
+                XXtkI[index, index] += self.rr.k
+                invXXtkI = np.linalg.inv(XXtkI)
+                self._XtinvXXtkI = np.dot(X.T, invXXtkI)
+
+            beta_hat = (v - np.dot(self._XtinvXXtkI, np.dot(X, v))) / self.rr.k
+
+        return beta_hat
 
     def gap(self, X, y, beta, beta_hat, mu,
             eps=utils.TOLERANCE,
             max_iter=100, min_iter=10, init_iter=1000):
+        # TODO: Remove init_iter everywhere!
 
         alpha = self.tv.alpha(beta, mu)
 
-#        if smooth_l1:
-#            alpha_l1 = self.l1.alpha(beta, mu)
-#
-#            P = self.rr.f(X, y, beta) \
-#              + self.l1.phi(beta, alpha_l1, mu) \
-#              + self.tv.phi(beta, alpha_tv, mu)
-#
-##            Aa_l1 = self.l1.Aa(alpha_l1)
-##            Aa_tv = self.tv.Aa(alpha_tv)
-#
-##            lAa_l1 = self.l1.l * Aa_l1
-##            gAa_tv = self.tv.g * Aa_tv
-##            gAa = lAa_l1 + gAa_tv
-#            beta_hat = self.betahat(X, y, [alpha_l1, alpha_tv])
-#
-#            D = self.rr.f(X, y, beta_hat) \
-#              + self.l1.phi(beta_hat, alpha_l1, mu) \
-#              + self.tv.phi(beta_hat, alpha_tv, mu)
-#
-#        else:
         P = self.rr.f(X, y, beta) \
           + self.l1.f(beta) \
           + self.tv.phi(beta, alpha, mu)
 
-        t = 1.0 / self.Lipschitz(X, mu)
+#        t = 1.0 / self.Lipschitz(X, mu)
 
-        if beta_hat == None:
-            min_iter = init_iter
-            beta_hat = beta
+#        if beta_hat == None:
+##            min_iter = init_iter
+##            beta_hat = beta
+#            beta_hat = self._beta_hat(X, y, beta, alpha, mu)
+        beta_hat = self._beta_hat(X, y, beta, alpha, mu)
 
-        beta_old = beta_new = beta_hat
-        computed = False
+#        print "diff before:", utils.math.norm(beta_hat - beta)
 
-        # TODO: Use the FISTA function instead!!
-        for i in xrange(1, max(min_iter, max_iter) + 1):
-
-            z = beta_new + ((i - 2.0) / (i + 1.0)) * (beta_new - beta_old)
-            beta_old = beta_new
-
-            beta_new = self.prox(z - t * (self.rr.grad(X, y, z) \
-                                        + self.tv.grad(z, mu, alpha)), t)
-
-            if (1.0 / t) * utils.math.norm(beta_new - z) < eps \
-                    and i >= min_iter:
-
-                D = self.rr.f(X, y, beta_new) \
-                  + self.l1.f(beta_new) \
-                  + self.tv.phi(beta_new, alpha, mu)
-                computed = True
-
-                if P - D >= 0:
-                    break
-            else:
-                computed = False
-
-        print "GAP did iterations =", i
+#        beta_old = beta_new = beta_hat
+#        computed = False
+#
+#        # TODO: Use the FISTA function instead!!
+#        for i in xrange(1, max(min_iter, max_iter) + 1):
+#
+#            z = beta_new + ((i - 2.0) / (i + 1.0)) * (beta_new - beta_old)
+#            beta_old = beta_new
+#
+#            beta_new = self.prox(z - t * (self.rr.grad(X, y, z) \
+#                                        + self.tv.grad(z, mu, alpha)), t)
+#
+#            if (1.0 / t) * utils.math.norm(beta_new - z) < eps \
+#                    and i >= min_iter:
+#
+#                D = self.rr.f(X, y, beta_new) \
+#                  + self.l1.f(beta_new) \
+#                  + self.tv.phi(beta_new, alpha, mu)
+#                computed = True
+#
+#                if P - D >= 0:
+#                    break
+#            else:
+#                computed = False
+#
+#        print "diff after:", utils.math.norm(beta_new - beta)
+#        print "GAP did iterations =", i
 
         # Avoid evaluating the dual function if not necessary
-        if not computed:
-            D = self.rr.f(X, y, beta_new) \
-              + self.l1.f(beta_new) \
-              + self.tv.phi(beta_new, alpha, mu)
+#        if not computed:
+        D = self.rr.f(X, y, beta_hat) \
+          + self.l1.f(beta_hat) \
+          + self.tv.phi(beta_hat, alpha, mu)
 
-        return P - D, beta_new
+        return P - D, beta_hat
 
 
 class SmoothedL1TV(object):

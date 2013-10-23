@@ -169,11 +169,11 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
         mu = [0.9 * function.mu(beta)]
     print "mu0:", mu[0]
 
-    max_eps = 10000.0
-    max_eps_ = utils.math.norm(function.grad(X, y, beta, mu))
-    G = eps0 = min(max_eps, function.eps_opt(mu[0], X))
-
     tmin = 1.0 / function.Lipschitz(X, mumin, max_iter=1000)
+
+    max_eps = function.eps_max(mu[0])
+
+    G = eps0 = min(max_eps, function.eps_opt(mu[0], X))
 
     beta_hat = None
 
@@ -187,12 +187,7 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
 
         tnew = 1.0 / function.Lipschitz(X, mu[i], max_iter=100)
 
-        if i == 0:
-            print "max_eps:", max_eps
-            print "max_eps:", tnew * max_eps_
-
-        eps_plus = min(max_eps, G)  # function.eps_opt(mu[i], X))
-#        print "eps_plus: ", eps_plus
+        eps_plus = min(max_eps, G)
         (beta, fval, tval) = FISTA(X, y, function, beta, tnew, mu[i],
                                  eps=eps_plus,
                                  max_iter=max_iter,
@@ -270,8 +265,8 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
     beta = beta0
     alpha = function.V(u, beta, L)  # u is zero here
 
-    print "f  :", function.g.f(X, y, beta) + function.h.f(beta, mu[0])
-    print "phi:", function.g.f(X, y, beta) + function.h.phi(beta, alpha, mu=0.0)
+#    print "f  :", function.g.f(X, y, beta) + function.h.f(beta, mu[0])
+#    print "phi:", function.g.f(X, y, beta) + function.h.phi(beta, alpha, mu=0.0)
 
     t = []
     f = []
@@ -279,8 +274,8 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
 
     k = 0
 
-    _f = []
-    _phi = []
+#    _f = []
+#    _phi = []
 
     while True:
         tm = time_func()
@@ -296,8 +291,8 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
         beta = (1.0 - tau) * beta + tau * betahat
         alpha = function.V(u, betahat, L)
 
-        _f.append(function.g.f(X, y, beta) + function.h.f(beta, mu[k+1]))
-        _phi.append(function.g.f(X, y, betahat) + function.h.phi(betahat, alpha, mu=0.0))
+#        _f.append(function.g.f(X, y, beta) + function.h.f(beta, mu[k+1]))
+#        _phi.append(function.g.f(X, y, betahat) + function.h.phi(betahat, alpha, mu=0.0))
 
         t.append(time_func() - tm)
         f.append(function.f(X, y, beta, mu=0.0))
@@ -312,11 +307,11 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
     print "L:", L
     print "mu[-1]:", mu[-1]
 
-    import matplotlib.pyplot as plot
-    plot.plot([_f[i] - f_star for i in xrange(len(_f))], 'r')
-    plot.plot([_phi[i] - f_star for i in xrange(len(_phi))], 'g')
-    plot.plot([f[i] - f_star for i in xrange(len(f))])
-    plot.plot(ulim, '-.r')
-    plot.show()
+#    import matplotlib.pyplot as plot
+#    plot.plot([_f[i] - f_star for i in xrange(len(_f))], 'r')
+#    plot.plot([_phi[i] - f_star for i in xrange(len(_phi))], 'g')
+#    plot.plot([f[i] - f_star for i in xrange(len(f))])
+#    plot.plot(ulim, '-.r')
+#    plot.show()
 
     return (beta, f, t, mu, ulim, beta0)

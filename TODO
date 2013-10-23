@@ -14,13 +14,6 @@
 -------------------------
 425: # TODO: Mask should be boolean!
 
-551: # TODO: Use the FISTA function instead!!
-
-./structured/data/simulated/l1_l2_tv_2D.py:
-------------------------------------------
-132: # TODO: This is suboptimal. Not all of the most correlated variables
-133: # will be in the positive quadrant.
-
 ./structured/datasets/simulated/grad.py:
 ---------------------------------------
 73: # TODO: Only works for up to 3 dimensions ...
