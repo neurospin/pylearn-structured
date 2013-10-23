@@ -276,24 +276,16 @@ class TotalVariation(object):
 
 #            lmaxTV = 2.0 * (1.0 - cos(float(self._p) * pi \
 #                                                 / float(self._p + 1)))
-            lmaxTV = 2.0 * (1.0 - math.cos(float(self.p - 1) * math.pi \
-                                                 / float(self.p)))
-            _lambda_max = lmaxTV * self.g ** 2.0 + self.l ** 2.0
-            print "lambda_max:", _lambda_max
+            self._lambda_max = 2.0 * (1.0 - math.cos(float(self.p - 1) \
+                                                     * math.pi \
+                                                     / float(self.p)))
 
-        if self._lambda_max == None:
+        elif self._lambda_max == None:
 
-#            A = sparse.vstack(self.A())
-#            v = algorithms.FastSparseSVD(A, max_iter=max_iter)
-#            us = A.dot(v)
-#            self._lambda_max = np.sum(us ** 2.0)
-
-            A = sparse.vstack(self.A()[1:])
+            A = sparse.vstack(self.A())
             v = algorithms.FastSparseSVD(A, max_iter=max_iter)
             us = A.dot(v)
-            self._lambda_max = np.sum(us ** 2.0) + self.l ** 2.0
-
-        print "lambda_max:", self._lambda_max
+            self._lambda_max = np.sum(us ** 2.0)
 
         return self._lambda_max
 
