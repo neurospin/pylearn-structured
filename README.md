@@ -12,8 +12,8 @@ Structured sparse learning for Python 2.7.
         * Total variation (TV)
         * Any combination of the above
     * Algorithms:
-        * Fast iterative soft-thresholding algorithm (FISTA)
-        * __CO__ntinuation of __NEST__sterov’s smoothing __A__lgorithm (CONESTA)
+        * _F_ast _I_terative _S_oft-_T_hresholding _A_lgorithm (FISTA)
+        * _CO_ntinuation of _NEST_sterov’s smoothing _A_lgorithm (CONESTA)
         * Excessive gap method
 
 
