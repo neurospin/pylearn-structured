@@ -14,6 +14,6 @@ import functions
 import utils
 import start_vectors
 
-__version__ = '0.0.99'
+__version__ = '0.1.0'
 
 __all__ = ['algorithms', 'datasets', 'functions', 'utils', 'start_vectors']
