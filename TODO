@@ -2,17 +2,19 @@
 
 ./structured/algorithms.py:
 --------------------------
-48: # TODO: Use module for this!
+51: # TODO: Use module for this!
 
-64: # TODO: Use module for this!
+67: # TODO: Use module for this!
 
-97: # TODO: Use module for this!
+104: # TODO: Use module for this!
+
+120: # TODO: Use module for this!
 
 ./structured/functions.py:
 -------------------------
-405: # TODO: Mask should be boolean!
+425: # TODO: Mask should be boolean!
 
-519: # TODO: Use the FISTA function instead!!
+551: # TODO: Use the FISTA function instead!!
 
 ./structured/data/simulated/l1_l2_tv_2D.py:
 ------------------------------------------
