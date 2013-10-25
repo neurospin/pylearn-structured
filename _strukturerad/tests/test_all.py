@@ -4,7 +4,7 @@ Created on Thu May 23 15:08:31 2013
 
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
-@license: TDB.
+@license: TBD
 """
 
 #import test_SVD_PCA
@@ -12,8 +12,11 @@ Created on Thu May 23 15:08:31 2013
 #import test_o2pls
 #import test_regularisation
 #import test_multiblock
-#import test_structure
-#import test_unpenalized
+import test_structure
+import utils
+
+import time
+
 
 def test():
 #    test_SVD_PCA.test()
@@ -21,9 +24,11 @@ def test():
 #    test_o2pls.test()
 #    test_regularisation.test()
 #    test_multiblock.test()
-#    test_structure.test()
-#    test_unpenalized.test()
+    test_structure.test()
+
 
 if __name__ == "__main__":
 
+    t = time()
     test()
+    utils.debug("test_all took %.2f seconds" % (time() - t))
