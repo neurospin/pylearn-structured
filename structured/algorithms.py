@@ -469,7 +469,7 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
         -------
         a          : A list with n numpy arrays of weights of shape [N_i, 1].
         """
-        n = len(X)
+        n = len(X) # This is J in Tenenhaus 2011
 
         if self.adj_matrix == None:
             self.adj_matrix = ones((n, n)) - eye(n, n)
@@ -482,19 +482,41 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
         bias = kwargs.pop('bias', False)
         ddof = 0.0 if bias else 1.0
 
-        invIXX = []
+        # Precomputations: in order to avoid computing large covariance a matrix
+        #  we have to use a different precomputation given the size of the block.
+        # If #rows > #columns we can compute [tau*I + (1-tau)/n X^T*X]^-1
+        # Else we compute (1-tau)/(tau/n)X^T[tau*I + (1-tau)/n X*X^T]^-1
+        # This also impact the computation of a in the main loop.
+        comp_strategy = [None]*n
+        invIXX  = [None]*n # Store [tau*I + (1-tau)/n X^T*X]^-1 if computed
+        XinvIXX = [None]*n # Store (1-tau)/(tau*n)X^T[tau*I + (1-tau)/n X*X^T]^-1 if computed
         a = []
         for i in range(n):
             Xi = X[i]
-            XX = np.dot(Xi.T, Xi)
-            I = eye(XX.shape[0])
-
+            tau = self.tau[i]
             a_ = self.start_vector.get_vector(Xi)
-            invIXX.append(pinv(self.tau[i] * I + \
-                    ((1.0 - self.tau[i]) / (Xi.shape[0] - ddof)) * XX))
-            invIXXa = np.dot(invIXX[i], a_)
-            ainvIXXa = np.dot(a_.T, invIXXa)
-            a_ = invIXXa / sqrt(ainvIXXa)
+            r, c = Xi.shape
+            if (r > c) or (tau == 0):
+                comp_strategy[i] = "cov"
+                #print "Computing covariance matrix for block %i" % i
+                XX = np.dot(Xi.T, Xi)
+                I = eye(XX.shape[0])
+
+                invIXX[i] = pinv(tau * I + \
+                        ((1.0 - tau) / (r - ddof)) * XX)
+                invIXXa = np.dot(invIXX[i], a_)
+                ainvIXXa = np.dot(a_.T, invIXXa)
+                a_ = invIXXa / sqrt(ainvIXXa)
+            else:
+                comp_strategy[i] = "not_cov"
+                #print "Avoid computing covariance matrix for block %i" % i
+                XX = np.dot(Xi, Xi.T)
+                I = eye(r)
+
+                XinvIXX[i] = (1-tau)/(tau*(r-ddof))* np.dot(Xi.T, pinv(tau * I + (1-tau)/(r-ddof)*XX))
+                invIXXa = 1/tau*a_ - np.dot(XinvIXX[i], np.dot(Xi, a_))
+                ainvIXXa = np.dot(a_.T, invIXXa)
+                a_ = invIXXa / sqrt(ainvIXXa)
 
             a.append(a_)
 
@@ -520,7 +542,11 @@ class RGCCAAlgorithm(NIPALSBaseAlgorithm):
 
                 # Outer estimation for block i
                 Xz = np.dot(Xi.T, zi)
-                ai = np.dot(invIXX[i], Xz)
+                if comp_strategy[i] == "cov":
+                    ai = np.dot(invIXX[i], Xz)
+                else:
+                    ai = 1/self.tau[i] * Xz - np.dot(XinvIXX[i], np.dot(Xi, Xz))
+
 
                 # Apply the proximal operator
                 ai = self.prox_op.prox(ai, i)
