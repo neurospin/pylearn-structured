@@ -560,7 +560,7 @@ class OLSL2_L1_TV(object):
 
     def gap(self, X, y, beta, beta_hat, mu,
             eps=utils.TOLERANCE,
-            max_iter=100, min_iter=10, init_iter=1000):
+            max_iter=100, min_iter=1):
         # TODO: Remove init_iter everywhere!
 
         alpha = self.tv.alpha(beta, mu)
