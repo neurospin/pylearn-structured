@@ -10,7 +10,7 @@ Created on Thu Mar 28 15:35:26 2013
 import abc
 import numpy as np
 
-from structured.utils import math
+from parsimony.utils import math
 
 __all__ = ['BaseStartVector', 'IdentityStartVector', 'RandomStartVector',
            'OnesStartVector', 'ZerosStartVector']

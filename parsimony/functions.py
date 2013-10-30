@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`structured.functions` module contains several functions used
+The :mod:`parsimony.functions` module contains several functions used
 throughout the package. These represent mathematical functions and should thus
 have any corresponding properties used by the algorithms.
 
@@ -19,9 +19,9 @@ import numpy as np
 import scipy.sparse as sparse
 import math
 
-import structured.utils as utils
-#import structured.utils.math as utils.math
-import structured.algorithms as algorithms
+import parsimony.utils as utils
+#import parsimony.utils.math as utils.math
+import parsimony.algorithms as algorithms
 
 __all__ = ['RidgeRegression', 'L1', 'SmoothedL1', 'TotalVariation']
 

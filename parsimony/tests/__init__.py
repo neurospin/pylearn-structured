@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`structured.tests` package includes tests for all (in time, at least)
+The :mod:`parsimony.tests` package includes tests for all (in time, at least)
 modules.
 
 @author:  Tommy Löfstedt

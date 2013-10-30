@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`structured.algorithms` module includes several algorithms used
+The :mod:`parsimony.algorithms` module includes several algorithms used
 throughout the package.
 
 Algorithms may not be stateful. I.e., if they are classes, do not keep
@@ -17,8 +17,8 @@ Created on Fri Feb  8 17:24:11 2013
 
 import numpy as np
 
-import structured.utils as utils
-from structured.utils import math
+import parsimony.utils as utils
+from parsimony.utils import math
 from time import time, clock
 
 #time_func = time

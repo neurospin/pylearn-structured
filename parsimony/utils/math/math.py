@@ -7,7 +7,7 @@ Created on Tue Jul 30 20:55:58 2013
 @license: TBD.
 """
 
-import structured.utils as utils
+import parsimony.utils as utils
 import numpy as np
 
 __all__ = ['norm', 'norm1', 'norm0', 'normInf', 'sign', 'cov', 'corr']

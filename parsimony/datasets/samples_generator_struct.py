@@ -610,7 +610,7 @@ if __name__ == '__main__':
 
 
     # TVL1L2 ===============================================================
-    import structured.models as models
+    import parsimony.models as models
     def ratio2coef(alpha, tv_ratio, l1_ratio):
         l = alpha * (1 - tv_ratio) * l1_ratio
         k = alpha * (1 - tv_ratio) * (1 - l1_ratio) * 0.5
@@ -665,4 +665,4 @@ if __name__ == '__main__':
 #    pgm.fit(Xtr, ytr)
 
 
-# run pylearn-structured/structured/datasets/samples_generator_struct.py
+# run pylearn-parsimony/parsimony/datasets/samples_generator_struct.py

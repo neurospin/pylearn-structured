@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`structured` module includes several different structured machine
+The :mod:`parsimony` module includes several different parsimony machine
 learning models for one, two or more blocks of data.
 
 @author:  Tommy Löfstedt

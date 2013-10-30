@@ -11,14 +11,14 @@ import numpy as np
 import matplotlib.pyplot as plot
 from time import time
 
-import structured.algorithms as algorithms
-import structured.functions as functions
-import structured.datasets.simulated.correlation_matrices \
+import parsimony.algorithms as algorithms
+import parsimony.functions as functions
+import parsimony.datasets.simulated.correlation_matrices \
         as correlation_matrices
-import structured.utils as utils
+import parsimony.utils as utils
 
-import structured.datasets.simulated.l1_l2_tv as l1_l2_tv
-import structured.datasets.simulated.beta as beta_generate
+import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
+import parsimony.datasets.simulated.beta as beta_generate
 
 
 np.random.seed(0)

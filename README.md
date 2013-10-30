@@ -1,8 +1,8 @@
-Structured and sparse machine learning in python
+parsimony and sparse machine learning in python
 ================================================
 
-Structured sparse learning for Python 2.7.
-* `structured` provides structured and sparse machine learning. It currently contains:
+parsimony sparse learning for Python 2.7.
+* `parsimony` provides parsimony and sparse machine learning. It currently contains:
     * Loss functions:
         * OLS
     * Penalties:
