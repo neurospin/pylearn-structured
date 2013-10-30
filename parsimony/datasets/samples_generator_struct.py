@@ -14,24 +14,6 @@ import scipy.sparse as sparse
 import scipy.sparse.linalg
 
 
-def covmat_indices(cols):
-    """Return indices in covariance matrix given indice in a matrix. The
-    order respect the flattening of the matrix.
-    Example
-    -------
-    >>> covmat_indices([1, 3])
-    (array([1, 1, 3, 3]), array([1, 3, 1, 3]))
-    >>> # order respect the flattening of the matrix
-    >>> m = np.array([[1, 2], [3, 4]])
-    >>> np.all(m[covmat_indices([0, 1])] == m.ravel())
-    True
-    """
-    cols = np.asarray(cols)
-    x_coord = cols[:, np.newaxis] + np.zeros(cols.shape[0], dtype=int)
-    y_coord = cols + np.zeros(cols.shape[0], dtype=int)[:, np.newaxis]
-    return x_coord.ravel(), y_coord.ravel()
-
-
 def corr_to_coef(v_x, v_e, cov_xe, R):
     """In a linear model y = bx + e. Calculate b such corr(bx + e, x) = R.
     Parameters
@@ -60,28 +42,6 @@ def corr_to_coef(v_x, v_e, cov_xe, R):
     sol2 = (-b1 + np.sqrt(delta)) / (2 * b2)
     return np.max([sol1, sol2]) if R >= 0 else  np.min([sol1, sol2])
 
-
-def corr_to_coef_empirical(x, e, R):
-    """In a linear model y = bx + e. Calculate b such corr(bx + e, x) = R.
-    Parameters
-    ----------
-    x: array of shape [n]
-    e: array of shape [n]
-    R: float
-        The desire correlation
-
-    Example
-    -------
-    import numpy as np
-    e = np.random.normal(1, 10, 100)
-    x = np.random.normal(4, 3, 100)
-    b = corr_to_coef_empirical(x, e, .5)
-    np.corrcoef(b * x + e, x)[0, 1]
-    """
-    v_x = np.var(x)
-    v_e = np.var(e)
-    cov_xe = np.cov(x, e)[0, 1]
-    return corr_to_coef(v_x, v_e, cov_xe, R)
 
 ############################################################################
 ## utils
@@ -195,14 +155,16 @@ def dice_five(shape):
 
 ############################################################################
 ## Spatial smoothing
-def spatial_smoothing(Xim, sigma, mu_e, sigma_e):
+def spatial_smoothing(Xim, sigma, mu_e=None, sigma_e=None):
     for i in xrange(Xim.shape[0]):
         Xim[i, :] = ndimage.gaussian_filter(Xim[i, :],
             sigma=sigma)
     X = Xim.reshape((Xim.shape[0], np.prod(Xim.shape[1:])))
     # Spatial smoothing reduced the std-dev, reset it to 1
-    X -= X.mean(axis=0) + mu_e  # Also ensure null mean
-    X /= X.std(axis=0) * sigma_e
+    if mu_e is not None:
+        X -= X.mean(axis=0) + mu_e  # Also ensure null mean
+    if sigma_e is not None:
+        X /= X.std(axis=0) * sigma_e
     return Xim
 
 
@@ -234,17 +196,13 @@ def object_model(objects, Xim, beta_o, sigma_o):
             labels_im[mask_o_suppr] = o.suppressor.label
             Xim[:, mask_o_suppr] = (np.sqrt(beta_o) * o_ik + \
                        np.sqrt(1 - beta_o) * Xim[:, mask_o_suppr].T).T
-#        X = Xim.reshape((Xim.shape[0], Xim.shape[1] * Xim.shape[2]))
-#        # Spatial smoothing reduced the std-dev, reset it to 1
-#        X -= X.mean(axis=0) + (mu_o + mu_e)  # Also ensure null mean
-#        X /= X.std(axis=0) * sigma_e
     return Xim, labels_im
 
 
 ############################################################################
 ## Apply causal model on objects
-def causal_model(objects, Xim, y, R):
-    """Add predictive information: x_ki +=  b_y * y
+def generative_model(objects, Xim, y, R):
+    """Add predictive information: x_ki += b_y * y
     """
     beta_y = corr_to_coef(v_x=1, v_e=1, cov_xe=0, R=R)
     for k in xrange(len(objects)):
@@ -257,123 +215,39 @@ def causal_model(objects, Xim, y, R):
         Xim[:, mask_o] = (Xim[:, mask_o].T + (beta_y * y)).T
     return Xim, beta_y
 
-
-def model_parameters(Xim, sigma_spatial_smoothing,
-                     sigma_e, sigma_y,
-                     beta_o, beta_y,
-                     objects, y, labels_im):
-    """Compute theoretical and empirical model parameters.
-    Parameters
-    ----------
-    Xim: array [n_samples, nx, ny]
-
-    sigma_e float
-        noize std-dev
-
-    objects: list of ObjImage
-
-    Details
-    -------
-    CovX = b_y^2 + b_o + (1 - b_o) * CovN
-    CovN = CorN * sigma_e ** 2 + 2 * mu_e
-    CorN = e(-dist ** 2 / (4 * sigma_spatial_smoothing ** 2) )
-
-    Return
-    ------
-    CovX: array [n_features, n_features]
-        X covariance matrix
-
-    covXy: array [n_features,]
-        X, y covariance matrix
+############################################################################
+## Apply causal model on objects
+def predictive_model(objects, Xim, snr, beta_per_feature):
+    """Add predictive information: y = X * beta_objects + noize_snr
     """
-    n_samples, nx, ny = Xim.shape
-    n_features = nx * ny
-    mask_im = labels_im != 0
-    ij_im = np.where(mask_im)  # ij of objects in image
-    i_flt = np.where(mask_im.ravel())[0]  # i of objects in flatten image
-    # get euclidian distances between pixel in the selection
-    Dist_sel = np.sqrt((ij_im[0][np.newaxis].T - ij_im[0]) ** 2 + \
-        (ij_im[1][np.newaxis].T - ij_im[1]) ** 2)
-    # True correlation between noize pixels: CorN_sel
-    if sigma_spatial_smoothing != 0:
-        CorN_sel = np.exp(-Dist_sel ** 2 / (4 * sigma_spatial_smoothing ** 2))
-    else:
-        CorN_sel = np.eye(Dist_sel.shape[0])
-    #CorN_sel = np.diag(np.diag(CorN_sel))
-    # True cov between noize pixels: CovN_sel
-    CovN_sel = CorN_sel * sigma_e ** 2  # + 2 * mu_e = 0
-    # True cov between pixels: Cov. Depends on o_k and y
-    CovX_sel = np.zeros(CovN_sel.shape)
-    i_allio_sel = list()  # indices of all informative objects in selection
-    i_allio_flt = list()  # indices of all informative objects in flatten image
-    for o in objects:
-        #o = objects[0]
+    beta = np.zeros(shape)
+    for k in xrange(len(objects)):
+        o = objects[k]
         if o.is_suppressor:
             continue
-        # mask of informative object in selection
-        mask_io_sel = labels_im[mask_im] == o.label
-        # mask of all objects (informative+suppressor) in selection
-        mask_all_sel = mask_io_sel.copy()
-        if o.suppressor is not None:
-            mask_all_sel += labels_im[mask_im] == o.suppressor.label
-        # i of both objects in selection
-        i_both_sel = np.where(mask_all_sel)[0]
-        # i of object in selection cov mat
-        i_both_sel_cov = covmat_indices(i_both_sel)
-        # CovX = b_y^2 + b_o + (1 - b_o) * CovN
-        CovX_sel[i_both_sel_cov] = beta_o + (1 - beta_o)\
-                                   * CovN_sel[i_both_sel_cov]
-        # store indices of informative object
-        i_allio_sel += np.where(mask_io_sel)[0].tolist()
-        i_allio_flt += np.where(labels_im.ravel() == o.label)[0].tolist()
-    # Add cov caused by y in ALL informative object
-    ij_allio_sel_cov = covmat_indices(i_allio_sel)
-    #labels_im[mask_im][ij_io_sel]
-    CovX_sel[ij_allio_sel_cov] += beta_y ** 2
-    ## Compare with empirical cov
-    CovX_sel_hat = np.cov(Xim[:, mask_im].T)
-    if False:
-        plt.plot(CovX_sel, CovX_sel_hat, "ob")
-        plt.plot(CovX_sel[ij_allio_sel_cov], CovX_sel_hat[ij_allio_sel_cov],
-                 "or")
-        plt.plot([0, 1, 2], [0, 1, 2])
-        plt.ylabel('Empirical (estimated) Cov(X)')
-        plt.xlabel('Theroretical Cov(X) (red=between informative pixels)')
-        plt.show()
-        ## Cov(X,y) = b_y * E(y^2) if causal else 0
-    covXy = np.zeros(n_features)
-    covXy[i_allio_flt] = beta_y * (sigma_y ** 2)  # + mu_y ** 2)
-    if False:
-        covXy_hat = np.dot(Xim[:, mask_im].T, y) / n_samples
-        plt.plot(covXy[i_flt], covXy_hat, "ob")
-        plt.plot([0, 1], [0, 1])
-        plt.ylabel('Empirical (estimated) Cov(X,y)')
-        plt.xlabel('Theroretical Cov(X,y)')
-        plt.show()
-    # indices of pixels in cov of flatten image
-    ij_flt_cov = covmat_indices(i_flt)
-    CovXs = sparse.csr_matrix((CovX_sel.ravel(), ij_flt_cov),
-                              shape=(n_features, n_features))
-    # Add diagonal where non null
-    diag = CovXs.diagonal()
-    diag[diag == 0] = float(sigma_e) ** 2
-    CovXs.setdiag(diag)
-    return CovXs, covXy
+        beta[o.get_mask()] = beta_per_feature
+    X = Xim.reshape((Xim.shape[0], np.prod(Xim.shape[1:])))
+    beta_flat = beta.ravel()
+    y_true = np.dot(X, beta_flat)
+    y = y_true + np.random.normal(0, y_true.std() / snr, y_true.shape[0])
+
+
+    return Xim, beta_y
+
 
 ############################################################################
 ## Parameters
-def make_regression_struct(n_samples=100, shape=(30, 30, 1), R=.5,
-                    sigma_spatial_smoothing=1, beta_o=.5,
-                    objects=None):
+def make_regression_struct(n_samples=100, shape=(30, 30, 1),
+                           sigma_spatial_smoothing=1,
+                           mode="predictive",
+                           snr=.2, R=.5,
+                           beta_o=.5,
+                           objects=None):
     """Generate regression samples (images + target variable) with input
     features having a covariance structure for both noize and informative
     features. The sructure of covariance can be controled both at a pixel level
-    (spatial smoothing) and at an object level. Objects a connected component
-    of pixel sharing a covariance and carrying (or not) predictive information.
-    Object without predictive information are called suppressors. They share
-    some noize variance with another predictive object and thus can be
-    usefull to suppress unwilling noize. The function return the theoretical
-    (population based) covariance matrix of input features.
+    (spatial smoothing) and at an object level. Objects are connected component
+    of pixels sharing a covariance that stem from a latent variable.
 
     Parameters
     ----------
@@ -383,20 +257,44 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1), R=.5,
     shape: (int, int, int)
         x, y, z shape each samples (default (30, 30, 1)).
 
+    mode: string in "predictive" (default) or "generative"
+
+        - In predictive mode, after having generated X, y is obtained by
+        y = X * beta + noize.
+        In this mode the function return the beta.
+
+        - In generative mode, y is randomly sampled, then it is added to causal
+        pixels of X:
+        x_ijk = e_ijk + y.
+        In this setting no beta is returned.
+        However the support of causal pixels are returned in the label image.
+        positive values of labels are causal pixels, while negative values are
+        the support of suppressor objects. Such objects share some noize
+        variance with another predictive object and thus can be usefull to
+        suppress unwilling noize.
+
+    snr: float
+        Use in mode == "predictive" is the ratio: std(Xbeta) / std(noize)
+
     R: float
-        Is the desire correlation between causal pixels and
-        the target y.
+        Use in mode == "predictive" is the desire correlation between causal
+        pixels and the target y.
 
     sigma_spatial_smoothing: scalar
-        Standard deviation for Gaussian kernel (default 1).
+        Standard deviation for Gaussian kernel (default 1). High value promotes
+        spatial correlation pixels.
 
-    b_o: float
-        Controls the amount of shared noize within
-        objects. It is null outside objects. Thus (1 - b_o) control the amount
-        of pixel level noize. b_o enable the mixing between pixel and object
-        level noize.
+    noize_object_pixel_ratio: float
+        Controls the ratio between object level noize and pixel level noize for
+        pixels within objects. If noize_object_pixel_ratio == 1 then 100% of the 
+        noize of pixels within the same object is shared (ie.: no pixel level)
+        noize. If noize_object_pixel_ratio == 0 then all the noize is pixel
+        specific. High noize_object_pixel_ratio promotes spatial correlation
+        between pixels of the same object.
 
     objects: list of objects
+        Define connected components of causal (or suppressor) pixels. 
+        
         Objects carying information to be drawn in the image. If not provide
         a dice with five points (object) will be drawn. Point 1, 3, 4 are
         carying predictive information while point 2 is a suppressor of point
@@ -416,50 +314,38 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1), R=.5,
     label: integer array of shape [nxs, nys]
         An image obects support in the image
 
-    Details of the generative sampling model
-    ----------------------------------------
+    Detail
+    ------
+    The general procedure is (1) Generate independant noize (e_i); (2) Add
+    object level noize. (3) If mode == "generative", generate y and add it
+    to causal pixels. (4) Spatial Smoothing. (5)  If mode == "predictive",
+    compute y = X * beta
 
     The signal within each pixel i and object k is a linear combination of
-    some information and object-level and pixel-level noize.
-
-    x_ki =  b_y * y + b_o^1/2 * o_k + (1 - b_o)^1/2 * e_i
-           < info >   <------------- noize ------------->
-                      <- object k ->   <--- pixel i ---->
+    some information and object-level and pixel-level noize. Let
+    b_o = noize_object_pixel_ratio, then:
+    
+    (1 and 2) Generate independant noize and object level noize
+    x_ki =  b_o^1/2 * o_k + (1 - b_o)^1/2 * e_i
+           <------------- noize ------------->
+           <- object k ->   <--- pixel i ---->
 
     e_i ~ N(0, 1) is the pixel-level noize, for all pixels i in [1, n_features]
     o_k ~ N(0, 1) is the object-level noize, for all objects k in [1, n_objects]
-    y   ~ N(0, 1) is the target variable
 
-    Procedure: (1) Generate e_i; (2) Add object level noize;
-    (3) Add y on causal pixels; (4) Spatial Smoothing; 
+    (3) If mode == "generative", generate y (~ N(0, 1)) and add it to causal 
+    pixels. Causal pixels are pixels within the objects.
+    x_ki = x_ki +  b_y * y + x_ki; for pixels within causal objects k
+                   <info > + <noize>
+    Here beta is not available, only the support of causal pixels is known
+    ie.: the positive values in the returned label.
 
-    b_y is null outside objects. Within causal object, it is computed such that
-    corr(x_ki, y) = R
+    (4) Spatial Smoothing
 
-    Moreover the model assume that:
-    var(noize) = b_o var(o_k) + (1 - b_o) var(e_ki) = 1
-    cov(y, noize) = 0
-
-    Distribution parameters
-    Each image Xi follow a multivariate normal distribution: N(0, Cov(X))
-
-    Cov(X)ij = b_y^2 + b_o + (1 - b_o) * Cov(Noize)ij
-    If i and j are in the same predictive object:
-
-    Cov(X)ij =  b_o + (1 - b_o) * Cov(Noize)ij
-    If i is in a predictive object an j in its suppressor:
-
-    Cov(X)ij = b_y^2 + Cov(Noize)ij
-    If i and j are in two differents predictive objects:
-
-    Cov(X)ij = b_y^2 + Cov(Noize)ij
-    Otherwise
-
-    Cov(Noize) = Cor(Noize) * sigma_e ** 2
-    Cor(Noize) = e(-dist ** 2 / (4 * sigma_spatial_smoothing ** 2) )
+    (5)  If mode == "predictive", generate beta Causal pixels (pixels within
+    objects) and compute y:
+    y = X * beta
     """
-#    shape = (200, 150, 1)
-#    n_samples=100
     sigma_y = sigma_e = sigma_o = 1  # items std-dev
     mu_e = mu_y = 0
     if len(shape) == 2:
@@ -475,11 +361,6 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1), R=.5,
     y = np.random.normal(mu_y, sigma_y, n_samples)
     y -= y.mean()
     y /= y.std()
-    #print X.mean(axis=0), X.std(axis=0)
-
-
-    #print X.mean(axis=0), X.std(axis=0)
-    #print y.mean()
 
     ##########################################################################
     ## 2. Build Objects
@@ -496,13 +377,7 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1), R=.5,
     ## 4. Causal model
     Xim, beta_y = causal_model(objects, Xim, y, R)
 
-    #weights = get_optimal_weights(beta_o, beta_y, sigma_e, sigma_y, labels, objects)
-#    ##########################################################################
-#    ## 6. Compute model parameters
-#    CovX, covXy, labels_im = model_parameters(Xim, sigma_spatial_smoothing,
-#                     sigma_e, sigma_y,
-#                     beta_o, beta_y,
-#                     objects, y)
+
     ##########################################################################
     ## 5. Pixel-level noize structure: spatial smoothing
     if sigma_spatial_smoothing != 0:
@@ -513,7 +388,7 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1), R=.5,
 #        CovX, covXy.reshape((n_features, 1)), labels_im
 
 
-if __name__ == '__main__':
+if __name__ == '__main__2':
     # utils
     def plot_map(im, plot=None):
         if plot is None:
@@ -539,6 +414,12 @@ if __name__ == '__main__':
     shape = (200, 150, 1)
     R = .25
     sigma_spatial_smoothing = 2
+    n_samples = 100
+    shape = (30, 30, 1)
+    R = .25
+    snr = .5
+    sigma_spatial_smoothing = 1
+    
     Xim, y, labels = make_regression_struct(n_samples=n_samples,
         shape=shape, R=R,
         sigma_spatial_smoothing=sigma_spatial_smoothing,
@@ -610,7 +491,7 @@ if __name__ == '__main__':
 
 
     # TVL1L2 ===============================================================
-    import parsimony.models as models
+    import structured.models as models
     def ratio2coef(alpha, tv_ratio, l1_ratio):
         l = alpha * (1 - tv_ratio) * l1_ratio
         k = alpha * (1 - tv_ratio) * (1 - l1_ratio) * 0.5
@@ -641,7 +522,7 @@ if __name__ == '__main__':
     r2 = r2_score(yte, np.dot(Xte, pgm.beta).ravel())
     plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % (alpha, tv_ratio, l1_ratio, r2))
 
-    tv_ratio=.95; l1_ratio=.95
+    tv_ratio= 1.; l1_ratio=.95
     l, k, gamma = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
     pgm = models.LinearRegressionL1L2TV(l=l, k=k, gamma=gamma, shape=(1, nx, ny))
     pgm = models.ContinuationRun(pgm, tolerances=[10000 * eps, 100 * eps, eps])
@@ -665,4 +546,4 @@ if __name__ == '__main__':
 #    pgm.fit(Xtr, ytr)
 
 
-# run pylearn-parsimony/parsimony/datasets/samples_generator_struct.py
+# run pylearn-structured/structured/datasets/samples_generator_struct.py
