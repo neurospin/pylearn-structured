@@ -25,6 +25,8 @@ import matplotlib.cm as cm
 import parsimony.functions as functions
 import parsimony.algorithms as algorithms
 
+import pickle
+
 np.random.seed(42)
 
 #mu_zero = 5e-8
@@ -961,17 +963,24 @@ np.random.seed(42)
 
 k = 0.5  # 0.271828
 l = 0.5  # 0.61803
-g = 10.0  # 3.14159
+g = 1.0  # 3.14159
 
 px = 6
 py = 6
-pz = 6
+pz = 1
 shape = (pz, py, px)
 p = np.prod(shape)
 n = 25
 
 function_egm = functions.OLSL2_SmoothedL1TV(k, l, g, shape)
 function_pgm = functions.OLSL2_L1_TV(k, l, g, shape)
+
+#A = function_egm.h.A()
+#np.set_printoptions(threshold=10000)
+#print A[0].todense()
+#print A[1].todense()
+#print A[2].todense()
+#print A[3].todense()
 
 a = 1.0
 Sigma = a * np.eye(p) + (1.0 - a) * np.ones((p, p))
@@ -981,87 +990,135 @@ e = np.random.randn(n, 1)
 e = e / math.norm(e)
 density = 0.5
 
-mu_zero = utils.TOLERANCE
-eps = 1e-3
-mu = 0.9 * (2.0 * eps / p)
-print "mu:", mu
-conts = 20
-maxit = 2500
-
 snr = 100.0
 
-betastar = generate_beta.rand(shape, density=density, sort=True)
+beta_star = generate_beta.rand(shape, density=density, sort=True)
 #betastar = np.random.rand(*shape).reshape((p, 1))
 #print betastar
 
-#betastart = np.random.rand(*betastar.shape)
+beta_start = np.random.rand(*beta_star.shape)
 
-X, y, betastar = l1_l2_tv.load(l, k, g, betastar, M, e, snr, shape)
+X, y, beta_star = l1_l2_tv.load(l, k, g, beta_star, M, e, snr, shape)
 
-t = time()
-beta_egm, f_egm, mu_egm, ulim, betastart = \
-                          algorithms.ExcessiveGapMethod(X, y,
-                                                        function_egm, eps=eps,
-                                                        max_iter=conts * maxit)
-print "time:", time() - t
+mu_zero = utils.TOLERANCE
+eps = 1e-4
+mu = function_pgm.mu_opt(eps, X)
+#mu = 0.9 * (2.0 * eps / p)
+print "mu:", mu
+conts = 10
+maxit = 1000
 
-#step = 1.0 / (function_test.g.Lipschitz(X) \
-#            + function_test.h.Lipschitz(mu, max_iter=100))
+f_star = function_pgm.f(X, y, beta_star, mu=mu_zero)
+
+#beta_start, _, _, _, _ = algorithms.ExcessiveGapMethod(X, y,
+#                                                       function_egm, eps=eps,
+#                                                       max_iter=maxit)
+step = 1.0 / function_pgm.Lipschitz(X, mu, max_iter=100)
+beta_start, _ = algorithms.FISTA(X, y, function_pgm, beta_start, step,
+                                 mu=100.0 * mu, eps=eps, max_iter=maxit)
+
+num_lin = 15
+beta_errs = np.zeros((num_lin, num_lin))
+f_errs = np.zeros((num_lin, num_lin))
+ls = np.maximum(0.0, np.linspace(l - l * 0.5, l + l * 0.5, num_lin))
+gs = np.maximum(0.0, np.linspace(g - g * 0.25, g + g * 0.25, num_lin))
+for i in range(len(ls)):
+    l = ls[i]
+    k = 1.0 - l
+    for j in range(len(gs)):
+        g = gs[j]
+
+        function_pgm_temp = functions.OLSL2_L1_TV(k, l, g, shape)
+        step = 1.0 / function_pgm_temp.Lipschitz(X, mu, max_iter=100)
+
+        beta_k, f_k = algorithms.FISTA(X, y, function_pgm_temp, beta_start,
+                                       step, mu,
+                                       eps=eps, max_iter=conts * maxit)
+    #        beta_k, f_k, mu_k, G_k = \
+    #                           algorithms.CONESTA(X, y, function_pgm,
+    #                                              beta_start, mumin=mu_zero,
+    #                                              sigma=1.0, tau=0.5, dynamic=True,
+    #                                              eps=eps,
+    #                                              conts=conts, max_iter=maxit)
+
+        err_beta = np.sum((beta_k - beta_star) ** 2.0)
+        err_f = function_pgm.f(X, y, beta_k, mu=mu_zero) - f_star
+
+        beta_errs[i, j] = err_beta
+        f_errs[i, j] = err_f
+
+        print "l: %.2f, k: %.2f, g: %.2f, beta: %f, f: %f" \
+                % (l, k, g, err_beta, err_f)
+
+        beta_start = beta_k
+
+pickle.dump([beta_errs, f_errs], open("sim.p", "wb"))
+
 #t = time()
-#step = 1.0 / function_pgm.Lipschitz(X, mu, max_iter=100)
-#beta_fista, f_fista = FISTA(X, y, function_pgm,
-#                            betastart, step, mu=mu,
-#                            eps=eps, max_iter=conts * maxit * 10)
+#beta_egm, f_egm, mu_egm, ulim, betastart = \
+#                          algorithms.ExcessiveGapMethod(X, y,
+#                                                        function_egm, eps=eps,
+#                                                        max_iter=conts * maxit)
 #print "time:", time() - t
-beta_fista = betastart
-f_fista = [0, 0]
-
-t = time()
-(beta_conesta, f_conesta, G_conesta) = algorithms.CONESTA(X, y, function_pgm,
-                                              betastart, mumin=mu_zero,
-                                              sigma=1.0, tau=0.5, dynamic=True,
-                                              eps=eps,
-                                              conts=conts, max_iter=maxit)
-print "time:", time() - t
-
-best_f = function_egm.f(X, y, betastar, mu=0.0)
-found_f = function_egm.f(X, y, beta_egm, mu=0.0)
-fista_f = function_egm.f(X, y, beta_fista, mu=0.0)
-conesta_f = function_egm.f(X, y, beta_conesta, mu=0.0)
-print "egm err      : %.6f" % (found_f - best_f)
-print "egm best    f:", best_f
-print "egm egm     f:", found_f
-print "egm conesta f:", conesta_f
-print "egm fista   f:", fista_f
-
-best_f = function_pgm.f(X, y, betastar, mu=0.0)
-found_f = function_pgm.f(X, y, beta_egm, mu=0.0)
-fista_f = function_pgm.f(X, y, beta_fista, mu=0.0)
-conesta_f = function_pgm.f(X, y, beta_conesta, mu=0.0)
-print "pgm err      : %.6f" % (found_f - best_f)
-print "pgm best    f:", best_f
-print "pgm egm     f:", found_f
-print "pgm conesta f:", conesta_f
-print "pgm fista   f:", fista_f
-
-plot.subplot(3, 1, 1)
-plot.plot(betastar + 0.01, '-g', beta_fista, '.-k',
-                                 beta_conesta, '-b',
-                                 beta_egm, '-r')
-plot.title("True $\\beta^*$ (green) and EGM $\\beta^{(k)}$ (red)")
-
-plot.subplot(3, 1, 2)
-plot.plot(f_egm,  '-b')
-plot.plot([0, len(f_egm) - 1], [best_f, best_f], 'g')
-plot.title("Function value of EGM as a function of iteration number")
-
-plot.subplot(3, 1, 3)
-err = [f_egm[i] - best_f for i in range(len(f_egm))]
-plot.plot(err, '-r')
-plot.plot(ulim, '-g')
-plot.title("Error at $k$th iteration and theoretical upper bound on the error")
-
-plot.show()
+#
+##step = 1.0 / (function_test.g.Lipschitz(X) \
+##            + function_test.h.Lipschitz(mu, max_iter=100))
+##t = time()
+##step = 1.0 / function_pgm.Lipschitz(X, mu, max_iter=100)
+##beta_fista, f_fista = FISTA(X, y, function_pgm,
+##                            betastart, step, mu=mu,
+##                            eps=eps, max_iter=conts * maxit * 10)
+##print "time:", time() - t
+#beta_fista = betastart
+#f_fista = [0, 0]
+#
+#t = time()
+#beta_conesta, f_conesta, mu_conesta, G_conesta = \
+#                           algorithms.CONESTA(X, y, function_pgm,
+#                                              betastart, mumin=mu_zero,
+#                                              sigma=1.0, tau=0.5, dynamic=True,
+#                                              eps=eps,
+#                                              conts=conts, max_iter=maxit)
+#print "time:", time() - t
+#
+#best_f = function_egm.f(X, y, betastar, mu=0.0)
+#found_f = function_egm.f(X, y, beta_egm, mu=0.0)
+#fista_f = function_egm.f(X, y, beta_fista, mu=0.0)
+#conesta_f = function_egm.f(X, y, beta_conesta, mu=0.0)
+#print "egm err      : %.6f" % (found_f - best_f)
+#print "egm best    f:", best_f
+#print "egm egm     f:", found_f
+#print "egm conesta f:", conesta_f
+#print "egm fista   f:", fista_f
+#
+#best_f = function_pgm.f(X, y, betastar, mu=0.0)
+#found_f = function_pgm.f(X, y, beta_egm, mu=0.0)
+#fista_f = function_pgm.f(X, y, beta_fista, mu=0.0)
+#conesta_f = function_pgm.f(X, y, beta_conesta, mu=0.0)
+#print "pgm err      : %.6f" % (found_f - best_f)
+#print "pgm best    f:", best_f
+#print "pgm egm     f:", found_f
+#print "pgm conesta f:", conesta_f
+#print "pgm fista   f:", fista_f
+#
+#plot.subplot(3, 1, 1)
+#plot.plot(betastar + 0.01, '-g', beta_fista, '.-k',
+#                                 beta_conesta, '-b',
+#                                 beta_egm, '-r')
+#plot.title("True $\\beta^*$ (green) and EGM $\\beta^{(k)}$ (red)")
+#
+#plot.subplot(3, 1, 2)
+#plot.plot(f_egm,  '-b')
+#plot.plot([0, len(f_egm) - 1], [best_f, best_f], 'g')
+#plot.title("Function value of EGM as a function of iteration number")
+#
+#plot.subplot(3, 1, 3)
+#err = [f_egm[i] - best_f for i in range(len(f_egm))]
+#plot.plot(err, '-r')
+#plot.plot(ulim, '-g')
+#plot.title("Error at $k$th iteration and theoretical upper bound on the error")
+#
+#plot.show()
 
 #print "snr = %.5f = %.5f = |X.b| / |e| = %.5f / %.5f" \
 #       % (snr, np.linalg.norm(np.dot(X, betastar)) / np.linalg.norm(e),

@@ -8,8 +8,8 @@ Created on Thu May 23 09:37:48 2013
 """
 
 import numpy as np
-import structured.models as models
-import structured.utils as utils
+import parsimony.models as models
+import parsimony.utils as utils
 
 from time import time
 
