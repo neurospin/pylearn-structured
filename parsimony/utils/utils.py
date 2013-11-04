@@ -31,7 +31,7 @@ __all__ = ['TOLERANCE', 'MAX_ITER']
 
 # Settings
 TOLERANCE = 5e-8
-MAX_ITER = 1000
+MAX_ITER = 10000
 #mu_zero = 5e-8
 
 #def norm1(x):

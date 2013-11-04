@@ -17,7 +17,9 @@ Created on Fri Feb  8 17:24:11 2013
 
 import numpy as np
 
+import parsimony.utils.math
 import parsimony.utils as utils
+
 from time import time, clock
 
 #time_func = time
@@ -133,12 +135,18 @@ def FastSparseSVD(X, max_iter=100, start_vector=None):
     return v
 
 
-def FISTA(X, y, function, beta, step, mu,
+def FISTA(X, y, function, beta, step=None, mu=None,
           eps=utils.TOLERANCE,
           max_iter=utils.MAX_ITER, min_iter=1, b_star=None, gradL1=None):
     """ The fast iterative shrinkage threshold algorithm.
     """
     z = betanew = betaold = beta
+
+    if mu == None:
+        mu = 0.9 * function.mu(beta)
+
+    if step == None:
+        step = 1.0 / function.Lipschitz(X, mu, max_iter=max_iter)
 
     t = []
     f = []
@@ -164,6 +172,7 @@ def FISTA(X, y, function, beta, step, mu,
         if (1.0 / step) * utils.math.norm(betanew - z) < eps and i >= min_iter:
             break
 
+    # TODO: These return values are for the OLS paper. Will be changed!
     return (betanew, f, t, b, g)
 
 
@@ -256,6 +265,7 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
 
         i = i + 1
 
+    # TODO: These return values are for the OLS paper. Will be changed!
     return (beta, f, t, mu, Gval, b, g)
 
 
@@ -336,4 +346,5 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
 #    plot.plot(ulim, '-.r')
 #    plot.show()
 
+    # TODO: These return values are for the OLS paper. Will be changed!
     return (beta, f, t, mu, ulim, beta0, b)
