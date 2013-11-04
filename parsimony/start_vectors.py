@@ -10,7 +10,7 @@ Created on Thu Mar 28 15:35:26 2013
 import abc
 import numpy as np
 
-from structured.utils import math
+import parsimony.utils as utils
 
 __all__ = ['BaseStartVector', 'IdentityStartVector', 'RandomStartVector',
            'OnesStartVector', 'ZerosStartVector']
@@ -59,7 +59,7 @@ class RandomStartVector(BaseStartVector):
         vector = np.random.rand(*shape)  # Random start vector
 
         if self.normalise:
-            return vector / math.norm(vector)
+            return vector / utils.math.norm(vector)
         else:
             return vector
 
@@ -76,7 +76,7 @@ class OnesStartVector(BaseStartVector):
         vector = np.ones(shape)  # Using a vector of ones.
 
         if self.normalise:
-            return vector / math.norm(vector)
+            return vector / utils.math.norm(vector)
         else:
             return vector
 

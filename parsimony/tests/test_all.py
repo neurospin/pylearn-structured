@@ -15,6 +15,7 @@ Created on Thu May 23 15:08:31 2013
 #import test_structure
 #import test_unpenalized
 
+
 def test():
 #    test_SVD_PCA.test()
 #    test_predictions.test()
@@ -23,6 +24,8 @@ def test():
 #    test_multiblock.test()
 #    test_structure.test()
 #    test_unpenalized.test()
+    pass
+
 
 if __name__ == "__main__":
 

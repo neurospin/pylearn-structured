@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`structured.algorithms` module includes several algorithms used
+The :mod:`parsimony.algorithms` module includes several algorithms used
 throughout the package.
 
 Algorithms may not be stateful. I.e., if they are classes, do not keep
@@ -17,13 +17,14 @@ Created on Fri Feb  8 17:24:11 2013
 
 import numpy as np
 
-import structured.utils as utils
+import parsimony.utils as utils
 from time import time, clock
 
 #time_func = time
 time_func = clock
 
-__all = ['FastSVD', 'FastSparseSVD', 'FISTA', 'CONESTA', 'ExcessiveGapMethod']
+__all__ = ['FastSVD', 'FastSparseSVD',
+           'FISTA', 'CONESTA', 'ExcessiveGapMethod']
 
 
 def FastSVD(X, max_iter=100, start_vector=None):
@@ -108,7 +109,7 @@ def FastSparseSVD(X, max_iter=100, start_vector=None):
             t /= np.sqrt(np.sum(t ** 2.0))
 
             a = float(np.sqrt(np.sum((t_ - t) ** 2.0)))
-            if a < utils.TOLERANCE / 1000.0:
+            if a < utils.TOLERANCE:
                 break
 
         v = X.T.dot(t)
@@ -126,7 +127,7 @@ def FastSparseSVD(X, max_iter=100, start_vector=None):
             v /= np.sqrt(np.sum(v ** 2.0))
 
             a = float(np.sqrt(np.sum((v_ - v) ** 2.0)))
-            if a < utils.TOLERANCE / 1000.0:
+            if a < utils.TOLERANCE:
                 break
 
     return v

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`structured.utils` module includes common functions and constants.
+The :mod:`parsimony.utils` module includes common functions and constants.
 
 Please add anything you need throughout the whole package to this module.
 (As opposed to having several commong definitions scattered all over the
