@@ -50,11 +50,11 @@ class LinearRegressionL1L2TV(BaseEstimator):
         self.shape = shape
 
         if func_class == None:
-#            func_class = functions.OLSL2_L1_TV
-            func_class = functions.OLSL2_SmoothedL1TV
+            func_class = functions.OLSL2_L1_TV
+#            func_class = functions.OLSL2_SmoothedL1TV
         if algorithm == None:
-#            algorithm = algorithms.CONESTA
-            algorithm = algorithms.ExcessiveGapMethod
+            algorithm = algorithms.CONESTA
+#            algorithm = algorithms.ExcessiveGapMethod
 
         self.func_class = func_class
         self.algorithm = algorithm
