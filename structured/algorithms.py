@@ -18,7 +18,6 @@ Created on Fri Feb  8 17:24:11 2013
 import numpy as np
 
 import structured.utils as utils
-from structured.utils import math
 from time import time, clock
 
 #time_func = time
@@ -66,7 +65,7 @@ def FastSVD(X, max_iter=100, start_vector=None):
         K = np.dot(X.T, X)
         # TODO: Use module for this!
         v = np.random.rand(X.shape[1], 1)
-        v /= math.norm(v)
+        v /= utils.math.norm(v)
 #        v = start_vectors.RandomStartVector().get_vector(X)
         for it in xrange(max_iter):
             v_ = v
@@ -119,7 +118,7 @@ def FastSparseSVD(X, max_iter=100, start_vector=None):
         K = X.T.dot(X)
         # TODO: Use module for this!
         v = np.random.rand(X.shape[1], 1)
-        v /= math.norm(v)
+        v /= utils.math.norm(v)
 #        v = start_vectors.RandomStartVector().get_vector(X)
         for it in xrange(max_iter):
             v_ = v
@@ -135,7 +134,7 @@ def FastSparseSVD(X, max_iter=100, start_vector=None):
 
 def FISTA(X, y, function, beta, step, mu,
           eps=utils.TOLERANCE,
-          max_iter=utils.MAX_ITER, min_iter=1, b_star=None):
+          max_iter=utils.MAX_ITER, min_iter=1, b_star=None, gradL1=None):
     """ The fast iterative shrinkage threshold algorithm.
     """
     z = betanew = betaold = beta
@@ -143,6 +142,7 @@ def FISTA(X, y, function, beta, step, mu,
     t = []
     f = []
     b = []
+    g = []
     for i in xrange(1, max_iter + 1):
         tm = time_func()
 
@@ -153,18 +153,23 @@ def FISTA(X, y, function, beta, step, mu,
         t.append(time_func() - tm)
         f.append(function.f(X, y, betanew, mu=0.0))
         if b_star != None:
-            b.append(np.linalg.norm(betanew - b_star))
+            b.append(utils.math.norm(betanew - b_star))
+        if gradL1 != None:
+            g.append(utils.math.norm(function.grad(X, y, betanew, mu) \
+                                      + gradL1))
+        else:
+            g.append(utils.math.norm(function.grad(X, y, betanew, mu)))
 
-        if (1.0 / step) * math.norm(betanew - z) < eps and i >= min_iter:
+        if (1.0 / step) * utils.math.norm(betanew - z) < eps and i >= min_iter:
             break
 
-    return (betanew, f, t, b)
+    return (betanew, f, t, b, g)
 
 
 def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
             tau=0.5, dynamic=True,
             eps=utils.TOLERANCE,
-            conts=50, max_iter=1000, min_iter=1, b_star=None):
+            conts=50, max_iter=1000, min_iter=1, b_star=None, gradL1=None):
 
     if mu_start != None:
         mu = [mu_start]
@@ -184,6 +189,7 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
     t = []
     f = []
     b = []
+    g = []
     Gval = []
 
     i = 0
@@ -192,12 +198,11 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
 
         tnew = 1.0 / function.Lipschitz(X, mu[-1], max_iter=100)
         eps_plus = min(max_eps, function.eps_opt(mu[-1], X))
-        (beta, fval, tval, bval) = FISTA(X, y, function, beta, tnew, mu[-1],
-                                         eps=eps_plus,
-                                         max_iter=max_iter,
-#                                         max_iter=int(float(max_iter) / np.sqrt(i + 1)),
-                                         min_iter=1,
-                                         b_star=b_star)
+        (beta, fval, tval, bval, gval) = FISTA(X, y, function, beta, tnew,
+                                               mu[-1], eps=eps_plus,
+                                               max_iter=max_iter,
+                                               min_iter=1,
+                                               b_star=b_star, gradL1=gradL1)
         print "FISTA did iterations =", len(fval)
 
         mumin = min(mumin, mu[-1])
@@ -206,8 +211,8 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
                                                                beta, mumin),
                                    tmin)
 
-        if (1.0 / tmin) * math.norm(beta - beta_tilde) < eps or i >= conts:
-            print "%f < %f" % ((1. / tmin) * math.norm(beta - beta_tilde), eps)
+        if (1.0 / tmin) * utils.math.norm(beta - beta_tilde) < eps or i >= conts:
+            print "%f < %f" % ((1. / tmin) * utils.math.norm(beta - beta_tilde), eps)
             print "%d >= %d" % (i, conts)
             stop = True
 
@@ -235,6 +240,7 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
         tval[-1] += gap_time
         t = t + tval
         b = b + bval
+        g = g + gval
 
         # For the simulation we make sure that we do enough iterations
         if len(f) < 0.33 * conts * max_iter or len(fval) < 0.9 * max_iter:
@@ -249,7 +255,7 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
 
         i = i + 1
 
-    return (beta, f, t, mu, Gval, b)
+    return (beta, f, t, mu, Gval, b, g)
 
 
 def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
@@ -310,7 +316,7 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
         t.append(time_func() - tm)
         f.append(function.f(X, y, beta, mu=0.0))
         if b_star != None:
-            b.append(np.linalg.norm(beta - b_star))
+            b.append(utils.math.norm(beta - b_star))
 #        ulim.append(2.0 * function.h.M() * mu[0] / ((float(k) + 1.0) * (float(k) + 2.0)))
         ulim.append(mu[k + 1] * function.h.M())
 
