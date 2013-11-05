@@ -25,7 +25,7 @@ class BaseEstimator(object):
             self.__setattr__(k, v)
 
     @abc.abstractmethod
-    def get_params(**kwargs):
+    def get_params():
         raise NotImplementedError('Abstract method "get_params" must be ' \
                                   'specialised!')
 
@@ -59,7 +59,7 @@ class LinearRegressionL1L2TV(BaseEstimator):
         self.func_class = func_class
         self.algorithm = algorithm
 
-    def get_params(self, **kwargs):
+    def get_params(self):
 
         return {"k": self.k, "l": self.l, "g": self.g}
 
