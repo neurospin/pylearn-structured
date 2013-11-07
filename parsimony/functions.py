@@ -238,12 +238,14 @@ class SmoothedL1(Function):
 
 class TotalVariation(Function):
 
-    def __init__(self, g, shape):
+    def __init__(self, g, A):
 
         self.g = float(g)
-        self.p = np.prod(shape)
-        self.shape = shape
-        self._A = self.precompute(shape, mask=None, compress=False)
+        self.p = A[0].shape[0]
+        #self.p = np.prod(shape)
+        #self.shape = shape
+        #self._A = self.precompute(shape, mask=None, compress=False)
+        self._A = A
         self._lambda_max = None
 
     """ Function value of Ridge regression.
@@ -308,9 +310,9 @@ class TotalVariation(Function):
 #            self._lambda_max = np.sum(us ** 2.0)
 
         # Note that we can save the state here since lmax(A) does not change.
-        if len(self.shape) == 3 \
-            and self.shape[0] == 1 and self.shape[1] == 1:
-
+        if len(self._A) == 3 \
+            and self._A[1].nnz == 0 and self._A[2].nnz == 0: # TODO check order with Tommy
+#            and self.shape[0] == 1 and self.shape[1] == 1:
 #            lmaxTV = 2.0 * (1.0 - cos(float(self._p) * pi \
 #                                                 / float(self._p + 1)))
             self._lambda_max = 2.0 * (1.0 - math.cos(float(self.p - 1) \
@@ -474,11 +476,11 @@ class TotalVariation(Function):
 
 class OLSL2_L1_TV(ProximalGradientFunction):
 
-    def __init__(self, k, l, g, shape):
+    def __init__(self, k, l, g, A):
 
         self.rr = RidgeRegression(k)
         self.l1 = L1(l)
-        self.tv = TotalVariation(g, shape=shape)
+        self.tv = TotalVariation(g, A=A)
 
         self.reset()
 
