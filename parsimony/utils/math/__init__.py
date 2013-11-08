@@ -4,7 +4,7 @@ Created on Tue Jul 30 21:07:07 2013
 
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
-@license: BSD Style
+@license: TBD.
 """
 
 from .math import norm

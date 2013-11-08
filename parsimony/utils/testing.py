@@ -20,8 +20,8 @@ import utils
 
 
 #'assert_array_almost_equal', 
-__all__ = ['fleiss_kappa', 'orth_matrix',
-           'check_ortho']
+__all__ = ['fleiss_kappa', 'orth_matrix']
+#           'check_ortho']
            #"assert_equal", "assert_not_equal", "assert_raises", "raises",
 #           "with_setup", "assert_true", "assert_false", "assert_almost_equal",
 #           "assert_array_equal",
@@ -83,6 +83,6 @@ def orth_matrix(n=10):
     return X, Y
 
 
-def check_ortho(M, err_msg):
-    K = np.dot(M.T, M)
-    assert_array_almost_equal(K, np.diag(np.diag(K)), err_msg=err_msg)
+#def check_ortho(M, err_msg):
+#    K = np.dot(M.T, M)
+#    assert_array_almost_equal(K, np.diag(np.diag(K)), err_msg=err_msg)
