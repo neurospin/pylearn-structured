@@ -428,7 +428,7 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
     return Xim, y.reshape((n_samples, 1)), beta, support
 
 
-if __name__ == '__main__2':
+if __name__ == '__main__':
     # utils
     def plot_map(im, plot=None):
         if plot is None:
@@ -445,28 +445,19 @@ if __name__ == '__main__2':
         cbar = plt.colorbar(cax, ticks=ticks)
         cbar.set_clim(vmin=-mx, vmax=mx)
 
-    def sinv(M):
-        lu_obj = scipy.sparse.linalg.splu(M.tocsr())
-        Minv = lu_obj.solve(np.eye(M.shape[0]))
-        return Minv
-
-    n_samples = 1000
-    shape = (200, 150, 1)
+    n_samples = 500
+    shape = (100, 100, 1)
     R = .25
-    sigma_spatial_smoothing = 2
-    #run pylearn-parsimony/parsimony/datasets/samples_generator_struct.py
-    n_samples = 100
-    shape = (30, 30, 1)
-    R = .25
-    snr = .5
+    snr = 2.
     sigma_spatial_smoothing = 1
     random_seed=None
     noize_object_pixel_ratio=.25
     objects = None
-
+    mode = "predictive"
+    #mode = "generative"
     Xim, y, beta, support = make_regression_struct(n_samples=n_samples,
         shape=shape, snr=1., sigma_spatial_smoothing=sigma_spatial_smoothing,
-        mode="predictive", noize_object_pixel_ratio=noize_object_pixel_ratio,
+        mode=mode, noize_object_pixel_ratio=noize_object_pixel_ratio,
         random_seed=random_seed)
     _, nx, ny, nz = Xim.shape
 
@@ -484,7 +475,8 @@ if __name__ == '__main__2':
     plt.title("Objects support (blue are suppressors)")
 
     plot = plt.subplot(332)
-    plot_map(beta.reshape(nx, ny), plot)
+    if beta is not None: 
+        plot_map(beta.reshape(nx, ny), plot)
     plt.title("beta")
 
     Xtrc = (Xtr - Xtr.mean(axis=0)) / Xtr.std(axis=0)
@@ -493,7 +485,6 @@ if __name__ == '__main__2':
     plot = plt.subplot(333)
     plot_map(cor, plot)
     plt.title("Corr(X, y)")
-    plt.show()
 
     from sklearn.linear_model import Lasso
     from sklearn.linear_model import ElasticNet, ElasticNetCV
@@ -504,7 +495,7 @@ if __name__ == '__main__2':
     alpha_g = 10.
     # Ridge ================================================================
     # Min ||y - Xw||^2_2 + alpha ||w||^2_2
-    plot = plt.subplot(333)
+    plot = plt.subplot(334)
     alpha = alpha_g
     l2 = Ridge(alpha=alpha)
     pred = l2.fit(Xtr, ytr).predict(Xte)
@@ -516,7 +507,7 @@ if __name__ == '__main__2':
     alpha = alpha_g * 1. / (2. * n_train)
     l1 = Lasso(alpha=alpha)
     pred = l1.fit(Xtr, ytr).predict(Xte)
-    plot = plt.subplot(334)
+    plot = plt.subplot(335)
     plot_map(l1.coef_.reshape((nx, ny)), plot)
     plt.title("Lasso (R2=%.2f)" % r2_score(yte, pred))
 
@@ -528,73 +519,59 @@ if __name__ == '__main__2':
     l1_ratio = .01
     l1l2 = ElasticNet(alpha=alpha, l1_ratio=l1_ratio)
     pred = l1l2.fit(Xtr, ytr).predict(Xte)
-    plot = plt.subplot(335)
+    plot = plt.subplot(336)
     plot_map(l1l2.coef_.reshape((nx, ny)), plot)
-    plt.title("Elasticnet(a:%.2f, l1:%.2f) (R2=%.2f)" % (l1l2.alpha, l1l2.l1_ratio, r2_score(yte, pred)))
+    plt.title("Elasticnet(a:%.2f, l1:%.2f) (R2=%.2f)" % (l1l2.alpha, 
+              l1l2.l1_ratio, r2_score(yte, pred)))
 
     l1l2cv = ElasticNetCV()
     pred = l1l2cv.fit(Xtr, ytr).predict(Xte)
-    plot = plt.subplot(336)
+    plot = plt.subplot(337)
     plot_map(l1l2cv.coef_.reshape((nx, ny)), plot)
-    plt.title("ElasticnetCV(a:%.2f, l1:%.2f) (R2=%.2f)" % (l1l2cv.alpha_, l1l2cv.l1_ratio, r2_score(yte, pred)))
+    plt.title("ElasticnetCV(a:%.2f, l1:%.2f) (R2=%.2f)" % (l1l2cv.alpha_,
+              l1l2cv.l1_ratio, r2_score(yte, pred)))
+    #plt.show()
     #plt.show()
     #plt.show()
 
 
     # TVL1L2 ===============================================================
-    import parsimony.models as models
+    import parsimony.estimators as estimators
+    import parsimony.tv
     def ratio2coef(alpha, tv_ratio, l1_ratio):
         l = alpha * (1 - tv_ratio) * l1_ratio
         k = alpha * (1 - tv_ratio) * (1 - l1_ratio) * 0.5
         gamma = alpha * tv_ratio
         return l, k, gamma
+
     eps = 0.01
     alpha = alpha_g #Constant that multiplies the penalty terms
 
     tv_ratio=.05; l1_ratio=.95
-    l, k, gamma = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
-    pgm = models.LinearRegressionL1L2TV(l=l, k=k, gamma=gamma, shape=(1, nx, ny))
-    pgm = models.ContinuationRun(pgm, tolerances=[10000 * eps, 100 * eps, eps])
-    pgm.fit(Xtr, ytr)
-    f = pgm.get_algorithm().f
-    plot = plt.subplot(337)
-    plot_map(pgm.beta.reshape(nx, ny), plot)
-    r2 = r2_score(yte, np.dot(Xte, pgm.beta).ravel())
-    plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % (alpha, tv_ratio, l1_ratio, r2))
+    l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
+
+    Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
+
+    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
+                                       algorithm="conesta_static")
+    tvl1l2.fit(Xtr, ytr)
+    #f = pgm.get_algorithm().f
+    plot = plt.subplot(338)
+    plot_map(tvl1l2.beta.reshape(nx, ny), plot)
+    r2 = r2_score(yte, np.dot(Xte, tvl1l2.beta).ravel())
+    plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % \
+        (alpha, tv_ratio, l1_ratio, r2))
 
     tv_ratio=.5; l1_ratio=.95
-    l, k, gamma = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
-    pgm = models.LinearRegressionL1L2TV(l=l, k=k, gamma=gamma, shape=(1, nx, ny))
-    pgm = models.ContinuationRun(pgm, tolerances=[10000 * eps, 100 * eps, eps])
-    pgm.fit(Xtr, ytr)
-    f = pgm.get_algorithm().f
-    plot = plt.subplot(338)
-    plot_map(pgm.beta.reshape(nx, ny), plot)
-    r2 = r2_score(yte, np.dot(Xte, pgm.beta).ravel())
-    plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % (alpha, tv_ratio, l1_ratio, r2))
-
-    tv_ratio= 1.; l1_ratio=.95
-    l, k, gamma = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
-    pgm = models.LinearRegressionL1L2TV(l=l, k=k, gamma=gamma, shape=(1, nx, ny))
-    pgm = models.ContinuationRun(pgm, tolerances=[10000 * eps, 100 * eps, eps])
-    pgm.fit(Xtr, ytr)
-    f = pgm.get_algorithm().f
+    l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
+    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
+                                       algorithm="conesta_static")
+    tvl1l2.fit(Xtr, ytr)
     plot = plt.subplot(339)
-    plot_map(pgm.beta.reshape(nx, ny), plot)
-    r2 = r2_score(yte, np.dot(Xte, pgm.beta).ravel())
-    plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % (alpha, tv_ratio, l1_ratio, r2))
+    plot_map(tvl1l2.beta.reshape(nx, ny), plot)
+    r2 = r2_score(yte, np.dot(Xte, tvl1l2.beta).ravel())
+    plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % \
+        (alpha, tv_ratio, l1_ratio, r2))
+
     plt.show()
-
-
-#    eps = 0.01
-#    alpha = alpha_g #Constant that multiplies the penalty terms
-#    l1_ratio = .95
-#    l = alpha * l1_ratio
-#    k = 0.5 * alpha * (1 - l1_ratio)
-#    gamma = 1 * alpha
-#    pgm = models.LinearRegressionL1L2TV(l=l, k=k, gamma=gamma, shape=(1, nx, ny))
-#    pgm = models.ContinuationRun(pgm, tolerances=[10000 * eps, 100 * eps, eps])
-#    pgm.fit(Xtr, ytr)
-
-
-# run pylearn-structured/structured/datasets/samples_generator_struct.py
+    #run pylearn-parsimony/parsimony/datasets/samples_generator_struct.py
