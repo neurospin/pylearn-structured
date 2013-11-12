@@ -447,6 +447,7 @@ if __name__ == '__main__':
 
     n_samples = 500
     shape = (100, 100, 1)
+    shape = (30, 30, 1)
     R = .25
     snr = 2.
     sigma_spatial_smoothing = 1
