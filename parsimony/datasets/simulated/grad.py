@@ -14,7 +14,7 @@ from utils import norm2
 import scipy.sparse as sparse
 
 __all__ = ['grad_L1', 'grad_L1mu', 'grad_L2', 'grad_norm2',
-           'grad_TV', 'grad_TVmu']
+           'grad_TV', 'grad_TVmu', 'grad_TV_sparse']
 
 
 def grad_L1(beta):
