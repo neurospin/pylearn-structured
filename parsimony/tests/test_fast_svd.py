@@ -63,7 +63,7 @@ class TestSVD(unittest.TestCase):
         X = generate_sparse_matrix(shape=(nrow, ncol),
                                    density=density)
         # svd from parsimony
-        parsimony_v = FastSparseSVD(X, max_iter=1000)
+        parsimony_v = FastSparseSVD(X, max_iter=10000)
         return self.get_err_by_np_linalg_svd(parsimony_v, X)
 
     def test_fast_sparse_svd(self):
@@ -73,9 +73,6 @@ class TestSVD(unittest.TestCase):
         self.assertTrue(err < (utils.TOLERANCE * 100))
         err = self.get_err_fast_sparse_svd(5000, 500, density=0.1)
         self.assertTrue(err < (utils.TOLERANCE * 100))
-
-
-
 
 
 if __name__ == '__main__':
