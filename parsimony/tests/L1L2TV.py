@@ -636,7 +636,7 @@ np.random.seed(42)
 #        t = 1.0 / self.Lipschitz(X, mu)
 #        beta_old = beta_new = beta
 #
-#        # TODO: Use the FISTA function instead!!
+#        # TODO: Use the fista function instead!!
 #        for i in xrange(1, max_iter):
 #            z = beta_new + ((i - 2.0) / (i + 1.0)) * (beta_new - beta_old)
 #            beta_old = beta_new
@@ -830,7 +830,7 @@ np.random.seed(42)
 
 
 ## The fast iterative shrinkage threshold algorithm
-#def FISTA(X, y, function, beta, step, mu,
+#def fista(X, y, function, beta, step, mu,
 #          eps=utils.TOLERANCE, max_iter=utils.MAX_ITER):
 #
 #    z = betanew = betaold = beta
@@ -849,7 +849,7 @@ np.random.seed(42)
 #    return (betanew, crit)
 #
 #
-#def CONESTA(X, y, function, beta, mumin=utils.TOLERANCE, sigma=1.0, tau=0.5,
+#def conesta(X, y, function, beta, mumin=utils.TOLERANCE, sigma=1.0, tau=0.5,
 #            dynamic=True, eps=utils.TOLERANCE, conts=50, max_iter=1000):
 #
 #    mu = [0.9 * function.mu(beta)]
@@ -868,7 +868,7 @@ np.random.seed(42)
 #        t.append(1.0 / function.Lipschitz(X, mu[i], max_iter=100))
 #        eps_plus = max(eps, function.eps_opt(mu[i], X))
 #        print "eps_plus: ", eps_plus
-#        (beta, crit) = FISTA(X, y, function, beta, t[i], mu[i],
+#        (beta, crit) = fista(X, y, function, beta, t[i], mu[i],
 #                             eps=eps_plus, max_iter=max_iter)
 #        print "crit: ", crit[-1]
 #        print "it: ", len(crit)
@@ -1014,7 +1014,7 @@ f_star = function_pgm.f(X, y, beta_star, mu=mu_zero)
 #                                                       function_egm, eps=eps,
 #                                                       max_iter=maxit)
 step = 1.0 / function_pgm.Lipschitz(X, mu, max_iter=100)
-beta_start, _ = algorithms.FISTA(X, y, function_pgm, beta_start, step,
+beta_start, _ = algorithms.fista(X, y, function_pgm, beta_start, step,
                                  mu=100.0 * mu, eps=eps, max_iter=maxit)
 
 num_lin = 15
@@ -1031,11 +1031,11 @@ for i in range(len(ls)):
         function_pgm_temp = functions.OLSL2_L1_TV(k, l, g, shape)
         step = 1.0 / function_pgm_temp.Lipschitz(X, mu, max_iter=100)
 
-        beta_k, f_k = algorithms.FISTA(X, y, function_pgm_temp, beta_start,
+        beta_k, f_k = algorithms.fista(X, y, function_pgm_temp, beta_start,
                                        step, mu,
                                        eps=eps, max_iter=conts * maxit)
     #        beta_k, f_k, mu_k, G_k = \
-    #                           algorithms.CONESTA(X, y, function_pgm,
+    #                           algorithms.conesta(X, y, function_pgm,
     #                                              beta_start, mumin=mu_zero,
     #                                              sigma=1.0, tau=0.5, dynamic=True,
     #                                              eps=eps,
@@ -1065,7 +1065,7 @@ pickle.dump([beta_errs, f_errs], open("sim.p", "wb"))
 ##            + function_test.h.Lipschitz(mu, max_iter=100))
 ##t = time()
 ##step = 1.0 / function_pgm.Lipschitz(X, mu, max_iter=100)
-##beta_fista, f_fista = FISTA(X, y, function_pgm,
+##beta_fista, f_fista = fista(X, y, function_pgm,
 ##                            betastart, step, mu=mu,
 ##                            eps=eps, max_iter=conts * maxit * 10)
 ##print "time:", time() - t
@@ -1074,7 +1074,7 @@ pickle.dump([beta_errs, f_errs], open("sim.p", "wb"))
 #
 #t = time()
 #beta_conesta, f_conesta, mu_conesta, G_conesta = \
-#                           algorithms.CONESTA(X, y, function_pgm,
+#                           algorithms.conesta(X, y, function_pgm,
 #                                              betastart, mumin=mu_zero,
 #                                              sigma=1.0, tau=0.5, dynamic=True,
 #                                              eps=eps,
@@ -1137,7 +1137,7 @@ pickle.dump([beta_errs, f_errs], open("sim.p", "wb"))
 #vals = np.maximum(0.0, np.linspace(val - val * 0.1, val + val * 0.1, num_lin))
 #beta = beta0
 #step = 1.0 / rrl1tv.Lipschitz(X, mu)
-#beta, _ = FISTA(X, y, rrl1tv, beta, step, mu=100.0 * mu, eps=eps, maxit=10000)
+#beta, _ = fista(X, y, rrl1tv, beta, step, mu=100.0 * mu, eps=eps, maxit=10000)
 #
 #t__ = time()
 #for i in range(len(vals)):
@@ -1147,31 +1147,31 @@ pickle.dump([beta_errs, f_errs], open("sim.p", "wb"))
 #    g_ = val
 #
 ##    beta = beta0    
-##    beta, crit = FISTA(X, y, l_, k_, g_, beta, step, mu=mu*100000.0, eps=eps, maxit=10000)
+##    beta, crit = fista(X, y, l_, k_, g_, beta, step, mu=mu*100000.0, eps=eps, maxit=10000)
 ##    print "f:", f(X, y, l_, k_, g_, beta, mu=mu)
-##    beta, crit = FISTA(X, y, l_, k_, g_, beta, step, mu=mu*10000.0, eps=eps, maxit=10000)
+##    beta, crit = fista(X, y, l_, k_, g_, beta, step, mu=mu*10000.0, eps=eps, maxit=10000)
 ##    print "f:", f(X, y, l_, k_, g_, beta, mu=mu)
-##    beta, crit = FISTA(X, y, l_, k_, g_, beta, step, mu=mu*1000.0, eps=eps, maxit=1000)
+##    beta, crit = fista(X, y, l_, k_, g_, beta, step, mu=mu*1000.0, eps=eps, maxit=1000)
 ##    print "f:", f(X, y, l_, k_, g_, beta, mu=mu)
-##    beta, crit = FISTA(X, y, l_, k_, g_, beta, step, mu=mu*100.0, eps=eps, maxit=1000)
+##    beta, crit = fista(X, y, l_, k_, g_, beta, step, mu=mu*100.0, eps=eps, maxit=1000)
 ##    print "f:", f(X, y, l_, k_, g_, beta, mu=mu)
-##    beta, crit = FISTA(X, y, l_, k_, g_, beta, step, mu=mu*10.0, eps=eps, maxit=1000)
+##    beta, crit = fista(X, y, l_, k_, g_, beta, step, mu=mu*10.0, eps=eps, maxit=1000)
 ##    print "f:", f(X, y, l_, k_, g_, beta, mu=mu)
 ##    step = 1.0 / Lipschitz(X, k_, g_, mu)
-##    beta, crit = FISTA(X, y, l_, k_, g_, beta, step, mu=mu, eps=eps, maxit=conts * maxit)
+##    beta, crit = fista(X, y, l_, k_, g_, beta, step, mu=mu, eps=eps, maxit=conts * maxit)
 ##    print "f:", rrl1tv.f(X, y, l_, k_, g_, beta, mu=mu)
 ##    beta0 = beta
 #
 #    rrl1tv.rr.k = k_
 #    rrl1tv.l1.l = l_
 #    rrl1tv.tv.g = g_
-#    (beta, fval_, Gval_) = CONESTA(X, y, rrl1tv, beta,
+#    (beta, fval_, Gval_) = conesta(X, y, rrl1tv, beta,
 #                                   mumin=mu_zero, sigma=1.01, tau=0.5,
 #                                   eps=utils.TOLERANCE,
 #                                   conts=conts, maxit=maxit, dynamic=True)
 #
-##    print "FISTA:  ", f(X, y, l, k, g, beta, mu=mu)
-##    print "CONESTA:", f(X, y, l, k, g, beta_test, mu=mu)
+##    print "fista:  ", f(X, y, l, k, g, beta, mu=mu)
+##    print "conesta:", f(X, y, l, k, g, beta_test, mu=mu)
 #
 #    curr_val = np.sum((beta - betastar) ** 2.0)
 #    rrl1tv.rr.k = k
@@ -1248,7 +1248,7 @@ pickle.dump([beta_errs, f_errs], open("sim.p", "wb"))
 #
 #t = time()
 #step = 1.0 / Lipschitz(X, k, g, mu)
-#beta, crit, critmu = FISTA(X, y, l, k, g, beta0, step, mu=mu, eps=eps, maxit=conts * maxit)
+#beta, crit, critmu = fista(X, y, l, k, g, beta0, step, mu=mu, eps=eps, maxit=conts * maxit)
 #print "Time:", (time() - t)
 #print "beta - betastar:", np.sum((beta - betastar) ** 2.0)
 #print "f(betastar) = ", f(X, y, l, k, g, betastar, mu=mu_zero)

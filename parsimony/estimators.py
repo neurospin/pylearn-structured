@@ -41,20 +41,29 @@ class BaseEstimator(object):
 
 
 class LinearRegressionL1L2TV(BaseEstimator):
-
-    def __init__(self, k, l, g, shape, func_class=None, algorithm=None):
+    """
+    Arguments
+    ---------
+    k float
+    l float
+    g float
+    A Sparse matrix
+    algorithm: function
+        conesta_static, conesta_dynamic, fista, ExcessiveGapMethod
+    """
+    def __init__(self, k, l, g, A, algorithm=None, func_class=None):
 
         self.k = k
         self.l = l
         self.g = g
-        self.shape = shape
+        self._A = A
 
+        if algorithm == None:
+            algorithm = algorithms.conesta_static
+#            algorithm = algorithms.ExcessiveGapMethod
         if func_class == None:
             func_class = functions.OLSL2_L1_TV
 #            func_class = functions.OLSL2_SmoothedL1TV
-        if algorithm == None:
-            algorithm = algorithms.CONESTA
-#            algorithm = algorithms.ExcessiveGapMethod
 
         self.func_class = func_class
         self.algorithm = algorithm
@@ -67,35 +76,48 @@ class LinearRegressionL1L2TV(BaseEstimator):
 
 #        function = self.func_class(options)#self.k, self.l, self.g, self.shape)
 #        output = self.algorithm.fit(X, y, function)
-
-        function = self.func_class(self.k, self.l, self.g, self.shape)
+        function = self.func_class(self.k, self.l, self.g, self._A)
 #        function.set_params(X=X, y=y)
 
         # TODO: Use start_vectors for this!
         betastart = np.random.rand(X.shape[1], 1)
 
-        if self.algorithm == algorithms.CONESTA:
+        if self.algorithm == algorithms.conesta_static:
 
             mu_zero = utils.TOLERANCE
             eps = utils.TOLERANCE
             conts = 25
             max_iter = int(utils.MAX_ITER / conts)
 
-            output = self.algorithm(X, y, function, betastart,
+            output = algorithms.conesta_static(X, y, function, betastart,
                                     mu_start=None,
                                     mumin=mu_zero,
                                     tau=0.5,
-                                    dynamic=True,
                                     eps=eps, conts=conts, max_iter=max_iter)
 
             beta, f, t, mu, Gval, b, g = output
 
-        elif self.algorithm == algorithms.FISTA:
+        elif self.algorithm == algorithms.conesta_dynamic:
+
+            mu_zero = utils.TOLERANCE
+            eps = utils.TOLERANCE
+            conts = 25
+            max_iter = int(utils.MAX_ITER / conts)
+
+            output = algorithms.conesta_dynamic(X, y, function, betastart,
+                                    mu_start=None,
+                                    mumin=mu_zero,
+                                    tau=0.5,
+                                    eps=eps, conts=conts, max_iter=max_iter)
+
+            beta, f, t, mu, Gval, b, g = output
+
+        elif self.algorithm == algorithms.fista:
 
             eps = utils.TOLERANCE
             max_iter = utils.MAX_ITER
 
-            output = algorithms.FISTA(X, y, function, betastart,
+            output = algorithms.fista(X, y, function, betastart,
                                       step=None, mu=None,
                                       eps=eps, max_iter=max_iter)
 

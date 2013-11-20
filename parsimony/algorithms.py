@@ -26,7 +26,8 @@ from time import time, clock
 time_func = clock
 
 __all__ = ['FastSVD', 'FastSparseSVD',
-           'FISTA', 'CONESTA', 'ExcessiveGapMethod']
+           'fista', 'conesta', 'conesta_static', 'conesta_dynamic',
+           'ExcessiveGapMethod']
 
 
 def FastSVD(X, max_iter=100, start_vector=None):
@@ -135,7 +136,7 @@ def FastSparseSVD(X, max_iter=100, start_vector=None):
     return v
 
 
-def FISTA(X, y, function, beta, step=None, mu=None,
+def fista(X, y, function, beta, step=None, mu=None,
           eps=utils.TOLERANCE,
           max_iter=utils.MAX_ITER, min_iter=1, b_star=None, gradL1=None):
     """ The fast iterative shrinkage threshold algorithm.
@@ -176,7 +177,7 @@ def FISTA(X, y, function, beta, step=None, mu=None,
     return (betanew, f, t, b, g)
 
 
-def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
+def conesta(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
             tau=0.5, dynamic=True,
             eps=utils.TOLERANCE,
             conts=50, max_iter=1000, min_iter=1, b_star=None, gradL1=None):
@@ -208,12 +209,12 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
 
         tnew = 1.0 / function.Lipschitz(X, mu[-1], max_iter=100)
         eps_plus = min(max_eps, function.eps_opt(mu[-1], X))
-        (beta, fval, tval, bval, gval) = FISTA(X, y, function, beta, tnew,
+        (beta, fval, tval, bval, gval) = fista(X, y, function, beta, tnew,
                                                mu[-1], eps=eps_plus,
                                                max_iter=max_iter,
                                                min_iter=1,
                                                b_star=b_star, gradL1=gradL1)
-        print "FISTA did iterations =", len(fval)
+        print "fista did iterations =", len(fval)
 
         mumin = min(mumin, mu[-1])
         tmin = min(tmin, tnew)
@@ -281,6 +282,12 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
 
     # TODO: These return values are for the OLS paper. Will be changed!
     return (beta, f, t, mu, Gval, b, g)
+
+def conesta_static(*args, **kwargs):
+    return conesta(dynamic=False, *args, **kwargs)
+
+def conesta_dynamic(*args, **kwargs):
+    return conesta(dynamic=True, *args, **kwargs)
 
 
 def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,

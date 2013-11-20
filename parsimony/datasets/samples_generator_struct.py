@@ -6,16 +6,11 @@ Created on Wed Aug  7 10:35:12 2013
 """
 
 import numpy as np
-import scipy
-import scipy.linalg
 from scipy import ndimage
 import matplotlib.pyplot as plt
-import scipy.sparse as sparse
-import scipy.sparse.linalg
 
-
-def corr_to_coef(v_x, v_e, cov_xe, R):
-    """In a linear model y = bx + e. Calculate b such corr(bx + e, x) = R.
+def corr_to_coef(v_x, v_e, cov_xe, cor):
+    """In a linear model y = bx + e. Calculate b such cor(bx + e, x) = cor.
     Parameters
     ----------
     v_x: float
@@ -27,20 +22,20 @@ def corr_to_coef(v_x, v_e, cov_xe, R):
     cov_xe: float
         cov(x, e)
 
-    R: float
+    cor: float
         The desire correlation
 
     Example
     -------
     b = corr_to_coef(1, 1, 0, .5)
     """
-    b2 = v_x ** 2 * (R ** 2 - 1)
-    b1 = 2 * cov_xe * v_x * (R ** 2 - 1)
-    b0 = R ** 2 * v_x * v_e - cov_xe ** 2
+    b2 = v_x ** 2 * (cor ** 2 - 1)
+    b1 = 2 * cov_xe * v_x * (cor ** 2 - 1)
+    b0 = cor ** 2 * v_x * v_e - cov_xe ** 2
     delta = b1 ** 2 - 4 * b2 * b0
     sol1 = (-b1 - np.sqrt(delta)) / (2 * b2)
     sol2 = (-b1 + np.sqrt(delta)) / (2 * b2)
-    return np.max([sol1, sol2]) if R >= 0 else  np.min([sol1, sol2])
+    return np.max([sol1, sol2]) if cor >= 0 else  np.min([sol1, sol2])
 
 
 ############################################################################
@@ -56,68 +51,95 @@ class ObjImage(object):
     -----------
     c_x, c_y: Center of object
 
-    im_x, im_y: int
-        Image x and y dimensions.
+    shape: (nx, ny, nz)
+        Image x, y and z dimensions.
 
-    beta_y: float
+    coef_info: float
+        coefficien of information
+
+    coef_noise: float
+        coefficien of noise
 
     beta_z: array of float [1 x n_regressors]
 
     beta_o: float
     """
-    def __init__(self, c_x, c_y, c_z, nx, ny, nz):
-        self.c_x = c_x
-        self.c_y = c_y
-        self.c_z = c_z
-        self.x_grid, self.y_grid , self.z_grid = np.ogrid[0:nx, 0:ny, 0:nz]
-        self.is_suppressor = False
-        self.suppressor = None
+    def __init__(self, mask=None, coef_info=.5, coef_noise=.5):
+        self.mask = mask
+        self.coef_info = coef_info
+        self.coef_noise = coef_noise
 
-    def set_suppresor(self, suppressor):
-        suppressor.is_suppressor = True
-        self.suppressor = suppressor
+    def get_coef_info(self):
+        return self.coef_info
 
-    def get_suppresor(self):
-        return self.suppressor
+    def get_coef_noise(self):
+        return self.coef_noise
+
+    def get_mask(self):
+        return self.mask
+
+    @staticmethod
+    def object_model(objects, Xim):
+        """Add object variance: x_ki =  coef^1/2 * o_k + (1 - coef)^1/2 * e_i
+        """
+        sigma_o = 1
+        labels_im = np.zeros(Xim.shape[1:], dtype=int) # image of objects label
+        label = 0
+        for k in xrange(len(objects)):
+            o = objects[k]
+            label += 1
+            o.label = label
+            # A) Add object latent variable
+            mask_o = o.get_mask()
+            labels_im[mask_o] = o.label
+            obj_latent = np.random.normal(0, sigma_o, Xim.shape[0])
+            obj_latent -= obj_latent.mean()  # - 0
+            obj_latent /= obj_latent.std() * sigma_o
+            coef_noize = o.get_coef_noise()
+            Xim[:, mask_o] = (coef_noize * obj_latent + Xim[:, mask_o].T).T
+        return Xim, labels_im
 
 
 class Square(ObjImage):
-    def __init__(self, size, coef=.5, **kwargs):
+    def __init__(self, center, size, shape, **kwargs):
         super(Square, self).__init__(**kwargs)
         self.size = size
-        self.coef = coef
-
+        self.center = center
+        self.x_grid, self.y_grid , self.z_grid = np.ogrid[0:shape[0], 0:shape[1],
+                                                          0:shape[2]]
     def get_mask(self):
-        hs = self.size / 2
-        mask = (np.abs(self.x_grid - self.c_x) <= hs) & \
-        (np.abs(self.y_grid - self.c_y) <= hs)
-        (np.abs(self.z_grid - self.c_z) <= hs)
+        hs = self.size / 2.
+        mask = (np.abs(self.x_grid - self.center[0]) <= hs) & \
+        (np.abs(self.y_grid - self.center[1]) <= hs)
+        (np.abs(self.z_grid - self.center[2]) <= hs)
         return mask
 
 
 class Dot(ObjImage):
-    def __init__(self, size, coef=.5, **kwargs):
+    def __init__(self, center, size, shape, **kwargs):
         super(Dot, self).__init__(**kwargs)
         self.size = size
-        self.coef = coef
-
+        self.center = center
+        self.x_grid, self.y_grid , self.z_grid = np.ogrid[0:shape[0], 0:shape[1],
+                                                          0:shape[2]]
     def get_mask(self):
-        mask = np.sqrt((self.x_grid - self.c_x) ** 2 + \
-                       (self.y_grid - self.c_y) ** 2 + \
-                       (self.z_grid - self.c_z) ** 2) <= self.size / 2
+        mask = np.sqrt((self.x_grid - self.center[0]) ** 2 + \
+                       (self.y_grid - self.center[1]) ** 2 + \
+                       (self.z_grid - self.center[2]) ** 2) <= self.size / 2
         return mask
 
 
 class Dimaond(ObjImage):
-    def __init__(self, size, coef=.5, **kwargs):
+    def __init__(self, center, size, shape, **kwargs):
         super(Square, self).__init__(**kwargs)
         self.size = size
-        self.coef = coef
-
+        self.center = center
+        self.x_grid, self.y_grid , self.z_grid = np.ogrid[0:shape[0], 0:shape[1],
+                                                          0:shape[2]]
     def get_mask(self):
-        mask = np.abs(self.x_grid - self.c_x) + \
-               np.abs(self.y_grid - self.c_y) + \
-               np.abs(self.z_grid - self.c_z) <= self.size / 2
+        mask = np.abs(self.x_grid - self.center[0]) + \
+               np.abs(self.y_grid - self.center[1]) + \
+               np.abs(self.z_grid - self.center[2]) <= self.size / 2
         return mask
 
 
@@ -132,32 +154,61 @@ def get_objects_edges(objects):
 
 ############################################################################
 ## Objects builder
-def dice_five(shape, noize_object_pixel_ratio):
+def dice_five_with_union_of_pairs(shape, coef_info, coef_noise):
+    """Seven objects, five dot + union1 = dots 1 + 2 and union2 = dots 4 + 5
+    1, 3 and 4 have coef_info
+    2, 5  have coef_info = -coef_info/2
+    union1 and union2 have coef_info = 0
+
+    Example
+    -------
+    #shape = (5, 5, 1)
+    coef_info = 1
+    coef_noise = 1
+    noise = np.zeros(shape)
+    info = np.zeros(shape)
+    for o in dice_five_with_union_of_pairs(shape, coef_info, coef_noise):
+        noise[o.get_mask()] += o.coef_noise
+        info[o.get_mask()] += o.coef_info
+        print o.coef_noise, o.coef_info
+    plot = plt.subplot(121)
+    import matplotlib.pyplot as plt
+    cax = plot.matshow(noise.squeeze())
+    plt.colorbar(cax)
+    plt.title("Noise sum coeficients")
+    plot = plt.subplot(122)
+    cax = plot.matshow(info.squeeze())
+    plt.colorbar(cax)
+    plt.title("Informative sum coeficients")
+    plt.show()
+    """
     nx, ny, nz = shape
-    s_obj = np.floor(nx / 7)
-    objects = list()
-    ## corner dots
-    for k in [1, 3]:
-        c_x = k * nx / 4.
-        c_y = ny / 4.
-        c_z = nz / 2.
-        o_info = Dot(size=s_obj, coef=noize_object_pixel_ratio,
-                     c_x=c_x, c_y=c_y, c_z=c_z, 
-                     nx=nx, ny=ny, nz=nz)
-        objects.append(o_info)
-        c_y = ny - (ny / 4.)
-        o_supp = Dot(size=s_obj, coef=noize_object_pixel_ratio,
-                     c_x=c_x, c_y=c_y, c_z=c_z, nx=nx, ny=ny, nz=nz)
-        objects.append(o_supp)
-        o_info.set_suppresor(o_supp)
+    if nx < 5 or ny < 5:
+        raise ValueError("Shape too small minimun is (5, 5, 0)")
+    s_obj = np.max([1, np.floor(np.max(shape) / 7)])
+    k = 1
+    c1 = np.floor((k * nx / 4., ny / 4., nz / 2.))
+    d1 = Dot(center=c1, size=s_obj, shape=shape, coef_info=coef_info,
+             coef_noise=coef_noise)
+    c2 = np.floor((k * nx / 4., ny - (ny / 4.), nz / 2.))
+    d2 = Dot(center=c2, size=s_obj, shape=shape, coef_info=-coef_info,
+             coef_noise=0)
+    union1 = ObjImage(mask=d1.get_mask() + d2.get_mask(), coef_info=0,
+              coef_noise=coef_noise)
+    k = 3
+    c4 = np.floor((k * nx / 4., ny / 4., nz / 2.))
+    d4 = Dot(center=c4, size=s_obj, shape=shape, coef_info=coef_info,
+             coef_noise=coef_noise)
+    c5 = np.floor((k * nx / 4., ny - (ny / 4.), nz / 2.))
+    d5 = Dot(center=c5, size=s_obj, shape=shape, coef_info=-coef_info,
+             coef_noise=0)
+    union2 = ObjImage(mask=d4.get_mask() + d5.get_mask(), coef_info=0,
+             coef_noise=coef_noise)
     ## dot in the middle
-    c_x = nx / 2.
-    c_y = ny / 2.
-    c_z = nz / 2.
-    o_info = Dot(size=s_obj, coef=noize_object_pixel_ratio,
-        c_x=c_x, c_y=c_y, c_z=c_z, nx=nx, ny=ny, nz=nz)
-    objects.append(o_info)
-    return objects
+    c3 = np.floor((nx / 2., ny / 2., nz / 2.))
+    d3 = Dot(center=c3, size=s_obj, shape=shape, coef_info=coef_info,
+             coef_noise=coef_noise * 2)
+    return [d1, d2, union1, d4, d5, union2, d3]
 
 
 ############################################################################
@@ -174,89 +225,24 @@ def spatial_smoothing(Xim, sigma, mu_e=None, sigma_e=None):
         X /= X.std(axis=0) * sigma_e
     return Xim
 
-
 ############################################################################
-## Add objects-based variance
-def object_model(objects, Xim):
-    """Add object variance: x_ki =  coef^1/2 * o_k + (1 - coef)^1/2 * e_i
-    """
-    sigma_o = 1
-    labels_im = np.zeros(Xim.shape[1:], dtype=int)  # image of objects label
-    label = 0
-    for k in xrange(len(objects)):
-        o = objects[k]
-        #print o.is_suppressor, o.suppressor
-        if o.is_suppressor:
-            continue
-        label += 1
-        o.label = label
-        # A) Add object latent variable
-        mask_o = o.get_mask()
-        labels_im[mask_o] = o.label
-        o_ik = np.random.normal(0, sigma_o, Xim.shape[0])
-        o_ik -= o_ik.mean()  # - 0
-        o_ik /= o_ik.std() * sigma_o
-        Xim[:, mask_o] = (np.sqrt(o.coef) * o_ik + \
-                        np.sqrt(1 - o.coef) * Xim[:, mask_o].T).T
-        if o.suppressor is not None:
-            o.suppressor.label = -label
-            mask_o_suppr = o.suppressor.get_mask()
-            labels_im[mask_o_suppr] = o.suppressor.label
-            Xim[:, mask_o_suppr] = (np.sqrt(o.suppressor.coef) * o_ik + \
-                       np.sqrt(1 - o.suppressor.coef) * Xim[:, mask_o_suppr].T).T
-    return Xim, labels_im
-
-
-############################################################################
-## Apply causal model on objects
-def generative_model(objects, Xim, y, R):
-    """Add predictive information: x_ki += b_y * y. Returns Xim.
-    """
-    beta_y = corr_to_coef(v_x=1, v_e=1, cov_xe=0, R=R)
-    for k in xrange(len(objects)):
-        o = objects[k]
-        if o.is_suppressor:
-            continue
-        # A) Add object latent variable
-        mask_o = o.get_mask()
-        # Compute the coeficient according to a desire correlation
-        Xim[:, mask_o] = (Xim[:, mask_o].T + (beta_y * y)).T
-    return Xim
-
-############################################################################
-## Apply causal model on objects
-def predictive_model(objects, Xim, snr, coef_per_feature):
-    """Add predictive information: y = X * beta_objects + noize_snr.
-    Retrns y, beta_flat, noize.
-    """
-    beta = np.zeros(Xim.shape[1:])
-    for k in xrange(len(objects)):
-        o = objects[k]
-        if o.is_suppressor:
-            continue
-        beta[o.get_mask()] = coef_per_feature
-    X = Xim.reshape((Xim.shape[0], np.prod(Xim.shape[1:])))
-    beta_flat = beta.ravel()
-    y_true = np.dot(X, beta_flat)
-    noize = np.random.normal(0, y_true.std() / snr, y_true.shape[0])
-    y = y_true + noize
-    return y, beta_flat, noize
-
-
-############################################################################
-## Parameters
 def make_regression_struct(n_samples=100, shape=(30, 30, 1),
-                           mode="predictive",
-                           snr=.2, R=.5,
+                           r2=.75,
                            sigma_spatial_smoothing=1,
                            noize_object_pixel_ratio=.5,
                            objects=None,
                            random_seed=None):
-    """Generate regression samples (images + target variable) with input
-    features having a covariance structure for both noize and informative
-    features. The sructure of covariance can be controled both at a pixel level
-    (spatial smoothing) and at an object level. Objects are connected component
+    """Generate regression samples (images + target variable) and beta.
+    Input features (X) have a covariance structure controled both at a pixel
+    level (spatial smoothing) and at an object. Objects are component
     of pixels sharing a covariance that stem from a latent variable.
+
+
+    Noise is sampled according to N(0, 1).
+    Then y is obtained with y = X * beta + noise, where beta is scalled such that
+    r_square(y, X * beta) = r2.
+
+    The sructure of covariance of X is
 
     Parameters
     ----------
@@ -266,23 +252,9 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
     shape: (int, int, int)
         x, y, z shape each samples (default (30, 30, 1)).
 
-    mode: string in "predictive" (default) or "generative"
-
-        - In predictive mode, after having generated X, y is obtained by
-        y = X * beta + noize.
-        In this mode the function return the beta.
-
-        - In generative mode, y is randomly sampled, then it is added to causal
-        pixels (i) within object (k):
-        x_ik = e_ik + y.
-        In this setting beta is unknown.
-
-    snr: float
-        Use in mode == "predictive" is the ratio: std(Xbeta) / std(noize)
-
-    R: float
-        Use in mode == "generative" is the desire correlation between causal
-        pixels and the target y.
+    r2: float
+        The desire R-squared (explained variance) ie.: r_square(y, X * beta) = r2
+        Default is .75
 
     sigma_spatial_smoothing: scalar
         Standard deviation for Gaussian kernel (default 1). High value promotes
@@ -290,14 +262,14 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
 
     noize_object_pixel_ratio: float
         Controls the ratio between object-level noize and pixel-level noize for
-        pixels within objects. If noize_object_pixel_ratio == 1 then 100% of the 
+        pixels within objects. If noize_object_pixel_ratio == 1 then 100% of the
         noize of pixels within the same object is shared (ie.: no pixel level)
         noize. If noize_object_pixel_ratio == 0 then all the noize is pixel
         specific. High noize_object_pixel_ratio promotes spatial correlation
         between pixels of the same object.
 
     objects: list of objects
-        Define connected components of causal (or suppressor) pixels. 
+        Define objects .
         Objects carying information to be drawn in the image. If not provide
         a dice with five points (object) will be drawn. Point 1, 3, 4 are
         carying predictive information while point 2 is a suppressor of point
@@ -319,54 +291,64 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
         the target variable.
 
     beta: float array of shape [shape]
-       If mode == "predictive", it is the beta such that y = X * beta + noize
-       If mode == "generative", beta is None.
+       It is the beta such that y = X * beta + noize
 
-    support: int array of shape [shape].
-        Support of objects (image of labels).
-        However the support of causal pixels are returned in the label image.
-        Positive values of labels are informative pixels ie.: pixels with non
-        zero beta in predictive mode and pixels that contain "y" in generative
-        mode (where x_ik = e_ijk + y). Negative values are the support of the
-        suppressor objects of the corresponding positive value. Such objects
-        share some noize variance with another predictive object and thus can
-        be usefull to suppress unwilling noize.
+    Details
+    -------
+    The general procedure is:
+        1) For each pixel i, Generate independant variables Xi ~ N(0, 1)
+        2) Add object level structure. By default there are five dots (objects).
+        Pixel i of dot 1, 2, 3, 4, 5 are sampled as:
+        X1i = l1 + l12 + Xi
+        X2i = l12 + Xi
+        X3i = 2 * l3 + Ni
+        X4i = l4 + l45 + Xi
+        X5i = l45 + Xi
+        Where l1, l12, l3, l4, l45 are latent variables ~ N(0, 1)
+        So pixels of X1 share a common variance that stem from l1 + l12.
+        So pixels of X2 share a common variance that stem from l12.
+        So pixels of X1 and X2 share a common variance that stem from l12.
+        etc.
+        4) Spatial Smoothing.
+        5) Model: y = X beta + e
+        - Betas are null outside dots, and 1 or -1 depending on the dot:
+            X1: 1, X2: -1, X3: 1, X4: 1, X5: -1.
+        - Sample noise e ~ N(0, 1)
+        - Compute X beta then scale beta such that: r_squred(y, X beta) = r2
+        Return X, y, beta
 
-    Detail
-    ------
-    The general procedure is (1) Generate independant noize (e_i); (2) Add
-    object level noize. (3) If mode == "generative", generate y and add it
-    to causal pixels. (4) Spatial Smoothing. (5)  If mode == "predictive",
-    compute y = X * beta
+        Note that we get:
+            y = X1 - X2 + X3 + X4 -X5 + e
+            y = l1 + l3 + l4 + noise
+            So pixels of X2 and X5 are not correlated with the target y so they
+            will not be detected by univariate analysis. However, they
+            are usefull since they are suppressing unwilling variance that stem
+            from latents l12 and l45.
 
-    The signal within each pixel i and object k is a linear combination of
-    some information and object-level and pixel-level noize. Let
-    b_o = noize_object_pixel_ratio, then:
-    
-    (1 and 2) Generate independant noize and object level noize
-    x_ki =  b_o^1/2 * o_k + (1 - b_o)^1/2 * e_i
-           <------------- noize ------------->
-           <- object k ->   <--- pixel i ---->
-
-    e_i ~ N(0, 1) is the pixel-level noize, for all pixels i in [1, n_features]
-    o_k ~ N(0, 1) is the object-level noize, for all objects k in [1, n_objects]
-
-    (3) If mode == "generative":
-    Generate y (~ N(0, 1)) and add it to causal pixels. Causal pixels are
-    pixels within the objects.
-    x_ki = x_ki +  b_y * y + x_ki; for pixels within causal objects k
-                   <info > + <noize>
-    Here beta is not available, only the support of causal pixels is known
-    ie.: the positive values in the returned beta.
-
-    (4) Spatial Smoothing
-
-    (5) If mode == "predictive", generate beta Causal pixels (pixels within
-    objects) and compute y:
-    y = X * beta + noize
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    >>> from parsimony.datasets import make_regression_struct
+    >>> n_samples = 100
+    >>> shape = (11, 11, 1)
+    >>> r2 = .5
+    >>> X, y, beta = make_regression_struct(n_samples=n_samples, shape=shape,
+    ...                            r2=r2, random_seed=1)
+    >>> X_flat = X.reshape(n_samples, np.prod(shape))
+    >>> beta_flat = beta.ravel()
+    >>> from sklearn.metrics import r2_score
+    >>> print np.round(r2_score(y, np.dot(X_flat, beta_flat)), 2)
+    0.5
+    >>> cax = plt.matshow(beta.squeeze())
+    >>> plt.colorbar(cax)
+    >>> plt.title("Beta")
+    >>> plt.show()
     """
-    sigma_y = sigma_e = 1  # items std-dev
-    mu_e = mu_y = 0
+    sigma_e = 1  # items std-dev
+    mu_e = 0
+    if shape[0] < 5 or shape[1] < 5:
+        raise ValueError("Shape too small. The minimun is (5, 5, 0)")
     if len(shape) == 2:
         shape = tuple(list(shape) + [1])
     n_features = np.prod(shape)
@@ -374,99 +356,89 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
 
     ##########################################################################
     ## 1. Build images with noize => e_ij
-    # Sample according to means and Cov
+    # Sample Noize: N
     if random_seed is not None:  # If random seed, save current random state
         rnd_state = np.random.get_state()
         np.random.seed(random_seed)
-
-    X = np.random.normal(mu_e, sigma_e, n_samples * n_features).reshape(n_samples,
-                                                                     n_features)
-    Xim = X.reshape(n_samples, nx, ny, nz)
-
+    Noise = np.random.normal(mu_e, sigma_e, n_samples * n_features)
+    Noise = Noise.reshape(n_samples, nx, ny, nz)
     #########################################################################
     ## 2. Build Objects
     if objects is None:
-        objects = dice_five(shape, noize_object_pixel_ratio)
-
+        objects = dice_five_with_union_of_pairs(shape, coef_info=1.,
+                                                coef_noise=sigma_e)
     #########################################################################
-    ## 3. Object-level noize structure
-    Xim, support = object_model(objects, Xim)
-    #X = Xim.reshape((Xim.shape[0], Xim.shape[1]*Xim.shape[2]))
-    #print X.mean(axis=0), X.std(axis=0)
-
+    ## 3. Object-level structured noise N
+    Noise, support = ObjImage.object_model(objects, Noise)
     #########################################################################
-    ## 4. Causal generative model
-    if mode == "generative":
-        y = np.random.normal(mu_y, sigma_y, n_samples)
-        y -= y.mean()
-        y /= y.std()
-        Xim = generative_model(objects, Xim, y, R)
-        beta = None
-
-    #########################################################################
-    ## 5. Pixel-level noize structure: spatial smoothing
+    ## 4. Pixel-level noize structure: spatial smoothing
     if sigma_spatial_smoothing != 0:
-        Xim = spatial_smoothing(Xim, sigma_spatial_smoothing, mu_e, sigma_e)
-        #X = Xim.reshape((Xim.shape[0], Xim.shape[1] * Xim.shape[2]))
+        Noise = spatial_smoothing(Noise, sigma_spatial_smoothing, mu_e, sigma_e)
+    Noise_flat = Noise.reshape((Noise.shape[0], np.prod(Noise.shape[1:])))
+    Noise_flat -= Noise_flat.mean(axis=0)
+    Noise_flat /= Noise_flat.std(axis=0)
 
-    if mode == "predictive":
-        y, beta_flat, noize = \
-            predictive_model(objects, Xim, snr, coef_per_feature=1.)
-        beta = beta_flat.reshape(nx, ny, nz)
-        if False:
-            X = Xim.reshape((n_samples, nx * ny))
-            Xc = (X - X.mean(axis=0)) / X.std(axis=0)
-            yc = (y - y.mean()) / y.std()
-            cor = np.dot(Xc.T, yc).reshape(nx, ny) / y.shape[0]
-            cax = plt.matshow(cor, cmap=plt.cm.coolwarm)
-            plt.colorbar(cax)
-            plt.show()
-
+    #########################################################################
+    ## 5. Model: y = X beta + noise
+    X = Noise
+    beta = np.zeros(X.shape[1:])
+    for k in xrange(len(objects)):
+        o = objects[k]
+        beta[o.get_mask()] += o.coef_info
+    beta_flat = beta.ravel()
+    # Fix a scaling to get the desire r2, ie.:
+    # y = coef * X * beta + noize
+    # Fix coef such r2(y, coef * X * beta) = r2
+    X_flat = X.reshape(n_samples, np.prod(shape))
+    Xbeta = np.dot(X_flat, beta_flat)
+    if r2 < 1:
+        noise = np.random.normal(0, 1, Xbeta.shape[0])
+        coef = corr_to_coef(v_x=np.var(Xbeta), v_e=np.var(noise),
+                     cov_xe=np.cov(Xbeta, noise)[0, 1], cor=np.sqrt(r2))
+        beta_flat *= coef
+        y = np.dot(X_flat, beta_flat) + noise
+    else:
+        noise = np.zeros(Xbeta.shape[0])
+        y = np.dot(X_flat, beta_flat)
+    if False:
+        Xflat = X.reshape((n_samples, nx * ny))
+        Xc = (Xflat - Xflat.mean(axis=0)) / Xflat.std(axis=0)
+        yc = (y - y.mean()) / y.std()
+        cor = np.dot(Xc.T, yc).reshape(nx, ny) / y.shape[0]
+        cax = plt.matshow(cor, cmap=plt.cm.coolwarm)
+        plt.colorbar(cax)
+        plt.show()
     if random_seed is not None:   # If random seed, restore random state
         np.random.set_state(rnd_state)
+    return X, y.reshape((n_samples, 1)), beta
 
-    return Xim, y.reshape((n_samples, 1)), beta, support
-
-
-if __name__ == '__main__2':
+if __name__ == '__main__':
     # utils
     def plot_map(im, plot=None):
         if plot is None:
             plot = plt
-        #fig, ax = plt.subplots()
         cax = plot.matshow(im, cmap=plt.cm.coolwarm)
         frame = plt.gca()
         frame.get_xaxis().set_visible(False)
         frame.get_yaxis().set_visible(False)
         mx = np.abs(im).max()
         k = 1
-        while (10 ** k * mx) < 1 and k<10: k+=1
-        ticks = np.array([-mx, -mx/4 -mx/2, 0, mx/2, mx/2, mx]).round(k+2)
+        while (10 ** k * mx) < 1 and k < 10:
+            k += 1
+        ticks = np.array([-mx, -mx/4 -mx/2, 0, mx/2, mx/2, mx]).round(k + 2)
         cbar = plt.colorbar(cax, ticks=ticks)
         cbar.set_clim(vmin=-mx, vmax=mx)
 
-    def sinv(M):
-        lu_obj = scipy.sparse.linalg.splu(M.tocsr())
-        Minv = lu_obj.solve(np.eye(M.shape[0]))
-        return Minv
-
-    n_samples = 1000
-    shape = (200, 150, 1)
-    R = .25
-    sigma_spatial_smoothing = 2
-    #run pylearn-parsimony/parsimony/datasets/samples_generator_struct.py
-    n_samples = 100
-    shape = (30, 30, 1)
-    R = .25
-    snr = .5
+    n_samples = 500
+    shape = (100, 100, 1)
+    r2 = .75
     sigma_spatial_smoothing = 1
-    random_seed=None
-    noize_object_pixel_ratio=.25
+    random_seed = None
+    noize_object_pixel_ratio = .25
     objects = None
-
-    Xim, y, beta, support = make_regression_struct(n_samples=n_samples,
-        shape=shape, snr=1., sigma_spatial_smoothing=sigma_spatial_smoothing,
-        mode="predictive", noize_object_pixel_ratio=noize_object_pixel_ratio,
+    Xim, y, beta = make_regression_struct(n_samples=n_samples,
+        shape=shape, r2=r2, sigma_spatial_smoothing=sigma_spatial_smoothing,
+        noize_object_pixel_ratio=noize_object_pixel_ratio,
         random_seed=random_seed)
     _, nx, ny, nz = Xim.shape
 
@@ -478,22 +450,18 @@ if __name__ == '__main__2':
     Xte = X[n_train:, :]
     yte = y[n_train:]
 
-    plt.figure()
     plot = plt.subplot(331)
-    plot_map(np.sign(support.squeeze()), plot)
-    plt.title("Objects support (blue are suppressors)")
-
-    plot = plt.subplot(332)
-    plot_map(beta.reshape(nx, ny), plot)
+    if beta is not None:
+        plot_map(beta.reshape(nx, ny), plot)
     plt.title("beta")
 
     Xtrc = (Xtr - Xtr.mean(axis=0)) / Xtr.std(axis=0)
     ytrc = (ytr - ytr.mean()) / ytr.std()
     cor = np.dot(Xtrc.T, ytrc).reshape(nx, ny) / ytr.shape[0]
-    plot = plt.subplot(333)
+    plot = plt.subplot(332)
     plot_map(cor, plot)
     plt.title("Corr(X, y)")
-    plt.show()
+    #plt.show()
 
     from sklearn.linear_model import Lasso
     from sklearn.linear_model import ElasticNet, ElasticNetCV
@@ -525,76 +493,72 @@ if __name__ == '__main__2':
     #        + alpha * l1_ratio * ||w||_1
     #        + 0.5 * alpha * (1 - l1_ratio) * ||w||^2_2
     alpha = alpha_g * 1. / (2. * n_train)
-    l1_ratio = .01
+    l1_ratio = .5
     l1l2 = ElasticNet(alpha=alpha, l1_ratio=l1_ratio)
     pred = l1l2.fit(Xtr, ytr).predict(Xte)
     plot = plt.subplot(335)
     plot_map(l1l2.coef_.reshape((nx, ny)), plot)
-    plt.title("Elasticnet(a:%.2f, l1:%.2f) (R2=%.2f)" % (l1l2.alpha, l1l2.l1_ratio, r2_score(yte, pred)))
+    plt.title("Elasticnet(a:%.2f, l1:%.2f) (R2=%.2f)" % (l1l2.alpha,
+              l1l2.l1_ratio, r2_score(yte, pred)))
 
     l1l2cv = ElasticNetCV()
     pred = l1l2cv.fit(Xtr, ytr).predict(Xte)
     plot = plt.subplot(336)
     plot_map(l1l2cv.coef_.reshape((nx, ny)), plot)
-    plt.title("ElasticnetCV(a:%.2f, l1:%.2f) (R2=%.2f)" % (l1l2cv.alpha_, l1l2cv.l1_ratio, r2_score(yte, pred)))
+    plt.title("ElasticnetCV(a:%.2f, l1:%.2f) (R2=%.2f)" % (l1l2cv.alpha_,
+              l1l2cv.l1_ratio, r2_score(yte, pred)))
     #plt.show()
-    #plt.show()
-
 
     # TVL1L2 ===============================================================
-    import parsimony.models as models
+    import parsimony.estimators as estimators
+    import parsimony.algorithms as algorithms
+    import parsimony.tv
+
     def ratio2coef(alpha, tv_ratio, l1_ratio):
-        l = alpha * (1 - tv_ratio) * l1_ratio
-        k = alpha * (1 - tv_ratio) * (1 - l1_ratio) * 0.5
-        gamma = alpha * tv_ratio
-        return l, k, gamma
+        l2_ratio = 1 - tv_ratio - l1_ratio
+        l, k, g = alpha * l1_ratio,  alpha * l2_ratio, alpha * tv_ratio
+        return l, k, g
+
     eps = 0.01
-    alpha = alpha_g #Constant that multiplies the penalty terms
+    alpha = alpha_g
 
-    tv_ratio=.05; l1_ratio=.95
-    l, k, gamma = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
-    pgm = models.LinearRegressionL1L2TV(l=l, k=k, gamma=gamma, shape=(1, nx, ny))
-    pgm = models.ContinuationRun(pgm, tolerances=[10000 * eps, 100 * eps, eps])
-    pgm.fit(Xtr, ytr)
-    f = pgm.get_algorithm().f
+    tv_ratio = .05
+    l1_ratio = .9
+    l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
+
+    Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
+    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
+                                       algorithm=algorithms.conesta_static)
+    tvl1l2.fit(Xtr, ytr)
     plot = plt.subplot(337)
-    plot_map(pgm.beta.reshape(nx, ny), plot)
-    r2 = r2_score(yte, np.dot(Xte, pgm.beta).ravel())
-    plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % (alpha, tv_ratio, l1_ratio, r2))
+    plot_map(tvl1l2.beta.reshape(nx, ny), plot)
+    r2 = r2_score(yte, np.dot(Xte, tvl1l2.beta).ravel())
+    plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % \
+        (alpha, tv_ratio, l1_ratio, r2))
 
-    tv_ratio=.5; l1_ratio=.95
-    l, k, gamma = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
-    pgm = models.LinearRegressionL1L2TV(l=l, k=k, gamma=gamma, shape=(1, nx, ny))
-    pgm = models.ContinuationRun(pgm, tolerances=[10000 * eps, 100 * eps, eps])
-    pgm.fit(Xtr, ytr)
-    f = pgm.get_algorithm().f
+    tv_ratio = .5
+    l1_ratio = .45
+    l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
+    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
+                                       algorithm=algorithms.conesta_static)
+    tvl1l2.fit(Xtr, ytr)
     plot = plt.subplot(338)
-    plot_map(pgm.beta.reshape(nx, ny), plot)
-    r2 = r2_score(yte, np.dot(Xte, pgm.beta).ravel())
-    plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % (alpha, tv_ratio, l1_ratio, r2))
+    plot_map(tvl1l2.beta.reshape(nx, ny), plot)
+    r2 = r2_score(yte, np.dot(Xte, tvl1l2.beta).ravel())
+    plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % \
+        (alpha, tv_ratio, l1_ratio, r2))
 
-    tv_ratio= 1.; l1_ratio=.95
-    l, k, gamma = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
-    pgm = models.LinearRegressionL1L2TV(l=l, k=k, gamma=gamma, shape=(1, nx, ny))
-    pgm = models.ContinuationRun(pgm, tolerances=[10000 * eps, 100 * eps, eps])
-    pgm.fit(Xtr, ytr)
-    f = pgm.get_algorithm().f
+    tv_ratio = .9
+    l1_ratio = .05
+    l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
+    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
+                                       algorithm=algorithms.conesta_static)
+    tvl1l2.fit(Xtr, ytr)
     plot = plt.subplot(339)
-    plot_map(pgm.beta.reshape(nx, ny), plot)
-    r2 = r2_score(yte, np.dot(Xte, pgm.beta).ravel())
-    plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % (alpha, tv_ratio, l1_ratio, r2))
+    plot_map(tvl1l2.beta.reshape(nx, ny), plot)
+    r2 = r2_score(yte, np.dot(Xte, tvl1l2.beta).ravel())
+    plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % \
+        (alpha, tv_ratio, l1_ratio, r2))
+
     plt.show()
-
-
-#    eps = 0.01
-#    alpha = alpha_g #Constant that multiplies the penalty terms
-#    l1_ratio = .95
-#    l = alpha * l1_ratio
-#    k = 0.5 * alpha * (1 - l1_ratio)
-#    gamma = 1 * alpha
-#    pgm = models.LinearRegressionL1L2TV(l=l, k=k, gamma=gamma, shape=(1, nx, ny))
-#    pgm = models.ContinuationRun(pgm, tolerances=[10000 * eps, 100 * eps, eps])
-#    pgm.fit(Xtr, ytr)
-
-
-# run pylearn-structured/structured/datasets/samples_generator_struct.py
+    #run pylearn-parsimony/parsimony/datasets/samples_generator_struct.py
