@@ -65,6 +65,9 @@ class LinearRegressionL1L2TV(BaseEstimator):
 
     def fit(self, X, y):
 
+#        function = self.func_class(options)#self.k, self.l, self.g, self.shape)
+#        output = self.algorithm.fit(X, y, function)
+
         function = self.func_class(self.k, self.l, self.g, self.shape)
 #        function.set_params(X=X, y=y)
 
@@ -121,3 +124,12 @@ class LinearRegressionL1L2TV(BaseEstimator):
     def predict(self, X):
 
         return np.dot(X, self.beta)
+        
+
+#class EstimatorConestaOLS2L1TV(LinearRegressionL1L2TV):
+#
+#    def __init__(self, k, l, g, shape):
+##        options = {...}
+#        super(LinearRegressionL1L2TV, self).__init__(k, l, g, shape, 
+#                                               func_class=functions.OLSL2_L1_TV,
+#                                               algorithm=algorithms.CONESTA)

@@ -228,18 +228,26 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
 
         gap_time = time_func()
         if dynamic:
+
             G_new, beta_hat = function.gap(X, y, beta, beta_hat,
                                            mu[-1], eps=eps_plus)
             G_new = abs(G_new)  # Just in case ...
-        else:
-#            G_new = eps0 * tau ** (i + 1)
-            G_new = tau * G
-#            print "Diff:", abs(G_new - G_new_)
 
-        if G_new < G:  # Always happens in the static version
-            G = G_new
-        else:
+            if G_new < G:
+                G = G_new
+            else:
+                G = tau * G
+
+        else:  # Static
+
+#            G_new = eps0 * tau ** (i + 1)
             G = tau * G
+
+        # We do this above now!
+#        if G_new < G:  # Always happens in the static version
+#            G = G_new
+#        else:
+#            G = tau * G
 #        G = tau * min(G, abs(G_new))
 
         gap_time = time_func() - gap_time
@@ -252,9 +260,9 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
         b = b + bval
         g = g + gval
 
-        # For the simulation we make sure that we do enough iterations
-        if len(f) < 0.33 * conts * max_iter or len(fval) < 0.9 * max_iter:
-            stop = False
+#        # For the simulation we make sure that we do enough iterations
+#        if len(f) < 0.33 * conts * max_iter or len(fval) < 0.9 * max_iter:
+#            stop = False
 
         if (G <= utils.TOLERANCE and mu[-1] <= utils.TOLERANCE) or stop:
             break
@@ -264,6 +272,12 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
         mu = mu + [max(mumin, mu_new)] * len(fval)
 
         i = i + 1
+
+    print
+    print
+    print "ITERATIONS:", i
+    print
+    print
 
     # TODO: These return values are for the OLS paper. Will be changed!
     return (beta, f, t, mu, Gval, b, g)
