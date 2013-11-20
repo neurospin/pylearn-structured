@@ -148,7 +148,7 @@ def fista(X, y, function, beta, step=None, mu=None,
 
     if step == None:
         step = 1.0 / function.Lipschitz(X, mu, max_iter=max_iter)
-
+ 
     t = []
     f = []
     b = []

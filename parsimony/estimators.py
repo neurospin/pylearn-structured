@@ -19,6 +19,9 @@ class BaseEstimator(object):
 
     __metaclass__ = abc.ABCMeta
 
+    def __init__(self, **opt):
+        self.opt = opt
+
     def set_params(self, **kwargs):
 
         for k, v in kwargs:
@@ -40,7 +43,7 @@ class BaseEstimator(object):
                                   'specialised!')
 
 
-class LinearRegressionL1L2TV(BaseEstimator):
+class BaseEstimator(object):
     """
     Arguments
     ---------
@@ -51,28 +54,36 @@ class LinearRegressionL1L2TV(BaseEstimator):
     algorithm: function
         conesta_static, conesta_dynamic, fista, ExcessiveGapMethod
     """
-    def __init__(self, k, l, g, A, algorithm=None, func_class=None):
+    def __init__(self, alg):
 
-        self.k = k
-        self.l = l
-        self.g = g
-        self._A = A
+        self.alg = alg
 
-        if algorithm == None:
-            algorithm = algorithms.conesta_static
-#            algorithm = algorithms.ExcessiveGapMethod
-        if func_class == None:
-            func_class = functions.OLSL2_L1_TV
-#            func_class = functions.OLSL2_SmoothedL1TV
+    def fit(self, X, y=None):
 
-        self.func_class = func_class
-        self.algorithm = algorithm
+        self.func.set_params(X=X, y=y)
+        self.beta = self.alg(self.func, beta)
 
-    def get_params(self):
 
-        return {"k": self.k, "l": self.l, "g": self.g}
+class OLS_L1(BaseEstimator):
 
-    def fit(self, X, y):
+    def __init__(self, l, alg=algorithms.fista):
+
+        self.func = functions.OLS_L1(l)
+        beta = ...
+        super(OLS_L1, self).__init__(alg=alg)
+
+
+
+e_fista = OLS_L1(0.5)
+e_fista.fit(X, y)
+
+e_conesta = OLS_L1(0.5, alg=algorithms.conesta(tau=0.9))
+e_conesta.fit(X, y)
+
+
+
+
+
 
 #        function = self.func_class(options)#self.k, self.l, self.g, self.shape)
 #        output = self.algorithm.fit(X, y, function)

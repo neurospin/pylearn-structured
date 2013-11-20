@@ -57,6 +57,11 @@ class ProximalGradientFunction(Function):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
+    def Lipschitz(self, X, mu, max_iter=1000):
+        raise NotImplementedError('Abstract method "Lipschitz" must be '\
+                                  'specialised!')
+
+    @abc.abstractmethod
     def gap(self, X, y, beta, beta_hat, mu, eps=utils.TOLERANCE,
             max_iter=1000, min_iter=1):
         raise NotImplementedError('Abstract method "gap" must be '\
