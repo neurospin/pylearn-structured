@@ -27,7 +27,8 @@ __all__ = ['RidgeRegression', 'L1', 'SmoothedL1', 'TotalVariation']
 
 
 class RidgeRegression(object):
-
+    """ f(beta) = (1 / 2)|Xbeta - y|² + (1 / 2)|beta|²
+    """
     def __init__(self, k):
 
         self.k = float(k)
