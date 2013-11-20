@@ -9,7 +9,7 @@ Created on Thu Sep 26 12:06:07 2013
 
 import numpy as np
 from utils import TOLERANCE
-from utils import U
+from utils import RandomUniform, ConstantValue
 from utils import norm2
 import scipy.sparse as sparse
 
@@ -17,7 +17,7 @@ __all__ = ['grad_L1', 'grad_L1mu', 'grad_L2', 'grad_norm2',
            'grad_TV', 'grad_TVmu', 'grad_TV_sparse']
 
 
-def grad_L1(beta):
+def grad_L1(beta, rnd=RandomUniform(-1, 1)):
 
     p = beta.shape[0]
 
@@ -28,7 +28,7 @@ def grad_L1(beta):
         elif beta[i, 0] < -TOLERANCE:
             grad[i, 0] = -1.0
         else:
-            grad[i, 0] = U(-1, 1)
+            grad[i, 0] = rnd(1)
 
     return grad
 
@@ -50,7 +50,7 @@ def grad_L2(beta):
 ## TODO check grad_tv with grad_TV_tommy, see code in __main__
 ## if ok remove grad_TV_tommy, _generate_A, _generate_Ai and modify
 ## modify grad_TVmu
-def grad_tv(beta, A):
+def grad_tv(beta, A, rnd=np.random.rand):
     beta_flat = beta.ravel()
     Ab = np.vstack([Ai.dot(beta_flat) for Ai in A]).T
     #Ab = np.vstack([A.dot(beta_flat), Ay.dot(beta_flat), Az.dot(beta_flat)]).T
@@ -62,10 +62,10 @@ def grad_tv(beta, A):
     n_lower = lower.sum()
     if n_lower:
         D = len(A)
-        rnd = (np.random.rand(n_lower, D) * 2.0) - 1.0
-        norm_rnd = np.sqrt(np.sum(rnd ** 2.0, axis=1))
-        a = np.random.rand(n_lower)
-        grad_Ab_norm2[lower] = (rnd.T * (a / norm_rnd)).T
+        vec_rnd = (rnd(n_lower, D) * 2.0) - 1.0
+        norm_vec = np.sqrt(np.sum(vec_rnd ** 2.0, axis=1))
+        a = rnd(n_lower)
+        grad_Ab_norm2[lower] = (vec_rnd.T * (a / norm_vec)).T
     grad = np.vstack([A[i].T.dot(grad_Ab_norm2[:, i]) for i in xrange(len(A))])
 #    grad = np.vstack([Ax.T.dot(grad_Ab_norm2[:, 0]),
 #                      Ay.T.dot(grad_Ab_norm2[:, 1]),
@@ -73,16 +73,16 @@ def grad_tv(beta, A):
     grad = grad.sum(axis=0)
     return grad.reshape(beta.shape)
 
-def grad_norm2(beta):
+def grad_norm2(beta, rnd=np.random.rand):
 
     norm_beta = norm2(beta)
     if norm_beta > TOLERANCE:
         return beta / norm_beta
     else:
         D = beta.shape[0]
-        u = (np.random.rand(D, 1) * 2.0) - 1.0  # [-1, 1]^D
+        u = (rnd(D, 1) * 2.0) - 1.0  # [-1, 1]^D
         norm_u = norm2(u)
-        a = np.random.rand()  # [0, 1]
+        a = rnd()  # [0, 1]
         return u * (a / norm_u)
 
 
@@ -138,7 +138,7 @@ def _generate_Ai(i, A, shape):
     return Ai
 
 
-def grad_TV(beta, shape):
+def grad_TV(beta, shape, rnd=np.random.rand):
 
     p = np.prod(shape)
 #    D = len(shape)
@@ -163,7 +163,7 @@ def grad_TV(beta, shape):
 #        print np.reshape(Ai[1, :], shape)
 #        print np.reshape(Ai[2, :], shape)
 
-        gradnorm2 = grad_norm2(np.dot(Ai, beta))
+        gradnorm2 = grad_norm2(np.dot(Ai, beta), rnd=rnd)
         grad += np.dot(Ai.T, gradnorm2)
 
     return grad
@@ -374,20 +374,25 @@ if __name__ == '__main__':
     from parsimony.datasets import make_regression_struct
     import parsimony.tv
     import numpy as np
+    seed = 1
     shape = (5, 5, 1)
-    Xim, y, beta = make_regression_struct(n_samples=100, shape=shape)
+    Xim, y, beta = make_regression_struct(n_samples=100, shape=shape, random_seed=seed)
     Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
     A = (Ax, Ay, Az)
     beta = beta.ravel()[:, np.newaxis]
-    seed = np.random.randint(10)
+    #seed = np.random.randint(10)
     np.random.seed(seed)
-    g1 = grad_tv(beta, A)
+    g1 = grad_tv(beta, A, rnd=RandomUniform(1))
     np.random.seed(seed)
-    g2 = grad_TV(beta, shape)
-    np.random.seed(seed)
-    #g3 = grad_TV_sparse(beta, shape, None)
+    g2 = grad_TV(beta, shape, rnd=RandomUniform(1))
     print np.allclose(g1, g2)
+    print g1
+    print g2
+    print g1 - g2
+#    g1 - g2
+#    g2 - g2
 #    Axf, Ayf, Azf = _generate_A(shape)
 #    np.all(Ax.toarray() == Azf)
 #    np.all(Ay.toarray() == Ayf)
 #    np.all(Az.toarray() == Axf)
+#run pylearn-parsimony/parsimony/datasets/simulated/grad.py

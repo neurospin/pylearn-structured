@@ -9,7 +9,7 @@ Created on Thu Sep 26 10:50:17 2013
 
 import numpy as np
 
-__all__ = ['TOLERANCE', 'RandomUniform', 'U', 'norm2', 'bisection_method']
+__all__ = ['TOLERANCE', 'RandomUniform', 'U', 'norm2', 'bisection_method', 'ConstantValue']
 
 TOLERANCE = 5e-8
 
@@ -28,13 +28,36 @@ class RandomUniform(object):
 
         return R
 
+    def __call__(self, *d):
+        return self.rand(*d)
 
-def U(a, b):
 
-    t = max(a, b)
-    a = float(min(a, b))
-    b = float(t)
-    return (np.random.rand() * (b - a)) + a
+class ConstantValue(object):
+    """Random like number generator that returns a constant value.
+
+    Example
+    -------
+    >>> rnd = ConstantValue(5.)
+    >>> rnd(3)
+    array([ 5.,  5.,  5.])
+    >>> rnd(2, 2)
+    array([[ 5.,  5.],
+           [ 5.,  5.]])
+    """
+    def __init__(self, val):
+        self.val = val
+
+    def __call__(self, *shape):
+        return np.repeat(self.val, np.prod(shape)).reshape(shape)
+
+
+
+#def U(a, b):
+#
+#    t = max(a, b)
+#    a = float(min(a, b))
+#    b = float(t)
+#    return (np.random.rand() * (b - a)) + a
 
 
 def norm2(x):
