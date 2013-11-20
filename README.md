@@ -1,8 +1,8 @@
-Structured and sparse machine learning in python
-================================================
+ParsimonY: structured and sparse machine learning in Python
+===========================================================
 
-Structured sparse learning for Python 2.7.
-* `structured` provides structured and sparse machine learning. It currently contains:
+ParsimonY contains the following features:
+* `parsimony` provides structured and sparse penalties in machine learning. It currently contains:
     * Loss functions:
         * OLS
     * Penalties:
@@ -12,8 +12,8 @@ Structured sparse learning for Python 2.7.
         * Total variation (TV)
         * Any combination of the above
     * Algorithms:
-        * _F_ast _I_terative _S_oft-_T_hresholding _A_lgorithm (FISTA)
-        * _CO_ntinuation of _NEST_sterov’s smoothing _A_lgorithm (CONESTA)
+        * _F_ast _I_terative _S_oft-_T_hresholding _A_lgorithm (fista)
+        * _CO_ntinuation of _NEST_sterov’s smoothing _A_lgorithm (conesta)
         * Excessive gap method
 
 

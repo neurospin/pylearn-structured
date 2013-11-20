@@ -14,7 +14,7 @@ import os
 import re
 import string
 
-PATH = "./structured/"
+PATH = "./parsimony/"
 OUTPUT = "./TODO"
 
 RE_PY_FILE = re.compile(".*\.py$")

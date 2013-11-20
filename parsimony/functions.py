@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`structured.functions` module contains several functions used
+The :mod:`parsimony.functions` module contains several functions used
 throughout the package. These represent mathematical functions and should thus
 have any corresponding properties used by the algorithms.
 
@@ -14,21 +14,57 @@ Created on Mon Apr 22 10:54:29 2013
 @email:   tommy.loefstedt@cea.fr
 @license: TBD.
 """
-
+import abc
 import numpy as np
 import scipy.sparse as sparse
 import math
 
-import structured.utils as utils
-#import structured.utils.math as utils.math
-import structured.algorithms as algorithms
+import parsimony.utils as utils
+#import parsimony.utils.math as utils.math
+import parsimony.algorithms as algorithms
 
-__all__ = ['RidgeRegression', 'L1', 'SmoothedL1', 'TotalVariation']
+__all__ = ['RidgeRegression', 'L1', 'SmoothedL1', 'TotalVariation',
+           'OLSL2_L1_TV', 'SmoothedL1TV', 'OLSL2_SmoothedL1TV']
 
 
-class RidgeRegression(object):
-    """ f(beta) = (1 / 2)|Xbeta - y|² + (1 / 2)|beta|²
-    """
+class Function(object):
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def f(*args, **kwargs):
+        raise NotImplementedError('Abstract method "f" must be '\
+                                  'specialised!')
+
+
+class ExcessiveGapFunction(Function):
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def betahat(self, X, y, alpha):
+        raise NotImplementedError('Abstract method "betahat" must be '\
+                                  'specialised!')
+
+    @abc.abstractmethod
+    def V(self, u, beta, L):
+        raise NotImplementedError('Abstract method "V" must be '\
+                                  'specialised!')
+
+
+class ProximalGradientFunction(Function):
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def gap(self, X, y, beta, beta_hat, mu, eps=utils.TOLERANCE,
+            max_iter=1000, min_iter=1):
+        raise NotImplementedError('Abstract method "gap" must be '\
+                                  'specialised!')
+
+
+class RidgeRegression(Function):
+
     def __init__(self, k):
 
         self.k = float(k)
@@ -92,7 +128,7 @@ class RidgeRegression(object):
 #        return self.f(X, y, self.k, beta)
 
 
-class L1(object):
+class L1(Function):
     """The proximal operator of the L1 loss function
 
         f(x) = l * ||x||_1,
@@ -118,7 +154,7 @@ class L1(object):
         return (np.abs(x) > l) * (x - l * np.sign(x - l))
 
 
-class SmoothedL1(object):
+class SmoothedL1(Function):
     """The proximal operator of the smoothed L1 loss function
 
         f(x) = l * L1mu(x),
@@ -200,14 +236,16 @@ class SmoothedL1(object):
         return np.max(np.absolute(beta))
 
 
-class TotalVariation(object):
+class TotalVariation(Function):
 
-    def __init__(self, g, shape):
+    def __init__(self, g, A):
 
         self.g = float(g)
-        self.p = np.prod(shape)
-        self.shape = shape
-        self._A = self.precompute(shape, mask=None, compress=False)
+        self.p = A[0].shape[0]  # WARNING: Number of rows may differ from p.
+        #self.p = np.prod(shape)
+        #self.shape = shape
+        #self._A = self.precompute(shape, mask=None, compress=False)
+        self._A = A
         self._lambda_max = None
 
     """ Function value of Ridge regression.
@@ -272,9 +310,9 @@ class TotalVariation(object):
 #            self._lambda_max = np.sum(us ** 2.0)
 
         # Note that we can save the state here since lmax(A) does not change.
-        if len(self.shape) == 3 \
-            and self.shape[0] == 1 and self.shape[1] == 1:
-
+        if len(self._A) == 3 \
+            and self._A[1].nnz == 0 and self._A[2].nnz == 0:
+#            and self.shape[0] == 1 and self.shape[1] == 1:
 #            lmaxTV = 2.0 * (1.0 - cos(float(self._p) * pi \
 #                                                 / float(self._p + 1)))
             self._lambda_max = 2.0 * (1.0 - math.cos(float(self.p - 1) \
@@ -436,13 +474,13 @@ class TotalVariation(object):
         return [Ax, Ay, Az]
 
 
-class OLSL2_L1_TV(object):
+class OLSL2_L1_TV(ProximalGradientFunction):
 
-    def __init__(self, k, l, g, shape):
+    def __init__(self, k, l, g, A):
 
         self.rr = RidgeRegression(k)
         self.l1 = L1(l)
-        self.tv = TotalVariation(g, shape=shape)
+        self.tv = TotalVariation(g, A=A)
 
         self.reset()
 
@@ -561,7 +599,7 @@ class OLSL2_L1_TV(object):
 
     def gap(self, X, y, beta, beta_hat, mu,
             eps=utils.TOLERANCE,
-            max_iter=100, min_iter=10, init_iter=1000):
+            max_iter=100, min_iter=1):
         # TODO: Remove init_iter everywhere!
 
         alpha = self.tv.alpha(beta, mu)
@@ -617,7 +655,7 @@ class OLSL2_L1_TV(object):
         return P - D, beta_hat
 
 
-class SmoothedL1TV(object):
+class SmoothedL1TV(Function):
 
     def __init__(self, l, g, shape):
 
@@ -755,7 +793,7 @@ class SmoothedL1TV(object):
              + (A[1].shape[0] / 2.0)
 
 
-class OLSL2_SmoothedL1TV(object):
+class OLSL2_SmoothedL1TV(ExcessiveGapFunction):
 
     def __init__(self, k, l, g, shape):
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`structured.utils` module includes common functions and constants.
+The :mod:`parsimony.utils` module includes common functions and constants.
 
 Please add anything you need throughout the whole package to this module.
 (As opposed to having several commong definitions scattered all over the
@@ -31,7 +31,7 @@ __all__ = ['TOLERANCE', 'MAX_ITER']
 
 # Settings
 TOLERANCE = 5e-8
-MAX_ITER = 1000
+MAX_ITER = 10000
 #mu_zero = 5e-8
 
 #def norm1(x):

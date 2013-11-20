@@ -7,6 +7,8 @@ Created on Thu Feb 8 09:22:00 2013
 @license: TBD.
 """
 
+#from parsimony.utils import math
+
 #from .utils import norm
 #from .utils import norm1
 #from .utils import norm0

@@ -11,14 +11,14 @@ import numpy as np
 import matplotlib.pyplot as plot
 from time import time
 
-import structured.algorithms as algorithms
-import structured.functions as functions
-import structured.datasets.simulated.correlation_matrices \
+import parsimony.algorithms as algorithms
+import parsimony.functions as functions
+import parsimony.datasets.simulated.correlation_matrices \
         as correlation_matrices
-import structured.utils as utils
+import parsimony.utils as utils
 
-import structured.datasets.simulated.l1_l2_tv as l1_l2_tv
-import structured.datasets.simulated.beta as beta_generate
+import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
+import parsimony.datasets.simulated.beta as beta_generate
 
 
 np.random.seed(0)
@@ -119,20 +119,20 @@ err_f_egm = [abs(f_egm[i] - f_star) \
 
 
 print
-print " FISTA"
+print " fista"
 print "======="
-# FISTA with mu_opt
+# fista with mu_opt
 t = time()
 mu_opt = function_pgm.mu_opt(eps, X)
 step = 1.0 / function_pgm.Lipschitz(X, mu_opt, max_iter=1000)
 function_pgm.reset()
-beta_fista, f_fista, t_fista = algorithms.FISTA(X, y, function_pgm,
+beta_fista, f_fista, t_fista = algorithms.fista(X, y, function_pgm,
                                                 betastart,
                                                 step, mu_opt,
                                                 eps=eps,
                                                 max_iter=max_it)
 time_fista = time() - t
-print "FISTA time:", time_fista
+print "fista time:", time_fista
 
 t_fista = np.cumsum(t_fista)
 err_f_fista = [abs(f_fista[i] - f_star) \
@@ -142,13 +142,13 @@ length = len(f_fista)
 
 
 print
-print " CONESTA DYNAMIC"
-print "================="
-# CONESTA with dynamic mu
+print "conesta dynamic"
+print "==============="
+# conesta with dynamic mu
 t = time()
 function_pgm.reset()
 beta_dynamic, f_dynamic, t_dynamic, mu_dynamic, G_conesta \
-    = algorithms.CONESTA(X, y, function_pgm,
+    = algorithms.conesta(X, y, function_pgm,
                          betastart,
                          mu_start=mu_egm[0],
                          mumin=mu_zero,
@@ -160,7 +160,7 @@ beta_dynamic, f_dynamic, t_dynamic, mu_dynamic, G_conesta \
                          max_iter=maxit,
                          init_iter=init_iter)
 time_dynamic = time() - t
-print "CONESTA DYNAMIC time:", time_dynamic
+print "conesta dynamic time:", time_dynamic
 
 t_dynamic = np.cumsum(t_dynamic).tolist()[:length]
 err_f_dynamic = [abs(f_dynamic[i] - f_star) \
@@ -170,15 +170,15 @@ max_it = max(max_it, len(f_dynamic))
 
 
 print
-print " CONESTA STATIC"
-print "================"
-# CONESTA with fixed mu and tau = 0.5 such that
+print "conesta static"
+print "=============="
+# conesta with fixed mu and tau = 0.5 such that
 # mu_i = eps0 * tau ** (i + 1), eps0 = eps_opt(mu0, X)
 # and mu0 = 0.9 * mu_start(beta).
 t = time()
 function_pgm.reset()
 beta_static, f_static, t_static, mu_static, G_conesta2 \
-    = algorithms.CONESTA(X, y, function_pgm,
+    = algorithms.conesta(X, y, function_pgm,
                          betastart,
                          mu_start=mu_egm[0],
                          mumin=mu_zero,
@@ -189,7 +189,7 @@ beta_static, f_static, t_static, mu_static, G_conesta2 \
                          conts=conts,
                          max_iter=maxit)
 time_static = time() - t
-print "CONESTA STATIC time:", time_static
+print "conesta static time:", time_static
 
 t_static = np.cumsum(t_static).tolist()[:length]
 err_f_static = [abs(f_static[i] - f_star) \

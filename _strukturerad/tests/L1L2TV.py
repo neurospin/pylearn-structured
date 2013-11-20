@@ -9,21 +9,21 @@ Created on Wed Sep  4 12:07:50 2013
 
 import numpy as np
 
-import structured.utils as utils
-from structured.utils import math
+import parsimony.utils as utils
+from parsimony.utils import math
 
-import structured.datasets.simulated.l1_l2_tv as l1_l2_tv
-import structured.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
-import structured.datasets.simulated.l1mu_l2_tvmu as l1mu_l2_tvmu
+import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
+import parsimony.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
+import parsimony.datasets.simulated.l1mu_l2_tvmu as l1mu_l2_tvmu
 
-import structured.datasets.simulated.beta as generate_beta
+import parsimony.datasets.simulated.beta as generate_beta
 
 from time import time
 import matplotlib.pyplot as plot
 import matplotlib.cm as cm
 
-import structured.functions as functions
-import structured.algorithms as algorithms
+import parsimony.functions as functions
+import parsimony.algorithms as algorithms
 
 np.random.seed(42)
 

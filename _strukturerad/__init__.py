@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`strukturerad` module includes several different structured machine
+The :mod:`strukturerad` module includes several different parsimony machine
 learning models.
 
 @author: Tommy Löfstedt

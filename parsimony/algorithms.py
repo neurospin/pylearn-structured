@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`structured.algorithms` module includes several algorithms used
+The :mod:`parsimony.algorithms` module includes several algorithms used
 throughout the package.
 
 Algorithms may not be stateful. I.e., if they are classes, do not keep
@@ -17,14 +17,17 @@ Created on Fri Feb  8 17:24:11 2013
 
 import numpy as np
 
-import structured.utils as utils
-from structured.utils import math
+import parsimony.utils.math
+import parsimony.utils as utils
+
 from time import time, clock
 
 #time_func = time
 time_func = clock
 
-__all = ['FastSVD', 'FastSparseSVD', 'FISTA', 'CONESTA', 'ExcessiveGapMethod']
+__all__ = ['FastSVD', 'FastSparseSVD',
+           'fista', 'conesta', 'conesta_static', 'conesta_dynamic',
+           'ExcessiveGapMethod']
 
 
 def FastSVD(X, max_iter=100, start_vector=None):
@@ -66,7 +69,7 @@ def FastSVD(X, max_iter=100, start_vector=None):
         K = np.dot(X.T, X)
         # TODO: Use module for this!
         v = np.random.rand(X.shape[1], 1)
-        v /= math.norm(v)
+        v /= utils.math.norm(v)
 #        v = start_vectors.RandomStartVector().get_vector(X)
         for it in xrange(max_iter):
             v_ = v
@@ -109,7 +112,7 @@ def FastSparseSVD(X, max_iter=100, start_vector=None):
             t /= np.sqrt(np.sum(t ** 2.0))
 
             a = float(np.sqrt(np.sum((t_ - t) ** 2.0)))
-            if a < utils.TOLERANCE / 1000.0:
+            if a < utils.TOLERANCE:
                 break
 
         v = X.T.dot(t)
@@ -119,7 +122,7 @@ def FastSparseSVD(X, max_iter=100, start_vector=None):
         K = X.T.dot(X)
         # TODO: Use module for this!
         v = np.random.rand(X.shape[1], 1)
-        v /= math.norm(v)
+        v /= utils.math.norm(v)
 #        v = start_vectors.RandomStartVector().get_vector(X)
         for it in xrange(max_iter):
             v_ = v
@@ -127,21 +130,29 @@ def FastSparseSVD(X, max_iter=100, start_vector=None):
             v /= np.sqrt(np.sum(v ** 2.0))
 
             a = float(np.sqrt(np.sum((v_ - v) ** 2.0)))
-            if a < utils.TOLERANCE / 1000.0:
+            if a < utils.TOLERANCE:
                 break
 
     return v
 
 
-def FISTA(X, y, function, beta, step, mu,
+def fista(X, y, function, beta, step=None, mu=None,
           eps=utils.TOLERANCE,
-          max_iter=utils.MAX_ITER, min_iter=1):
+          max_iter=utils.MAX_ITER, min_iter=1, b_star=None, gradL1=None):
     """ The fast iterative shrinkage threshold algorithm.
     """
     z = betanew = betaold = beta
 
+    if mu == None:
+        mu = 0.9 * function.mu(beta)
+
+    if step == None:
+        step = 1.0 / function.Lipschitz(X, mu, max_iter=max_iter)
+
     t = []
     f = []
+    b = []
+    g = []
     for i in xrange(1, max_iter + 1):
         tm = time_func()
 
@@ -151,17 +162,25 @@ def FISTA(X, y, function, beta, step, mu,
 
         t.append(time_func() - tm)
         f.append(function.f(X, y, betanew, mu=0.0))
+        if b_star != None:
+            b.append(utils.math.norm(betanew - b_star))
+        if gradL1 != None:
+            g.append(utils.math.norm(function.grad(X, y, betanew, mu) \
+                                      + gradL1))
+        else:
+            g.append(utils.math.norm(function.grad(X, y, betanew, mu)))
 
-        if (1.0 / step) * math.norm(betanew - z) < eps and i >= min_iter:
+        if (1.0 / step) * utils.math.norm(betanew - z) < eps and i >= min_iter:
             break
 
-    return (betanew, f, t)
+    # TODO: These return values are for the OLS paper. Will be changed!
+    return (betanew, f, t, b, g)
 
 
-def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
-            sigma=1.0, tau=0.5, dynamic=True,
+def conesta(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
+            tau=0.5, dynamic=True,
             eps=utils.TOLERANCE,
-            conts=50, max_iter=1000, min_iter=1, init_iter=1000):
+            conts=50, max_iter=1000, min_iter=1, b_star=None, gradL1=None):
 
     if mu_start != None:
         mu = [mu_start]
@@ -173,75 +192,106 @@ def CONESTA(X, y, function, beta, mu_start=None, mumin=utils.TOLERANCE,
 
     max_eps = function.eps_max(mu[0])
 
-    G = eps0 = min(max_eps, function.eps_opt(mu[0], X))
+#    G = eps0 = min(max_eps, function.eps_opt(mu[0], X))
+    G = min(max_eps, function.eps_opt(mu[0], X))
 
     beta_hat = None
 
     t = []
     f = []
+    b = []
+    g = []
     Gval = []
 
     i = 0
     while True:
         stop = False
 
-        tnew = 1.0 / function.Lipschitz(X, mu[i], max_iter=100)
+        tnew = 1.0 / function.Lipschitz(X, mu[-1], max_iter=100)
+        eps_plus = min(max_eps, function.eps_opt(mu[-1], X))
+        (beta, fval, tval, bval, gval) = fista(X, y, function, beta, tnew,
+                                               mu[-1], eps=eps_plus,
+                                               max_iter=max_iter,
+                                               min_iter=1,
+                                               b_star=b_star, gradL1=gradL1)
+        print "fista did iterations =", len(fval)
 
-        eps_plus = min(max_eps, G)
-        (beta, fval, tval) = FISTA(X, y, function, beta, tnew, mu[i],
-                                 eps=eps_plus,
-                                 max_iter=max_iter,
-#                                 max_iter=int(float(max_iter) / np.sqrt(i + 1)),
-                                 min_iter=1)
-        print "FISTA did iterations =", len(fval)
-
-        fista_its = len(fval)
-
-        mumin = min(mumin, mu[i])
+        mumin = min(mumin, mu[-1])
         tmin = min(tmin, tnew)
         beta_tilde = function.prox(beta - tmin * function.grad(X, y,
                                                                beta, mumin),
                                    tmin)
 
-        if (1.0 / tmin) * math.norm(beta - beta_tilde) < eps or i >= conts:
-            print "%f < %f" % ((1. / tmin) * math.norm(beta - beta_tilde), eps)
+        if (1.0 / tmin) * utils.math.norm(beta - beta_tilde) < eps or i >= conts:
+            print "%f < %f" % ((1. / tmin) * utils.math.norm(beta - beta_tilde), eps)
             print "%d >= %d" % (i, conts)
             stop = True
 
         gap_time = time_func()
         if dynamic:
-            G_new, beta_hat = function.gap(X, y, beta, beta_hat,
-                                       mu[i],
-                                       eps=eps_plus,
-                                       max_iter=max(1, int(0.1 * fista_its)),
-                                       min_iter=1,
-                                       init_iter=init_iter)
-        else:
-            G_new = eps0 * tau ** (i + 1)
 
-        G = min(G, abs(G_new)) / sigma
+            G_new, beta_hat = function.gap(X, y, beta, beta_hat,
+                                           mu[-1], eps=eps_plus)
+            G_new = abs(G_new)  # Just in case ...
+
+            if G_new < G:
+                G = G_new
+            else:
+                G = tau * G
+
+        else:  # Static
+
+#            G_new = eps0 * tau ** (i + 1)
+            G = tau * G
+
+        # We do this above now!
+#        if G_new < G:  # Always happens in the static version
+#            G = G_new
+#        else:
+#            G = tau * G
+#        G = tau * min(G, abs(G_new))
+
         gap_time = time_func() - gap_time
         print "Gap:", G
         Gval.append(G)
 
+        f = f + fval
         tval[-1] += gap_time
         t = t + tval
-        f = f + fval
+        b = b + bval
+        g = g + gval
 
-        if (G <= utils.TOLERANCE and mu[i] <= utils.TOLERANCE) or stop:
+#        # For the simulation we make sure that we do enough iterations
+#        if len(f) < 0.33 * conts * max_iter or len(fval) < 0.9 * max_iter:
+#            stop = False
+
+        if (G <= utils.TOLERANCE and mu[-1] <= utils.TOLERANCE) or stop:
             break
 
-        mu_new = min(mu[i], function.mu_opt(G, X))
-#        print "mu_opt: ", mu_new
-        mu.append(max(mumin, mu_new))
+        mu_new = min(mu[-1], function.mu_opt(G, X))
+        mumin = min(mumin, mu_new)  # Testing only. Remove!!
+        mu = mu + [max(mumin, mu_new)] * len(fval)
 
         i = i + 1
 
-    return (beta, f, t, mu, Gval)
+    print
+    print
+    print "ITERATIONS:", i
+    print
+    print
+
+    # TODO: These return values are for the OLS paper. Will be changed!
+    return (beta, f, t, mu, Gval, b, g)
+
+def conesta_static(*args, **kwargs):
+    return conesta(dynamic=False, *args, **kwargs)
+
+def conesta_dynamic(*args, **kwargs):
+    return conesta(dynamic=True, *args, **kwargs)
 
 
 def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
-                       max_iter=utils.MAX_ITER, f_star=0.0):
+                       max_iter=utils.MAX_ITER, b_star=None, f_star=0.0):
     """ The excessive gap method for strongly convex functions.
 
     Parameters
@@ -270,6 +320,7 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
 
     t = []
     f = []
+    b = []
     ulim = []
 
     k = 0
@@ -296,6 +347,8 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
 
         t.append(time_func() - tm)
         f.append(function.f(X, y, beta, mu=0.0))
+        if b_star != None:
+            b.append(utils.math.norm(beta - b_star))
 #        ulim.append(2.0 * function.h.M() * mu[0] / ((float(k) + 1.0) * (float(k) + 2.0)))
         ulim.append(mu[k + 1] * function.h.M())
 
@@ -314,4 +367,5 @@ def ExcessiveGapMethod(X, y, function, eps=utils.TOLERANCE,
 #    plot.plot(ulim, '-.r')
 #    plot.show()
 
-    return (beta, f, t, mu, ulim, beta0)
+    # TODO: These return values are for the OLS paper. Will be changed!
+    return (beta, f, t, mu, ulim, beta0, b)
