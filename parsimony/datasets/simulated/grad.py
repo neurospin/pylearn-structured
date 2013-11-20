@@ -47,6 +47,31 @@ def grad_L2(beta):
 
     return beta
 
+## TODO check grad_tv with grad_TV_tommy, see code in __main__
+## if ok remove grad_TV_tommy, _generate_A, _generate_Ai and modify
+## modify grad_TVmu
+def grad_tv(beta, A):
+    beta_flat = beta.ravel()
+    Ab = np.vstack([Ai.dot(beta_flat) for Ai in A]).T
+    #Ab = np.vstack([A.dot(beta_flat), Ay.dot(beta_flat), Az.dot(beta_flat)]).T
+    Ab_norm2 = np.sqrt(np.sum(Ab ** 2.0, axis=1))    
+    upper = Ab_norm2 > TOLERANCE
+    grad_Ab_norm2 = Ab
+    grad_Ab_norm2[upper] = (Ab[upper].T / Ab_norm2[upper]).T
+    lower = Ab_norm2 <= TOLERANCE
+    n_lower = lower.sum()
+    if n_lower:
+        D = len(A)
+        rnd = (np.random.rand(n_lower, D) * 2.0) - 1.0
+        norm_rnd = np.sqrt(np.sum(rnd ** 2.0, axis=1))
+        a = np.random.rand(n_lower)
+        grad_Ab_norm2[lower] = (rnd.T * (a / norm_rnd)).T
+    grad = np.vstack([A[i].T.dot(grad_Ab_norm2[:, i]) for i in xrange(len(A))])
+#    grad = np.vstack([Ax.T.dot(grad_Ab_norm2[:, 0]),
+#                      Ay.T.dot(grad_Ab_norm2[:, 1]),
+#                      Az.T.dot(grad_Ab_norm2[:, 2])])
+    grad = grad.sum(axis=0)
+    return grad.reshape(beta.shape)
 
 def grad_norm2(beta):
 
@@ -345,3 +370,24 @@ def grad_TV_sparse(beta, shape, mask):
 
     return grad
 
+if __name__ == '__main__':
+    from parsimony.datasets import make_regression_struct
+    import parsimony.tv
+    import numpy as np
+    shape = (5, 5, 1)
+    Xim, y, beta = make_regression_struct(n_samples=100, shape=shape)
+    Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
+    A = (Ax, Ay, Az)
+    beta = beta.ravel()[:, np.newaxis]
+    seed = np.random.randint(10)
+    np.random.seed(seed)
+    g1 = grad_tv(beta, A)
+    np.random.seed(seed)
+    g2 = grad_TV(beta, shape)
+    np.random.seed(seed)
+    #g3 = grad_TV_sparse(beta, shape, None)
+    print np.allclose(g1, g2)
+#    Axf, Ayf, Azf = _generate_A(shape)
+#    np.all(Ax.toarray() == Azf)
+#    np.all(Ay.toarray() == Ayf)
+#    np.all(Az.toarray() == Axf)
