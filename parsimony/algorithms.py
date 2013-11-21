@@ -206,6 +206,75 @@ class FastSparseSVD(ImplicitAlgorithm):
 
 class FISTA(ExplicitAlgorithm):
     """ The fast iterative shrinkage threshold algorithm.
+
+    Example
+    -------
+    import numpy as np
+    import parsimony.estimators as estimators
+    import parsimony.algorithms as algorithms
+    import parsimony.tv
+    from parsimony.functions import OLSL2_L1_TV
+    from parsimony.algorithms import fista
+    from parsimony.start_vectors import RandomStartVector
+
+    shape = (100, 100, 1)
+    num_samples = 500
+
+    num_ft = shape[0] * shape[1] * shape[2]
+    X = np.random.random((num_samples, num_ft))
+    y = np.random.randint(0, 2, (num_samples, 1))
+    random_start_vector = np.random.random((X.shape[1], 1))
+
+    def ratio2coef(alpha, tv_ratio, l1_ratio):
+        l2_ratio = 1 - tv_ratio - l1_ratio
+        l, k, g = alpha * l1_ratio,  alpha * l2_ratio, alpha * tv_ratio
+        return l, k, g
+
+    eps = 0.01
+    alpha = 10.
+
+    tv_ratio = .05
+    l1_ratio = .9
+
+    l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
+
+    Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
+
+    tvl1l2_conesta = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
+                                        algorithm=algorithms.conesta_static)
+    tvl1l2_conesta.fit(X, y)
+
+    tvl1l2_fista = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
+                                        algorithm=algorithms.fista)
+    tvl1l2_fista.fit(X, y)
+
+    residual = np.sum(tvl1l2_fista.beta - tvl1l2_conesta.beta)
+
+    import spams
+    spams_X = np.asfortranarray(X)
+    spams_Y = np.asfortranarray(y)
+    W0 = np.asfortranarray(np.random.random((spams_X.shape[1],
+                                             spams_Y.shape[1])))
+    spams_X = np.asfortranarray(spams_X - np.tile(np.mean(spams_X, 0),
+                                                  (spams_X.shape[0], 1)))
+    spams_Y = np.asfortranarray(spams_Y - np.tile(np.mean(spams_Y,0),
+                                                         (spams_Y.shape[0],1)))
+    param = {'numThreads' : 1,'verbose' : True,
+         'lambda1' : 0.05, 'it0' : 10, 'max_it' : 200,
+         'L0' : 0.1, 'tol' : 1e-3, 'intercept' : False,
+         'pos' : False}
+    (W, optim_info) = spams.fistaFlat(spams_Y,
+                                      spams_X,
+                                      W0,
+                                      True,
+                                      **param)
+
+#    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
+#                                algorithm=algorithms.conesta_static)
+#    tvl1l2.fit(X, y)
+#    start_beta_vector = random_start_vector.get_vector([X.shape[1], 1])
+#    fista(X, y, olsl2_L1_TV, start_beta_vector)
+
     """
     INTERFACES = [functions.Gradient,
                   # TODO: We should use a step size here instead of the
@@ -503,47 +572,3 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
             return (beta, output)
         else:
             return beta
-
-
-class GeneralisedMultiblockISTA(ExplicitAlgorithm):
-    """ The iterative shrinkage threshold algorithm in a multiblock setting.
-    """
-    INTERFACES = [functions.MultiblockFunction,
-                  functions.MultiblockGradient,
-                  functions.MultiblockProximalOperator,
-                  functions.GradientStep,
-                 ]
-
-    def __init__(self, step=None, output=False,
-                 eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
-
-        self.step = step
-        self.output = output
-        self.eps = eps
-        self.max_iter = max_iter
-        self.min_iter = min_iter
-
-    def __call__(self, function, w):
-
-        self.check_compatability(function, self.INTERFACES)
-
-        for it in xrange(10):  # TODO: Get number of iterations!
-            print "it:", it
-
-            for i in xrange(len(w)):
-                print "  i:", i
-
-                for k in xrange(10000):
-                    print "    k:", k
-
-                    t = function.step(w, i)
-                    w[i] = w[i] - t * function.grad(w, i)
-                    w = function.prox(w, i, t)
-#                    = w[:i] + [wi] + w[i+1:]
-
-                    print "    f:", function.f(w)
-
-#                w[i] = wi
-
-        return w
