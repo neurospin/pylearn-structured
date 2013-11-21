@@ -217,8 +217,8 @@ class FISTA(ExplicitAlgorithm):
     from parsimony.algorithms import fista
     from parsimony.start_vectors import RandomStartVector
 
-    shape = (100, 100, 1)
-    num_samples = 500
+    shape = (10, 10, 1)
+    num_samples = 20
 
     num_ft = shape[0] * shape[1] * shape[2]
     X = np.random.random((num_samples, num_ft))
@@ -231,43 +231,78 @@ class FISTA(ExplicitAlgorithm):
         return l, k, g
 
     eps = 0.01
-    alpha = 10.
 
-    tv_ratio = .05
-    l1_ratio = .9
+    alpha = 1.
+    tv_ratio = .00
+    l1_ratio = 0.05
 
     l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
 
     Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
-
-    tvl1l2_conesta = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
-                                        algorithm=algorithms.conesta_static)
-    tvl1l2_conesta.fit(X, y)
+#
+#    tvl1l2_conesta = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
+#                                        algorithm=algorithms.conesta_static)
+#    tvl1l2_conesta.fit(X, y)
 
     tvl1l2_fista = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
                                         algorithm=algorithms.fista)
     tvl1l2_fista.fit(X, y)
 
-    residual = np.sum(tvl1l2_fista.beta - tvl1l2_conesta.beta)
+#    error = np.sum(tvl1l2_fista.beta - tvl1l2_conesta.beta)
 
     import spams
-    spams_X = np.asfortranarray(X)
+    spams_X = np.asfortranarray(X)    
+#    spams_X = np.asfortranarray(spams_X - np.tile(np.mean(spams_X, 0),
+#                                                  (spams_X.shape[0], 1)))
+#    spams_X = spams.normalize(spams_X)
+
     spams_Y = np.asfortranarray(y)
-    W0 = np.asfortranarray(np.random.random((spams_X.shape[1],
-                                             spams_Y.shape[1])))
-    spams_X = np.asfortranarray(spams_X - np.tile(np.mean(spams_X, 0),
-                                                  (spams_X.shape[0], 1)))
-    spams_Y = np.asfortranarray(spams_Y - np.tile(np.mean(spams_Y,0),
-                                                         (spams_Y.shape[0],1)))
+#    spams_Y = np.asfortranarray(spams_Y - np.tile(np.mean(spams_Y,0),
+#                                                         (spams_Y.shape[0],1)))
+#    spams_Y = spams.normalize(spams_Y)
+    W0 = np.zeros((spams_X.shape[1],spams_Y.shape[1]),dtype=np.float64,order="FORTRAN")
     param = {'numThreads' : 1,'verbose' : True,
-         'lambda1' : 0.05, 'it0' : 10, 'max_it' : 200,
+         'lambda1' : l1_ratio, 'it0' : 10, 'max_it' : 200,
          'L0' : 0.1, 'tol' : 1e-3, 'intercept' : False,
          'pos' : False}
-    (W, optim_info) = spams.fistaFlat(spams_Y,
-                                      spams_X,
-                                      W0,
-                                      True,
-                                      **param)
+    param['compute_gram'] = True
+    param['loss'] = 'square'
+    param['regul'] = 'l1'
+    (W, optim_info) = spams.fistaFlat(spams_Y,spams_X,W0,True,**param)
+
+    error = np.sum(tvl1l2_fista.beta - W)
+
+                    
+
+
+#    import spams
+#    import numpy as np
+#    param = {'numThreads' : 1,'verbose' : True,
+#             'lambda1' : 0.05, 'it0' : 10, 'max_it' : 200,
+#             'L0' : 0.1, 'tol' : 1e-3, 'intercept' : False,
+#             'pos' : False}
+#    np.random.seed(0)
+#    m = 100;n = 200
+#    X = np.asfortranarray(np.random.normal(size = (m,n)))
+#    X = np.asfortranarray(X - np.tile(np.mean(X,0),(X.shape[0],1)))
+#    X = spams.normalize(X)
+#    Y = np.asfortranarray(np.random.normal(size = (m,1)))
+#    Y = np.asfortranarray(Y - np.tile(np.mean(Y,0),(Y.shape[0],1)))
+#    Y = spams.normalize(Y)
+#    W0 = np.zeros((X.shape[1],Y.shape[1]),dtype=np.float64,order="FORTRAN")
+#    # Regression experiments 
+#    # 100 regression problems with the same design matrix X.
+#    print '\nVarious regression experiments'
+#    param['compute_gram'] = True
+#    print '\nFISTA + Regression l1'
+#    param['loss'] = 'square'
+#    param['regul'] = 'l1'
+#    # param.regul='group-lasso-l2';
+#    # param.size_group=10;
+#    (W, optim_info) = spams.fistaFlat(Y,X,W0,True,**param)
+#    print "XX %s" %str(optim_info.shape);return None
+#    print 'mean loss: %f, mean relative duality_gap: %f, number of iterations: %f' %(np.mean(optim_info[0,:],0),np.mean(optim_info[2,:],0),np.mean(optim_info[3,:],0))
+#    
 
 #    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
 #                                algorithm=algorithms.conesta_static)
