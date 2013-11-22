@@ -143,15 +143,31 @@ class TestFISTA(unittest.TestCase):
         # ================================================================
         # using pre-computed values
         Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
-        tvl1l2_fista = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
+        tvl1l2_algorithms = []
+        tvl1l2_fista = estimators.LinearRegressionL1L2TV(k, l, g,
+                                                         [Ax, Ay, Az],
                                             algorithm=algorithms.fista)
-        tvl1l2_fista.fit(spams_X, spams_Y)
-        error = np.sum(np.absolute(tvl1l2_fista.beta - W))
-        self.assertTrue(error < 0.01)
-        err1 = np.sum(np.absolute(
-                      np.dot(spams_X, tvl1l2_fista.beta) - spams_Y))
-        err2 = np.sum(np.absolute(np.dot(spams_X, W) - spams_Y))
-        self.assertTrue(err1 - err2 < 0.01)
+        tvl1l2_conesta_static = estimators.LinearRegressionL1L2TV(k, l, g,
+                                                                  [Ax, Ay, Az],
+                                            algorithm=algorithms.conesta_static)
+        tvl1l2_conesta_dynamic = estimators.LinearRegressionL1L2TV(k, l, g,
+                                                                  [Ax, Ay, Az],
+                                            algorithm=algorithms.conesta_dynamic)
+#        tvl1l2_excessive_gap = estimators.LinearRegressionL1L2TV(k, l, g,
+#                                                                 [Ax, Ay, Az],
+#                                            algorithm=algorithms.ExcessiveGapMethod)
+        tvl1l2_algorithms.append(tvl1l2_fista)
+        tvl1l2_algorithms.append(tvl1l2_conesta_static)
+        tvl1l2_algorithms.append(tvl1l2_conesta_dynamic)
+        # tvl1l2_algorithms.append(tvl1l2_excessive_gap)
+        for tvl1l2_algorithm in tvl1l2_algorithms:
+            tvl1l2_algorithm.fit(spams_X, spams_Y)
+            error = np.sum(np.absolute(tvl1l2_algorithm.beta - W))
+            self.assertTrue(error < 0.01)
+            err1 = np.sum(np.absolute(
+                          np.dot(spams_X, tvl1l2_algorithm.beta) - spams_Y))
+            err2 = np.sum(np.absolute(np.dot(spams_X, W) - spams_Y))
+            self.assertTrue(err1 - err2 < 0.01)
 
 if __name__ == "__main__":
     unittest.main()
