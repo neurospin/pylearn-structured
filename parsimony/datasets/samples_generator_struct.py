@@ -385,6 +385,7 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
     for k in xrange(len(objects)):
         o = objects[k]
         beta[o.get_mask()] += o.coef_info
+    beta = ndimage.gaussian_filter(beta, sigma=sigma_spatial_smoothing)
     beta_flat = beta.ravel()
     # Fix a scaling to get the desire r2, ie.:
     # y = coef * X * beta + noize

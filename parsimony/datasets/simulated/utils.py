@@ -46,7 +46,6 @@ class ConstantValue(object):
     """
     def __init__(self, val):
         self.val = val
-
     def __call__(self, *shape):
         return np.repeat(self.val, np.prod(shape)).reshape(shape)
 
