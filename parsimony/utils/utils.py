@@ -34,23 +34,6 @@ TOLERANCE = 5e-8
 MAX_ITER = 10000
 #mu_zero = 5e-8
 
-#def norm1(x):
-#    return norm(x, ord=1)
-#
-#
-#def norm0(x):
-#    return np.count_nonzero(np.absolute(x))
-#
-#
-#def normI(x):
-#    """Identity norm. Used in e.g. prox_op when the norm of a vector should not
-#    be changed after division by its norm.
-#
-#    Always return 1, as the norm of all vectors.
-#    """
-#    return 1
-#
-#
 #def make_list(a, n, default=None):
 #    # If a list, but empty
 #    if isinstance(a, (tuple, list)) and len(a) == 0:
@@ -64,17 +47,7 @@ MAX_ITER = 10000
 ##        a = [default for i in xrange(n)]
 #        a = [default] * n
 #    return a
-#
-#
-#def sign(v):
-#    if v < 0:
-#        return -1
-#    elif v > 0:
-#        return 1
-#    else:
-#        return 0
-#
-#
+
 #def corr(a, b):
 #    ma = np.mean(a)
 #    mb = np.mean(b)
@@ -122,22 +95,6 @@ MAX_ITER = 10000
 #def ssvar(a):
 #    a = np.asarray(a)
 #    return np.sum(a ** 2, axis=0)
-#
-#
-#def zeros(*shape, **kwargs):
-#    """ Wrapper for numpy.zeros that accepts a variable number of arguments as
-#    the shape. I.e. zeros(2,3) and zeros((2,3)) give the same output.
-#
-#    The other parameters are the same, i.e. pass dtype and/or order if you need
-#    to. No other arguments are processed but simply passed on to numpy.zeros.
-#
-#    Caution, though, the the second and third keyword arguments must be named
-#    if the shape is not passed as a tuple or list, i.e. zeros(2, int) will
-#    raise a ValueError. Instead you will have to call zeros(2, dtype=int).
-#    """
-#    if isinstance(shape[0], (tuple, list)):
-#        shape = tuple(shape[0])
-#    return np.zeros(shape, **kwargs)
 #
 #
 #def direct(W, T=None, P=None, compare=False):
@@ -287,14 +244,14 @@ MAX_ITER = 10000
 #        return self.__dict__ != other.__dict__
 #
 #
-##class Enum(object):
-##    def __init__(self, *sequential, **named):
-##        enums = dict(zip(sequential, range(len(sequential))), **named)
-##        for k, v in enums.items():
-##            setattr(self, k, v)
-##
-##    def __setattr__(self, name, value): # Read-only
-##        raise TypeError("Enum attributes are read-only.")
-##
-##    def __str__(self):
-##        return "Enum: "+str(self.__dict__)
+#class Enum(object):
+#    def __init__(self, *sequential, **named):
+#        enums = dict(zip(sequential, range(len(sequential))), **named)
+#        for k, v in enums.items():
+#            setattr(self, k, v)
+#
+#    def __setattr__(self, name, value): # Read-only
+#        raise TypeError("Enum attributes are read-only.")
+#
+#    def __str__(self):
+#        return "Enum: "+str(self.__dict__)
