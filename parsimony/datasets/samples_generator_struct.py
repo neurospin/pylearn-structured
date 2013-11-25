@@ -526,6 +526,8 @@ if __name__ == '__main__':
     l1_ratio = .9
     l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
 
+    # TODO: We cannot return the A matrices separately like this, we must
+    # return a list or tuple A such that A = [Ax, Ay, Az].
     Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
     tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
                                        algorithm=algorithms.conesta_static)

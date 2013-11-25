@@ -17,19 +17,22 @@ Created on Fri Feb  8 17:24:11 2013
 import abc
 import numpy as np
 
-import parsimony.utils as utils
+import parsimony.utils.consts as consts
+import parsimony.utils.maths as maths
 import parsimony.functions as functions
 
 from time import time, clock
 
-#TODO: This depends on the OS. We should be clever here ...
+#TODO: This depends on the OS. We should try to be clever here ...
 #time_func = time
 time_func = clock
 
-__all__ = ['BaseAlgorithm', 'ImplicitAlgorithm', 'ExplicitAlgorithm',
-           'FastSVD', 'FastSparseSVD', 'FISTA', 'CONESTA',
+__all__ = ['BaseAlgorithm',
+           'ImplicitAlgorithm',
+           'FastSVD', 'FastSparseSVD',
 
-           'conesta_static', 'conesta_dynamic',
+           'ExplicitAlgorithm',
+           'FISTA', 'CONESTA', 'StaticCONESTA', 'DynamicCONESTA',
            'ExcessiveGapMethod']
 
 
@@ -44,8 +47,8 @@ class BaseAlgorithm(object):
 
     def set_params(self, **kwargs):
 
-        for k, v in kwargs:
-            self.__setattr__(k, v)
+        for k in kwargs:
+            self.__setattr__(k, kwargs[k])
 
 
 class ImplicitAlgorithm(BaseAlgorithm):
@@ -78,7 +81,7 @@ class ExplicitAlgorithm(BaseAlgorithm):
     beta : A start vector.
     """
     @abc.abstractmethod
-    def __call__(X, function, beta, **kwargs):
+    def __call__(function, beta, **kwargs):
         raise NotImplementedError('Abstract method "__call__" must be ' \
                                   'specialised!')
 
@@ -115,7 +118,7 @@ class FastSVD(ImplicitAlgorithm):
                 t = np.dot(K, t_)
                 t /= np.sqrt(np.sum(t ** 2.0))
 
-                if np.sqrt(np.sum((t_ - t) ** 2.0)) < utils.TOLERANCE:
+                if np.sqrt(np.sum((t_ - t) ** 2.0)) < consts.TOLERANCE:
                     break
 
             v = np.dot(X.T, t)
@@ -125,14 +128,14 @@ class FastSVD(ImplicitAlgorithm):
             K = np.dot(X.T, X)
             # TODO: Use module for this!
             v = np.random.rand(X.shape[1], 1)
-            v /= utils.math.norm(v)
+            v /= maths.norm(v)
     #        v = start_vectors.RandomStartVector().get_vector(X)
             for it in xrange(max_iter):
                 v_ = v
                 v = np.dot(K, v_)
                 v /= np.sqrt(np.sum(v ** 2.0))
 
-                if np.sqrt(np.sum((v_ - v) ** 2.0)) < utils.TOLERANCE:
+                if np.sqrt(np.sum((v_ - v) ** 2.0)) < consts.TOLERANCE:
                     break
 
         return v
@@ -170,7 +173,7 @@ class FastSparseSVD(ImplicitAlgorithm):
                 t /= np.sqrt(np.sum(t ** 2.0))
 
                 a = float(np.sqrt(np.sum((t_ - t) ** 2.0)))
-                if a < utils.TOLERANCE:
+                if a < consts.TOLERANCE:
                     break
 
             v = X.T.dot(t)
@@ -180,7 +183,7 @@ class FastSparseSVD(ImplicitAlgorithm):
             K = X.T.dot(X)
             # TODO: Use module for this!
             v = np.random.rand(X.shape[1], 1)
-            v /= utils.math.norm(v)
+            v /= maths.norm(v)
     #        v = start_vectors.RandomStartVector().get_vector(X)
             for it in xrange(max_iter):
                 v_ = v
@@ -188,7 +191,7 @@ class FastSparseSVD(ImplicitAlgorithm):
                 v /= np.sqrt(np.sum(v ** 2.0))
 
                 a = float(np.sqrt(np.sum((v_ - v) ** 2.0)))
-                if a < utils.TOLERANCE:
+                if a < consts.TOLERANCE:
                     break
 
         return v
@@ -204,8 +207,8 @@ class FISTA(ExplicitAlgorithm):
                  ]
 
     def __init__(self, step=None, output=False,
-                 eps=utils.TOLERANCE,
-                 max_iter=utils.MAX_ITER, min_iter=1):
+                 eps=consts.TOLERANCE,
+                 max_iter=consts.MAX_ITER, min_iter=1):
 
         self.step = step
         self.output = output
@@ -213,7 +216,7 @@ class FISTA(ExplicitAlgorithm):
         self.max_iter = max_iter
         self.min_iter = min_iter
 
-    def __call__(self, X, y, function, beta):
+    def __call__(self, function, beta):
 
         self.check_compatability(function, self.INTERFACES)
 
@@ -224,7 +227,7 @@ class FISTA(ExplicitAlgorithm):
 #            mu = 0.9 * function.mu(beta)
 
         if self.step == None:
-            self.step = 1.0 / function.Lipschitz()
+            self.step = 1.0 / function.L()
 
         if self.output:
             t = []
@@ -240,11 +243,9 @@ class FISTA(ExplicitAlgorithm):
 
             if self.output:
                 t.append(time_func() - tm)
-                # TODO: Set mu to zero here!!
                 f.append(function.f(betanew))
-                # TODO: Reset mu to whatever it was here!!
 
-            if (1.0 / self.step) * utils.math.norm(betanew - z) < self.eps \
+            if (1.0 / self.step) * maths.norm(betanew - z) < self.eps \
                     and i >= self.min_iter:
                 break
 
@@ -267,12 +268,12 @@ class CONESTA(ExplicitAlgorithm):
                   functions.DualFunction
                  ]
 
-    def __init__(self, mu_start=None, mu_min=utils.TOLERANCE, tau=0.5,
+    def __init__(self, mu_start=None, mu_min=consts.TOLERANCE, tau=0.5,
                  dynamic=True, continuations=50,
 
                  output=False,
-                 eps=utils.TOLERANCE,
-                 max_iter=utils.MAX_ITER, min_iter=1):
+                 eps=consts.TOLERANCE,
+                 max_iter=consts.MAX_ITER, min_iter=1):
 
         self.mu_start = mu_start
         self.mu_min = mu_min
@@ -289,7 +290,7 @@ class CONESTA(ExplicitAlgorithm):
                            eps=self.eps,
                            max_iter=self.max_iter, min_iter=self.min_iter)
 
-    def __call__(self, X, y, function, beta):
+    def __call__(self, function, beta):
 
         self.check_compatability(function, self.INTERFACES)
 
@@ -320,11 +321,11 @@ class CONESTA(ExplicitAlgorithm):
             eps_plus = min(max_eps, function.eps_opt(mu[-1]))
             self.FISTA.set_params(step=tnew, eps=eps_plus)
             if self.output:
-                (beta, output) = self.FISTA(X, y, function, beta)
+                (beta, output) = self.FISTA(function, beta)
                 fval = output["f"]
                 tval = output["t"]
             else:
-                beta = self.FISTA(X, y, function, beta)
+                beta = self.FISTA(function, beta)
 
             self.mu_min = min(self.mu_min, mu[-1])
             tmin = min(tmin, tnew)
@@ -334,10 +335,10 @@ class CONESTA(ExplicitAlgorithm):
                                        tmin)
             function.set_params(mu=mu[-1])
 
-            if (1.0 / tmin) * utils.math.norm(beta - beta_tilde) < self.eps \
+            if (1.0 / tmin) * maths.norm(beta - beta_tilde) < self.eps \
                     or i >= self.continuations:
                 print "%f < %f" % ((1. / tmin) \
-                                * utils.math.norm(beta - beta_tilde), self.eps)
+                                * maths.norm(beta - beta_tilde), self.eps)
                 print "%d >= %d" % (i, self.continuations)
                 stop = True
 
@@ -367,10 +368,10 @@ class CONESTA(ExplicitAlgorithm):
                 tval[-1] += gap_time
                 t = t + tval
 
-            if (G <= utils.TOLERANCE and mu[-1] <= utils.TOLERANCE) or stop:
+            if (G <= consts.TOLERANCE and mu[-1] <= consts.TOLERANCE) or stop:
                 break
 
-            mu_new = min(mu[-1], function.mu_opt(G, X))
+            mu_new = min(mu[-1], function.mu_opt(G))
             self.mu_min = min(self.mu_min, mu_new)
             if self.output:
                 mu = mu + [max(self.mu_min, mu_new)] * len(fval)
@@ -424,8 +425,8 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
                  ]
 
     def __init__(self, output=False,
-                 eps=utils.TOLERANCE,
-                 max_iter=utils.MAX_ITER, min_iter=1):
+                 eps=consts.TOLERANCE,
+                 max_iter=consts.MAX_ITER, min_iter=1):
 
         self.output = output
         self.eps = eps
@@ -440,7 +441,7 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
             the strongly convex part and function.h is the smoothed part of the
             function.
     """
-    def __call__(self, X, y, function, beta=None):
+    def __call__(self, function, beta=None):
 
         A = function.h.A()
 

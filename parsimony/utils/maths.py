@@ -7,16 +7,19 @@ Created on Tue Jul 30 20:55:58 2013
 @license: TBD.
 """
 
-import parsimony.utils as utils
 import numpy as np
+#import parsimony.utils as utils
+from parsimony.utils.consts import TOLERANCE
 
 __all__ = ['norm', 'norm1', 'norm0', 'normInf', 'sign', 'cov', 'corr']
 
-norm = np.linalg.norm
+
+def norm(x):
+    return np.linalg.norm(x)
 
 
 def norm1(x):
-    return norm(x, ord=1)
+    return np.linalg.norm(x, ord=1)
 
 
 def norm0(x):
@@ -24,7 +27,7 @@ def norm0(x):
 
 
 def normInf(x):
-    return norm(x, ord=float('inf'))
+    return np.linalg.norm(x, ord=float('inf'))
 
 
 def sign(v):
@@ -46,8 +49,8 @@ def corr(a, b):
     norma = np.sqrt(np.sum(a_ ** 2.0, axis=0))
     normb = np.sqrt(np.sum(b_ ** 2.0, axis=0))
 
-    norma[norma < utils.TOLERANCE] = 1.0
-    normb[normb < utils.TOLERANCE] = 1.0
+    norma[norma < TOLERANCE] = 1.0
+    normb[normb < TOLERANCE] = 1.0
 
     a_ /= norma
     b_ /= normb

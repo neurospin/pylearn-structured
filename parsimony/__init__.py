@@ -12,10 +12,10 @@ import algorithms
 import datasets
 import estimators
 import functions
-import utils
+#import utils
 import start_vectors
 
 __version__ = '0.1.0'
 
-__all__ = ['algorithms', 'datasets', 'estimators', 'functions', 'utils',
+__all__ = ['algorithms', 'datasets', 'estimators', 'functions',  # 'utils',
            'start_vectors']

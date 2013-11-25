@@ -19,15 +19,17 @@ import numpy as np
 import scipy.sparse as sparse
 import math
 
-import parsimony.utils as utils
-import parsimony.algorithms as algorithms
+import parsimony.utils.maths as maths
+import parsimony.utils.consts as consts
 
 __all__ = ['RidgeRegression', 'L1', 'SmoothedL1', 'TotalVariation',
-           'OLSL2_L1_TV', 'SmoothedL1TV', 'OLSL2_SmoothedL1TV']
+           'RR_L1_TV',
+           'SmoothedL1TV',
+           'RR_SmoothedL1TV']
 
 
-mapping = {RidgeRegression.__class__.__name__: [algorithms.FISTA,
-                                                algorithms.CONESTA]}
+#mapping = {RidgeRegression.__class__.__name__: [algorithms.FISTA,
+#                                                algorithms.CONESTA]}
 
 
 class Function(object):
@@ -44,8 +46,8 @@ class Function(object):
 
     def set_params(self, **kwargs):
 
-        for k, v in kwargs:
-            self.__setattr__(k, v)
+        for k in kwargs:
+            self.__setattr__(k, kwargs[k])
 
 
 class AtomicFunction(Function):
@@ -96,6 +98,51 @@ class NesterovFunction(object):
 
     __metaclass__ = abc.ABCMeta
 
+    def __init__(self, l, c=0.0, A=None, mu=consts.TOLERANCE):
+
+        self.l = float(l)
+        self.c = float(c)
+        self._A = A
+        self.mu = float(mu)
+
+    """Returns the smoothed function value.
+    """
+    def fmu(self, beta, mu=None):
+
+        if mu == None:
+            mu = self.get_mu()
+
+        alpha = self.alpha(beta)
+        alpha_sqsum = 0.0
+        for a in alpha:
+            alpha_sqsum += np.sum(a ** 2.0)
+
+        Aa = self.Aa(alpha)
+
+        return self.l * ((np.dot(beta.T, Aa)[0, 0] \
+                          - (mu / 2.0) * alpha_sqsum) - self.c)
+
+    """ Gradient of the function at beta.
+    """
+    def grad(self, beta):
+
+        if self.l < consts.TOLERANCE:
+            return 0.0
+
+        alpha = self.alpha(beta)
+
+        return self.l * self.Aa(alpha)
+
+    """Returns the regularisation constant for the smoothing.
+    """
+    def get_mu(self):
+        return self.mu
+
+    """Sets the regularisation constant for the smoothing.
+    """
+    def set_mu(self, mu):
+        self.mu = mu
+
     """ Function value with known alpha.
     """
     @abc.abstractmethod
@@ -105,24 +152,35 @@ class NesterovFunction(object):
 
     """ Dual variable of the Nesterov function.
     """
-    @abc.abstractmethod
     def alpha(self, beta):
-        raise NotImplementedError('Abstract method "alpha" must be ' \
-                                  'specialised!')
+
+        # Compute a*
+        A = self.A()
+        mu = self.get_mu()
+        alpha = [0] * len(A)
+        for i in xrange(len(A)):
+            alpha[i] = A[i].dot(beta) / mu
+
+        # Apply projection
+        alpha = self.project(alpha)
+
+        return alpha
 
     """ Linear operator of the Nesterov function.
     """
-    @abc.abstractmethod
     def A(self):
-        raise NotImplementedError('Abstract method "A" must be ' \
-                                  'specialised!')
+        return self._A
 
     """ Computes A^\T\alpha.
     """
-    @abc.abstractmethod
     def Aa(self, alpha):
-        raise NotImplementedError('Abstract method "Aa" must be ' \
-                                  'specialised!')
+
+        A = self.A()
+        Aa = A[0].T.dot(alpha[0])
+        for i in xrange(1, len(A)):
+            Aa += A[i].T.dot(alpha[i])
+
+        return Aa
 
     """ Projection onto the compact space of the Nesterov function.
     """
@@ -143,19 +201,9 @@ class NesterovFunction(object):
     """ Computes a "good" value of \mu with respect to the given \beta.
     """
     @abc.abstractmethod
-    def mu(self, beta):
+    def estimate_mu(self, beta):
         raise NotImplementedError('Abstract method "mu" must be ' \
                                   'specialised!')
-
-    """Returns the regularisation constant for the smoothing.
-    """
-    def get_mu(self):
-        return self.mu
-
-    """Sets the regularisation constant for the smoothing.
-    """
-    def set_mu(self, mu):
-        self.mu = mu
 
 
 class Continuation(object):
@@ -398,7 +446,7 @@ class L1(AtomicFunction, Constraint, ProximalOperator):
     """
     def f(self, beta):
 
-        return self.l * (utils.math.norm1(beta) - self.c)
+        return self.l * (maths.norm1(beta) - self.c)
 
     """The corresponding proximal operator.
 
@@ -438,30 +486,22 @@ class SmoothedL1(AtomicFunction, NesterovFunction, Gradient,
             The default value is c=0, i.e. the default is a regularisation
             formulation.
 
-    A : The linear operator for the Nesterov formulation.
+    A : The linear operator for the Nesterov formulation. May not be None.
 
     mu : The regularisation constant for the smoothing.
     """
     def __init__(self, l, c=0.0, A=None, mu=0.0):
 
-        self.l = float(l)
-        self.c = float(c)
-
-        self._A = A
-        self.mu = float(mu)
+        super(SmoothedL1, self).__init__(l, c, A, mu)
 
     """ Function value.
     """
     def f(self, beta):
 
-        if self.l < utils.TOLERANCE:
+        if self.l < consts.TOLERANCE:
             return 0.0
 
-        if self.mu > 0.0:
-            alpha = self.alpha(beta)
-            return self.phi(alpha, beta)
-        else:
-            return self.l * (utils.math.norm1(beta) - self.c)
+        return self.l * (maths.norm1(beta) - self.c)
 
     """ Function value with known alpha.
 
@@ -469,7 +509,7 @@ class SmoothedL1(AtomicFunction, NesterovFunction, Gradient,
     """
     def phi(self, alpha, beta):
 
-        if self.l < utils.TOLERANCE:
+        if self.l < consts.TOLERANCE:
             return 0.0
 
         return self.l * ((np.dot(alpha[0].T, beta)[0, 0] \
@@ -477,7 +517,8 @@ class SmoothedL1(AtomicFunction, NesterovFunction, Gradient,
 
     """ Gradient of the function at beta.
 
-    From the interface "Gradient".
+    From the interface "Gradient". Overloaded since we can be faster than the
+    default.
     """
     def grad(self, beta):
 
@@ -493,17 +534,18 @@ class SmoothedL1(AtomicFunction, NesterovFunction, Gradient,
 
         return self.l / self.mu
 
-    """ Linear operator of the Nesterov function.
-
-    From the interface "NesterovFunction".
-    """
-    def A(self):
-
-        return self._A
+#    """ Linear operator of the Nesterov function.
+#
+#    From the interface "NesterovFunction".
+#    """
+#    def A(self):
+#
+#        return self._A
 
     """ Dual variable of the Nesterov function.
 
-    From the interface "NesterovFunction".
+    From the interface "NesterovFunction". Overloaded since we can be faster
+    than the default.
     """
     def alpha(self, beta):
 
@@ -542,7 +584,7 @@ class SmoothedL1(AtomicFunction, NesterovFunction, Gradient,
 
     From the interface "NesterovFunction".
     """
-    def mu(self, beta):
+    def estimate_mu(self, beta):
 
         return np.max(np.absolute(beta))
 
@@ -566,19 +608,14 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
             The default value is c=0, i.e. the default is a regularisation
             formulation.
 
-    A : The linear operator for the Nesterov formulation.
+    A : The linear operator for the Nesterov formulation. May not be None!
 
     mu : The regularisation constant for the smoothing.
     """
     def __init__(self, l, c=0.0, A=None, mu=0.0):
 
-        self.l = float(l)
-        self.c = float(c)
-
+        super(TotalVariation, self).__init__(l, c, A, mu)
         self._p = A[0].shape[1]
-        self._A = A
-
-        self.mu = float(mu)
 
         self.reset()
 
@@ -590,25 +627,21 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
     """
     def f(self, beta):
 
-        if self.l < utils.TOLERANCE:
+        if self.l < consts.TOLERANCE:
             return 0.0
 
-        if self.mu > 0.0:
-            alpha = self.alpha(beta)
-            return self.phi(alpha, beta)
-        else:
-            A = self.A()
-            return self.l * (np.sum(np.sqrt(A[0].dot(beta) ** 2.0 + \
-                                            A[1].dot(beta) ** 2.0 + \
-                                            A[2].dot(beta) ** 2.0)) - self.c)
+        A = self.A()
+        return self.l * (np.sum(np.sqrt(A[0].dot(beta) ** 2.0 + \
+                                        A[1].dot(beta) ** 2.0 + \
+                                        A[2].dot(beta) ** 2.0)) - self.c)
 
-    """ Function value with known alpha.
+    """Function value with known alpha.
 
     From the interface "NesterovFunction".
     """
     def phi(self, alpha, beta):
 
-        if self.l < utils.TOLERANCE:
+        if self.l < consts.TOLERANCE:
             return 0.0
 
         Aa = self.Aa(alpha)
@@ -620,18 +653,18 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
         return self.l * ((np.dot(beta.T, Aa)[0, 0] \
                           - (self.mu / 2.0) * alpha_sqsum) - self.c)
 
-    """ Gradient of the function at beta.
-
-    From the interface "Gradient".
-    """
-    def grad(self, beta):
-
-        if self.l < utils.TOLERANCE:
-            return 0.0
-
-        alpha = self.alpha(beta)
-
-        return self.l * self.Aa(alpha)
+#    """ Gradient of the function at beta.
+#
+#    From the interface "Gradient".
+#    """
+#    def grad(self, beta):
+#
+#        if self.l < utils.TOLERANCE:
+#            return 0.0
+#
+#        alpha = self.alpha(beta)
+#
+#        return self.l * self.Aa(alpha)
 
     """ Lipschitz constant of the gradient.
 
@@ -639,7 +672,7 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
     """
     def L(self):
 
-        if self.l < utils.TOLERANCE:
+        if self.l < consts.TOLERANCE:
             return 0.0
 
         lmaxA = self.lambda_max()
@@ -663,51 +696,53 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
 
         elif self._lambda_max == None:
 
+            from parsimony.algorithms import FastSparseSVD
+
             A = sparse.vstack(self.A())
             # TODO: Add max_iter here!
-            v = algorithms.FastSparseSVD(A)  # , max_iter=max_iter)
+            v = FastSparseSVD()(A)  # , max_iter=max_iter)
             us = A.dot(v)
             self._lambda_max = np.sum(us ** 2.0)
 
         return self._lambda_max
 
-    """ Linear operator of the Nesterov function.
+#    """ Linear operator of the Nesterov function.
+#
+#    From the interface "NesterovFunction".
+#    """
+#    def A(self):
+#
+#        return self._A
 
-    From the interface "NesterovFunction".
-    """
-    def A(self):
+#    """ Computes A^\T\alpha.
+#
+#    From the interface "NesterovFunction".
+#    """
+#    def Aa(self, alpha):
+#
+#        A = self.A()
+#        Aa = A[0].T.dot(alpha[0])
+#        for i in xrange(1, len(A)):
+#            Aa += A[i].T.dot(alpha[i])
+#
+#        return Aa
 
-        return self._A
-
-    """ Computes A^\T\alpha.
-
-    From the interface "NesterovFunction".
-    """
-    def Aa(self, alpha):
-
-        A = self.A()
-        Aa = A[0].T.dot(alpha[0])
-        for i in xrange(1, len(A)):
-            Aa += A[i].T.dot(alpha[i])
-
-        return Aa
-
-    """ Dual variable of the Nesterov function.
-
-    From the interface "NesterovFunction".
-    """
-    def alpha(self, beta):
-
-        # Compute a*
-        A = self.A()
-        alpha = [0] * len(A)
-        for i in xrange(len(A)):
-            alpha[i] = A[i].dot(beta) / self.mu
-
-        # Apply projection
-        alpha = self.project(alpha)
-
-        return alpha
+#    """ Dual variable of the Nesterov function.
+#
+#    From the interface "NesterovFunction".
+#    """
+#    def alpha(self, beta):
+#
+#        # Compute a*
+#        A = self.A()
+#        alpha = [0] * len(A)
+#        for i in xrange(len(A)):
+#            alpha[i] = A[i].dot(beta) / self.mu
+#
+#        # Apply projection
+#        alpha = self.project(alpha)
+#
+#        return alpha
 
     """ Projection onto the compact space of the Nesterov function.
 
@@ -742,7 +777,7 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
 
     From the interface "NesterovFunction".
     """
-    def mu(self, beta):
+    def estimate_mu(self, beta):
 
         SS = 0
         A = self.A()
@@ -843,7 +878,7 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
 #        return [Ax, Ay, Az]
 
 
-class LRL2_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
+class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
                  ProximalOperator, NesterovFunction, Continuation):
 
     def __init__(self, X, y, k, l, g, A=None, mu=0.0):
@@ -868,6 +903,13 @@ class LRL2_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
         self._invXXkI = None
         self._XtinvXXtkI = None
 
+    def set_params(self, **kwargs):
+
+        mu = kwargs.pop("mu", self.get_mu())
+        self.set_mu(mu)
+
+        super(RR_L1_TV, self).set_params(**kwargs)
+
     """Function value.
     """
     def f(self, beta):
@@ -875,6 +917,14 @@ class LRL2_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
         return self.rr.f(beta) \
              + self.l1.f(beta) \
              + self.tv.f(beta)
+
+    """ Function value with known alpha.
+    """
+    def phi(self, alpha, beta):
+
+        return self.rr.f(beta) \
+             + self.l1.f(beta) \
+             + self.tv.phi(alpha, beta)
 
     """Gradient of the differentiable part of the function.
 
@@ -906,9 +956,9 @@ class LRL2_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
     From the interface "NesterovFunction".
     """
-    def mu(self, beta):
+    def estimate_mu(self, beta):
 
-        return self.tv.mu(beta)
+        return self.tv.estimate_mu(beta)
 
     """The maximum value of the regularisation of the dual variable. We have
 
@@ -968,7 +1018,7 @@ class LRL2_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
             self._Xty = np.dot(self.X.T, self.y)
 
         Ata_tv = self.tv.l * self.tv.Aa(alphak)
-        Ata_l1 = self.l1.l * SmoothedL1.project(betak / utils.TOLERANCE)
+        Ata_l1 = self.l1.l * SmoothedL1.project(betak / consts.TOLERANCE)
         v = (self._Xty - Ata_tv - Ata_l1)
 
         shape = self.X.shape
@@ -1018,6 +1068,38 @@ class LRL2_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
         return P - D
 
+    """Linear operator of the Nesterov function.
+
+    From the interface "NesterovFunction".
+    """
+    def A(self):
+
+        return self.tv.A()
+
+    """Computes A^\T\alpha.
+
+    From the interface "NesterovFunction".
+    """
+    def Aa(self, alpha):
+
+        return self.tv.Aa()
+
+    """ Projection onto the compact space of the Nesterov function.
+
+    From the interface "NesterovFunction".
+    """
+    def project(self, a):
+
+        return self.tv.project(a)
+
+    def get_mu(self):
+
+        return self.tv.get_mu()
+
+    def set_mu(self, mu):
+
+        self.tv.set_mu(mu)
+
 
 class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
                    Eigenvalues):
@@ -1048,18 +1130,14 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
     """
     def f(self, beta):
 
-        if self.l < utils.TOLERANCE and self.g < utils.TOLERANCE:
+        if self.l < consts.TOLERANCE and self.g < consts.TOLERANCE:
             return 0.0
 
-        if self.mu > 0.0:
-            alpha = self.alpha(beta)
-            return self.phi(alpha, beta)
-        else:
-            A = self.A()
-            return utils.math.norm1(A[0].dot(beta)) + \
-                   np.sum(np.sqrt(A[1].dot(beta) ** 2.0 + \
-                                  A[2].dot(beta) ** 2.0 + \
-                                  A[3].dot(beta) ** 2.0))
+        A = self.A()
+        return maths.norm1(A[0].dot(beta)) + \
+               np.sum(np.sqrt(A[1].dot(beta) ** 2.0 + \
+                              A[2].dot(beta) ** 2.0 + \
+                              A[3].dot(beta) ** 2.0))
 
     """ Function value with known alpha.
 
@@ -1067,7 +1145,7 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
     """
     def phi(self, alpha, beta):
 
-        if self.l < utils.TOLERANCE and self.g < utils.TOLERANCE:
+        if self.l < consts.TOLERANCE and self.g < consts.TOLERANCE:
             return 0.0
 
         Aa = self.Aa(alpha)
@@ -1094,6 +1172,8 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
 
         elif self._lambda_max == None:
 
+            from parsimony.algorithms import FastSparseSVD
+
 #            A = sparse.vstack(self.A())
 #            v = algorithms.FastSparseSVD(A, max_iter=max_iter)
 #            us = A.dot(v)
@@ -1101,36 +1181,37 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
 
             A = sparse.vstack(self.A()[1:])
             # TODO: Add max_iter here!!
-            v = algorithms.FastSparseSVD(A)  # , max_iter=max_iter)
+            v = FastSparseSVD(A)  # , max_iter=max_iter)
             us = A.dot(v)
             self._lambda_max = np.sum(us ** 2.0) + self.l ** 2.0
 
         return self._lambda_max
 
-    """ Linear operator of the Nesterov function.
+#    """ Linear operator of the Nesterov function.
+#
+#    From the interface "NesterovFunction".
+#    """
+#    def A(self):
+#
+#        return self._A
 
-    From the interface "NesterovFunction".
-    """
-    def A(self):
-
-        return self._A
-
-    """ Computes A^\T\alpha.
-
-    From the interface "NesterovFunction".
-    """
-    def Aa(self, alpha):
-
-        A = self.A()
-        Aa = A[0].T.dot(alpha[0])
-        for i in xrange(1, len(A)):
-            Aa += A[i].T.dot(alpha[i])
-
-        return Aa
+#    """ Computes A^\T\alpha.
+#
+#    From the interface "NesterovFunction".
+#    """
+#    def Aa(self, alpha):
+#
+#        A = self.A()
+#        Aa = A[0].T.dot(alpha[0])
+#        for i in xrange(1, len(A)):
+#            Aa += A[i].T.dot(alpha[i])
+#
+#        return Aa
 
     """ Dual variable of the Nesterov function.
 
-    From the interface "NesterovFunction".
+    From the interface "NesterovFunction". Overloaded since we need to do more
+    than the default.
     """
     def alpha(self, beta):
 
@@ -1141,6 +1222,7 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
         a[1] = (1.0 / self.mu) * A[1].dot(beta)
         a[2] = (1.0 / self.mu) * A[2].dot(beta)
         a[3] = (1.0 / self.mu) * A[3].dot(beta)
+        # Remember: lambda and gamma are already in the A matrices.
 
         return self.project(a)
 
@@ -1185,7 +1267,7 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
              + (A[1].shape[0] / 2.0)
 
 
-class LRL2_SmoothedL1TV(CompositeFunction, LipschitzContinuousGradient,
+class RR_SmoothedL1TV(CompositeFunction, LipschitzContinuousGradient,
                         GradientMap, DualFunction):
 
     def __init__(self, X, y, k, l, g, Atv=None, Al1=None, mu=0.0):

@@ -8,161 +8,128 @@ Created on Sat Nov  2 15:19:17 2013
 """
 import abc
 import numpy as np
+import numbers
+
 import parsimony.functions as functions
 import parsimony.algorithms as algorithms
-import parsimony.utils as utils
+import parsimony.start_vectors as start_vectors
 
-__all__ = ['LinearRegressionL1L2TV']
+__all__ = ['BaseEstimator', 'RegressionEstimator',
+
+           'RidgeRegression_L1_TV']
 
 
 class BaseEstimator(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, **opt):
-        self.opt = opt
+    def __init__(self, algorithm):
+
+        self.algorithm = algorithm
+
+    def fit(self, X):
+        raise NotImplementedError('Abstract method "fit" must be ' \
+                                  'specialised!')
 
     def set_params(self, **kwargs):
 
-        for k, v in kwargs:
-            self.__setattr__(k, v)
+        for k in kwargs:
+            self.__setattr__(k, kwargs[k])
 
     @abc.abstractmethod
-    def get_params():
+    def get_params(self):
         raise NotImplementedError('Abstract method "get_params" must be ' \
                                   'specialised!')
 
     @abc.abstractmethod
-    def fit(X):
-        raise NotImplementedError('Abstract method "fit" must be ' \
-                                  'specialised!')
-
-    @abc.abstractmethod
-    def predict(X):
+    def predict(self, X):
         raise NotImplementedError('Abstract method "predict" must be ' \
                                   'specialised!')
 
-
-class BaseEstimator(object):
-    """
-    Arguments
-    ---------
-    k float
-    l float
-    g float
-    A Sparse matrix
-    algorithm: function
-        conesta_static, conesta_dynamic, fista, ExcessiveGapMethod
-    """
-    def __init__(self, alg):
-
-        self.alg = alg
-
-    def fit(self, X, y=None):
-
-        self.func.set_params(X=X, y=y)
-        self.beta = self.alg(self.func, beta)
+    # TODO: Is this a good name?
+    @abc.abstractmethod
+    def score(self, X, y):
+        raise NotImplementedError('Abstract method "score" must be ' \
+                                  'specialised!')
 
 
-class OLS_L1(BaseEstimator):
+class RegressionEstimator(BaseEstimator):
 
-    def __init__(self, l, alg=algorithms.fista):
+    __metaclass__ = abc.ABCMeta
 
-        self.func = functions.OLS_L1(l)
-        beta = ...
-        super(OLS_L1, self).__init__(alg=alg)
+    def __init__(self, algorithm, output=False,
+                       start_vector=start_vectors.RandomStartVector()):
 
+        self.output = output
+        self.start_vector = start_vector
 
+        super(RegressionEstimator, self).__init__(algorithm=algorithm)
 
-e_fista = OLS_L1(0.5)
-e_fista.fit(X, y)
+    @abc.abstractmethod
+    def fit(self, X, y):
+        raise NotImplementedError('Abstract method "fit" must be ' \
+                                  'specialised!')
 
-e_conesta = OLS_L1(0.5, alg=algorithms.conesta(tau=0.9))
-e_conesta.fit(X, y)
-
-
-
-
-
-
-#        function = self.func_class(options)#self.k, self.l, self.g, self.shape)
-#        output = self.algorithm.fit(X, y, function)
-        function = self.func_class(self.k, self.l, self.g, self._A)
-#        function.set_params(X=X, y=y)
-
-        # TODO: Use start_vectors for this!
-        betastart = np.random.rand(X.shape[1], 1)
-
-        if self.algorithm == algorithms.conesta_static:
-
-            mu_zero = utils.TOLERANCE
-            eps = utils.TOLERANCE
-            conts = 25
-            max_iter = int(utils.MAX_ITER / conts)
-
-            output = algorithms.conesta_static(X, y, function, betastart,
-                                    mu_start=None,
-                                    mumin=mu_zero,
-                                    tau=0.5,
-                                    eps=eps, conts=conts, max_iter=max_iter)
-
-            beta, f, t, mu, Gval, b, g = output
-
-        elif self.algorithm == algorithms.conesta_dynamic:
-
-            mu_zero = utils.TOLERANCE
-            eps = utils.TOLERANCE
-            conts = 25
-            max_iter = int(utils.MAX_ITER / conts)
-
-            output = algorithms.conesta_dynamic(X, y, function, betastart,
-                                    mu_start=None,
-                                    mumin=mu_zero,
-                                    tau=0.5,
-                                    eps=eps, conts=conts, max_iter=max_iter)
-
-            beta, f, t, mu, Gval, b, g = output
-
-        elif self.algorithm == algorithms.fista:
-
-            eps = utils.TOLERANCE
-            max_iter = utils.MAX_ITER
-
-            output = algorithms.fista(X, y, function, betastart,
-                                      step=None, mu=None,
-                                      eps=eps, max_iter=max_iter)
-
-            beta, f, t, b, g = output
-
-        elif self.algorithm == algorithms.ExcessiveGapMethod:
-
-            eps = utils.TOLERANCE
-            max_iter = utils.MAX_ITER
-
-            output = algorithms.ExcessiveGapMethod(X, y, function,
-                                                   eps=eps, max_iter=max_iter)
-            beta, f, t, mu, ulim, beta0, b = output
-
-        else:
-            raise NotImplementedError("Unknown algorithm!")
-
-        self.beta = beta
-        self.f = f
-        self.t = t
-#        self.mu = mu
-#        self.G = G
-
-        return self
+#        self.function.set_params(X=X, y=y)
+#        # TODO: Should we use a seed here so that we get deterministic results?
+#        beta = self.start_vector.get_vector((X.shape[1], 1))
+#        if self.output:
+#            self.beta, self.output = self.algorithm(X, y, self.function, beta)
+#        else:
+#            self.beta = self.algorithm(X, y, self.function, beta)
 
     def predict(self, X):
-
         return np.dot(X, self.beta)
-        
 
-#class EstimatorConestaOLS2L1TV(LinearRegressionL1L2TV):
-#
-#    def __init__(self, k, l, g, shape):
-##        options = {...}
-#        super(LinearRegressionL1L2TV, self).__init__(k, l, g, shape, 
-#                                               func_class=functions.OLSL2_L1_TV,
-#                                               algorithm=algorithms.CONESTA)
+    def score(self, X, y):
+
+        self.function.set_params(X=X, y=y)
+        return self.function.f(self.beta)
+
+
+class RidgeRegression_L1_TV(RegressionEstimator):
+
+    def __init__(self, k, l, g, A, mu=None, output=False,
+                 algorithm=algorithms.FISTA()):
+
+        self.k = float(k)
+        self.l = float(l)
+        self.g = float(g)
+        self.A = A
+        if isinstance(mu, numbers.Number):
+            self.mu = float(mu)
+        else:
+            self.mu = None
+
+        super(RidgeRegression_L1_TV, self).__init__(algorithm=algorithm,
+                                                    output=output)
+
+    def get_params(self):
+
+        return {"k": self.k, "l": self.l, "g": self.g,
+                "A": self.A, "mu": self.mu}
+
+    def fit(self, X, y):
+
+        self.function = functions.RR_L1_TV(X, y, self.k, self.l, self.g,
+                                           A=self.A)
+
+        # TODO: Should we use a seed here so that we get deterministic results?
+        beta = self.start_vector.get_vector((X.shape[1], 1))
+
+        if self.mu == None:
+            self.mu = 0.9 * self.function.mu(beta)
+        else:
+            self.mu = float(self.mu)
+
+        print "mu fore:", self.function.get_mu()
+        self.function.set_params(mu=self.mu)
+        print "mu efter:", self.function.get_mu()
+        self.algorithm.set_params(output=self.output)
+
+        if self.output:
+            self.beta, self.info = self.algorithm(self.function, beta)
+        else:
+            self.beta = self.algorithm(self.function, beta)
+
+        return self

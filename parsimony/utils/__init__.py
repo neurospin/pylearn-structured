@@ -9,6 +9,11 @@ Created on Thu Feb 8 09:22:00 2013
 
 #from parsimony.utils import math
 
+import maths
+import consts
+
+__all__ = ['maths', 'consts']
+
 #from .utils import norm
 #from .utils import norm1
 #from .utils import norm0
@@ -17,8 +22,8 @@ Created on Thu Feb 8 09:22:00 2013
 #from .utils import sign
 #from .utils import cov
 #from .utils import corr
-from .utils import TOLERANCE
-from .utils import MAX_ITER
+#from .utils import TOLERANCE
+#from .utils import MAX_ITER
 #from .utils import copy
 #from .utils import sstot
 #from .utils import ssvar
@@ -36,7 +41,7 @@ from .utils import MAX_ITER
 
 #import testing
 
-__all__ = ['TOLERANCE', 'MAX_ITER']
+#__all__ = ['TOLERANCE', 'MAX_ITER', "math"]
 #, 'norm1', 'norm0', 'normI', 'make_list', 'sign',
 #           'cov', 'corr', 'copy',
 #           'sstot', 'ssvar', 'sqrt', 'rand', 'zeros',
