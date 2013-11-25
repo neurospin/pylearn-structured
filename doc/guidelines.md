@@ -37,8 +37,7 @@ Python code format
 Docstring format
 ----------------
 
-- Use PEP 257 convention.
-- Here is a useful example using the same style as numpy:
+Use PEP 257 convention. Here is a useful example using the same style as numpy:
 
     Testing code block.
 
