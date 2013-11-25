@@ -123,7 +123,7 @@ class RidgeRegression_L1_TV(RegressionEstimator):
         beta = self.start_vector.get_vector((X.shape[1], 1))
 
         if self.mu == None:
-            self.mu = 0.9 * self.function.mu(beta)
+            self.mu = 0.9 * self.function.get_mu(beta)
         else:
             self.mu = float(self.mu)
 
