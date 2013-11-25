@@ -17,6 +17,8 @@
 
 ./parsimony/functions.py:
 ------------------------
+98: # TODO: We need a superclass for NesterovFunction wrappers.
+
 680: # TODO: Instead of p, this should really be the number of non-zero
 681: # rows of A.
 
@@ -24,17 +26,22 @@
 
 1125: # TODO: Is reset still necessary?
 
-1183: # TODO: Add max_iter here!!
+1170: # TODO: Instead of p, this should really be the number of non-zero
+1171: # rows of A.
 
-1303: # TODO: Use max_iter here!!
+1187: # TODO: Add max_iter here!!
 
-1331: # TODO: Kernelise this function! See how I did in LRL2_L1_TV._beta_hat.
+1350: # TODO: Use max_iter here!!
+
+1378: # TODO: Kernelise this function! See how I did in LRL2_L1_TV._beta_hat.
+
+1417: # TODO: Add this function!
 
 ./parsimony/estimators.py:
 -------------------------
-49: # TODO: Is this a good name?
+51: # TODO: Is this a good name?
 
-119: # TODO: Should we use a seed here so that we get deterministic results?
+122: # TODO: Should we use a seed here so that we get deterministic results?
 
 ./parsimony/datasets/samples_generator_struct.py:
 ------------------------------------------------

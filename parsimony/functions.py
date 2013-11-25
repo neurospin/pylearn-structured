@@ -95,6 +95,7 @@ class ProximalOperator(object):
 
 
 class NesterovFunction(object):
+    # TODO: We need a superclass for NesterovFunction wrappers.
 
     __metaclass__ = abc.ABCMeta
 
