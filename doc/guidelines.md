@@ -39,46 +39,44 @@ Docstring format
 
 - Use PEP 257 convention.
 - Here is a useful example using the same style as numpy:
-```
-"""
-Descriptive explanation of the function/class.
-
-Parameters
-----------
-a : Datatype. Descriptive text that explains the parameter. Then a blank line.
-
-b : List or tuple. Descriptive texts that span multiple lines should be broken
-        to be less than 80 characters wide. The second, third and so on, lines
-        of the same descriptive text should be indented two tabs or eight
-        spaces.
-
-c : Int or Float. Note that the variable name is preceded by a space, such
-        that we have "name : Datatype."
-
-Returns
--------
-out1 : Datatype. A descriptive text for the output parameters. Then a blank
-        line.
-
-out2 : Datatype. Note that the same rules regarding lines that wrap are used
-        here as well.
-
-See Also
---------
-other_function : Short description of what the other function does.
-or_other_class : Or of what the other class does.
-
-Examples
---------
->>> s = "Give doctest examples here."
->>> s
-'Give doctest examples here.'
->>> such_as = np.random.rand(2, 3)
->>> such_as
-array([[ 0.51982512,  0.84506951,  0.31517025],
-       [ 0.81975035,  0.6654892 ,  0.78142793]])
-"""
-```
+    """
+    Descriptive explanation of the function/class.
+    
+    Parameters
+    ----------
+    a : Datatype. Descriptive text that explains the parameter. Then a blank line.
+    
+    b : List or tuple. Descriptive texts that span multiple lines should be broken
+            to be less than 80 characters wide. The second, third and so on, lines
+            of the same descriptive text should be indented two tabs or eight
+            spaces.
+    
+    c : Int or Float. Note that the variable name is preceded by a space, such
+            that we have "name : Datatype."
+    
+    Returns
+    -------
+    out1 : Datatype. A descriptive text for the output parameters. Then a blank
+            line.
+    
+    out2 : Datatype. Note that the same rules regarding lines that wrap are used
+            here as well.
+    
+    See Also
+    --------
+    other_function : Short description of what the other function does.
+    or_other_class : Or of what the other class does.
+    
+    Examples
+    --------
+    >>> s = "Give doctest examples here."
+    >>> s
+    'Give doctest examples here.'
+    >>> such_as = np.random.rand(2, 3)
+    >>> such_as
+    array([[ 0.51982512,  0.84506951,  0.31517025],
+           [ 0.81975035,  0.6654892 ,  0.78142793]])
+    """
 You may omit any parts you feel are not relevant for your function.
 
 
