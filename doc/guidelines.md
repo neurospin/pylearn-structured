@@ -39,7 +39,9 @@ Docstring format
 
 Use PEP 257 convention. Here is a useful example using the same style as numpy:
 
-    Testing code block.
+    """
+    Descriptive explanation of the function/class.
+    
 
 You may omit any parts you feel are not relevant for your function.
 
