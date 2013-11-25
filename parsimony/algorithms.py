@@ -110,6 +110,26 @@ class FastSVD(ImplicitAlgorithm):
         -------
         v : The right singular vector of X that corresponds to the largest
                 singular value.
+        
+        Example:
+        -------
+        >>> import numpy as np
+        >>> from parsimony.algorithms import FastSVD
+        >>> np.random.seed(0)
+        >>> X = np.random.random((10,10))
+        >>> fast_svd = FastSVD()
+        >>> fast_svd(X)
+        array([[-0.3522974 ],
+               [-0.35647707],
+               [-0.35190104],
+               [-0.34715338],
+               [-0.19594198],
+               [-0.24103104],
+               [-0.25578904],
+               [-0.29501092],
+               [-0.42311297],
+               [-0.27656382]])
+
         """
         M, N = X.shape
         if M < 80 and N < 80:  # Very arbitrary threshold for my computer ;-)
@@ -167,6 +187,27 @@ class FastSparseSVD(ImplicitAlgorithm):
         Returns:
         -------
         v : The right singular vector.
+        
+        Example:
+        -------
+        >>> import numpy as np
+        >>> from parsimony.algorithms import FastSparseSVD
+        >>> np.random.seed(0)
+        >>> X = np.random.random((10,10))
+        >>> fast_sparse_svd = FastSparseSVD()
+        >>> fast_sparse_svd(X)
+        array([[ 0.3522974 ],
+               [ 0.35647707],
+               [ 0.35190103],
+               [ 0.34715338],
+               [ 0.19594198],
+               [ 0.24103104],
+               [ 0.25578904],
+               [ 0.29501092],
+               [ 0.42311297],
+               [ 0.27656382]])
+
+        
         """
         M, N = X.shape
         if M < N:

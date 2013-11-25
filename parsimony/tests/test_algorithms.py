@@ -124,15 +124,15 @@ class TestFISTA(unittest.TestCase):
         # using pre-computed values
         Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
         tvl1l2_algorithms = []
-        tvl1l2_fista = estimators.LinearRegressionL1L2TV(k, l, g,
+        tvl1l2_fista = estimators.RidgeRegression_L1_TV(k, l, g,
                                                          [Ax, Ay, Az],
-                                            algorithm=algorithms.fista)
-        tvl1l2_conesta_static = estimators.LinearRegressionL1L2TV(k, l, g,
+                                algorithm=algorithms.FISTA())
+        tvl1l2_conesta_static = estimators.RidgeRegression_L1_TV(k, l, g,
                                                                   [Ax, Ay, Az],
-                                            algorithm=algorithms.conesta_static)
-        tvl1l2_conesta_dynamic = estimators.LinearRegressionL1L2TV(k, l, g,
+                                algorithm=algorithms.CONESTA(dynamic=False))
+        tvl1l2_conesta_dynamic = estimators.RidgeRegression_L1_TV(k, l, g,
                                                                   [Ax, Ay, Az],
-                                            algorithm=algorithms.conesta_dynamic)
+                                algorithm=algorithms.CONESTA(dynamic=True))
 #        tvl1l2_excessive_gap = estimators.LinearRegressionL1L2TV(k, l, g,
 #                                                                 [Ax, Ay, Az],
 #                                            algorithm=algorithms.ExcessiveGapMethod)

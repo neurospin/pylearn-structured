@@ -12,6 +12,7 @@ from parsimony.algorithms import FastSparseSVD
 import parsimony.utils as utils
 
 
+
 def generate_sparse_matrix(shape, density=0.10):
     '''
     Example
@@ -47,33 +48,36 @@ class TestSVD(unittest.TestCase):
         return err
 
     def get_err_fast_svd(self, nrow, ncol):
+        np.random.seed(0)
         X = np.random.random((nrow, ncol))
         # svd from parsimony
-        parsimony_v = FastSVD(X, max_iter=1000)
+        fast_svd = FastSVD()
+        parsimony_v = fast_svd(X, max_iter=1000)
         return self.get_err_by_np_linalg_svd(parsimony_v, X)
 
     def test_fast_svd(self):
         err = self.get_err_fast_svd(50, 50)
-        self.assertTrue(err < utils.TOLERANCE)
+        self.assertTrue(err < utils.consts.TOLERANCE)
         err = self.get_err_fast_svd(5000, 5)
-        self.assertTrue(err < utils.TOLERANCE)
+        self.assertTrue(err < utils.consts.TOLERANCE)
         err = self.get_err_fast_svd(5, 5000)
-        self.assertTrue(err < utils.TOLERANCE * 1000)
+        self.assertTrue(err < utils.consts.TOLERANCE * 1000)
 
     def get_err_fast_sparse_svd(self, nrow, ncol, density):
         X = generate_sparse_matrix(shape=(nrow, ncol),
                                    density=density)
         # svd from parsimony
-        parsimony_v = FastSparseSVD(X, max_iter=1000)
+        fast_sparse_svd = FastSparseSVD()
+        parsimony_v = fast_sparse_svd(X, max_iter=1000)
         return self.get_err_by_np_linalg_svd(parsimony_v, X)
 
     def test_fast_sparse_svd(self):
         err = self.get_err_fast_sparse_svd(50, 50, density=0.1)
-        self.assertTrue(err < (utils.TOLERANCE * 100))
+        self.assertTrue(err < (utils.consts.TOLERANCE * 100))
         err = self.get_err_fast_sparse_svd(500, 5000, density=0.1)
-        self.assertTrue(err < (utils.TOLERANCE * 100))
+        self.assertTrue(err < (utils.consts.TOLERANCE * 100))
         err = self.get_err_fast_sparse_svd(5000, 500, density=0.1)
-        self.assertTrue(err < (utils.TOLERANCE * 100))
+        self.assertTrue(err < (utils.consts.TOLERANCE * 100))
 
 
 if __name__ == '__main__':
