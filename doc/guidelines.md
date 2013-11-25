@@ -1,57 +1,102 @@
 Architecture
 ============
 
-- Separate components (for example, soma-workflow, pyanatomist, vip etc.). Those can be achieved by adding interfaces for each component.
-- It is better to build the interface according to the requirements of application.
-- To help separate components, it is better to image that each component can have different implementations and each external dependencies can be replaced.
+- Do we have any architechtural constraints?
 
 
-General guideline
+
+General guidelines
 ==================
 
-- Function is better to be shorter (there may be problems since 25 lines)
-- Discriminant names are preferable for functions, classes, files or a set of files. Because it is easy to debug and rename.
-- Limit your comments. It is better to make functions or code more clearly by using an explicate name rather than adding a comment.
-- Some comments are very important, for example opition explanation.
-- Use standard comments which are easy to search and which are adequate for : TODO, FIXME, XXX
+- Functions are better if they are short (try to keep them less than 25 lines, and absolutely less than 50).
+- Make functions and classes, or code in general, as clear as possible. Use explicit and descriptive names as far as possible.
+- Some comments are very important, for example when choices have been made or if something is an opition.
+- Use standard comment prefixes, that are easy to search, and which are adequate for: TODO, FIXME, WARNING, ERROR, BUG, XXX, etc.
 - Boy scout rule: Leave the campground cleaner than you found it. 
-- Write your method from top to down. For example: if a method A use a method B, write A and then B.
-- Class order: top -> down, code client -> code interne (???), high level code -> low level code.
-- Don't leave prints (proper stdout)
+- Write your method from top to down. For example: if a method A use a method B, write A before you write B.
+- Class order: top -> down, high level code -> low level code.
+- Don't leave prints (writes to stdout).
+- Don't optimise prematurely. Make it work well, before you spend time making it fast.
+
 
 
 Python code format
-=====================
+==================
 
-- Pep 8 
-- Recommandly donot go beyond 80 characters per line, strictly donot go beyond 120 characters.
-- A module contains 400 lines in maximum
-- All the members of an instance should be explictly declared in the function "__init__" or in the methods using the prefixs by "_init_" or called as constructor (don't add it just-in-time)
-- No "import *"
-- No relative imports
-- Declare import standard python modules, and then add one empty line and the other externe imports (for example, aims, soma_workflow) and at the end import internal modules.
-- Use a coherent name with the module for "import something as smthg"
-- The private classes are renamed using the prefix double underscore (not yet applied). The protected method use the prefix by one underscore. ??? Pour l’accès par réference const (modification de l’objet autorisé mais pas de la référence), utiliser les properties.???
-- The methods "friends" are should use the prefix with «_friend» in order to show which are protected but accessible for the architecture requirements of other classes, but not users.
-- Data with list type is defined use a name with plural form.
-- To distinguish the file name with path or not, relative or absolute, please use the belowing convention:
-    * filename : the file name without the path (basename)
-    * filepath : the file name with absolute path 
-    * file_relative_path : the file name with a relative path
+- Pep 8. As far as possible.
+- Never go beyond 80 characters per line. If you cannot break the line before 80 characters, well then you or someone else have done something wrong.
+- Keep modules short and purposeful.
+- All the fields of an instance should be explictly declared in the function "__init__" or in methods that have the prefix "_init_". Avoid adding fields run-time.
+- Never "import *".
+- Do not use relative imports. When we move to Python 3, this will be relevant.
+- First import standard python modules, add one empty line and then import other non-standard python modules, add another empty line and then import library modules.
+- Use coherent names when importing modules, and use the same thoughout. E.g. "import numpy as np", "import very.long.imported.module.path as path".
+- Private fields, classes, functions, etc. use an underscore prefix. Such as "_private_field = 3.141592653589".
+- Lists, tuples, modules or datatypes with multiples members should be names in plural.
+
+Docstring format
+----------------
+
+- Use PEP 257 convention.
+- Here is a useful example using the same style as numpy:
+```
+"""
+Descriptive explanation of the function/class.
+
+Parameters
+----------
+a : Datatype. Descriptive text that explains the parameter. Then a blank line.
+
+b : List or tuple. Descriptive texts that span multiple lines should be broken
+        to be less than 80 characters wide. The second, third and so on, lines
+        of the same descriptive text should be indented two tabs or eight
+        spaces.
+
+c : Int or Float. Note that the variable name is preceded by a space, such
+        that we have "name : Datatype."
+
+Returns
+-------
+out1 : Datatype. A descriptive text for the output parameters. Then a blank
+        line.
+
+out2 : Datatype. Note that the same rules regarding lines that wrap are used
+        here as well.
+
+See Also
+--------
+other_function : Short description of what the other function does.
+or_other_class : Or of what the other class does.
+
+Examples
+--------
+>>> s = "Give doctest examples here."
+>>> s
+'Give doctest examples here.'
+>>> such_as = np.random.rand(2, 3)
+>>> such_as
+array([[ 0.51982512,  0.84506951,  0.31517025],
+       [ 0.81975035,  0.6654892 ,  0.78142793]])
+"""
+```
+You may omit any parts you feel are not relevant for your function.
+
 
 
 Commit Message
 ==============
 
 Git format
--------------
+----------
 
-- a synthetic line should start with the below tags
-- a blank (empty) line will be ignored by git
-- a comment can be described by serveral lines 
+- Write proper sentences.
+- Be descriptive.
+- Use several lines if necessary, wrap at 80 characters.
 
-Tag list for the first line
----------------------------
+Possible tag list for the first line
+------------------------------------
+
+Should we use this?
 
 - **ENH**: When adding or improving an existing or new class in term of capabilities,
 - **COMP**: When fixing a compilation error or warning,
@@ -63,5 +108,3 @@ Tag list for the first line
 - **PERF**: When improving performance,
 - **TEST**: When adding or modifying a test,
 - **WRG**: When correcting a warning.
-
-

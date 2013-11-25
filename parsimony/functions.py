@@ -74,10 +74,10 @@ class Constraint(object):
 
     __metaclass__ = abc.ABCMeta
 
-    """Feasibility of the constraint.
-    """
     @abc.abstractmethod
     def feasible(self):
+        """Feasibility of the constraint.
+        """
         raise NotImplementedError('Abstract method "feasible" must be ' \
                                   'specialised!')
 
@@ -86,10 +86,10 @@ class ProximalOperator(object):
 
     __metaclass__ = abc.ABCMeta
 
-    """The proximal operator corresponding to the function.
-    """
     @abc.abstractmethod
     def prox(self, beta):
+        """The proximal operator corresponding to the function.
+        """
         raise NotImplementedError('Abstract method "prox" must be ' \
                                   'specialised!')
 
@@ -105,10 +105,9 @@ class NesterovFunction(object):
         self._A = A
         self.mu = float(mu)
 
-    """Returns the smoothed function value.
-    """
     def fmu(self, beta, mu=None):
-
+        """Returns the smoothed function value.
+        """
         if mu == None:
             mu = self.get_mu()
 
@@ -122,10 +121,9 @@ class NesterovFunction(object):
         return self.l * ((np.dot(beta.T, Aa)[0, 0] \
                           - (mu / 2.0) * alpha_sqsum) - self.c)
 
-    """ Gradient of the function at beta.
-    """
     def grad(self, beta):
-
+        """ Gradient of the function at beta.
+        """
         if self.l < consts.TOLERANCE:
             return 0.0
 
@@ -133,28 +131,39 @@ class NesterovFunction(object):
 
         return self.l * self.Aa(alpha)
 
-    """Returns the regularisation constant for the smoothing.
-    """
     def get_mu(self):
+        """Returns the regularisation constant for the smoothing.
+        """
         return self.mu
 
-    """Sets the regularisation constant for the smoothing.
-    """
     def set_mu(self, mu):
+        """Sets the regularisation constant for the smoothing.
+
+        Arguments:
+        =========
+        mu: The regularisation constant for the smoothing to use from now on.
+
+        Returns:
+        =======
+        old_mu: The old regularisation constant for the smoothing that was
+                overwritten and is no longer used.
+        """
+        old_mu = self.get_mu()
+
         self.mu = mu
 
-    """ Function value with known alpha.
-    """
+        return old_mu
+
     @abc.abstractmethod
     def phi(self, alpha, beta):
+        """ Function value with known alpha.
+        """
         raise NotImplementedError('Abstract method "phi" must be ' \
                                   'specialised!')
 
-    """ Dual variable of the Nesterov function.
-    """
     def alpha(self, beta):
-
-        # Compute a*
+        """ Dual variable of the Nesterov function.
+        """
         A = self.A()
         mu = self.get_mu()
         alpha = [0] * len(A)
@@ -166,15 +175,14 @@ class NesterovFunction(object):
 
         return alpha
 
-    """ Linear operator of the Nesterov function.
-    """
     def A(self):
+        """ Linear operator of the Nesterov function.
+        """
         return self._A
 
-    """ Computes A^\T\alpha.
-    """
     def Aa(self, alpha):
-
+        """ Computes A^\T\alpha.
+        """
         A = self.A()
         Aa = A[0].T.dot(alpha[0])
         for i in xrange(1, len(A)):
@@ -182,26 +190,27 @@ class NesterovFunction(object):
 
         return Aa
 
-    """ Projection onto the compact space of the Nesterov function.
-    """
     @abc.abstractmethod
     def project(self, a):
+        """ Projection onto the compact space of the Nesterov function.
+        """
         raise NotImplementedError('Abstract method "project" must be ' \
                                   'specialised!')
 
-    """ The maximum value of the regularisation of the dual variable. We have
-
-        M = max_{\alpha \in K} 0.5*|\alpha|²_2.
-    """
     @abc.abstractmethod
     def M(self):
+        """ The maximum value of the regularisation of the dual variable. We
+        have
+
+            M = max_{\alpha \in K} 0.5*|\alpha|²_2.
+        """
         raise NotImplementedError('Abstract method "M" must be ' \
                                   'specialised!')
 
-    """ Computes a "good" value of \mu with respect to the given \beta.
-    """
     @abc.abstractmethod
     def estimate_mu(self, beta):
+        """ Computes a "good" value of \mu with respect to the given \beta.
+        """
         raise NotImplementedError('Abstract method "mu" must be ' \
                                   'specialised!')
 
@@ -210,24 +219,24 @@ class Continuation(object):
 
     __metaclass__ = abc.ABCMeta
 
-    """The optimal value of \mu given \epsilon.
-    """
     @abc.abstractmethod
     def mu_opt(self, eps):
+        """The optimal value of \mu given \epsilon.
+        """
         raise NotImplementedError('Abstract method "mu_opt" must be ' \
                                   'specialised!')
 
-    """The optimal value of \epsilon given \mu.
-    """
     @abc.abstractmethod
     def eps_opt(self, mu):
+        """The optimal value of \epsilon given \mu.
+        """
         raise NotImplementedError('Abstract method "eps_opt" must be ' \
                                   'specialised!')
 
-    """The maximum value of \epsilon.
-    """
     @abc.abstractmethod
     def eps_max(self, mu):
+        """The maximum value of \epsilon.
+        """
         raise NotImplementedError('Abstract method "eps_max" must be ' \
                                   'specialised!')
 
@@ -236,10 +245,10 @@ class Gradient(object):
 
     __metaclass__ = abc.ABCMeta
 
-    """Gradient of the function.
-    """
     @abc.abstractmethod
     def grad(self, beta):
+        """Gradient of the function.
+        """
         raise NotImplementedError('Abstract method "grad" must be ' \
                                   'specialised!')
 
@@ -248,34 +257,34 @@ class Hessian(object):
 
     __metaclass__ = abc.ABCMeta
 
-    """Hessian (second derivative) of the function.
-
-    Arguments:
-    ---------
-    beta : The point at which to evaluate the Hessian.
-
-    vector : If not None, it is multiplied with the Hessian from the right.
-    """
     @abc.abstractmethod
     def hessian(self, beta, vector=None):
+        """Hessian (second derivative) of the function.
+
+        Arguments:
+        ---------
+        beta : The point at which to evaluate the Hessian.
+
+        vector : If not None, it is multiplied with the Hessian from the right.
+        """
         raise NotImplementedError('Abstract method "hessian" must be ' \
                                   'specialised!')
 
-    """Inverse of the Hessian (second derivative) of the function.
-
-    Sometimes this can be done efficiently if we know the structure of the
-    Hessian. Also, if we multiply the Hessian by a vector, it is often possible
-    to do efficiently.
-
-    Arguments:
-    ---------
-    beta : The point at which to evaluate the Hessian.
-
-    vector : If not None, it is multiplied with the inverse of the Hessian from
-            the right.
-    """
     @abc.abstractmethod
     def hessian_inverse(self, beta, vector=None):
+        """Inverse of the Hessian (second derivative) of the function.
+
+        Sometimes this can be done efficiently if we know the structure of the
+        Hessian. Also, if we multiply the Hessian by a vector, it is often
+        possible to do efficiently.
+
+        Arguments:
+        ---------
+        beta : The point at which to evaluate the Hessian.
+
+        vector : If not None, it is multiplied with the inverse of the Hessian
+                from the right.
+        """
         raise NotImplementedError('Abstract method "hessian_inverse" must be '\
                                   'specialised!')
 
@@ -284,10 +293,10 @@ class LipschitzContinuousGradient(object):
 
     __metaclass__ = abc.ABCMeta
 
-    """Lipschitz constant of the gradient.
-    """
     @abc.abstractmethod
     def L(self):
+        """Lipschitz constant of the gradient.
+        """
         raise NotImplementedError('Abstract method "L" must be ' \
                                   'specialised!')
 
@@ -296,10 +305,10 @@ class GradientMap(object):
 
     __metaclass__ = abc.ABCMeta
 
-    """The gradient map associated to the function.
-    """
     @abc.abstractmethod
     def V(self, alpha, beta, L):
+        """The gradient map associated to the function.
+        """
         raise NotImplementedError('Abstract method "V" must be ' \
                                   'specialised!')
 
@@ -308,17 +317,17 @@ class DualFunction(object):
 
     __metaclass__ = abc.ABCMeta
 
-    """Compute the duality gap.
-    """
     @abc.abstractmethod
     def gap(self, beta, beta_hat):
+        """Compute the duality gap.
+        """
         raise NotImplementedError('Abstract method "gap" must be ' \
                                   'specialised!')
 
-    """Returns the beta that minimises the dual function.
-    """
     @abc.abstractmethod
-    def betahat(self, alpha):
+    def betahat(self, alpha, beta=None):
+        """Returns the beta that minimises the dual function.
+        """
         raise NotImplementedError('Abstract method "betahat" must be ' \
                                   'specialised!')
 
@@ -327,17 +336,17 @@ class Eigenvalues(object):
 
     __metaclass__ = abc.ABCMeta
 
-    """Largest eigenvalue of the corresponding covariance matrix.
-    """
     @abc.abstractmethod
     def lambda_max(self):
+        """Largest eigenvalue of the corresponding covariance matrix.
+        """
         raise NotImplementedError('Abstract method "lambda_max" must be ' \
                                   'specialised!')
 
-    """Smallest eigenvalue of the corresponding covariance matrix.
-    """
     @abc.abstractmethod
     def lambda_min(self):
+        """Smallest eigenvalue of the corresponding covariance matrix.
+        """
         raise NotImplementedError('Abstract method "lambda_min" must be ' \
                                   'specialised!')
 
@@ -358,36 +367,32 @@ class RidgeRegression(CompositeFunction, Gradient, LipschitzContinuousGradient,
         self._lambda_max = None
         self._lambda_min = None
 
-    """Function value of Ridge regression.
-    """
     def f(self, beta):
-
+        """Function value of Ridge regression.
+        """
         return (1.0 / 2.0) * np.sum((np.dot(self.X, beta) - self.y) ** 2.0) \
              + (self.k / 2.0) * np.sum(beta ** 2.0)
 
-    """Gradient of the function at beta.
-
-    From the interface "Gradient".
-    """
     def grad(self, beta):
+        """Gradient of the function at beta.
 
+        From the interface "Gradient".
+        """
         return np.dot((np.dot(self.X, beta) - self.y).T, self.X).T \
              + self.k * beta
 
-    """Lipschitz constant of the gradient.
-
-    From the interface "LipschitzContinuousGradient".
-    """
     def L(self):
+        """Lipschitz constant of the gradient.
 
+        From the interface "LipschitzContinuousGradient".
+        """
         return self.lambda_max()
 
-    """Largest eigenvalue of the corresponding covariance matrix.
-
-    From the interface "Eigenvalues".
-    """
     def lambda_max(self):
+        """Largest eigenvalue of the corresponding covariance matrix.
 
+        From the interface "Eigenvalues".
+        """
         if self._lambda_max == None:
             s = np.linalg.svd(self.X, full_matrices=False, compute_uv=False)
 
@@ -400,12 +405,11 @@ class RidgeRegression(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
         return self._lambda_max + self.k
 
-    """Smallest eigenvalue of the corresponding covariance matrix.
-
-    From the interface "Eigenvalues".
-    """
     def lambda_min(self):
+        """Smallest eigenvalue of the corresponding covariance matrix.
 
+        From the interface "Eigenvalues".
+        """
         if self._lambda_min == None:
             s = np.linalg.svd(self.X, full_matrices=False, compute_uv=False)
 
@@ -442,28 +446,25 @@ class L1(AtomicFunction, Constraint, ProximalOperator):
         self.l = float(l)
         self.c = float(c)
 
-    """Function value.
-    """
     def f(self, beta):
-
+        """Function value.
+        """
         return self.l * (maths.norm1(beta) - self.c)
 
-    """The corresponding proximal operator.
-
-    From the interface "ProximalOperator".
-    """
     def prox(self, beta, factor=1.0):
+        """The corresponding proximal operator.
 
+        From the interface "ProximalOperator".
+        """
         l = self.l * factor
 
         return (np.abs(beta) > l) * (beta - l * np.sign(beta - l))
 
-    """Feasibility of the constraint.
-
-    From the interface "Constraint".
-    """
     def feasible(self, beta):
+        """Feasibility of the constraint.
 
+        From the interface "Constraint".
+        """
         return self.f(beta) <= self.c
 
 
@@ -494,44 +495,40 @@ class SmoothedL1(AtomicFunction, NesterovFunction, Gradient,
 
         super(SmoothedL1, self).__init__(l, c, A, mu)
 
-    """ Function value.
-    """
     def f(self, beta):
-
+        """ Function value.
+        """
         if self.l < consts.TOLERANCE:
             return 0.0
 
         return self.l * (maths.norm1(beta) - self.c)
 
-    """ Function value with known alpha.
-
-    From the interface "NesterovFunction".
-    """
     def phi(self, alpha, beta):
+        """ Function value with known alpha.
 
+        From the interface "NesterovFunction".
+        """
         if self.l < consts.TOLERANCE:
             return 0.0
 
         return self.l * ((np.dot(alpha[0].T, beta)[0, 0] \
                          - (self.mu / 2.0) * np.sum(alpha[0] ** 2.0)) - self.c)
 
-    """ Gradient of the function at beta.
-
-    From the interface "Gradient". Overloaded since we can be faster than the
-    default.
-    """
     def grad(self, beta):
+        """ Gradient of the function at beta.
 
+        From the interface "Gradient". Overloaded since we can be faster than
+        the default.
+        """
         alpha = self.alpha(beta)
 
         return self.l * alpha[0]
 
-    """ Lipschitz constant of the gradient.
-
-    From the interface "LipschitzContinuousGradient".
-    """
     def L(self):
+        """ Lipschitz constant of the gradient.
 
+        From the interface "LipschitzContinuousGradient".
+        """
         return self.l / self.mu
 
 #    """ Linear operator of the Nesterov function.
@@ -542,25 +539,22 @@ class SmoothedL1(AtomicFunction, NesterovFunction, Gradient,
 #
 #        return self._A
 
-    """ Dual variable of the Nesterov function.
-
-    From the interface "NesterovFunction". Overloaded since we can be faster
-    than the default.
-    """
     def alpha(self, beta):
+        """ Dual variable of the Nesterov function.
 
-        # Compute a*
+        From the interface "NesterovFunction". Overloaded since we can be
+        faster than the default.
+        """
         alpha = self.project([beta / self.mu])
 
         return alpha
 
-    """ Projection onto the compact space of the Nesterov function.
-
-    From the interface "NesterovFunction".
-    """
     @staticmethod
-    def project(self, a):
+    def project(a):
+        """ Projection onto the compact space of the Nesterov function.
 
+        From the interface "NesterovFunction".
+        """
         a = a[0]
         anorm = np.abs(a)
         i = anorm > 1.0
@@ -569,23 +563,22 @@ class SmoothedL1(AtomicFunction, NesterovFunction, Gradient,
 
         return [a]
 
-    """ The maximum value of the regularisation of the dual variable. We have
-
-        M = max_{\alpha \in K} 0.5*|\alpha|²_2.
-
-    From the interface "NesterovFunction".
-    """
     def M(self):
+        """ The maximum value of the regularisation of the dual variable. We
+        have
 
+            M = max_{\alpha \in K} 0.5*|\alpha|²_2.
+
+        From the interface "NesterovFunction".
+        """
         A = self.A()
         return A[0].shape[0] / 2.0
 
-    """ Computes a "good" value of \mu with respect to the given \beta.
-
-    From the interface "NesterovFunction".
-    """
     def estimate_mu(self, beta):
+        """ Computes a "good" value of \mu with respect to the given \beta.
 
+        From the interface "NesterovFunction".
+        """
         return np.max(np.absolute(beta))
 
 
@@ -623,10 +616,9 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
 
         self._lambda_max = None
 
-    """ Function value.
-    """
     def f(self, beta):
-
+        """ Function value.
+        """
         if self.l < consts.TOLERANCE:
             return 0.0
 
@@ -635,12 +627,11 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
                                         A[1].dot(beta) ** 2.0 + \
                                         A[2].dot(beta) ** 2.0)) - self.c)
 
-    """Function value with known alpha.
-
-    From the interface "NesterovFunction".
-    """
     def phi(self, alpha, beta):
+        """Function value with known alpha.
 
+        From the interface "NesterovFunction".
+        """
         if self.l < consts.TOLERANCE:
             return 0.0
 
@@ -666,12 +657,11 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
 #
 #        return self.l * self.Aa(alpha)
 
-    """ Lipschitz constant of the gradient.
-
-    From the interface "LipschitzContinuousGradient".
-    """
     def L(self):
+        """ Lipschitz constant of the gradient.
 
+        From the interface "LipschitzContinuousGradient".
+        """
         if self.l < consts.TOLERANCE:
             return 0.0
 
@@ -679,12 +669,11 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
 
         return self.l * lmaxA / self.mu
 
-    """ Largest eigenvalue of the corresponding covariance matrix.
-
-    From the interface "Eigenvalues".
-    """
     def lambda_max(self):
+        """ Largest eigenvalue of the corresponding covariance matrix.
 
+        From the interface "Eigenvalues".
+        """
         # Note that we can save the state here since lmax(A) does not change.
         if len(self._A) == 3 \
             and self._A[1].nnz == 0 and self._A[2].nnz == 0:
@@ -744,12 +733,11 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
 #
 #        return alpha
 
-    """ Projection onto the compact space of the Nesterov function.
-
-    From the interface "NesterovFunction".
-    """
     def project(self, a):
+        """ Projection onto the compact space of the Nesterov function.
 
+        From the interface "NesterovFunction".
+        """
         ax = a[0]
         ay = a[1]
         az = a[2]
@@ -763,14 +751,14 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
 
         return [ax, ay, az]
 
-    """ The maximum value of the regularisation of the dual variable. We have
-
-        M = max_{\alpha \in K} 0.5*|\alpha|²_2.
-
-    From the interface "NesterovFunction".
-    """
     def M(self):
+        """ The maximum value of the regularisation of the dual variable. We
+        have
 
+            M = max_{\alpha \in K} 0.5*|\alpha|²_2.
+
+        From the interface "NesterovFunction".
+        """
         return self._A[0].shape[0] / 2.0
 
     """ Computes a "good" value of \mu with respect to the given \beta.
@@ -879,7 +867,8 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
 
 
 class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
-                 ProximalOperator, NesterovFunction, Continuation):
+                 ProximalOperator, NesterovFunction, Continuation,
+                 DualFunction):
 
     def __init__(self, X, y, k, l, g, A=None, mu=0.0):
 
@@ -890,7 +879,6 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
         self.l1 = L1(l)
         self.tv = TotalVariation(g, A=A, mu=0.0)
 
-        # TODO: Is reset still necessary?
         self.reset()
 
     def reset(self):
@@ -910,115 +898,119 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
         super(RR_L1_TV, self).set_params(**kwargs)
 
-    """Function value.
-    """
     def f(self, beta):
-
+        """Function value.
+        """
         return self.rr.f(beta) \
              + self.l1.f(beta) \
              + self.tv.f(beta)
 
-    """ Function value with known alpha.
-    """
     def phi(self, alpha, beta):
-
+        """ Function value with known alpha.
+        """
         return self.rr.f(beta) \
              + self.l1.f(beta) \
              + self.tv.phi(alpha, beta)
 
-    """Gradient of the differentiable part of the function.
-
-    From the interface "Gradient".
-    """
     def grad(self, beta):
+        """Gradient of the differentiable part of the function.
 
+        From the interface "Gradient".
+        """
         return self.rr.grad(beta) \
              + self.tv.grad(beta)
 
-    """Lipschitz constant of the gradient.
-
-    From the interface "LipschitzContinuousGradient".
-    """
     def L(self):
+        """Lipschitz constant of the gradient.
 
+        From the interface "LipschitzContinuousGradient".
+        """
         return self.rr.L() \
              + self.tv.L()
 
-    """The proximal operator of the non-differentiable part of the function.
-
-    From the interface "ProximalOperator".
-    """
     def prox(self, beta, factor=1.0):
+        """The proximal operator of the non-differentiable part of the
+        function.
 
+        From the interface "ProximalOperator".
+        """
         return self.l1.prox(beta, factor)
 
-    """Computes a "good" value of \mu with respect to the given \beta.
-
-    From the interface "NesterovFunction".
-    """
     def estimate_mu(self, beta):
+        """Computes a "good" value of \mu with respect to the given \beta.
 
+        From the interface "NesterovFunction".
+        """
         return self.tv.estimate_mu(beta)
 
-    """The maximum value of the regularisation of the dual variable. We have
-
-        M = max_{\alpha \in K} 0.5*|\alpha|²_2.
-
-    From the interface "NesterovFunction".
-    """
     def M(self):
+        """The maximum value of the regularisation of the dual variable. We
+        have
 
+            M = max_{\alpha \in K} 0.5*|\alpha|²_2.
+
+        From the interface "NesterovFunction".
+        """
         return self.tv.M()
 
-    """The optimal value of \mu given \epsilon.
-
-    From the interface "Continuation".
-    """
     def mu_opt(self, eps):
+        """The optimal value of \mu given \epsilon.
 
+        From the interface "Continuation".
+        """
         gM = self.tv.l * self.tv.M()
-        # TODO: mu must be set here!!
+
+        # Mu is set to 1.0, because it is in fact not here "anymore". It is
+        # factored out in this solution.
+        old_mu = self.tv.set_mu(1.0)
         gA2 = self.tv.L()  # Gamma is in here!
+        self.tv.set_mu(old_mu)
+
         Lg = self.rr.L()
 
         return (-gM * gA2 + np.sqrt((gM * gA2) ** 2.0 \
              + gM * Lg * gA2 * eps)) \
              / (gM * Lg)
 
-    """The optimal value of \epsilon given \mu.
-
-    From the interface "Continuation".
-    """
     def eps_opt(self, mu):
+        """The optimal value of \epsilon given \mu.
 
+        From the interface "Continuation".
+        """
         gM = self.tv.l * self.tv.M()
-        gA2 = self.tv.Lipschitz(1.0)  # Gamma is in here!
-        Lg = self.rr.Lipschitz()
+
+        # Mu is set to 1.0, because it is in fact not here "anymore". It is
+        # factored out in this solution.
+        old_mu = self.tv.set_mu(1.0)
+        gA2 = self.tv.L()  # Gamma is in here!
+        self.tv.set_mu(old_mu)
+
+        Lg = self.rr.L()
 
         return (2.0 * gM * gA2 * mu \
              + gM * Lg * mu ** 2.0) \
              / gA2
 
-    """The maximum value of \epsilon.
-
-    From the interface "Continuation".
-    """
     def eps_max(self, mu):
+        """The maximum value of \epsilon.
 
+        From the interface "Continuation".
+        """
         gM = self.tv.l * self.tv.M()
 
         return mu * gM
 
-    """ Returns the beta that minimises the dual function. Used when computing
-    the gap.
-    """
-    def _beta_hat(self, alphak, betak):
+    def betahat(self, alphak, betak):
+        """ Returns the beta that minimises the dual function. Used when we
+        compute the gap.
 
+        From the interface "DualFunction".
+        """
         if self._Xty == None:
             self._Xty = np.dot(self.X.T, self.y)
 
         Ata_tv = self.tv.l * self.tv.Aa(alphak)
-        Ata_l1 = self.l1.l * SmoothedL1.project(betak / consts.TOLERANCE)
+        Ata_l1 = self.l1.l * SmoothedL1.project([betak / consts.TOLERANCE])
         v = (self._Xty - Ata_tv - Ata_l1)
 
         shape = self.X.shape
@@ -1048,19 +1040,18 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
         return beta_hat
 
-    """Compute the duality gap.
+    def gap(self, beta, beta_hat=None):
+        """Compute the duality gap.
 
-    From the interface "DualFunction".
-    """
-    def gap(self, beta):
-
+        From the interface "DualFunction".
+        """
         alpha = self.tv.alpha(beta)
 
         P = self.rr.f(beta) \
           + self.l1.f(beta) \
           + self.tv.phi(alpha, beta)
 
-        beta_hat = self._beta_hat(alpha, beta)
+        beta_hat = self.betahat(alpha, beta)
 
         D = self.rr.f(beta_hat) \
           + self.l1.f(beta_hat) \
@@ -1068,37 +1059,49 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
         return P - D
 
-    """Linear operator of the Nesterov function.
-
-    From the interface "NesterovFunction".
-    """
     def A(self):
+        """Linear operator of the Nesterov function.
 
+        From the interface "NesterovFunction".
+        """
         return self.tv.A()
 
-    """Computes A^\T\alpha.
-
-    From the interface "NesterovFunction".
-    """
     def Aa(self, alpha):
+        """Computes A^\T\alpha.
 
+        From the interface "NesterovFunction".
+        """
         return self.tv.Aa()
 
-    """ Projection onto the compact space of the Nesterov function.
-
-    From the interface "NesterovFunction".
-    """
     def project(self, a):
+        """ Projection onto the compact space of the Nesterov function.
 
+        From the interface "NesterovFunction".
+        """
         return self.tv.project(a)
 
     def get_mu(self):
+        """Returns the regularisation constant for the smoothing.
 
+        From the interface "NesterovFunction".
+        """
         return self.tv.get_mu()
 
     def set_mu(self, mu):
+        """Sets the regularisation constant for the smoothing.
 
-        self.tv.set_mu(mu)
+        From the interface "NesterovFunction".
+
+        Arguments:
+        =========
+        mu: The regularisation constant for the smoothing to use from now on.
+
+        Returns:
+        =======
+        old_mu: The old regularisation constant for the smoothing that was
+                overwritten and is no longer used.
+        """
+        return self.tv.set_mu(mu)
 
 
 class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
@@ -1126,10 +1129,9 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
 
         self._lambda_max = None
 
-    """ Function value.
-    """
     def f(self, beta):
-
+        """ Function value.
+        """
         if self.l < consts.TOLERANCE and self.g < consts.TOLERANCE:
             return 0.0
 
@@ -1139,12 +1141,11 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
                               A[2].dot(beta) ** 2.0 + \
                               A[3].dot(beta) ** 2.0))
 
-    """ Function value with known alpha.
-
-    From the interface "NesterovFunction".
-    """
     def phi(self, alpha, beta):
+        """ Function value with known alpha.
 
+        From the interface "NesterovFunction".
+        """
         if self.l < consts.TOLERANCE and self.g < consts.TOLERANCE:
             return 0.0
 
@@ -1156,12 +1157,11 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
 
         return np.dot(beta.T, Aa)[0, 0] - (self.mu / 2.0) * alpha_sqsum
 
-    """ Largest eigenvalue of the corresponding covariance matrix.
-
-    From the interface "Eigenvalues".
-    """
     def lambda_max(self):
+        """ Largest eigenvalue of the corresponding covariance matrix.
 
+        From the interface "Eigenvalues".
+        """
         # Note that we can save the state here since lmax(A) does not change.
         if len(self._shape) == 3 \
             and self._shape[0] == 1 and self._shape[1] == 1:
@@ -1208,13 +1208,12 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
 #
 #        return Aa
 
-    """ Dual variable of the Nesterov function.
-
-    From the interface "NesterovFunction". Overloaded since we need to do more
-    than the default.
-    """
     def alpha(self, beta):
+        """ Dual variable of the Nesterov function.
 
+        From the interface "NesterovFunction". Overloaded since we need to do
+        more than the default.
+        """
         A = self.A()
 
         a = [0] * len(A)
@@ -1226,12 +1225,11 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
 
         return self.project(a)
 
-    """ Projection onto the compact space of the Nesterov function.
-
-    From the interface "NesterovFunction".
-    """
     def project(self, a):
+        """ Projection onto the compact space of the Nesterov function.
 
+        From the interface "NesterovFunction".
+        """
         # L1
         al1 = a[0]
         anorm_l1 = np.abs(al1)
@@ -1253,14 +1251,14 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
 
         return [al1, ax, ay, az]
 
-    """ The maximum value of the regularisation of the dual variable. We have
-
-        M = max_{\alpha \in K} 0.5*|\alpha|²_2.
-
-    From the interface "NesterovFunction".
-    """
     def M(self):
+        """ The maximum value of the regularisation of the dual variable. We
+        have
 
+            M = max_{\alpha \in K} 0.5*|\alpha|²_2.
+
+        From the interface "NesterovFunction".
+        """
         A = self.A()
 
         return (A[0].shape[0] / 2.0) \
@@ -1290,31 +1288,28 @@ class RR_SmoothedL1TV(CompositeFunction, LipschitzContinuousGradient,
         self._Xy = None
         self._XtinvXXtkI = None
 
-    """ Function value.
-    """
     def f(self, beta):
-
+        """ Function value.
+        """
         return self.g.f(beta) \
              + self.h.f(beta)
 
-    """Lipschitz constant of the gradient.
-
-    From the interface "LipschitzContinuousGradient".
-    """
     def L(self):
+        """Lipschitz constant of the gradient.
 
+        From the interface "LipschitzContinuousGradient".
+        """
         b = self.g.lambda_min()
         # TODO: Use max_iter here!!
         a = self.h.lambda_max()  # max_iter=max_iter)
 
         return a / b
 
-    """The gradient map associated to the function.
-
-    From the interface "GradientMap".
-    """
     def V(self, u, beta, L):
+        """The gradient map associated to the function.
 
+        From the interface "GradientMap".
+        """
         A = self.h.A()
         a = [0] * len(A)
         a[0] = (1.0 / L) * A[0].dot(beta)
@@ -1328,12 +1323,12 @@ class RR_SmoothedL1TV(CompositeFunction, LipschitzContinuousGradient,
 
         return self.h.project(u_new)
 
-    """ Returns the beta that minimises the dual function.
+    def betahat(self, alpha, beta=None):
+        """ Returns the beta that minimises the dual function.
 
-    From the interface "DualFunction".
-    """
-    def betahat(self, alpha):
-        # TODO: Kernelise this function! See LRL2_L1_TV._beta_hat.
+        From the interface "DualFunction".
+        """
+        # TODO: Kernelise this function! See how I did in LRL2_L1_TV._beta_hat.
 
         A = self.h.A()
         grad = A[0].T.dot(alpha[0])

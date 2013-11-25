@@ -70,18 +70,18 @@ class ExplicitAlgorithm(BaseAlgorithm):
     """
     __metaclass__ = abc.ABCMeta
 
-    """Call this object to obtain the variable that gives the minimum.
-
-    Arguments:
-    =========
-    X : The data.
-
-    function : The function to minimise.
-
-    beta : A start vector.
-    """
     @abc.abstractmethod
     def __call__(function, beta, **kwargs):
+        """Call this object to obtain the variable that gives the minimum.
+
+        Arguments:
+        =========
+        X : The data.
+
+        function : The function to minimise.
+
+        beta : A start vector.
+        """
         raise NotImplementedError('Abstract method "__call__" must be ' \
                                   'specialised!')
 
@@ -222,10 +222,6 @@ class FISTA(ExplicitAlgorithm):
 
         z = betanew = betaold = beta
 
-        # TODO: Make sure \mu is set before calling FISTA!
-#        if mu == None:
-#            mu = 0.9 * function.mu(beta)
-
         if self.step == None:
             self.step = 1.0 / function.L()
 
@@ -269,7 +265,7 @@ class CONESTA(ExplicitAlgorithm):
                  ]
 
     def __init__(self, mu_start=None, mu_min=consts.TOLERANCE, tau=0.5,
-                 dynamic=True, continuations=50,
+                 dynamic=True, continuations=30,
 
                  output=False,
                  eps=consts.TOLERANCE,
@@ -297,11 +293,12 @@ class CONESTA(ExplicitAlgorithm):
         if self.mu_start != None:
             mu = [self.mu_start]
         else:
-            mu = [0.9 * function.mu(beta)]
+            mu = [0.9 * function.estimate_mu(beta)]
 
-        # TODO: Set mu to self.mu_min here!!
+#        old_mu = function.get_mu()
+        function.set_mu(self.mu_min)
         tmin = 1.0 / function.L()
-        # TODO: Reset mu to whatever it was here!!
+        function.set_mu(mu[0])
 
         max_eps = function.eps_max(mu[0])
 
@@ -321,19 +318,19 @@ class CONESTA(ExplicitAlgorithm):
             eps_plus = min(max_eps, function.eps_opt(mu[-1]))
             self.FISTA.set_params(step=tnew, eps=eps_plus)
             if self.output:
-                (beta, output) = self.FISTA(function, beta)
-                fval = output["f"]
-                tval = output["t"]
+                (beta, info) = self.FISTA(function, beta)
+                fval = info["f"]
+                tval = info["t"]
             else:
                 beta = self.FISTA(function, beta)
 
             self.mu_min = min(self.mu_min, mu[-1])
             tmin = min(tmin, tnew)
-            function.set_params(mu=self.mu_min)
+            function.set_mu(self.mu_min)
             # Take one ISTA step to use in the stopping criterion.
             beta_tilde = function.prox(beta - tmin * function.grad(beta),
                                        tmin)
-            function.set_params(mu=mu[-1])
+            function.set_mu(mu[-1])
 
             if (1.0 / tmin) * maths.norm(beta - beta_tilde) < self.eps \
                     or i >= self.continuations:
@@ -377,13 +374,13 @@ class CONESTA(ExplicitAlgorithm):
                 mu = mu + [max(self.mu_min, mu_new)] * len(fval)
             else:
                 mu.append(max(self.mu_min, mu_new))
-            function.set_params(mu=mu_new)
+            function.set_mu(mu_new)
 
             i = i + 1
 
         if self.output:
-            output = {"t": t, "f": f, "mu": mu, "gap": Gval}
-            return (beta, output)
+            info = {"t": t, "f": f, "mu": mu, "gap": Gval}
+            return (beta, info)
         else:
             return beta
 
@@ -392,7 +389,6 @@ class StaticCONESTA(CONESTA):
     """COntinuation with NEsterov smoothing in a Soft-Thresholding Algorithm,
     or CONESTA for short, with a statically decreasing \mu.
     """
-
     def __init__(self, **kwargs):
 
         kwargs.pop("dynamic")  # We ignore this if it was given ...
@@ -404,7 +400,6 @@ class DynamicCONESTA(CONESTA):
     """COntinuation with NEsterov smoothing in a Soft-Thresholding Algorithm,
     or CONESTA for short, with a dynamically decreasing \mu.
     """
-
     def __init__(self, **kwargs):
 
         kwargs.pop("dynamic")  # We ignore this if it was given ...
@@ -433,16 +428,15 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
         self.max_iter = max_iter
         self.min_iter = min_iter
 
-    """The excessive gap method for strongly convex functions.
-
-    Parameters
-    ----------
-    function : The function to minimise. It contains two parts, function.g is
-            the strongly convex part and function.h is the smoothed part of the
-            function.
-    """
     def __call__(self, function, beta=None):
+        """The excessive gap method for strongly convex functions.
 
+        Parameters
+        ----------
+        function : The function to minimise. It contains two parts, function.g
+                is the strongly convex part and function.h is the smoothed part
+                of the function.
+        """
         A = function.h.A()
 
         u = [0] * len(A)

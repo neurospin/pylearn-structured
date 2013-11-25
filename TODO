@@ -2,31 +2,51 @@
 
 ./parsimony/algorithms.py:
 -------------------------
-53: # TODO: Use module for this!
+26: #TODO: This depends on the OS. We should try to be clever here ...
+27: #time_func = time
 
-69: # TODO: Use module for this!
+113: # TODO: Use module for this!
 
-106: # TODO: Use module for this!
+129: # TODO: Use module for this!
 
-122: # TODO: Use module for this!
+168: # TODO: Use module for this!
 
-175: # TODO: These return values are for the OLS paper. Will be changed!
+184: # TODO: Use module for this!
 
-268: # TODO: These return values are for the OLS paper. Will be changed!
-
-349: # TODO: These return values are for the OLS paper. Will be changed!
+346: # TODO: Warn if G_new < 0.
 
 ./parsimony/functions.py:
 ------------------------
-462: # TODO: Mask should be boolean!
+680: # TODO: Instead of p, this should really be the number of non-zero
+681: # rows of A.
 
-601: # TODO: Remove init_iter everywhere!
+691: # TODO: Add max_iter here!
+
+1125: # TODO: Is reset still necessary?
+
+1183: # TODO: Add max_iter here!!
+
+1303: # TODO: Use max_iter here!!
+
+1331: # TODO: Kernelise this function! See how I did in LRL2_L1_TV._beta_hat.
 
 ./parsimony/estimators.py:
 -------------------------
-71: # TODO: Use start_vectors for this!
+49: # TODO: Is this a good name?
+
+119: # TODO: Should we use a seed here so that we get deterministic results?
+
+./parsimony/datasets/samples_generator_struct.py:
+------------------------------------------------
+529: # TODO: We cannot return the A matrices separately like this, we must
+530: # return a list or tuple A such that A = [Ax, Ay, Az].
 
 ./parsimony/datasets/simulated/grad.py:
 --------------------------------------
-73: # TODO: Only works for up to 3 dimensions ...
+74: # TODO: Only works for up to 3 dimensions ...
+
+./parsimony/utils/consts.py:
+---------------------------
+14: # TODO: MAX_ITER is heavily algorithm-dependent, so we have to think about if
+15: # we should include a package-wide maximum at all.
 

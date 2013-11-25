@@ -83,6 +83,7 @@ class RegressionEstimator(BaseEstimator):
 
     def score(self, X, y):
 
+        self.function.reset()
         self.function.set_params(X=X, y=y)
         return self.function.f(self.beta)
 
@@ -90,7 +91,8 @@ class RegressionEstimator(BaseEstimator):
 class RidgeRegression_L1_TV(RegressionEstimator):
 
     def __init__(self, k, l, g, A, mu=None, output=False,
-                 algorithm=algorithms.FISTA()):
+                 algorithm=algorithms.CONESTA(dynamic=False)):
+#                 algorithm=algorithms.FISTA()):
 
         self.k = float(k)
         self.l = float(l)
@@ -122,9 +124,7 @@ class RidgeRegression_L1_TV(RegressionEstimator):
         else:
             self.mu = float(self.mu)
 
-        print "mu fore:", self.function.get_mu()
         self.function.set_params(mu=self.mu)
-        print "mu efter:", self.function.get_mu()
         self.algorithm.set_params(output=self.output)
 
         if self.output:
