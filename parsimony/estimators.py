@@ -16,7 +16,9 @@ import parsimony.start_vectors as start_vectors
 
 __all__ = ['BaseEstimator', 'RegressionEstimator',
 
-           'RidgeRegression_L1_TV']
+           'RidgeRegression_L1_TV',
+
+           'RidgeRegression_SmoothedL1TV']
 
 
 class BaseEstimator(object):
@@ -91,7 +93,8 @@ class RegressionEstimator(BaseEstimator):
 class RidgeRegression_L1_TV(RegressionEstimator):
 
     def __init__(self, k, l, g, A, mu=None, output=False,
-                 algorithm=algorithms.CONESTA(dynamic=True)):
+                 algorithm=algorithms.StaticCONESTA()):
+#                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
 
         self.k = float(k)
@@ -128,8 +131,45 @@ class RidgeRegression_L1_TV(RegressionEstimator):
         self.algorithm.set_params(output=self.output)
 
         if self.output:
-            self.beta, self.info = self.algorithm(self.function, beta)
+            (self.beta, self.info) = self.algorithm(self.function, beta)
         else:
             self.beta = self.algorithm(self.function, beta)
+
+        return self
+
+
+class RidgeRegression_SmoothedL1TV(RegressionEstimator):
+
+    def __init__(self, k, l, g, Atv, Al1, mu=None, output=False,
+                 algorithm=algorithms.ExcessiveGapMethod()):
+
+        self.k = float(k)
+        self.l = float(l)
+        self.g = float(g)
+        self.Atv = Atv
+        self.Al1 = Al1
+        if isinstance(mu, numbers.Number):
+            self.mu = float(mu)
+        else:
+            self.mu = None
+
+        super(RidgeRegression_SmoothedL1TV, self).__init__(algorithm=algorithm,
+                                                           output=output)
+
+    def get_params(self):
+
+        return {"k": self.k, "l": self.l, "g": self.g,
+                "A": self.A, "mu": self.mu}
+
+    def fit(self, X, y):
+
+        self.function = functions.RR_SmoothedL1TV(X, y, self.k, self.l, self.g,
+                                                  Atv=self.Atv, Al1=self.Al1)
+
+        self.algorithm.set_params(output=self.output)
+        if self.output:
+            (self.beta, self.info) = self.algorithm(self.function)
+        else:
+            self.beta = self.algorithm(self.function)
 
         return self

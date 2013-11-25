@@ -343,12 +343,11 @@ class Eigenvalues(object):
         raise NotImplementedError('Abstract method "lambda_max" must be ' \
                                   'specialised!')
 
-    @abc.abstractmethod
     def lambda_min(self):
         """Smallest eigenvalue of the corresponding covariance matrix.
         """
-        raise NotImplementedError('Abstract method "lambda_min" must be ' \
-                                  'specialised!')
+        raise NotImplementedError('Abstract method "lambda_min" is not ' \
+                                  'implemented!')
 
 
 class RidgeRegression(CompositeFunction, Gradient, LipschitzContinuousGradient,
@@ -898,6 +897,29 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
         super(RR_L1_TV, self).set_params(**kwargs)
 
+    def get_mu(self):
+        """Returns the regularisation constant for the smoothing.
+
+        From the interface "NesterovFunction".
+        """
+        return self.tv.get_mu()
+
+    def set_mu(self, mu):
+        """Sets the regularisation constant for the smoothing.
+
+        From the interface "NesterovFunction".
+
+        Arguments:
+        =========
+        mu: The regularisation constant for the smoothing to use from now on.
+
+        Returns:
+        =======
+        old_mu: The old regularisation constant for the smoothing that was
+                overwritten and is no longer used.
+        """
+        return self.tv.set_mu(mu)
+
     def f(self, beta):
         """Function value.
         """
@@ -1080,29 +1102,6 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
         """
         return self.tv.project(a)
 
-    def get_mu(self):
-        """Returns the regularisation constant for the smoothing.
-
-        From the interface "NesterovFunction".
-        """
-        return self.tv.get_mu()
-
-    def set_mu(self, mu):
-        """Sets the regularisation constant for the smoothing.
-
-        From the interface "NesterovFunction".
-
-        Arguments:
-        =========
-        mu: The regularisation constant for the smoothing to use from now on.
-
-        Returns:
-        =======
-        old_mu: The old regularisation constant for the smoothing that was
-                overwritten and is no longer used.
-        """
-        return self.tv.set_mu(mu)
-
 
 class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
                    Eigenvalues):
@@ -1163,11 +1162,15 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
         From the interface "Eigenvalues".
         """
         # Note that we can save the state here since lmax(A) does not change.
-        if len(self._shape) == 3 \
-            and self._shape[0] == 1 and self._shape[1] == 1:
-
-            lmaxTV = 2.0 * (1.0 - math.cos(float(self._p - 1) * math.pi \
-                                                 / float(self._p)))
+        if len(self._A) == 4 \
+            and self._A[2].nnz == 0 and self._A[3].nnz == 0:
+#        if len(self._shape) == 3 \
+#            and self._shape[0] == 1 and self._shape[1] == 1:
+            # TODO: Instead of p, this should really be the number of non-zero
+            # rows of A.
+            p = self._A[1].shape[0]
+            lmaxTV = 2.0 * (1.0 - math.cos(float(p - 1) * math.pi \
+                                           / float(p)))
             self._lambda_max = lmaxTV * self.g ** 2.0 + self.l ** 2.0
 
         elif self._lambda_max == None:
@@ -1181,7 +1184,7 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
 
             A = sparse.vstack(self.A()[1:])
             # TODO: Add max_iter here!!
-            v = FastSparseSVD(A)  # , max_iter=max_iter)
+            v = FastSparseSVD()(A)  # , max_iter=max_iter)
             us = A.dot(v)
             self._lambda_max = np.sum(us ** 2.0) + self.l ** 2.0
 
@@ -1251,6 +1254,13 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
 
         return [al1, ax, ay, az]
 
+    def estimate_mu(self, beta):
+        """Computes a "good" value of \mu with respect to the given \beta.
+
+        From the interface "NesterovFunction".
+        """
+        raise NotImplementedError("We do not use this here!")
+
     def M(self):
         """ The maximum value of the regularisation of the dual variable. We
         have
@@ -1266,7 +1276,7 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
 
 
 class RR_SmoothedL1TV(CompositeFunction, LipschitzContinuousGradient,
-                        GradientMap, DualFunction):
+                        GradientMap, DualFunction, NesterovFunction):
 
     def __init__(self, X, y, k, l, g, Atv=None, Al1=None, mu=0.0):
 
@@ -1288,11 +1298,47 @@ class RR_SmoothedL1TV(CompositeFunction, LipschitzContinuousGradient,
         self._Xy = None
         self._XtinvXXtkI = None
 
+    def set_params(self, **kwargs):
+
+        mu = kwargs.pop("mu", self.get_mu())
+        self.set_mu(mu)
+
+        super(RR_SmoothedL1TV, self).set_params(**kwargs)
+
+    def get_mu(self):
+        """Returns the regularisation constant for the smoothing.
+
+        From the interface "NesterovFunction".
+        """
+        return self.h.get_mu()
+
+    def set_mu(self, mu):
+        """Sets the regularisation constant for the smoothing.
+
+        From the interface "NesterovFunction".
+
+        Arguments:
+        =========
+        mu: The regularisation constant for the smoothing to use from now on.
+
+        Returns:
+        =======
+        old_mu: The old regularisation constant for the smoothing that was
+                overwritten and is no longer used.
+        """
+        return self.h.set_mu(mu)
+
     def f(self, beta):
         """ Function value.
         """
         return self.g.f(beta) \
              + self.h.f(beta)
+
+    def phi(self, alpha, beta):
+        """ Function value.
+        """
+        return self.g.f(beta) \
+             + self.h.phi(alpha, beta)
 
     def L(self):
         """Lipschitz constant of the gradient.
@@ -1361,3 +1407,35 @@ class RR_SmoothedL1TV(CompositeFunction, LipschitzContinuousGradient,
         beta = (Xty_grad - np.dot(self._XtinvXXtkI, np.dot(self.X, Xty_grad)))
 
         return beta
+
+    def gap(self, beta, beta_hat):
+        """Compute the duality gap.
+
+        From the interface "DualFunction".
+        """
+        # TODO: Add this function!
+        raise NotImplementedError("We cannot currently do this!")
+
+    def estimate_mu(self, beta):
+        """Computes a "good" value of \mu with respect to the given \beta.
+
+        From the interface "NesterovFunction".
+        """
+        raise NotImplementedError("We do not use this here!")
+
+    def M(self):
+        """ The maximum value of the regularisation of the dual variable. We
+        have
+
+            M = max_{\alpha \in K} 0.5*|\alpha|²_2.
+
+        From the interface "NesterovFunction".
+        """
+        return self.h.M()
+
+    def project(self, a):
+        """ Projection onto the compact space of the Nesterov function.
+
+        From the interface "NesterovFunction".
+        """
+        return self.h.project(a)

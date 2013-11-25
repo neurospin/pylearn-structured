@@ -334,9 +334,9 @@ class CONESTA(ExplicitAlgorithm):
 
             if (1.0 / tmin) * maths.norm(beta - beta_tilde) < self.eps \
                     or i >= self.continuations:
-                print "%f < %f" % ((1. / tmin) \
-                                * maths.norm(beta - beta_tilde), self.eps)
-                print "%d >= %d" % (i, self.continuations)
+#                print "%f < %f" % ((1. / tmin) \
+#                                * maths.norm(beta - beta_tilde), self.eps)
+#                print "%d >= %d" % (i, self.continuations)
                 stop = True
 
             if self.output:
@@ -356,7 +356,7 @@ class CONESTA(ExplicitAlgorithm):
     #            G_new = eps0 * tau ** (i + 1)
                 G = self.tau * G
 
-            print "Gap:", G
+#            print "Gap:", G
             if self.output:
                 gap_time = time_func() - gap_time
                 Gval.append(G)
@@ -391,9 +391,9 @@ class StaticCONESTA(CONESTA):
     """
     def __init__(self, **kwargs):
 
-        kwargs.pop("dynamic")  # We ignore this if it was given ...
+        kwargs["dynamic"] = False
 
-        super(StaticCONESTA, self).__init__(dynamic=False, **kwargs)
+        super(StaticCONESTA, self).__init__(**kwargs)
 
 
 class DynamicCONESTA(CONESTA):
@@ -402,19 +402,16 @@ class DynamicCONESTA(CONESTA):
     """
     def __init__(self, **kwargs):
 
-        kwargs.pop("dynamic")  # We ignore this if it was given ...
+        kwargs["dynamic"] = True
 
-        super(StaticCONESTA, self).__init__(dynamic=True, **kwargs)
+        super(DynamicCONESTA, self).__init__(**kwargs)
 
 
 class ExcessiveGapMethod(ExplicitAlgorithm):
     """Nesterov's excessive gap method for strongly convex functions.
     """
     INTERFACES = [functions.NesterovFunction,
-#                  functions.Continuation,
                   functions.LipschitzContinuousGradient,
-#                  functions.ProximalOperator,
-#                  functions.Gradient,
                   functions.GradientMap,
                   functions.DualFunction
                  ]
@@ -445,7 +442,6 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
 
         # L = lambda_max(A'A) / (lambda_min(X'X) + k)
         L = function.L()
-        print "L:", L
 
         mu = [2.0 * L]
         function.h.set_mu(mu)
