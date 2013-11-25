@@ -91,7 +91,7 @@ class RegressionEstimator(BaseEstimator):
 class RidgeRegression_L1_TV(RegressionEstimator):
 
     def __init__(self, k, l, g, A, mu=None, output=False,
-                 algorithm=algorithms.CONESTA(dynamic=False)):
+                 algorithm=algorithms.CONESTA(dynamic=True)):
 #                 algorithm=algorithms.FISTA()):
 
         self.k = float(k)

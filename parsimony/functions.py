@@ -1010,7 +1010,7 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
             self._Xty = np.dot(self.X.T, self.y)
 
         Ata_tv = self.tv.l * self.tv.Aa(alphak)
-        Ata_l1 = self.l1.l * SmoothedL1.project([betak / consts.TOLERANCE])
+        Ata_l1 = self.l1.l * SmoothedL1.project([betak / consts.TOLERANCE])[0]
         v = (self._Xty - Ata_tv - Ata_l1)
 
         shape = self.X.shape
