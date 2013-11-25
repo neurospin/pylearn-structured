@@ -91,7 +91,31 @@ class RegressionEstimator(BaseEstimator):
 
 
 class RidgeRegression_L1_TV(RegressionEstimator):
-
+    """
+    Example
+    -------
+    >>> import numpy as np
+    >>> import parsimony.estimators as estimators
+    >>> import parsimony.algorithms as algorithms
+    >>> import parsimony.tv
+    >>> shape = (4, 4, 1)
+    >>> num_samples = 10
+    >>> num_ft = shape[0] * shape[1] * shape[2]
+    >>> np.random.seed(seed=0)
+    >>> X = np.random.random((num_samples, num_ft))
+    >>> y = np.random.randint(0, 2, (num_samples, 1))
+    >>> k = 0  # ridge regression coefficient
+    >>> l = 0.05  # l1 coefficient
+    >>> g = 0  # tv coefficient
+    >>> Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
+    >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g,
+    ...                                               [Ax, Ay, Az],
+    ...                                     algorithm=algorithms.FISTA())
+    >>> res = ridge_l1_tv.fit(X, y)
+    >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
+    >>> print "error = ", error
+    error =  0.678598202475
+    """
     def __init__(self, k, l, g, A, mu=None, output=False,
                  algorithm=algorithms.StaticCONESTA()):
 #                 algorithm=algorithms.DynamicCONESTA()):
@@ -123,7 +147,7 @@ class RidgeRegression_L1_TV(RegressionEstimator):
         beta = self.start_vector.get_vector((X.shape[1], 1))
 
         if self.mu == None:
-            self.mu = 0.9 * self.function.get_mu(beta)
+            self.mu = 0.9 * self.function.get_mu()
         else:
             self.mu = float(self.mu)
 
