@@ -35,6 +35,8 @@ class Function(object):
 
     @abc.abstractmethod
     def f(self, *args, **kwargs):
+        """Function value.
+        """
         raise NotImplementedError('Abstract method "f" must be ' \
                                   'specialised!')
 
@@ -62,6 +64,15 @@ class CompositeFunction(Function):
     __metaclass__ = abc.ABCMeta
 
 
+class MultiblockFunction(CompositeFunction):
+    """ This is a function that is the combination (i.e. sum) of other
+    multiblock, composite or atomic functions. The difference from
+    CompositeFunction is that this function assumes that relevant functions
+    accept an index, i, that is the block we are working with.
+    """
+    __metaclass__ = abc.ABCMeta
+
+
 class Regularisation(object):
 
     __metaclass__ = abc.ABCMeta
@@ -84,8 +95,20 @@ class ProximalOperator(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def prox(self, beta):
+    def prox(self, beta, factor=1.0):
         """The proximal operator corresponding to the function.
+        """
+        raise NotImplementedError('Abstract method "prox" must be ' \
+                                  'specialised!')
+
+
+class MultiblockProximalOperator(object):
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def prox(self, beta, index, factor=1.0):
+        """The proximal operator corresponding to the function with the index.
         """
         raise NotImplementedError('Abstract method "prox" must be ' \
                                   'specialised!')
@@ -251,13 +274,25 @@ class Gradient(object):
                                   'specialised!')
 
 
+class MultiblockGradient(object):
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def grad(self, beta, index):
+        """Gradient of the function.
+        """
+        raise NotImplementedError('Abstract method "grad" must be ' \
+                                  'specialised!')
+
+
 class Hessian(object):
 
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def hessian(self, beta, vector=None):
-        """Hessian (second derivative) of the function.
+        """The Hessian of the function.
 
         Arguments:
         ---------
@@ -420,23 +455,138 @@ class RidgeRegression(CompositeFunction, Gradient, LipschitzContinuousGradient,
         return self._lambda_min + self.k
 
 
+class QuadraticConstraint(AtomicFunction, Gradient, Constraint):
+    """The proximal operator of the quadratic function
+
+        f(x) = l * (sqrt(x'Mx) - c),
+
+    where M is a given positive definite matrix. The constrained version has
+    the form
+
+        sqrt(x'Mx) <= c.
+
+    Parameters:
+    ----------
+    l : Float. The Lagrange multiplier, or regularisation constant, of the
+            function.
+
+    c : Float. The limit of the constraint. The function is feasible if
+            sqrt(x'Mx) <= c. The default value is c=0, i.e. the default is a
+            regularisation formulation.
+    """
+    def __init__(self, l=1.0, c=0.0, M=None):
+
+        self.l = float(l)
+        self.c = float(c)
+        self.M = M
+
+    def f(self, beta):
+        """Function value.
+        """
+        return self.l * (np.sqrt(np.dot(beta.T, np.dot(self.M, beta))) \
+                            - self.c)
+
+    def grad(self, beta):
+        """Gradient of the function.
+
+        From the interface "Gradient".
+        """
+        return self.l * np.dot(self.M, beta)
+
+    def feasible(self, beta):
+        """Feasibility of the constraint.
+
+        From the interface "Constraint".
+        """
+        return np.sqrt(np.dot(beta.T, np.dot(self.M, beta))) <= self.c
+
+
+class RGCCAConstraint(QuadraticConstraint):
+    """The proximal operator of the quadratic function
+
+        f(x) = l * (sqrt(x'(\tau * I + ((1 - \tau) / n) * X'X)x) - c),
+
+    where \tau is a given regularisation constant. The constrained version has
+    the form
+
+        sqrt(x'(\tau * I + ((1 - \tau) / n) * X'X)x) <= c.
+
+    Parameters:
+    ----------
+    l : Float. The Lagrange multiplier, or regularisation constant, of the
+            function.
+
+    c : Float. The limit of the constraint. The function is feasible if
+            sqrt(x'(\tau * I + ((1 - \tau) / n) * X'X)x) <= c. The default
+            value is c=0, i.e. the default is a regularisation formulation.
+    """
+    def __init__(self, l=1.0, c=0.0, tau=1.0, X=None, unbiased=True):
+
+        self.l = float(l)
+        self.c = float(c)
+        self.tau = max(0.0, min(float(tau), 1.0))
+        self.X = X
+        self.unbiased = unbiased
+
+    def f(self, beta):
+        """Function value.
+        """
+        xtMx = self._compute_value(beta)
+        return self.l * (np.sqrt(xtMx) - self.c)
+
+    def grad(self, beta):
+        """Gradient of the function.
+
+        From the interface "Gradient".
+        """
+        if self.unbiased:
+            n = self.X.shape[0] - 1.0
+        else:
+            n = self.X.shape[0]
+
+        XtXbeta = np.dot(self.X.T, np.dot(self.X, beta))
+        grad = self.tau * beta \
+             + ((1.0 - self.tau) / float(n)) * XtXbeta
+
+        return grad
+
+    def feasible(self, beta):
+        """Feasibility of the constraint.
+
+        From the interface "Constraint".
+        """
+        xtMx = self._compute_value(beta)
+        return np.sqrt(xtMx) <= self.c
+
+    def _compute_value(self, beta):
+
+        if self.unbiased:
+            n = self.X.shape[0] - 1.0
+        else:
+            n = self.X.shape[0]
+        Xbeta = np.dot(self.X, beta)
+        val = self.tau * np.dot(beta.T, beta) \
+            + ((1.0 - self.tau) / float(n)) * np.dot(Xbeta.T, Xbeta)
+        return val
+
+
 class L1(AtomicFunction, Constraint, ProximalOperator):
     """The proximal operator of the L1 function
 
-        f(beta) = l * (||beta||_1 - c),
+        f(\beta) = l * (||\beta||_1 - c),
 
-    where ||beta||_1 is the L1 loss function. The constrained version has the
+    where ||\beta||_1 is the L1 loss function. The constrained version has the
     form
 
-        f(beta) <= c.
+        ||\beta||_1 <= c.
 
     Parameters:
     ----------
     l : The Lagrange multiplier, or regularisation constant, of the function.
 
-    c : The limit of the constraint. The function is feasible if f(beta) <= c.
-            The default value is c=0, i.e. the default is a regularisation
-            formulation.
+    c : The limit of the constraint. The function is feasible if
+            ||\beta||_1 <= c. The default value is c=0, i.e. the default is a
+            regularisation formulation.
     """
     def __init__(self, l=1.0, c=0.0):
 
@@ -462,27 +612,27 @@ class L1(AtomicFunction, Constraint, ProximalOperator):
 
         From the interface "Constraint".
         """
-        return self.f(beta) <= self.c
+        return maths.norm1(beta) <= self.c
 
 
-class SmoothedL1(AtomicFunction, NesterovFunction, Gradient,
+class SmoothedL1(AtomicFunction, Constraint, NesterovFunction, Gradient,
                  LipschitzContinuousGradient):
     """The proximal operator of the smoothed L1 function
 
-        f(beta) = l * (L1mu(beta) - c),
+        f(\beta) = l * (L1mu(\beta) - c),
 
-    where L1mu(beta) is the smoothed L1 function. The constrained version has
+    where L1mu(\beta) is the smoothed L1 function. The constrained version has
     the form
 
-        f(beta) <= c.
+        ||\beta||_1 <= c.
 
     Parameters
     ----------
     l : The Lagrange multiplier, or regularisation constant, of the function.
 
-    c : The limit of the constraint. The function is feasible if f(beta) <= c.
-            The default value is c=0, i.e. the default is a regularisation
-            formulation.
+    c : The limit of the constraint. The function is feasible if
+            ||\beta||_1 <= c. The default value is c=0, i.e. the default is a
+            regularisation formulation.
 
     A : The linear operator for the Nesterov formulation. May not be None.
 
@@ -499,6 +649,13 @@ class SmoothedL1(AtomicFunction, NesterovFunction, Gradient,
             return 0.0
 
         return self.l * (maths.norm1(beta) - self.c)
+
+    def feasible(self, beta):
+        """Feasibility of the constraint.
+
+        From the interface "Constraint".
+        """
+        return maths.norm1(beta) <= self.c
 
     def phi(self, alpha, beta):
         """ Function value with known alpha.
@@ -527,14 +684,6 @@ class SmoothedL1(AtomicFunction, NesterovFunction, Gradient,
         From the interface "LipschitzContinuousGradient".
         """
         return self.l / self.mu
-
-#    """ Linear operator of the Nesterov function.
-#
-#    From the interface "NesterovFunction".
-#    """
-#    def A(self):
-#
-#        return self._A
 
     def alpha(self, beta):
         """ Dual variable of the Nesterov function.
@@ -588,15 +737,15 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
     where TV(beta) is the smoothed L1 function. The constrained version has the
     form
 
-        f(\beta) <= c.
+        TV(\beta) <= c.
 
     Parameters
     ----------
     l : The Lagrange multiplier, or regularisation constant, of the function.
 
-    c : The limit of the constraint. The function is feasible if f(\beta) <= c.
-            The default value is c=0, i.e. the default is a regularisation
-            formulation.
+    c : The limit of the constraint. The function is feasible if
+            TV(\beta) <= c. The default value is c=0, i.e. the default is a
+            regularisation formulation.
 
     A : The linear operator for the Nesterov formulation. May not be None!
 
@@ -641,18 +790,16 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
         return self.l * ((np.dot(beta.T, Aa)[0, 0] \
                           - (self.mu / 2.0) * alpha_sqsum) - self.c)
 
-#    """ Gradient of the function at beta.
-#
-#    From the interface "Gradient".
-#    """
-#    def grad(self, beta):
-#
-#        if self.l < utils.TOLERANCE:
-#            return 0.0
-#
-#        alpha = self.alpha(beta)
-#
-#        return self.l * self.Aa(alpha)
+    def feasible(self, beta):
+        """Feasibility of the constraint.
+
+        From the interface "Constraint".
+        """
+        A = self.A()
+        val = np.sum(np.sqrt(A[0].dot(beta) ** 2.0 + \
+                             A[1].dot(beta) ** 2.0 + \
+                             A[2].dot(beta) ** 2.0))
+        return val <= self.c
 
     def L(self):
         """ Lipschitz constant of the gradient.
@@ -1437,3 +1584,78 @@ class RR_SmoothedL1TV(CompositeFunction, LipschitzContinuousGradient,
         From the interface "NesterovFunction".
         """
         return self.h.project(a)
+
+
+class GeneralisedMultiblock(MultiblockFunction, MultiblockGradient,
+                            MultiblockProximalOperator
+#                            LipschitzContinuousGradient, ProximalOperator,
+#                            NesterovFunction, Continuation, DualFunction
+                            ):
+
+    def __init__(self, X, functions):
+
+        self.X = X
+        self.functions = functions
+
+        self.reset()
+
+    def reset(self):
+
+        self.rr.reset()
+        self.l1.reset()
+        self.tv.reset()
+
+    def f(self, beta):
+        """Function value.
+        """
+        val = 0.0
+        for i in xrange(len(self.functions)):
+            fi = self.functions[i]
+            for j in xrange(len(fi)):
+                fij = fi[j]
+                if i == j and isinstance(fij, (list, tuple)):
+                    for k in xrange(len(fij)):
+                        val += fij[k].f(beta)
+                else:
+                    val += fij.f(beta)
+
+        return val
+
+    def grad(self, beta, index):
+        """Gradient of the differentiable part of the function.
+
+        From the interface "MultiblockGradient".
+        """
+        grad = 0.0
+        fi = self.functions[index]
+        for j in xrange(len(fi)):
+            fij = fi[j]
+            if index != j:
+                if isinstance(fij, Gradient):
+                    grad += fij.grad(beta)
+                elif isinstance(fij, MultiblockGradient):
+                    grad += fij.grad(beta, 1)
+
+        for i in xrange(len(self.functions)):
+            fij = self.functions[i][index]
+            if i != j:
+                if isinstance(fij, Gradient):
+                    grad += fij.grad(beta)
+                elif isinstance(fij, MultiblockGradient):
+                    grad += fij.grad(beta, 2)
+
+        for k in xrange(len(self.functions[index][index])):
+            fii = self.functions[index][index][k]
+            if isinstance(fii, Gradient):
+                grad += fii.grad(beta)
+
+        return grad
+
+    def prox(self, beta, index, factor=1.0):
+        """The proximal operator corresponding to the function with the index.
+
+        From the interface "MultiblockProximalOperator".
+        """
+        for k in xrange(len(self.functions[index][index])):
+            if isinstance(self.functions[index][index][k], ProximalOperator):
+                return self.functions[index][index][k].prox(beta, factor)
