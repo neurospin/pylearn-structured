@@ -15,16 +15,17 @@ Created on Mon Apr 22 10:54:29 2013
 @license: TBD.
 """
 import abc
+import math
+
 import numpy as np
 import scipy.sparse as sparse
-import math
 
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
 
 __all__ = ['RidgeRegression', 'L1', 'SmoothedL1', 'TotalVariation',
-           'RR_L1_TV',
            'SmoothedL1TV',
+           'RR_L1_TV',
            'RR_SmoothedL1TV']
 
 

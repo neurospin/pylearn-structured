@@ -2,51 +2,54 @@
 
 ./parsimony/algorithms.py:
 -------------------------
-26: #TODO: This depends on the OS. We should try to be clever here ...
-27: #time_func = time
+33: #TODO: This depends on the OS. We should try to be clever here ...
 
-113: # TODO: Use module for this!
+120: # TODO: Use module for this!
 
-129: # TODO: Use module for this!
+136: # TODO: Use module for this!
 
-168: # TODO: Use module for this!
+175: # TODO: Use module for this!
 
-184: # TODO: Use module for this!
+191: # TODO: Use module for this!
 
-346: # TODO: Warn if G_new < 0.
+353: # TODO: Warn if G_new < 0.
 
 ./parsimony/functions.py:
 ------------------------
-98: # TODO: We need a superclass for NesterovFunction wrappers.
+95: # TODO: We need a superclass for NesterovFunction wrappers.
 
-680: # TODO: Instead of p, this should really be the number of non-zero
-681: # rows of A.
+677: # TODO: Instead of p, this should really be the number of non-zero
+678: # rows of A.
 
-691: # TODO: Add max_iter here!
+688: # TODO: Add max_iter here!
 
-1125: # TODO: Is reset still necessary?
+1112: self._p = Atv[0].shape[1]  # WARNING: Number of rows may differ from p.
 
-1170: # TODO: Instead of p, this should really be the number of non-zero
-1171: # rows of A.
+1122: # TODO: Is reset still necessary?
 
-1187: # TODO: Add max_iter here!!
+1167: # TODO: Instead of p, this should really be the number of non-zero
+1168: # rows of A.
 
-1350: # TODO: Use max_iter here!!
+1184: # TODO: Add max_iter here!!
 
-1378: # TODO: Kernelise this function! See how I did in LRL2_L1_TV._beta_hat.
+1347: # TODO: Use max_iter here!!
 
-1417: # TODO: Add this function!
+1375: # TODO: Kernelise this function! See how I did in LRL2_L1_TV._beta_hat.
+
+1414: # TODO: Add this function!
 
 ./parsimony/estimators.py:
 -------------------------
-51: # TODO: Is this a good name?
+52: # TODO: Is this a good name?
 
-122: # TODO: Should we use a seed here so that we get deterministic results?
+158: # TODO: Should we use a seed here so that we get deterministic results?
 
 ./parsimony/datasets/samples_generator_struct.py:
 ------------------------------------------------
-529: # TODO: We cannot return the A matrices separately like this, we must
-530: # return a list or tuple A such that A = [Ax, Ay, Az].
+9: # TODO: Remove dependence on scikit learn.
+
+556: # TODO: We cannot return the A matrices separately like this, we must
+557: # return a list or tuple A such that A = [Ax, Ay, Az].
 
 ./parsimony/datasets/simulated/grad.py:
 --------------------------------------
@@ -56,4 +59,8 @@
 ---------------------------
 14: # TODO: MAX_ITER is heavily algorithm-dependent, so we have to think about if
 15: # we should include a package-wide maximum at all.
+
+./parsimony/tv/__init__.py:
+--------------------------
+10: # TODO: Remove relative imports.
 

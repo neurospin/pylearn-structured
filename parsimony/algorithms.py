@@ -22,17 +22,17 @@ Created on Fri Feb  8 17:24:11 2013
 @license: TBD.
 """
 import abc
+from time import time, clock
+
 import numpy as np
 
 import parsimony.utils.consts as consts
 import parsimony.utils.maths as maths
 import parsimony.functions as functions
 
-from time import time, clock
-
 #TODO: This depends on the OS. We should try to be clever here ...
-#time_func = time
 time_func = clock
+#time_func = time
 
 __all__ = ['BaseAlgorithm',
            'ImplicitAlgorithm',

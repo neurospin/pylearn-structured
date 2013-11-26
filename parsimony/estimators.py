@@ -7,8 +7,9 @@ Created on Sat Nov  2 15:19:17 2013
 @license: TBD.
 """
 import abc
-import numpy as np
 import numbers
+
+import numpy as np
 
 import parsimony.functions as functions
 import parsimony.algorithms as algorithms

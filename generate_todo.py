@@ -18,7 +18,12 @@ PATH = "./parsimony/"
 OUTPUT = "./TODO"
 
 RE_PY_FILE = re.compile(".*\.py$")
-RE_TODO = re.compile("^[ \t]*#[ \t]*TODO:.*$")  # TODO: Allow code before TODO
+RE_TODO = re.compile("^[^#]*#[ \t]*TODO:.*$")  # TODO: Allow code before TODO
+RE_FIXME = re.compile("^[^#]*#[ \t]*FIXME:.*$")  # TODO: Allow code before FIXME
+RE_WARNING = re.compile("^[^#]*#[ \t]*WARNING:.*$")  # TODO: Allow code before WARNING
+RE_ERROR = re.compile("^[^#]*#[ \t]*ERROR:.*$")  # TODO: Allow code before ERROR
+RE_BUG = re.compile("^[^#]*#[ \t]*BUG:.*$")  # TODO: Allow code before BUG
+RE_XXX = re.compile("^[^#]*#[ \t]*XXX:.*$")  # TODO: Allow code before XXX
 RE_COMMENT = re.compile("^[ \t]*#.*$")
 
 
@@ -37,7 +42,12 @@ with open(OUTPUT, "w+") as out:
                 with open(fullpath, "r") as f:
                     match_next_comment = False
                     for i, line in enumerate(f):
-                        if RE_TODO.match(line):
+                        if RE_TODO.match(line) or \
+                           RE_FIXME.match(line) or \
+                           RE_WARNING.match(line) or \
+                           RE_ERROR.match(line) or \
+                           RE_BUG.match(line) or \
+                           RE_XXX.match(line):
                             if first_in_file:
                                 write(out, "%s:" % fullpath)
                                 write(out, "-" * len(fullpath))
