@@ -2,9 +2,10 @@
 """
 Created on Sun Jul 21 12:29:03 2013
 
-@author: edouard.duchesnay@cea.fr
+@author:  Edouard Duchesnay
+@email:   edouard.duchesnay@cea.fr
+@license: TBD.
 """
-
 import numpy as np
 import scipy.linalg
 
@@ -62,8 +63,9 @@ def make_classification(n_samples=100,
         of features, groups means is orthogonal to shared variance, ie.: the
         predictive information is in un-shared variance. Features provide
         complementary information. All (at least two of them) features should
-        be included in a predictive model to exploit the pattern. The orientation
-        of the group means is colinear to the smallest eigen vector. Default 1.
+        be included in a predictive model to exploit the pattern. The
+        orientation of the group means is colinear to the smallest eigen
+        vector. Default 1.
 
     size_complementary_patterns: int
         The number of features in each pattern. Default 2.
@@ -77,8 +79,9 @@ def make_classification(n_samples=100,
         of features, groups means is colinear to shared variance, ie.: the
         predictive information is in shared variance. Features provide
         redundant predictive information. Only one feature should
-        be included in a predictive model to exploit the pattern. The orientation
-        of the group means is colinear to the largest eigen vector. Default 1.
+        be included in a predictive model to exploit the pattern. The
+        orientation of the group means is colinear to the largest eigen vector.
+        Default 1.
 
     size_redundant_patterns: int
         The number of features in each pattern. Default 2.
@@ -91,14 +94,14 @@ def make_classification(n_samples=100,
         features.
 
     snr: float
-        Global Signal to noize ratio ie.: the Mahalanobis distance between 
+        Global Signal to noize ratio ie.: the Mahalanobis distance between
         the two groups.
 
     grp_proportion: float
         The proportion of samples of the first group. Default 0.5
 
     full_info: bool
-        If False (default) return only X and y. Otherwise return 
+        If False (default) return only X and y. Otherwise return.
 
     random_seed: None or int
         See numpy.random.seed(). If not None, it can be used to obtain
@@ -124,7 +127,7 @@ def make_classification(n_samples=100,
 
     Cov: array of shape [n_informative_features, n_informative_features]
         The within class covariance for the informative_features only.
-        This covariance was used to generate multivariate normal samples.    
+        This covariance was used to generate multivariate normal samples.
     """
     n_informative_features = \
     n_complementary_patterns * size_complementary_patterns + \
@@ -143,7 +146,7 @@ def make_classification(n_samples=100,
     m1 = np.zeros(n_informative_features)
 
     def calc_pattern_snr(m0, m1, cov):
-        return np.sqrt(np.dot(np.dot(scipy.linalg.inv(cov), m1 - m0),  
+        return np.sqrt(np.dot(np.dot(scipy.linalg.inv(cov), m1 - m0),
                               m1 - m0))
 
     def calc_univ_snrs(m0, m1, var):
@@ -243,15 +246,17 @@ def make_classification(n_samples=100,
     if n_noize is None:
         n_noize = n_informative_features * 10
 
-    X = np.hstack([X, 
-        np.random.normal(0, 1, n_samples*n_noize).reshape(n_samples, n_noize)])
+    X = np.hstack([X,
+        np.random.normal(0, 1, n_samples * n_noize).reshape(n_samples,
+                                                            n_noize)])
     weigths = np.concatenate((weigths, [0] * n_noize))
-    
+
     if full_info:
         return X, y, weigths, m0, m1, Cov
     else:
         return X, y
-    
+
+
 if __name__ == '__main__':
     X, y, weigths, m0, m1, Cov = make_classification(n_samples=500,
                         n_complementary_patterns=1,

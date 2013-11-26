@@ -2,12 +2,16 @@
 """
 Created on Wed Aug  7 10:35:12 2013
 
-@author: edouard.duchesnay@cea.fr
+@author:  Edouard Duchesnay
+@email:   edouard.duchesnay@cea.fr
+@license: TBD.
 """
+# TODO: Remove dependence on scikit learn.
 
 import numpy as np
 from scipy import ndimage
 import matplotlib.pyplot as plt
+
 
 def corr_to_coef(v_x, v_e, cov_xe, cor):
     """In a linear model y = bx + e. Calculate b such cor(bx + e, x) = cor.
@@ -83,7 +87,8 @@ class ObjImage(object):
         """Add object variance: x_ki =  coef^1/2 * o_k + (1 - coef)^1/2 * e_i
         """
         sigma_o = 1
-        labels_im = np.zeros(Xim.shape[1:], dtype=int) # image of objects label
+        # Image of objects label
+        labels_im = np.zeros(Xim.shape[1:], dtype=int)
         label = 0
         for k in xrange(len(objects)):
             o = objects[k]
@@ -105,8 +110,10 @@ class Square(ObjImage):
         super(Square, self).__init__(**kwargs)
         self.size = size
         self.center = center
-        self.x_grid, self.y_grid , self.z_grid = np.ogrid[0:shape[0], 0:shape[1],
-                                                          0:shape[2]]
+        self.x_grid, self.y_grid, self.z_grid = np.ogrid[0:shape[0],
+                                                         0:shape[1],
+                                                         0:shape[2]]
+
     def get_mask(self):
         hs = self.size / 2.
         mask = (np.abs(self.x_grid - self.center[0]) <= hs) & \
@@ -120,8 +127,10 @@ class Dot(ObjImage):
         super(Dot, self).__init__(**kwargs)
         self.size = size
         self.center = center
-        self.x_grid, self.y_grid , self.z_grid = np.ogrid[0:shape[0], 0:shape[1],
-                                                          0:shape[2]]
+        self.x_grid, self.y_grid, self.z_grid = np.ogrid[0:shape[0],
+                                                         0:shape[1],
+                                                         0:shape[2]]
+
     def get_mask(self):
         mask = np.sqrt((self.x_grid - self.center[0]) ** 2 + \
                        (self.y_grid - self.center[1]) ** 2 + \
@@ -134,8 +143,10 @@ class Dimaond(ObjImage):
         super(Square, self).__init__(**kwargs)
         self.size = size
         self.center = center
-        self.x_grid, self.y_grid , self.z_grid = np.ogrid[0:shape[0], 0:shape[1],
-                                                          0:shape[2]]
+        self.x_grid, self.y_grid, self.z_grid = np.ogrid[0:shape[0],
+                                                         0:shape[1],
+                                                         0:shape[2]]
+
     def get_mask(self):
         mask = np.abs(self.x_grid - self.center[0]) + \
                np.abs(self.y_grid - self.center[1]) + \
@@ -225,6 +236,7 @@ def spatial_smoothing(Xim, sigma, mu_e=None, sigma_e=None):
         X /= X.std(axis=0) * sigma_e
     return Xim
 
+
 ############################################################################
 def make_regression_struct(n_samples=100, shape=(30, 30, 1),
                            r2=.75,
@@ -239,8 +251,8 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
 
 
     Noise is sampled according to N(0, 1).
-    Then y is obtained with y = X * beta + noise, where beta is scalled such that
-    r_square(y, X * beta) = r2.
+    Then y is obtained with y = X * beta + noise, where beta is scalled such
+    that r_square(y, X * beta) = r2.
 
     The sructure of covariance of X is
 
@@ -253,7 +265,10 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
         x, y, z shape each samples (default (30, 30, 1)).
 
     r2: float
-        The desire R-squared (explained variance) ie.: r_square(y, X * beta) = r2
+        The desire R-squared (explained variance) ie.:
+
+            r_square(y, X * beta) = r2
+
         Default is .75
 
     sigma_spatial_smoothing: scalar
@@ -262,11 +277,11 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
 
     noize_object_pixel_ratio: float
         Controls the ratio between object-level noize and pixel-level noize for
-        pixels within objects. If noize_object_pixel_ratio == 1 then 100% of the
-        noize of pixels within the same object is shared (ie.: no pixel level)
-        noize. If noize_object_pixel_ratio == 0 then all the noize is pixel
-        specific. High noize_object_pixel_ratio promotes spatial correlation
-        between pixels of the same object.
+        pixels within objects. If noize_object_pixel_ratio == 1 then 100% of
+        the noize of pixels within the same object is shared (ie.: no pixel
+        level) noize. If noize_object_pixel_ratio == 0 then all the noize is
+        pixel specific. High noize_object_pixel_ratio promotes spatial
+        correlation between pixels of the same object.
 
     objects: list of objects
         Define objects .
@@ -297,8 +312,8 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
     -------
     The general procedure is:
         1) For each pixel i, Generate independant variables Xi ~ N(0, 1)
-        2) Add object level structure. By default there are five dots (objects).
-        Pixel i of dot 1, 2, 3, 4, 5 are sampled as:
+        2) Add object level structure. By default there are five dots
+        (objects). Pixel i of dot 1, 2, 3, 4, 5 are sampled as:
         X1i = l1 + l12 + Xi
         X2i = l12 + Xi
         X3i = 2 * l3 + Ni
@@ -349,8 +364,10 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
     mu_e = 0
     if shape[0] < 5 or shape[1] < 5:
         raise ValueError("Shape too small. The minimun is (5, 5, 0)")
+
     if len(shape) == 2:
         shape = tuple(list(shape) + [1])
+
     n_features = np.prod(shape)
     nx, ny, nz = shape
 
@@ -373,7 +390,9 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
     #########################################################################
     ## 4. Pixel-level noize structure: spatial smoothing
     if sigma_spatial_smoothing != 0:
-        Noise = spatial_smoothing(Noise, sigma_spatial_smoothing, mu_e, sigma_e)
+        Noise = spatial_smoothing(Noise, sigma_spatial_smoothing, mu_e,
+                                  sigma_e)
+
     Noise_flat = Noise.reshape((Noise.shape[0], np.prod(Noise.shape[1:])))
     Noise_flat -= Noise_flat.mean(axis=0)
     Noise_flat /= Noise_flat.std(axis=0)
@@ -382,15 +401,18 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
     ## 5. Model: y = X beta + noise
     X = Noise
     beta = np.zeros(X.shape[1:])
+
     for k in xrange(len(objects)):
         o = objects[k]
         beta[o.get_mask()] += o.coef_info
+
     beta_flat = beta.ravel()
     # Fix a scaling to get the desire r2, ie.:
     # y = coef * X * beta + noize
     # Fix coef such r2(y, coef * X * beta) = r2
     X_flat = X.reshape(n_samples, np.prod(shape))
     Xbeta = np.dot(X_flat, beta_flat)
+
     if r2 < 1:
         noise = np.random.normal(0, 1, Xbeta.shape[0])
         coef = corr_to_coef(v_x=np.var(Xbeta), v_e=np.var(noise),
@@ -400,6 +422,7 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
     else:
         noise = np.zeros(Xbeta.shape[0])
         y = np.dot(X_flat, beta_flat)
+
     if False:
         Xflat = X.reshape((n_samples, nx * ny))
         Xc = (Xflat - Xflat.mean(axis=0)) / Xflat.std(axis=0)
@@ -408,9 +431,12 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
         cax = plt.matshow(cor, cmap=plt.cm.coolwarm)
         plt.colorbar(cax)
         plt.show()
+
     if random_seed is not None:   # If random seed, restore random state
         np.random.set_state(rnd_state)
+
     return X, y.reshape((n_samples, 1)), beta
+
 
 if __name__ == '__main__':
     # utils
@@ -425,7 +451,8 @@ if __name__ == '__main__':
         k = 1
         while (10 ** k * mx) < 1 and k < 10:
             k += 1
-        ticks = np.array([-mx, -mx/4 -mx/2, 0, mx/2, mx/2, mx]).round(k + 2)
+        ticks = np.array([-mx, -mx / 4 - mx / 2, 0, mx / 2, mx / 2,
+                          mx]).round(k + 2)
         cbar = plt.colorbar(cax, ticks=ticks)
         cbar.set_clim(vmin=-mx, vmax=mx)
 
@@ -501,13 +528,13 @@ if __name__ == '__main__':
     plt.title("Elasticnet(a:%.2f, l1:%.2f) (R2=%.2f)" % (l1l2.alpha,
               l1l2.l1_ratio, r2_score(yte, pred)))
 
-    l1l2cv = ElasticNetCV()
-    pred = l1l2cv.fit(Xtr, ytr).predict(Xte)
-    plot = plt.subplot(336)
-    plot_map(l1l2cv.coef_.reshape((nx, ny)), plot)
-    plt.title("ElasticnetCV(a:%.2f, l1:%.2f) (R2=%.2f)" % (l1l2cv.alpha_,
-              l1l2cv.l1_ratio, r2_score(yte, pred)))
-    #plt.show()
+#    l1l2cv = ElasticNetCV()
+#    pred = l1l2cv.fit(Xtr, ytr).predict(Xte)
+#    plot = plt.subplot(336)
+#    plot_map(l1l2cv.coef_.reshape((nx, ny)), plot)
+#    plt.title("ElasticnetCV(a:%.2f, l1:%.2f) (R2=%.2f)" % (l1l2cv.alpha_,
+#              l1l2cv.l1_ratio, r2_score(yte, pred)))
+#    #plt.show()
 
     # TVL1L2 ===============================================================
     import parsimony.estimators as estimators
@@ -528,8 +555,8 @@ if __name__ == '__main__':
 
     # TODO: We cannot return the A matrices separately like this, we must
     # return a list or tuple A such that A = [Ax, Ay, Az].
-    Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
-    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
+    A, n_compacts = parsimony.tv.tv_As_from_shape(shape)
+    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, A,
                                        algorithm=algorithms.conesta_static)
     tvl1l2.fit(Xtr, ytr)
     plot = plt.subplot(337)
@@ -541,7 +568,7 @@ if __name__ == '__main__':
     tv_ratio = .5
     l1_ratio = .45
     l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
-    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
+    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, A,
                                        algorithm=algorithms.conesta_static)
     tvl1l2.fit(Xtr, ytr)
     plot = plt.subplot(338)
@@ -553,7 +580,7 @@ if __name__ == '__main__':
     tv_ratio = .9
     l1_ratio = .05
     l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
-    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
+    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, A,
                                        algorithm=algorithms.conesta_static)
     tvl1l2.fit(Xtr, ytr)
     plot = plt.subplot(339)

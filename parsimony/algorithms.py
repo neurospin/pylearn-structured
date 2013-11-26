@@ -8,6 +8,13 @@ references to objects with state in the algorithm objects. It should be
 possible to copy and share algorithms between estimators, and thus they should
 not depend on any state.
 
+There are currently two types of algorithms: implicit and explicit. The
+difference is whether they run directly on the data (implicit) or if they have
+an actual loss function than is minimised (explicit). Implicit algorithms take
+the data as input, and then run on the data. Explicit algorithms take a loss
+function and a start vector as input, and then minimise the function value
+starting from the point of the start vector.
+
 Created on Fri Feb  8 17:24:11 2013
 
 @author:  Tommy Löfstedt

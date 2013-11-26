@@ -104,31 +104,28 @@ class RidgeRegression_L1_TV(RegressionEstimator):
     >>> np.random.seed(seed=1)
     >>> X = np.random.random((num_samples, num_ft))
     >>> y = np.random.randint(0, 2, (num_samples, 1))
-    >>> k = 0.05  # ridge regression coefficient
-    >>> l = 0.05  # l1 coefficient
-    >>> g = 0.05  # tv coefficient
-    >>> Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
-    >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g,
-    ...                                               [Ax, Ay, Az],
-    ...                                     algorithm=algorithms.StaticCONESTA())
+    >>> k = 0.9  # ridge regression coefficient
+    >>> l = 0.1  # l1 coefficient
+    >>> g = 1.0  # tv coefficient
+    >>> A, n_compacts = parsimony.tv.A_from_shape(shape)
+    >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
+    ...                     algorithm=algorithms.StaticCONESTA(max_iter=1000))
     >>> res = ridge_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
     >>> print "error = ", error
-    error =  1.69470613734
-    >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g,
-    ...                                               [Ax, Ay, Az],
-    ...                                     algorithm=algorithms.DynamicCONESTA())
+    error =  4.70079220678
+    >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
+    ...                     algorithm=algorithms.DynamicCONESTA(max_iter=1000))
     >>> res = ridge_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
     >>> print "error = ", error
-    error =  1.69470610479
-    >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g,
-    ...                                               [Ax, Ay, Az],
-    ...                                     algorithm=algorithms.FISTA())
+    error =  4.70096488794
+    >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
+    ...                     algorithm=algorithms.FISTA(max_iter=1000))
     >>> res = ridge_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
     >>> print "error = ", error
-    error =  nan
+    error =  4.27776729699
     """
     def __init__(self, k, l, g, A, mu=None, output=False,
                  algorithm=algorithms.StaticCONESTA()):
@@ -161,7 +158,7 @@ class RidgeRegression_L1_TV(RegressionEstimator):
         beta = self.start_vector.get_vector((X.shape[1], 1))
 
         if self.mu == None:
-            self.mu = 0.9 * self.function.get_mu()
+            self.mu = 0.9 * self.function.estimate_mu(beta)
         else:
             self.mu = float(self.mu)
 
@@ -180,42 +177,29 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
     """
     Example
     -------
-import numpy as np
-import parsimony.estimators as estimators
-import parsimony.algorithms as algorithms
-import parsimony.tv
-shape = (4, 4, 1)
-num_samples = 10
-num_ft = shape[0] * shape[1] * shape[2]
-np.random.seed(seed=1)
-X = np.random.random((num_samples, num_ft))
-y = np.random.randint(0, 2, (num_samples, 1))
-k = 0.05  # ridge regression coefficient
-l = 0.05  # l1 coefficient
-g = 0.05  # tv coefficient
-Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
-ridge_smoothed_l1_tv = estimators.RidgeRegression_SmoothedL1TV(k, l, g,
-                                                      [Ax, Ay, Az],
-                                                      Al1=None,
-                                    algorithm=algorithms.StaticCONESTA())
-res = ridge_smoothed_l1_tv.fit(X, y)
-error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
-print "error = ", error
-
-ridge_l1_tv = estimators.RidgeRegression_SmoothedL1TV(k, l, g,
-                                              [Ax, Ay, Az],
-                                    algorithm=algorithms.DynamicCONESTA())
-res = ridge_l1_tv.fit(X, y)
-error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
-print "error = ", error
-
-ridge_l1_tv = estimators.RidgeRegression_SmoothedL1TV(k, l, g,
-                                                      [Ax, Ay, Az],
-                                    algorithm=algorithms.FISTA())
-res = ridge_l1_tv.fit(X, y)
-error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
-print "error = ", error
-
+    >>> import numpy as np
+    >>> import scipy.sparse as sparse
+    >>> import parsimony.estimators as estimators
+    >>> import parsimony.algorithms as algorithms
+    >>> import parsimony.tv
+    >>> shape = (4, 4, 1)
+    >>> num_samples = 10
+    >>> num_ft = shape[0] * shape[1] * shape[2]
+    >>> np.random.seed(seed=1)
+    >>> X = np.random.random((num_samples, num_ft))
+    >>> y = np.random.randint(0, 2, (num_samples, 1))
+    >>> k = 0.05  # ridge regression coefficient
+    >>> l = 0.05  # l1 coefficient
+    >>> g = 0.05  # tv coefficient
+    >>> Atv, n_compacts = parsimony.tv.A_from_shape(shape)
+    >>> Al1 = sparse.eye(num_ft, num_ft)
+    >>> ridge_smoothed_l1_tv = estimators.RidgeRegression_SmoothedL1TV(k, l, g,
+    ...                 Atv=Atv, Al1=Al1,
+    ...                 algorithm=algorithms.ExcessiveGapMethod(max_iter=1000))
+    >>> res = ridge_smoothed_l1_tv.fit(X, y)
+    >>> error = np.sum(np.abs(np.dot(X, ridge_smoothed_l1_tv.beta) - y))
+    >>> print "error = ", error
+    error =  1.69470206808
     """
     def __init__(self, k, l, g, Atv, Al1, mu=None, output=False,
                  algorithm=algorithms.ExcessiveGapMethod()):

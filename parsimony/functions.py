@@ -28,10 +28,6 @@ __all__ = ['RidgeRegression', 'L1', 'SmoothedL1', 'TotalVariation',
            'RR_SmoothedL1TV']
 
 
-#mapping = {RidgeRegression.__class__.__name__: [algorithms.FISTA,
-#                                                algorithms.CONESTA]}
-
-
 class Function(object):
 
     __metaclass__ = abc.ABCMeta

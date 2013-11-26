@@ -9,13 +9,12 @@ learning models for one, two or more blocks of data.
 """
 
 import algorithms
-import datasets
+#import datasets
 import estimators
 import functions
 #import utils
 import start_vectors
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
-__all__ = ['algorithms', 'datasets', 'estimators', 'functions',  # 'utils',
-           'start_vectors']
+__all__ = ['algorithms', 'estimators', 'functions', 'start_vectors']

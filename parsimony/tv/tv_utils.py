@@ -2,14 +2,18 @@
 """
 Created on Fri Sep 13 18:48:16 2013
 
-@author: ed203246
+@author:  Edouard Duchesnay
+@email:   edouard.duchesnay@cea.fr
+@license: TBD.
 """
-
 import numpy as np
 import scipy.sparse as sparse
 
 
-def tv_As_from_mask(mask):
+def A_from_mask(mask):
+    """Generates the linear operator for the total variation Nesterov function
+    from a mask for a 3D image.
+    """
     while len(mask.shape) < 3:
         mask = mask[:, np.newaxis]
     nx, ny, nz = mask.shape
@@ -54,12 +58,16 @@ def tv_As_from_mask(mask):
     Ax = sparse.csr_matrix((Ax_v, (Ax_i, Ax_j)), shape=(p, p))
     Ay = sparse.csr_matrix((Ay_v, (Ay_i, Ay_j)), shape=(p, p))
     Az = sparse.csr_matrix((Az_v, (Az_i, Az_j)), shape=(p, p))
-    return Ax, Ay, Az, n_compacts
+    return [Ax, Ay, Az], n_compacts
 
 
 ##############################################################################
 
-def tv_As_from_shape(shape):
+
+def A_from_shape(shape):
+    """Generates the linear operator for the total variation Nesterov function
+    from the shape of a 3D image.
+    """
     while len(shape) < 3:
         shape = tuple(list(shape) + [1])
     nx = shape[0]
@@ -97,4 +105,4 @@ def tv_As_from_shape(shape):
         Az.eliminate_zeros()
     else:
         Az = sparse.csc_matrix((p, p), dtype=float)
-    return Ax, Ay, Az, (nx * ny * nz - 1)
+    return [Ax, Ay, Az], (nx * ny * nz - 1)
