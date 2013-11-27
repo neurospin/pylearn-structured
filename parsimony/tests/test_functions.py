@@ -146,20 +146,20 @@ class TestFunctions(unittest.TestCase):
 #
 #        # ================================================================
 #        # using pre-computed values
-#        Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
+#        Atv, n_compacts = parsimony.tv.A_from_shape(shape)
 #        k = 0.05  # ridge regression coefficient
 #        l = 0  # l1 coefficient
 #        g = 0  # tv coefficient
-#        tvl1l2_fista_ridge = estimators.LinearRegressionL1L2TV(k, l, g,
-#                                                         [Ax, Ay, Az],
-#                                            algorithm=algorithms.fista)
+#        tvl1l2_fista_ridge = estimators.RidgeRegression_L1_TV(k, l, g,
+#                                                  Atv,
+#                                                  algorithm=algorithms.FISTA())
 #        tvl1l2_fista_ridge.fit(spams_X, spams_Y)
 #        k = 0  # ridge regression coefficient
 #        l = 0.05  # l1 coefficient
 #        g = 0  # tv coefficient
-#        tvl1l2_fista_l1 = estimators.LinearRegressionL1L2TV(k, l, g,
-#                                                         [Ax, Ay, Az],
-#                                            algorithm=algorithms.fista)
+#        tvl1l2_fista_l1 = estimators.RidgeRegression_L1_TV(k, l, g,
+#                                                  Atv,
+#                                                  algorithm=algorithms.FISTA())
 #        tvl1l2_fista_l1.fit(spams_X, spams_Y)
 #        err1_ridge = np.sum(np.absolute(
 #                          np.dot(spams_X, tvl1l2_fista_ridge.beta) - spams_Y))
@@ -172,6 +172,7 @@ class TestFunctions(unittest.TestCase):
 
     def test_smoothed_l1(self):
         import numpy as np
+        import scipy.sparse as sparse
         import parsimony.estimators as estimators
         import parsimony.algorithms as algorithms
         import parsimony.tv
@@ -221,29 +222,17 @@ class TestFunctions(unittest.TestCase):
 
         # ================================================================
         # using pre-computed values
-        Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
+        Atv, n_compacts = parsimony.tv.A_from_shape(shape)
+        Al1 = sparse.eye(num_ft, num_ft)
         k = 0.05  # ridge regression coefficient
         l = 0  # l1 coefficient
         g = 0  # tv coefficient
-        tvl1l2_fista_ridge = estimators.LinearRegressionL1L2TV(k, l, g,
-                                                         [Ax, Ay, Az],
-                                            algorithm=algorithms.fista)
+        tvl1l2_fista_ridge = estimators.RidgeRegression_SmoothedL1TV(
+                    k, l, g,
+                    Atv=Atv, Al1=Al1,
+                    algorithm=algorithms.ExcessiveGapMethod(max_iter=1000))
         tvl1l2_fista_ridge.fit(spams_X, spams_Y)
-        k = 0  # ridge regression coefficient
-        l = 0.05  # l1 coefficient
-        g = 0  # tv coefficient
-        tvl1l2_fista_l1 = estimators.LinearRegressionL1L2TV(k, l, g,
-                                                         [Ax, Ay, Az],
-                                            algorithm=algorithms.fista)
-        tvl1l2_fista_l1.fit(spams_X, spams_Y)
-        err1_ridge = np.sum(np.absolute(
-                          np.dot(spams_X, tvl1l2_fista_ridge.beta) - spams_Y))
-        err1_l1 = np.sum(np.absolute(
-                          np.dot(spams_X, tvl1l2_fista_l1.beta) - spams_Y))
-        err2_ridge = np.sum(np.absolute(np.dot(spams_X, W_ridge) - spams_Y))
-        err2_l1 = np.sum(np.absolute(np.dot(spams_X, W_l1) - spams_Y))
-        self.assertTrue(np.absolute(err1_ridge - err2_ridge) < 0.01)
-        self.assertTrue(np.absolute(err1_l1 - err2_l1) < 0.01)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -2,7 +2,7 @@
 """
 Created on Fri Nov 22 10:42:07 2013
 
-@author: jinpeng
+@author: jinpeng.li@cea.fr
 """
 import unittest
 
@@ -122,16 +122,16 @@ class TestFISTA(unittest.TestCase):
                        [ 0.        ]])
         # ================================================================
         # using pre-computed values
-        Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
+        Atv, n_compacts = parsimony.tv.A_from_shape(shape)
         tvl1l2_algorithms = []
-        tvl1l2_fista = estimators.RidgeRegression_L1_TV(k, l, g,
-                                                         [Ax, Ay, Az],
+        tvl1l2_fista = estimators.RidgeRegression_SmoothedL1TV(k, l, g,
+                                Atv,
                                 algorithm=algorithms.FISTA())
-        tvl1l2_conesta_static = estimators.RidgeRegression_L1_TV(k, l, g,
-                                                                  [Ax, Ay, Az],
+        tvl1l2_conesta_static = estimators.RidgeRegression_SmoothedL1TV(k, l, g,
+                                Atv,
                                 algorithm=algorithms.CONESTA(dynamic=False))
-        tvl1l2_conesta_dynamic = estimators.RidgeRegression_L1_TV(k, l, g,
-                                                                  [Ax, Ay, Az],
+        tvl1l2_conesta_dynamic = estimators.RidgeRegression_SmoothedL1TV(k, l, g,
+                                                                  Atv,
                                 algorithm=algorithms.CONESTA(dynamic=True))
 #        tvl1l2_excessive_gap = estimators.LinearRegressionL1L2TV(k, l, g,
 #                                                                 [Ax, Ay, Az],

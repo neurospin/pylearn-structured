@@ -154,6 +154,8 @@ class RidgeRegression_L1_TV(RegressionEstimator):
 
         self.function = functions.RR_L1_TV(X, y, self.k, self.l, self.g,
                                            A=self.A)
+        self.algorithm.check_compatability(self.function,
+                                           self.algorithm.INTERFACES)
 
         # TODO: Should we use a seed here so that we get deterministic results?
         beta = self.start_vector.get_vector((X.shape[1], 1))
@@ -227,6 +229,9 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
 
         self.function = functions.RR_SmoothedL1TV(X, y, self.k, self.l, self.g,
                                                   Atv=self.Atv, Al1=self.Al1)
+
+        self.algorithm.check_compatability(self.function,
+                                           self.algorithm.INTERFACES)
 
         self.algorithm.set_params(output=self.output)
         if self.output:
