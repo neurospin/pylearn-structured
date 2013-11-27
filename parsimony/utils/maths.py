@@ -40,6 +40,18 @@ def sign(v):
 
 
 def corr(a, b):
+    """
+    Example
+    -------
+    >>> import numpy as np
+    >>> from parsimony.utils.maths import corr
+    >>> v1 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
+    >>> v2 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
+    >>> print corr(v1, v2)
+    [[ 1.  0. -1.]
+     [ 0.  0.  0.]
+     [-1.  0.  1.]]
+    """
     ma = np.mean(a)
     mb = np.mean(b)
 
@@ -64,6 +76,19 @@ def corr(a, b):
 
 
 def cov(a, b):
+    """
+    Example
+    -------
+    >>> import numpy as np
+    >>> from parsimony.utils.maths import corr
+    >>> v1 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
+    >>> v2 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
+    >>> print cov(v1, v2)
+    [[ 1.  1.  1.  1.]
+     [ 1.  1.  1.  1.]
+     [ 1.  1.  1.  1.]
+     [ 1.  1.  1.  1.]]
+    """
     ma = np.mean(a)
     mb = np.mean(b)
 
@@ -76,3 +101,7 @@ def cov(a, b):
         return ip[0, 0]
     else:
         return ip
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
