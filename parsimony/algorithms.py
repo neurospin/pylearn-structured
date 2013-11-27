@@ -208,9 +208,12 @@ class FISTA(ExplicitAlgorithm):
     """ The fast iterative shrinkage threshold algorithm.
     """
     INTERFACES = [functions.Gradient,
+                  # TODO: We should use a step size here instead of the
+                  # Lipschitz constant. All functions don't have L, but will
+                  # still run in FISTA with a small enough step size.
+                  # Updated: Use GradientStep instead!!
                   functions.LipschitzContinuousGradient,
                   functions.ProximalOperator,
-                  functions.NesterovFunction
                  ]
 
     def __init__(self, step=None, output=False,
@@ -500,3 +503,47 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
             return (beta, output)
         else:
             return beta
+
+
+class GeneralisedMultiblockISTA(ExplicitAlgorithm):
+    """ The iterative shrinkage threshold algorithm in a multiblock setting.
+    """
+    INTERFACES = [functions.MultiblockFunction,
+                  functions.MultiblockGradient,
+                  functions.MultiblockProximalOperator,
+                  functions.GradientStep,
+                 ]
+
+    def __init__(self, step=None, output=False,
+                 eps=consts.TOLERANCE,
+                 max_iter=consts.MAX_ITER, min_iter=1):
+
+        self.step = step
+        self.output = output
+        self.eps = eps
+        self.max_iter = max_iter
+        self.min_iter = min_iter
+
+    def __call__(self, function, w):
+
+        self.check_compatability(function, self.INTERFACES)
+
+        for it in xrange(10):  # TODO: Get number of iterations!
+            print "it:", it
+
+            for i in xrange(len(w)):
+                print "  i:", i
+
+                for k in xrange(10000):
+                    print "    k:", k
+
+                    t = function.step(w, i)
+                    w[i] = w[i] - t * function.grad(w, i)
+                    w = function.prox(w, i, t)
+#                    = w[:i] + [wi] + w[i+1:]
+
+                    print "    f:", function.f(w)
+
+#                w[i] = wi
+
+        return w

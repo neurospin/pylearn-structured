@@ -16,6 +16,7 @@ Created on Mon Apr 22 10:54:29 2013
 """
 import abc
 import math
+import numbers
 
 import numpy as np
 import scipy.sparse as sparse
@@ -331,6 +332,23 @@ class LipschitzContinuousGradient(object):
         """Lipschitz constant of the gradient.
         """
         raise NotImplementedError('Abstract method "L" must be ' \
+                                  'specialised!')
+
+
+class GradientStep(object):
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def step(self, beta=None, index=0):
+        """The step size to use in gradient descent.
+
+        Arguments
+        ---------
+        beta : A weight vector. Optional, since some functions may determine
+                the step without knowing beta.
+        """
+        raise NotImplementedError('Abstract method "step" must be ' \
                                   'specialised!')
 
 
@@ -1586,9 +1604,44 @@ class RR_SmoothedL1TV(CompositeFunction, LipschitzContinuousGradient,
         return self.h.project(a)
 
 
+class LatentVariableCovariance(MultiblockFunction, MultiblockGradient):
+
+    def __init__(self, X, unbiased=True):
+
+        self.X = X
+        if unbiased:
+            self.n = X[0].shape[0] - 1.0
+        else:
+            self.n = X[0].shape[0]
+
+#        self.reset()
+#
+#    def reset(self):
+#        pass
+
+    def f(self, w):
+        """Function value.
+
+        From the interface "Function".
+        """
+        wX = np.dot(self.X[0], w[0]).T
+        Yc = np.dot(self.X[1], w[1])
+        return np.dot(wX, Yc) / float(self.n)
+
+    def grad(self, w, index):
+        """Gradient of the function.
+
+        From the interface "MultiblockGradient".
+        """
+        index = int(index)
+        return np.dot(self.X[index].T,
+                      np.dot(self.X[1 - index], w[1 - index])) \
+             / float(self.n)
+
+
 class GeneralisedMultiblock(MultiblockFunction, MultiblockGradient,
-                            MultiblockProximalOperator
-#                            LipschitzContinuousGradient, ProximalOperator,
+                            MultiblockProximalOperator, GradientStep
+#                            LipschitzContinuousGradient,
 #                            NesterovFunction, Continuation, DualFunction
                             ):
 
@@ -1601,11 +1654,15 @@ class GeneralisedMultiblock(MultiblockFunction, MultiblockGradient,
 
     def reset(self):
 
-        self.rr.reset()
-        self.l1.reset()
-        self.tv.reset()
+        for i in xrange(len(self.functions)):
+            for j in xrange(len(self.functions[i])):
+                if i == j:
+                    for k in xrange(len(self.functions[i][j])):
+                        self.functions[i][j][k].reset()
+                else:
+                    self.functions[i][j].reset()
 
-    def f(self, beta):
+    def f(self, w):
         """Function value.
         """
         val = 0.0
@@ -1615,13 +1672,19 @@ class GeneralisedMultiblock(MultiblockFunction, MultiblockGradient,
                 fij = fi[j]
                 if i == j and isinstance(fij, (list, tuple)):
                     for k in xrange(len(fij)):
-                        val += fij[k].f(beta)
+#                        print "Diag: ", i
+                        val += fij[k].f(w[i])
                 else:
-                    val += fij.f(beta)
+#                    print "f(w[%d], w[%d])" % (i, j)
+                    val += fij.f([w[i], w[j]])
 
-        return val
+        # TODO: Check instead if it is a numpy array.
+        if not isinstance(val, numbers.Number):
+            return val[0, 0]
+        else:
+            return val
 
-    def grad(self, beta, index):
+    def grad(self, w, index):
         """Gradient of the differentiable part of the function.
 
         From the interface "MultiblockGradient".
@@ -1632,30 +1695,44 @@ class GeneralisedMultiblock(MultiblockFunction, MultiblockGradient,
             fij = fi[j]
             if index != j:
                 if isinstance(fij, Gradient):
-                    grad += fij.grad(beta)
+                    grad += fij.grad(w[index])
                 elif isinstance(fij, MultiblockGradient):
-                    grad += fij.grad(beta, 1)
+                    grad += fij.grad([w[index], w[j]], 0)
 
         for i in xrange(len(self.functions)):
             fij = self.functions[i][index]
-            if i != j:
+            if i != index:
                 if isinstance(fij, Gradient):
-                    grad += fij.grad(beta)
+                    # We shouldn't do anything here, right? This means e.g.
+                    # that this (block i) is the y of a logistic regression.
+                    pass
+#                    grad += fij.grad(w)
                 elif isinstance(fij, MultiblockGradient):
-                    grad += fij.grad(beta, 2)
+                    grad += fij.grad([w[i], w[index]], 1)
 
-        for k in xrange(len(self.functions[index][index])):
-            fii = self.functions[index][index][k]
-            if isinstance(fii, Gradient):
-                grad += fii.grad(beta)
+        fii = self.functions[index][index]
+        for k in xrange(len(fii)):
+            if isinstance(fii[k], Gradient):
+                grad += fii[k].grad(w[index])
 
         return grad
 
-    def prox(self, beta, index, factor=1.0):
+    def prox(self, w, index, factor=1.0):
         """The proximal operator corresponding to the function with the index.
 
         From the interface "MultiblockProximalOperator".
         """
-        for k in xrange(len(self.functions[index][index])):
-            if isinstance(self.functions[index][index][k], ProximalOperator):
-                return self.functions[index][index][k].prox(beta, factor)
+        # Find a proximal operator.
+        fii = self.functions[index][index]
+        for k in xrange(len(fii)):
+            if isinstance(fii[k], ProximalOperator):
+                w[index] = fii[k].prox(w[index], factor)
+                break
+        # If no proximal operator was found, we will just return the same
+        # vectors again. The proximal operator of the zero function returns the
+        # vector itself.
+
+        return w
+
+    def step(self, w, index):
+        return 0.01  # TODO: Fix this!! Add backtracking?
