@@ -57,11 +57,17 @@ class TestSVD(unittest.TestCase):
 
     def test_fast_svd(self):
         err = self.get_err_fast_svd(50, 50)
-        self.assertTrue(err < utils.consts.TOLERANCE)
+        self.assertTrue(err < utils.consts.TOLERANCE,
+                        "Error too big : %g > %g tolerance" %
+                        (err, utils.consts.TOLERANCE))
         err = self.get_err_fast_svd(5000, 5)
-        self.assertTrue(err < utils.consts.TOLERANCE)
+        self.assertTrue(err < utils.consts.TOLERANCE,
+                        "Error too big : %g > %g tolerance" %
+                        (err, utils.consts.TOLERANCE))
         err = self.get_err_fast_svd(5, 5000)
-        self.assertTrue(err < utils.consts.TOLERANCE * 1000)
+        self.assertTrue(err < utils.consts.TOLERANCE * 1000,
+                        "Error too big : %g > %g tolerance" %
+                        (err, utils.consts.TOLERANCE * 1000))
 
     def get_err_fast_sparse_svd(self, nrow, ncol, density):
         X = generate_sparse_matrix(shape=(nrow, ncol),
@@ -73,11 +79,17 @@ class TestSVD(unittest.TestCase):
 
     def test_fast_sparse_svd(self):
         err = self.get_err_fast_sparse_svd(50, 50, density=0.1)
-        self.assertTrue(err < (utils.consts.TOLERANCE * 100))
+        self.assertTrue(err < (utils.consts.TOLERANCE * 100),
+                        "Error too big : %g > %g tolerance" %
+                        (err, utils.consts.TOLERANCE * 100))
         err = self.get_err_fast_sparse_svd(500, 5000, density=0.1)
-        self.assertTrue(err < (utils.consts.TOLERANCE * 100))
+        self.assertTrue(err < (utils.consts.TOLERANCE * 100),
+                        "Error too big : %g > %g tolerance" %
+                        (err, utils.consts.TOLERANCE))
         err = self.get_err_fast_sparse_svd(5000, 500, density=0.1)
-        self.assertTrue(err < (utils.consts.TOLERANCE * 100))
+        self.assertTrue(err < (utils.consts.TOLERANCE * 100),
+                        "Error too big : %g > %g tolerance" %
+                        (err, utils.consts.TOLERANCE))
 
 
 if __name__ == '__main__':
