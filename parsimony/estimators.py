@@ -227,7 +227,8 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
 
     def fit(self, X, y):
 
-        self.function = functions.RR_SmoothedL1TV(X, y, self.k, self.l, self.g,
+        self.function = functions.RR_SmoothedL1TV(X, y,
+                                                  self.k, self.l, self.g,
                                                   Atv=self.Atv, Al1=self.Al1)
 
         self.algorithm.check_compatability(self.function,
