@@ -93,6 +93,27 @@ class RegressionEstimator(BaseEstimator):
 
 class RidgeRegression_L1_TV(RegressionEstimator):
     """
+
+    Parameters
+    ----------
+    l : The L1 regularisation parameter.
+
+    k : The L2 regularisation parameter.
+
+    g : The total variation regularisation parameter.
+
+    A : Matrix allocation for regression
+
+    # TODO : what is mu?
+    mu : ???
+
+    output : boolean, need output information
+
+    algorithm : which algorithm willbe applied :
+        1. algorithms.StaticCONESTA()
+        2. algorithms.DynamicCONESTA()
+        3. algorithms.FISTA()
+
     Example
     -------
     >>> import numpy as np
@@ -178,6 +199,9 @@ class RidgeRegression_L1_TV(RegressionEstimator):
 
 class RidgeRegression_SmoothedL1TV(RegressionEstimator):
     """
+    Parameters
+    ----------
+    
     Example
     -------
     >>> import numpy as np
