@@ -167,8 +167,21 @@ class TestFunctions(unittest.TestCase):
                           np.dot(spams_X, tvl1l2_fista_l1.beta) - spams_Y))
         err2_ridge = np.sum(np.absolute(np.dot(spams_X, W_ridge) - spams_Y))
         err2_l1 = np.sum(np.absolute(np.dot(spams_X, W_l1) - spams_Y))
-        self.assertTrue(np.absolute(err1_ridge - err2_ridge) < 0.01)
-        self.assertTrue(np.absolute(err1_l1 - err2_l1) < 0.01)
+
+        self.assertTrue(np.absolute(err1_ridge - err2_ridge) < 0.01,
+                        "Difference in ridge errors too big : \n"
+                        "Spams ridge error = %g \n"
+                        "Parsimony ridge error = %g \n"
+                        "Comparison : abs(parsimony - spams) = %g > 0.01" %
+                        (err2_ridge, err1_ridge,
+                         np.absolute(err1_ridge - err2_ridge)))
+        self.assertTrue(np.absolute(err1_l1 - err2_l1) < 0.01,
+                        "Difference in L1 errors too big : \n"
+                        "Spams L1 error = %g \n"
+                        "Parsimony L1 error = %g \n"
+                        "Comparison : abs(parsimony - spams) = %g > 0.01" %
+                        (err2_l1, err1_l1,
+                         np.absolute(err2_l1 - err1_l1)))
 
     def test_smoothed_l1(self):
         import numpy as np
@@ -324,7 +337,7 @@ class TestFunctions(unittest.TestCase):
                                    [  6.50395154e-06],
                                    [  2.09415248e-05]])
         err = np.sum(np.abs(verified_beta - rr.beta))
-        self.assertTrue(err < 0.01)
+        self.assertTrue(err < 0.01, "Error too big : %g > 0.01" % err)
 
 if __name__ == "__main__":
     unittest.main()
