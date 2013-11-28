@@ -41,10 +41,11 @@ class TestSVD(unittest.TestCase):
         # svd from numpy array
         U, s_np, V = np.linalg.svd(X)
         np_v = V[[0], :].T
-        err = np.sum(
-            np.absolute(np.absolute(computed_v / np_v) -
-                        np.ones((np_v.shape[0], 1), dtype=computed_v.dtype)
-                        ))
+        
+        sign = np.dot(computed_v.T, np_v)[0][0]
+        np_v_new = np_v * sign
+        err = np.linalg.norm(computed_v - np_v_new)
+
         return err
 
     def get_err_fast_svd(self, nrow, ncol):
@@ -72,6 +73,8 @@ class TestSVD(unittest.TestCase):
     def get_err_fast_sparse_svd(self, nrow, ncol, density):
         X = generate_sparse_matrix(shape=(nrow, ncol),
                                    density=density)
+        # For debug
+        np.save("/tmp/X_%d_%d.npy" % (nrow, ncol), X)
         # svd from parsimony
         fast_sparse_svd = FastSparseSVD()
         parsimony_v = fast_sparse_svd(X, max_iter=1000)
