@@ -613,3 +613,8 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
             return (beta, output)
         else:
             return beta
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
