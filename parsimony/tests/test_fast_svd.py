@@ -17,9 +17,14 @@ def generate_sparse_matrix(shape, density=0.10):
     '''
     Example
     -------
-    shape = (5, 5)
-    density = 0.2
-    print generate_sparse_matrix(shape, density)
+    >>> shape = (5, 5)
+    >>> density = 0.2
+    >>> print generate_sparse_matrix(shape, density)  # doctest: +SKIP
+    [[ 0.          0.          0.          0.          0.        ]
+     [ 0.          0.          0.95947611  0.          0.        ]
+     [ 0.          0.          0.          0.12626569  0.        ]
+     [ 0.          0.51318651  0.          0.          0.        ]
+     [ 0.          0.          0.          0.          0.92133575]]
     '''
     # shape = (5, 5)
     # density = 0.1
@@ -96,4 +101,6 @@ class TestSVD(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
     unittest.main()

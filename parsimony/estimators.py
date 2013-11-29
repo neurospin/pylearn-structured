@@ -96,11 +96,11 @@ class RidgeRegression_L1_TV(RegressionEstimator):
 
     Parameters
     ----------
-    l : The L1 regularisation parameter.
+    l : The L1 regularization parameter.
 
-    k : The L2 regularisation parameter.
+    k : The L2 regularization parameter.
 
-    g : The total variation regularisation parameter.
+    g : The total variation regularization parameter.
 
     A : Matrix allocation for regression
 
@@ -201,7 +201,25 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
     """
     Parameters
     ----------
-    
+    l : The L1 regularisation parameter.
+
+    k : The L2 regularisation parameter.
+
+    g : The total variation regularization parameter.
+
+    # TODO : what is Atv?
+    Atv :
+
+    # TODO : what is Al1?
+    Al1 :
+
+    # TODO : what is mu?
+    mu :
+
+    output : boolean, store output information
+
+    algorithm : the algorithm that will be applied
+
     Example
     -------
     >>> import numpy as np
@@ -243,6 +261,7 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
 
         super(RidgeRegression_SmoothedL1TV, self).__init__(algorithm=algorithm,
                                                            output=output)
+
 
     def get_params(self):
 

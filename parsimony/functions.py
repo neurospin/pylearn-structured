@@ -1031,6 +1031,29 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
 class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
                  ProximalOperator, NesterovFunction, Continuation,
                  DualFunction):
+    """Combination (sum) of RidgeRegression, L1 and TotalVariation
+
+    Parameters
+    ----------
+    X : Ridge Regression parameter.
+
+    y : Ridge REgression parameter.
+
+    k : Ridge Regression parameter.
+
+    l : L1 parameter.
+            The Lagrange multiplier, or regularisation constant, of the function.
+
+    g : Total Variation parameter
+            The Lagrange multiplier, or regularisation constant, of the function.
+
+    A : Total Variation parameter.
+            The linear operator for the Nesterov formulation. May not be None!
+
+    mu : Total Variation parameter.
+            The regularisation constant for the smoothing.
+    """
+
 
     def __init__(self, X, y, k, l, g, A=None, mu=0.0):
 
