@@ -10,6 +10,7 @@ import unittest
 class TestFISTA(unittest.TestCase):
     def test_fista(self):
         import numpy as np
+        import scipy.sparse as sparse
         import parsimony.estimators as estimators
         import parsimony.algorithms as algorithms
         import parsimony.tv
@@ -124,23 +125,26 @@ class TestFISTA(unittest.TestCase):
         # using pre-computed values
         Atv, n_compacts = parsimony.tv.A_from_shape(shape)
         tvl1l2_algorithms = []
-        tvl1l2_fista = estimators.RidgeRegression_SmoothedL1TV(k, l, g,
+        # Al1 = sparse.eye(num_ft, num_ft)
+        tvl1l2_fista = estimators.RidgeRegression_L1_TV(
+                                k, l, g,
                                 Atv,
                                 algorithm=algorithms.FISTA())
-        tvl1l2_conesta_static = estimators.RidgeRegression_SmoothedL1TV(k, l, g,
+        tvl1l2_conesta_static = estimators.RidgeRegression_L1_TV(
+                                k, l, g,
                                 Atv,
                                 algorithm=algorithms.CONESTA(dynamic=False))
-        tvl1l2_conesta_dynamic = estimators.RidgeRegression_SmoothedL1TV(k, l, g,
-                                                                  Atv,
+        tvl1l2_conesta_dynamic = estimators.RidgeRegression_L1_TV(
+                                k, l, g,
+                                Atv,
                                 algorithm=algorithms.CONESTA(dynamic=True))
-#        tvl1l2_excessive_gap = estimators.LinearRegressionL1L2TV(k, l, g,
-#                                                                 [Ax, Ay, Az],
-#                                            algorithm=algorithms.ExcessiveGapMethod)
+
         tvl1l2_algorithms.append(tvl1l2_fista)
         tvl1l2_algorithms.append(tvl1l2_conesta_static)
         tvl1l2_algorithms.append(tvl1l2_conesta_dynamic)
-        # tvl1l2_algorithms.append(tvl1l2_excessive_gap)
+
         for tvl1l2_algorithm in tvl1l2_algorithms:
+            print str(tvl1l2_algorithm.algorithm)
             tvl1l2_algorithm.fit(spams_X, spams_Y)
             ## sometimes betas are different
             ## but lead to the same error (err1 and err2)
@@ -149,7 +153,8 @@ class TestFISTA(unittest.TestCase):
             err1 = np.sum(np.absolute(
                           np.dot(spams_X, tvl1l2_algorithm.beta) - spams_Y))
             err2 = np.sum(np.absolute(np.dot(spams_X, W) - spams_Y))
-            self.assertTrue(np.absolute(err1 - err2) < 0.01)
+            self.assertTrue(np.absolute(err1 - err2) < 0.01,
+                            np.absolute(err1 - err2))
 
 if __name__ == "__main__":
     unittest.main()

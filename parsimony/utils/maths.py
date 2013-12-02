@@ -80,7 +80,7 @@ def cov(a, b):
     Example
     -------
     >>> import numpy as np
-    >>> from parsimony.utils.maths import corr
+    >>> from parsimony.utils.maths import cov
     >>> v1 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
     >>> v2 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
     >>> print cov(v1, v2)
