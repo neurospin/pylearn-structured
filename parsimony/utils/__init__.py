@@ -12,7 +12,9 @@ Created on Thu Feb 8 09:22:00 2013
 import maths
 import consts
 
-__all__ = ['maths', 'consts']
+from .utils import AnonymousClass
+
+__all__ = ['maths', 'consts', 'AnonymousClass']
 
 #from .utils import norm
 #from .utils import norm1

@@ -27,7 +27,9 @@ import parsimony.utils.consts as consts
 __all__ = ['RidgeRegression', 'L1', 'SmoothedL1', 'TotalVariation',
            'SmoothedL1TV',
            'RR_L1_TV',
-           'RR_SmoothedL1TV']
+           'RR_SmoothedL1TV',
+
+           'AnonymousFunction']
 
 
 class Function(object):
@@ -399,6 +401,17 @@ class Eigenvalues(object):
         """
         raise NotImplementedError('Abstract method "lambda_min" is not ' \
                                   'implemented!')
+
+
+class AnonymousFunction(AtomicFunction):
+
+    def __init__(self, f):
+
+        self._f = f
+
+    def f(self, x):
+
+        return self._f(x)
 
 
 class RidgeRegression(CompositeFunction, Gradient, LipschitzContinuousGradient,

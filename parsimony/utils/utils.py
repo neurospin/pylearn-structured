@@ -21,6 +21,8 @@ Created on Thu Feb 8 09:22:00 2013
 #from copy import copy
 #import traceback
 
+__all__ = ['AnonymousClass']
+
 #__all__ = ['norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
 #           'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy', 'sstot', 'ssvar',
 #           'sqrt', 'rand', 'zeros', 'direct', '_DEBUG', 'debug', 'warning',
@@ -221,23 +223,23 @@ Created on Thu Feb 8 09:22:00 2013
 #    mat.indptr[i:] -= n
 #    mat.indptr = mat.indptr[:-1]
 #    mat._shape = (mat._shape[0] - 1, mat._shape[1])
-#
-#
-#class AnonymousClass:
-#    """Used to create anonymous classes.
-#
-#    Usage: anonymous_class = AnonymousClass(field=value, method=function)
-#    """
-#    def __init__(self, **entries):
-#        self.__dict__.update(entries)
-#
-#    def __eq__(self, other):
-#        return self.__dict__ == other.__dict__
-#
-#    def __neq__(self, other):
-#        return self.__dict__ != other.__dict__
-#
-#
+
+
+class AnonymousClass(object):
+    """Used to create anonymous classes.
+
+    Usage: anonymous_class = AnonymousClass(field=value, method=function)
+    """
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __neq__(self, other):
+        return self.__dict__ != other.__dict__
+
+
 #class Enum(object):
 #    def __init__(self, *sequential, **named):
 #        enums = dict(zip(sequential, range(len(sequential))), **named)

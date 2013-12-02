@@ -505,6 +505,83 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
             return beta
 
 
+class Bisection(ExplicitAlgorithm):
+    """Finds a root of the function assumed to be on the line between two
+    points.
+
+    Assumes a function f(x) such that |f(x)|_2 < -eps if x is too small,
+    |f(x)|_2 > eps if x is too large and |f(x)|_2 <= eps if x is just right.
+
+    Parameters
+    ----------
+    eps : A positive value such that |f(x)|_2 <= eps. Only guaranteed if
+            |f(x)|_2 <= eps in less than maxiter iterations.
+
+    max_iter : The maximum number of iterations.
+
+    min_iter : The minimum number of iterations.
+    """
+    INTERFACES = [functions.Function,
+                 ]
+
+    def __init__(self, eps=consts.TOLERANCE,
+                 max_iter=50, min_iter=1):
+
+        self.eps = eps
+        self.max_iter = max_iter
+        self.min_iter = min_iter
+
+    def __call__(self, function, x=None):
+        """
+        Parameters
+        ----------
+        function: The function for which a root is found. The function must be
+                increasing for increasing x, and decresing for decreasing x.
+
+        x: A vector or tuple with two elements. The first element is the lower
+                end of the interval for which |f(x[0])|_2 < -eps. The second
+                element is the upper end of the interfal for which
+                |f(x[1])|_2 > eps. If x is None, these values are found.
+                Finding them may be slow, though, if the function is expensive
+                to evaluate.
+        """
+        if x != None:
+            low = min(x)
+            high = max(x)
+        else:
+            low = 0
+            high = 1
+
+        # Find start values. If the low and high
+        # values are feasible this will just break
+        for i in xrange(self.max_iter):
+            f_low = function.f(low)
+            f_high = function.f(high)
+
+            if maths.sign(f_low) != maths.sign(f_high):
+                break
+            else:
+                low -= abs(low) * 2.0 ** i
+                high += abs(high) * 2.0 ** i
+
+        # Use the bisection method to find where |f(x)|_2 <= eps.
+        for i in xrange(self.max_iter):
+            mid = (low + high) / 2.0
+            f_mid = function.f(mid)
+
+            if maths.sign(f_mid) == maths.sign(f_low):
+                low = mid
+                f_low = f_mid
+            else:
+                high = mid
+                f_high = f_mid
+
+            if np.sqrt(np.sum((high - low) ** 2.0)) <= self.eps:
+                break
+
+        return (low + high) / 2.0
+
+
 class GeneralisedMultiblockISTA(ExplicitAlgorithm):
     """ The iterative shrinkage threshold algorithm in a multiblock setting.
     """
