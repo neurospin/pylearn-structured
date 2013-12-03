@@ -36,6 +36,20 @@ class BaseStartVector(object):
 
 class IdentityStartVector(BaseStartVector):
     """A pre-determined start vector.
+    
+    Parameters
+    ----------
+    vector : Array. Value of the pre-determined start vector
+
+    Examples
+    --------
+    >>> from parsimony.start_vectors import IdentityStartVector
+    >>> start_vector = IdentityStartVector(np.array([[0.5], [2.0], [0.3], [1.0]]))
+    >>> start_vector.get_vector()
+    array([[ 0.5],
+           [ 2. ],
+           [ 0.3],
+           [ 1. ]])
     """
     def __init__(self, vector, **kwargs):
 
@@ -316,3 +330,8 @@ class ZerosStartVector(BaseStartVector):
 #            return w / norm(w)
 #        else:
 #            return w
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
