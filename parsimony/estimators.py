@@ -104,8 +104,7 @@ class RidgeRegression_L1_TV(RegressionEstimator):
 
     A : Matrix allocation for regression
 
-    # TODO : what is mu?
-    mu : ???
+    mu : The regularisation constant for the smoothing.
 
     output : boolean, need output information
 
@@ -213,8 +212,7 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
     # TODO : what is Al1?
     Al1 :
 
-    # TODO : what is mu?
-    mu :
+    mu : The regularisation constant for the smoothing.
 
     output : boolean, store output information
 
