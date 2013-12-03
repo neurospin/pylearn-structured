@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>epac.workflow.wrappers</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="epac-module.html">Package&nbsp;epac</a> ::
+        <a href="epac.workflow-module.html" onclick="show_private();">Package&nbsp;workflow</a> ::
+        Module&nbsp;wrappers
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="epac.workflow.wrappers-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="epac.workflow.wrappers-module.html">Module epac.workflow.wrappers</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno">  1</tt>  <tt class="py-line"><tt class="py-comment"># -*- coding: utf-8 -*-</tt> </tt>
+<a name="L2"></a><tt class="py-lineno">  2</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L3"></a><tt class="py-lineno">  3</tt>  <tt class="py-line"><tt class="py-docstring">Created on Mon Jul 22 14:43:15 2013</tt> </tt>
+<a name="L4"></a><tt class="py-lineno">  4</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L5"></a><tt class="py-lineno">  5</tt>  <tt class="py-line"><tt class="py-docstring">@author: jinpeng.li@cea.fr</tt> </tt>
+<a name="L6"></a><tt class="py-lineno">  6</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L7"></a><tt class="py-lineno">  7</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L8"></a><tt class="py-lineno">  8</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">dill</tt> <tt class="py-keyword">as</tt> <tt class="py-name">pickle</tt> </tt>
+<a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line"> </tt>
+<a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-0" class="py-name" targets="Package epac=epac-module.html"><a title="epac" class="py-name" href="#" onclick="return doclink('link-0', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-1" class="py-name" targets="Package epac.workflow=epac.workflow-module.html"><a title="epac.workflow" class="py-name" href="#" onclick="return doclink('link-1', 'workflow', 'link-1');">workflow</a></tt><tt class="py-op">.</tt><tt id="link-2" class="py-name" targets="Module epac.workflow.base=epac.workflow.base-module.html"><a title="epac.workflow.base" class="py-name" href="#" onclick="return doclink('link-2', 'base', 'link-2');">base</a></tt> <tt class="py-keyword">import</tt> <tt id="link-3" class="py-name" targets="Class epac.workflow.base.BaseNode=epac.workflow.base.BaseNode-class.html"><a title="epac.workflow.base.BaseNode" class="py-name" href="#" onclick="return doclink('link-3', 'BaseNode', 'link-3');">BaseNode</a></tt> </tt>
+<a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-4" class="py-name"><a title="epac" class="py-name" href="#" onclick="return doclink('link-4', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-5" class="py-name" targets="Module epac.tests.utils=epac.tests.utils-module.html,Module epac.utils=epac.utils-module.html"><a title="epac.tests.utils
+epac.utils" class="py-name" href="#" onclick="return doclink('link-5', 'utils', 'link-5');">utils</a></tt> <tt class="py-keyword">import</tt> <tt id="link-6" class="py-name" targets="Function epac.utils._func_get_args_names()=epac.utils-module.html#_func_get_args_names"><a title="epac.utils._func_get_args_names" class="py-name" href="#" onclick="return doclink('link-6', '_func_get_args_names', 'link-6');">_func_get_args_names</a></tt><tt class="py-op">,</tt> <tt id="link-7" class="py-name" targets="Function epac.utils.train_test_merge()=epac.utils-module.html#train_test_merge"><a title="epac.utils.train_test_merge" class="py-name" href="#" onclick="return doclink('link-7', 'train_test_merge', 'link-7');">train_test_merge</a></tt><tt class="py-op">,</tt> <tt id="link-8" class="py-name" targets="Function epac.utils.train_test_split()=epac.utils-module.html#train_test_split"><a title="epac.utils.train_test_split" class="py-name" href="#" onclick="return doclink('link-8', 'train_test_split', 'link-8');">train_test_split</a></tt> </tt>
+<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-9" class="py-name"><a title="epac" class="py-name" href="#" onclick="return doclink('link-9', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-10" class="py-name"><a title="epac.tests.utils
+epac.utils" class="py-name" href="#" onclick="return doclink('link-10', 'utils', 'link-5');">utils</a></tt> <tt class="py-keyword">import</tt> <tt id="link-11" class="py-name" targets="Function epac.utils._sub_dict()=epac.utils-module.html#_sub_dict"><a title="epac.utils._sub_dict" class="py-name" href="#" onclick="return doclink('link-11', '_sub_dict', 'link-11');">_sub_dict</a></tt> </tt>
+<a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-12" class="py-name"><a title="epac" class="py-name" href="#" onclick="return doclink('link-12', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-13" class="py-name" targets="Module epac.configuration=epac.configuration-module.html"><a title="epac.configuration" class="py-name" href="#" onclick="return doclink('link-13', 'configuration', 'link-13');">configuration</a></tt> <tt class="py-keyword">import</tt> <tt id="link-14" class="py-name" targets="Class epac.configuration.conf=epac.configuration.conf-class.html"><a title="epac.configuration.conf" class="py-name" href="#" onclick="return doclink('link-14', 'conf', 'link-14');">conf</a></tt> </tt>
+<a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-15" class="py-name"><a title="epac" class="py-name" href="#" onclick="return doclink('link-15', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-16" class="py-name" targets="Package epac.map_reduce=epac.map_reduce-module.html"><a title="epac.map_reduce" class="py-name" href="#" onclick="return doclink('link-16', 'map_reduce', 'link-16');">map_reduce</a></tt><tt class="py-op">.</tt><tt id="link-17" class="py-name" targets="Module epac.map_reduce.results=epac.map_reduce.results-module.html"><a title="epac.map_reduce.results" class="py-name" href="#" onclick="return doclink('link-17', 'results', 'link-17');">results</a></tt> <tt class="py-keyword">import</tt> <tt id="link-18" class="py-name" targets="Class epac.map_reduce.results.ResultSet=epac.map_reduce.results.ResultSet-class.html"><a title="epac.map_reduce.results.ResultSet" class="py-name" href="#" onclick="return doclink('link-18', 'ResultSet', 'link-18');">ResultSet</a></tt> </tt>
+<a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-19" class="py-name"><a title="epac" class="py-name" href="#" onclick="return doclink('link-19', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-20" class="py-name"><a title="epac.workflow" class="py-name" href="#" onclick="return doclink('link-20', 'workflow', 'link-1');">workflow</a></tt><tt class="py-op">.</tt><tt id="link-21" class="py-name"><a title="epac.workflow.base" class="py-name" href="#" onclick="return doclink('link-21', 'base', 'link-2');">base</a></tt> <tt class="py-keyword">import</tt> <tt id="link-22" class="py-name" targets="Function epac.workflow.base.key_push()=epac.workflow.base-module.html#key_push"><a title="epac.workflow.base.key_push" class="py-name" href="#" onclick="return doclink('link-22', 'key_push', 'link-22');">key_push</a></tt> </tt>
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"> </tt>
+<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"> </tt>
+<a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"><tt class="py-comment">## ================================= ##</tt> </tt>
+<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"><tt class="py-comment">## == Wrapper node == ##</tt> </tt>
+<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"><tt class="py-comment">## ================================= ##</tt> </tt>
+<a name="Wrapper"></a><div id="Wrapper-def"><a name="L21"></a><tt class="py-lineno"> 21</tt> <a class="py-toggle" href="#" id="Wrapper-toggle" onclick="return toggle('Wrapper');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="epac.workflow.wrappers.Wrapper-class.html">Wrapper</a><tt class="py-op">(</tt><tt class="py-base-class">BaseNode</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Wrapper-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="Wrapper-expanded"><a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line">    <tt class="py-docstring">"""Node that wrap any class</tt> </tt>
+<a name="L23"></a><tt class="py-lineno"> 23</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line"><tt class="py-docstring">    Example</tt> </tt>
+<a name="L25"></a><tt class="py-lineno"> 25</tt>  <tt class="py-line"><tt class="py-docstring">    -------</tt> </tt>
+<a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; from epac.workflow.wrappers import Wrapper</tt> </tt>
+<a name="L27"></a><tt class="py-lineno"> 27</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; class Node2Wrap:</tt> </tt>
+<a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line"><tt class="py-docstring">    ...     def __init__(self):</tt> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line"><tt class="py-docstring">    ...         self.a = 1</tt> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line"><tt class="py-docstring">    ...         self.b = 2</tt> </tt>
+<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line"><tt class="py-docstring">    ...     def transform(self, X, y):</tt> </tt>
+<a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line"><tt class="py-docstring">    ...         return dict(res = x * self.a + y * self.b)</tt> </tt>
+<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line"><tt class="py-docstring">    ...</tt> </tt>
+<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; wrapper_node = Wrapper(Node2Wrap())</tt> </tt>
+<a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; print wrapper_node.get_signature()</tt> </tt>
+<a name="L36"></a><tt class="py-lineno"> 36</tt>  <tt class="py-line"><tt class="py-docstring">    Node2Wrap</tt> </tt>
+<a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; print wrapper_node.get_parameters()</tt> </tt>
+<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line"><tt class="py-docstring">    {'a': 1, 'b': 2}</tt> </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L40"></a><tt class="py-lineno"> 40</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line"> </tt>
+<a name="Wrapper.__init__"></a><div id="Wrapper.__init__-def"><a name="L42"></a><tt class="py-lineno"> 42</tt> <a class="py-toggle" href="#" id="Wrapper.__init__-toggle" onclick="return toggle('Wrapper.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.workflow.wrappers.Wrapper-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">wrapped_node</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Wrapper.__init__-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="Wrapper.__init__-expanded"><a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line">        <tt class="py-name">super</tt><tt class="py-op">(</tt><tt id="link-23" class="py-name" targets="Class epac.workflow.wrappers.Wrapper=epac.workflow.wrappers.Wrapper-class.html"><a title="epac.workflow.wrappers.Wrapper" class="py-name" href="#" onclick="return doclink('link-23', 'Wrapper', 'link-23');">Wrapper</a></tt><tt class="py-op">,</tt> <tt class="py-name">self</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt id="link-24" class="py-name" targets="Method epac.map_reduce.engine.Engine.__init__()=epac.map_reduce.engine.Engine-class.html#__init__,Method epac.map_reduce.engine.LocalEngine.__init__()=epac.map_reduce.engine.LocalEngine-class.html#__init__,Method epac.map_reduce.engine.SomaWorkflowEngine.__init__()=epac.map_reduce.engine.SomaWorkflowEngine-class.html#__init__,Method epac.map_reduce.inputs.NodesInput.__init__()=epac.map_reduce.inputs.NodesInput-class.html#__init__,Method epac.map_reduce.mappers.MapperSubtrees.__init__()=epac.map_reduce.mappers.MapperSubtrees-class.html#__init__,Method epac.map_reduce.reducers.CVBestSearchRefitPReducer.__init__()=epac.map_reduce.reducers.CVBestSearchRefitPReducer-class.html#__init__,Method epac.map_reduce.reducers.ClassificationReport.__init__()=epac.map_reduce.reducers.ClassificationReport-class.html#__init__,Method epac.map_reduce.reducers.PvalPerms.__init__()=epac.map_reduce.reducers.PvalPerms-class.html#__init__,Method epac.map_reduce.results.Result.__init__()=epac.map_reduce.results.Result-class.html#__init__,Method epac.map_reduce.results.ResultSet.__init__()=epac.map_reduce.results.ResultSet-class.html#__init__,Method epac.map_reduce.split_input.SplitInput.__init__()=epac.map_reduce.split_input.SplitInput-class.html#__init__,Method epac.map_reduce.split_input.SplitNodesInput.__init__()=epac.map_reduce.split_input.SplitNodesInput-class.html#__init__,Method epac.map_reduce.wfdescriptors.BashWorkflowDescriptor.__init__()=epac.map_reduce.wfdescriptors.BashWorkflowDescriptor-class.html#__init__,Method epac.map_reduce.wfdescriptors.SharePathSomaWorkflowDescriptor.__init__()=epac.map_reduce.wfdescriptors.SharePathSomaWorkflowDescriptor-class.html#__init__,Method epac.map_reduce.wfdescriptors.SomaWorkflowDescriptor.__init__()=epac.map_reduce.wfdescriptors.SomaWorkflowDescriptor-class.html#__init__,Method epac.sklearn_plugins.estimators.Estimator.__init__()=epac.sklearn_plugins.estimators.Estimator-class.html#__init__,Method epac.sklearn_plugins.resampling.FeatureRanking.__init__()=epac.sklearn_plugins.resampling.FeatureRanking-class.html#__init__,Method epac.sklearn_plugins.resampling.Permutations.__init__()=epac.sklearn_plugins.resampling.Permutations-class.html#__init__,Method epac.stores.StoreFs.__init__()=epac.stores.StoreFs-class.html#__init__,Method epac.stores.StoreMem.__init__()=epac.stores.StoreMem-class.html#__init__,Method epac.stores.TagObject.__init__()=epac.stores.TagObject-class.html#__init__,Method epac.tests.test_dump_class_definition_sfw.MySVC.__init__()=epac.tests.test_dump_class_definition_sfw.MySVC-class.html#__init__,Method epac.tests.test_warm_start_methods.TOY_CLF.__init__()=epac.tests.test_warm_start_methods.TOY_CLF-class.html#__init__,Method epac.workflow.base.BaseNode.__init__()=epac.workflow.base.BaseNode-class.html#__init__,Method epac.workflow.splitters.BaseNodeSplitter.__init__()=epac.workflow.splitters.BaseNodeSplitter-class.html#__init__,Method epac.workflow.splitters.CRSlicer.__init__()=epac.workflow.splitters.CRSlicer-class.html#__init__,Method epac.workflow.splitters.CRSplitter.__init__()=epac.workflow.splitters.CRSplitter-class.html#__init__,Method epac.workflow.splitters.CV.__init__()=epac.workflow.splitters.CV-class.html#__init__,Method epac.workflow.splitters.CVBestSearchRefit.__init__()=epac.workflow.splitters.CVBestSearchRefit-class.html#__init__,Method epac.workflow.splitters.CVBestSearchRefitParallel.__init__()=epac.workflow.splitters.CVBestSearchRefitParallel-class.html#__init__,Method epac.workflow.splitters.ColumnSplitter.__init__()=epac.workflow.splitters.ColumnSplitter-class.html#__init__,Method epac.workflow.splitters.Methods.__init__()=epac.workflow.splitters.Methods-class.html#__init__,Method epac.workflow.splitters.Perms.__init__()=epac.workflow.splitters.Perms-class.html#__init__,Method epac.workflow.splitters.RowSplitter.__init__()=epac.workflow.splitters.RowSplitter-class.html#__init__,Method epac.workflow.splitters.Slicer.__init__()=epac.workflow.splitters.Slicer-class.html#__init__,Method epac.workflow.splitters.VirtualList.__init__()=epac.workflow.splitters.VirtualList-class.html#__init__,Method epac.workflow.splitters.WarmStartMethods.__init__()=epac.workflow.splitters.WarmStartMethods-class.html#__init__,Method epac.workflow.wrappers.TransformNode.__init__()=epac.workflow.wrappers.TransformNode-class.html#__init__,Method epac.workflow.wrappers.Wrapper.__init__()=epac.workflow.wrappers.Wrapper-class.html#__init__"><a title="epac.map_reduce.engine.Engine.__init__
+epac.map_reduce.engine.LocalEngine.__init__
+epac.map_reduce.engine.SomaWorkflowEngine.__init__
+epac.map_reduce.inputs.NodesInput.__init__
+epac.map_reduce.mappers.MapperSubtrees.__init__
+epac.map_reduce.reducers.CVBestSearchRefitPReducer.__init__
+epac.map_reduce.reducers.ClassificationReport.__init__
+epac.map_reduce.reducers.PvalPerms.__init__
+epac.map_reduce.results.Result.__init__
+epac.map_reduce.results.ResultSet.__init__
+epac.map_reduce.split_input.SplitInput.__init__
+epac.map_reduce.split_input.SplitNodesInput.__init__
+epac.map_reduce.wfdescriptors.BashWorkflowDescriptor.__init__
+epac.map_reduce.wfdescriptors.SharePathSomaWorkflowDescriptor.__init__
+epac.map_reduce.wfdescriptors.SomaWorkflowDescriptor.__init__
+epac.sklearn_plugins.estimators.Estimator.__init__
+epac.sklearn_plugins.resampling.FeatureRanking.__init__
+epac.sklearn_plugins.resampling.Permutations.__init__
+epac.stores.StoreFs.__init__
+epac.stores.StoreMem.__init__
+epac.stores.TagObject.__init__
+epac.tests.test_dump_class_definition_sfw.MySVC.__init__
+epac.tests.test_warm_start_methods.TOY_CLF.__init__
+epac.workflow.base.BaseNode.__init__
+epac.workflow.splitters.BaseNodeSplitter.__init__
+epac.workflow.splitters.CRSlicer.__init__
+epac.workflow.splitters.CRSplitter.__init__
+epac.workflow.splitters.CV.__init__
+epac.workflow.splitters.CVBestSearchRefit.__init__
+epac.workflow.splitters.CVBestSearchRefitParallel.__init__
+epac.workflow.splitters.ColumnSplitter.__init__
+epac.workflow.splitters.Methods.__init__
+epac.workflow.splitters.Perms.__init__
+epac.workflow.splitters.RowSplitter.__init__
+epac.workflow.splitters.Slicer.__init__
+epac.workflow.splitters.VirtualList.__init__
+epac.workflow.splitters.WarmStartMethods.__init__
+epac.workflow.wrappers.TransformNode.__init__
+epac.workflow.wrappers.Wrapper.__init__" class="py-name" href="#" onclick="return doclink('link-24', '__init__', 'link-24');">__init__</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">wrapped_node</tt> <tt class="py-op">=</tt> <tt class="py-name">wrapped_node</tt> </tt>
+</div><a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line"> </tt>
+<a name="Wrapper.get_signature"></a><div id="Wrapper.get_signature-def"><a name="L46"></a><tt class="py-lineno"> 46</tt> <a class="py-toggle" href="#" id="Wrapper.get_signature-toggle" onclick="return toggle('Wrapper.get_signature');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.workflow.wrappers.Wrapper-class.html#get_signature">get_signature</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Wrapper.get_signature-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="Wrapper.get_signature-expanded"><a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line">        <tt class="py-docstring">"""Overload the base name method"""</tt> </tt>
+<a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">signature_args</tt><tt class="py-op">:</tt> </tt>
+<a name="L49"></a><tt class="py-lineno"> 49</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">wrapped_node</tt><tt class="py-op">.</tt><tt class="py-name">__class__</tt><tt class="py-op">.</tt><tt class="py-name">__name__</tt> </tt>
+<a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line">            <tt class="py-name">args_str</tt> <tt class="py-op">=</tt> <tt class="py-string">","</tt><tt class="py-op">.</tt><tt class="py-name">join</tt><tt class="py-op">(</tt><tt class="py-op">[</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">k</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">"="</tt> <tt class="py-op">+</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">signature_args</tt><tt class="py-op">[</tt><tt class="py-name">k</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line">                                 <tt class="py-keyword">for</tt> <tt class="py-name">k</tt> <tt class="py-keyword">in</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">signature_args</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line">            <tt class="py-name">args_str</tt> <tt class="py-op">=</tt> <tt class="py-string">"("</tt> <tt class="py-op">+</tt> <tt class="py-name">args_str</tt> <tt class="py-op">+</tt> <tt class="py-string">")"</tt> </tt>
+<a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">wrapped_node</tt><tt class="py-op">.</tt><tt class="py-name">__class__</tt><tt class="py-op">.</tt><tt class="py-name">__name__</tt> <tt class="py-op">+</tt> <tt class="py-name">args_str</tt> </tt>
+</div><a name="L55"></a><tt class="py-lineno"> 55</tt>  <tt class="py-line"> </tt>
+<a name="Wrapper.get_parameters"></a><div id="Wrapper.get_parameters-def"><a name="L56"></a><tt class="py-lineno"> 56</tt> <a class="py-toggle" href="#" id="Wrapper.get_parameters-toggle" onclick="return toggle('Wrapper.get_parameters');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.workflow.wrappers.Wrapper-class.html#get_parameters">get_parameters</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="Wrapper.get_parameters-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="Wrapper.get_parameters-expanded"><a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">wrapped_node</tt><tt class="py-op">.</tt><tt class="py-name">__dict__</tt> </tt>
+</div></div><a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line"> </tt>
+<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line"> </tt>
+<a name="TransformNode"></a><div id="TransformNode-def"><a name="L60"></a><tt class="py-lineno"> 60</tt> <a class="py-toggle" href="#" id="TransformNode-toggle" onclick="return toggle('TransformNode');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="epac.workflow.wrappers.TransformNode-class.html">TransformNode</a><tt class="py-op">(</tt><tt class="py-base-class">Wrapper</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="TransformNode-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="TransformNode-expanded"><a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line">    <tt class="py-docstring">'''Wrapping a class has a "transform" method</tt> </tt>
+<a name="L62"></a><tt class="py-lineno"> 62</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line"><tt class="py-docstring">    Parameters</tt> </tt>
+<a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line"><tt class="py-docstring">    ----------</tt> </tt>
+<a name="L65"></a><tt class="py-lineno"> 65</tt>  <tt class="py-line"><tt class="py-docstring">    in_args_transform: list of strings</tt> </tt>
+<a name="L66"></a><tt class="py-lineno"> 66</tt>  <tt class="py-line"><tt class="py-docstring">        names of input arguments of the tranform method. If missing,</tt> </tt>
+<a name="L67"></a><tt class="py-lineno"> 67</tt>  <tt class="py-line"><tt class="py-docstring">        discover it automatically.</tt> </tt>
+<a name="L68"></a><tt class="py-lineno"> 68</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L69"></a><tt class="py-lineno"> 69</tt>  <tt class="py-line"><tt class="py-docstring">    Example</tt> </tt>
+<a name="L70"></a><tt class="py-lineno"> 70</tt>  <tt class="py-line"><tt class="py-docstring">    -------</tt> </tt>
+<a name="L71"></a><tt class="py-lineno"> 71</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L72"></a><tt class="py-lineno"> 72</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; from epac.workflow.wrappers import TransformNode</tt> </tt>
+<a name="L73"></a><tt class="py-lineno"> 73</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; from epac.utils import _func_get_args_names</tt> </tt>
+<a name="L74"></a><tt class="py-lineno"> 74</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; class Node2Wrap:</tt> </tt>
+<a name="L75"></a><tt class="py-lineno"> 75</tt>  <tt class="py-line"><tt class="py-docstring">    ...     def __init__(self):</tt> </tt>
+<a name="L76"></a><tt class="py-lineno"> 76</tt>  <tt class="py-line"><tt class="py-docstring">    ...         self.a = 1</tt> </tt>
+<a name="L77"></a><tt class="py-lineno"> 77</tt>  <tt class="py-line"><tt class="py-docstring">    ...         self.b = 2</tt> </tt>
+<a name="L78"></a><tt class="py-lineno"> 78</tt>  <tt class="py-line"><tt class="py-docstring">    ...     def transform(self, x, y):</tt> </tt>
+<a name="L79"></a><tt class="py-lineno"> 79</tt>  <tt class="py-line"><tt class="py-docstring">    ...         return dict(res = x * self.a + y * self.b)</tt> </tt>
+<a name="L80"></a><tt class="py-lineno"> 80</tt>  <tt class="py-line"><tt class="py-docstring">    ...</tt> </tt>
+<a name="L81"></a><tt class="py-lineno"> 81</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; node = TransformNode(Node2Wrap())</tt> </tt>
+<a name="L82"></a><tt class="py-lineno"> 82</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; node.transform(x=1, y=2)</tt> </tt>
+<a name="L83"></a><tt class="py-lineno"> 83</tt>  <tt class="py-line"><tt class="py-docstring">    {'res': 5}</tt> </tt>
+<a name="L84"></a><tt class="py-lineno"> 84</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; from epac.configuration import conf</tt> </tt>
+<a name="L85"></a><tt class="py-lineno"> 85</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; from epac.utils import train_test_merge</tt> </tt>
+<a name="L86"></a><tt class="py-lineno"> 86</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; train_test_merged = train_test_merge(dict(x=1, y=2), dict(x=33, y=44))</tt> </tt>
+<a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; print train_test_merged</tt> </tt>
+<a name="L88"></a><tt class="py-lineno"> 88</tt>  <tt class="py-line"><tt class="py-docstring">    {'x/test': 33, 'x/train': 1, 'y/train': 2, 'y/test': 44}</tt> </tt>
+<a name="L89"></a><tt class="py-lineno"> 89</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; train_test_merged[conf.KW_SPLIT_TRAIN_TEST] = True</tt> </tt>
+<a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; node.transform(**train_test_merged)</tt> </tt>
+<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line"><tt class="py-docstring">    {'res/train': 5, 'res/test': 121}</tt> </tt>
+<a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L93"></a><tt class="py-lineno"> 93</tt>  <tt class="py-line"><tt class="py-docstring">    '''</tt> </tt>
+<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line"> </tt>
+<a name="TransformNode.__init__"></a><div id="TransformNode.__init__-def"><a name="L95"></a><tt class="py-lineno"> 95</tt> <a class="py-toggle" href="#" id="TransformNode.__init__-toggle" onclick="return toggle('TransformNode.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.workflow.wrappers.TransformNode-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">wrapped_node</tt><tt class="py-op">,</tt> <tt class="py-param">in_args_transform</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="TransformNode.__init__-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="TransformNode.__init__-expanded"><a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line"> </tt>
+<a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">hasattr</tt><tt class="py-op">(</tt><tt class="py-name">wrapped_node</tt><tt class="py-op">,</tt> <tt class="py-string">"transform"</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line">            <tt class="py-keyword">raise</tt> <tt class="py-name">ValueError</tt><tt class="py-op">(</tt><tt class="py-string">"wrapped_node should implement transform"</tt><tt class="py-op">)</tt> </tt>
+<a name="L99"></a><tt class="py-lineno"> 99</tt>  <tt class="py-line">        <tt class="py-name">super</tt><tt class="py-op">(</tt><tt id="link-25" class="py-name" targets="Class epac.workflow.wrappers.TransformNode=epac.workflow.wrappers.TransformNode-class.html"><a title="epac.workflow.wrappers.TransformNode" class="py-name" href="#" onclick="return doclink('link-25', 'TransformNode', 'link-25');">TransformNode</a></tt><tt class="py-op">,</tt> <tt class="py-name">self</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt id="link-26" class="py-name"><a title="epac.map_reduce.engine.Engine.__init__
+epac.map_reduce.engine.LocalEngine.__init__
+epac.map_reduce.engine.SomaWorkflowEngine.__init__
+epac.map_reduce.inputs.NodesInput.__init__
+epac.map_reduce.mappers.MapperSubtrees.__init__
+epac.map_reduce.reducers.CVBestSearchRefitPReducer.__init__
+epac.map_reduce.reducers.ClassificationReport.__init__
+epac.map_reduce.reducers.PvalPerms.__init__
+epac.map_reduce.results.Result.__init__
+epac.map_reduce.results.ResultSet.__init__
+epac.map_reduce.split_input.SplitInput.__init__
+epac.map_reduce.split_input.SplitNodesInput.__init__
+epac.map_reduce.wfdescriptors.BashWorkflowDescriptor.__init__
+epac.map_reduce.wfdescriptors.SharePathSomaWorkflowDescriptor.__init__
+epac.map_reduce.wfdescriptors.SomaWorkflowDescriptor.__init__
+epac.sklearn_plugins.estimators.Estimator.__init__
+epac.sklearn_plugins.resampling.FeatureRanking.__init__
+epac.sklearn_plugins.resampling.Permutations.__init__
+epac.stores.StoreFs.__init__
+epac.stores.StoreMem.__init__
+epac.stores.TagObject.__init__
+epac.tests.test_dump_class_definition_sfw.MySVC.__init__
+epac.tests.test_warm_start_methods.TOY_CLF.__init__
+epac.workflow.base.BaseNode.__init__
+epac.workflow.splitters.BaseNodeSplitter.__init__
+epac.workflow.splitters.CRSlicer.__init__
+epac.workflow.splitters.CRSplitter.__init__
+epac.workflow.splitters.CV.__init__
+epac.workflow.splitters.CVBestSearchRefit.__init__
+epac.workflow.splitters.CVBestSearchRefitParallel.__init__
+epac.workflow.splitters.ColumnSplitter.__init__
+epac.workflow.splitters.Methods.__init__
+epac.workflow.splitters.Perms.__init__
+epac.workflow.splitters.RowSplitter.__init__
+epac.workflow.splitters.Slicer.__init__
+epac.workflow.splitters.VirtualList.__init__
+epac.workflow.splitters.WarmStartMethods.__init__
+epac.workflow.wrappers.TransformNode.__init__
+epac.workflow.wrappers.Wrapper.__init__" class="py-name" href="#" onclick="return doclink('link-26', '__init__', 'link-24');">__init__</a></tt><tt class="py-op">(</tt><tt class="py-name">wrapped_node</tt><tt class="py-op">=</tt><tt class="py-name">wrapped_node</tt><tt class="py-op">)</tt> </tt>
+<a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">in_args_transform</tt> <tt class="py-op">=</tt> \ </tt>
+<a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line">            <tt id="link-27" class="py-name"><a title="epac.utils._func_get_args_names" class="py-name" href="#" onclick="return doclink('link-27', '_func_get_args_names', 'link-6');">_func_get_args_names</a></tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">wrapped_node</tt><tt class="py-op">.</tt><tt id="link-28" class="py-name" targets="Method epac.sklearn_plugins.estimators.Estimator.transform()=epac.sklearn_plugins.estimators.Estimator-class.html#transform,Method epac.sklearn_plugins.resampling.FeatureRanking.transform()=epac.sklearn_plugins.resampling.FeatureRanking-class.html#transform,Method epac.tests.test_dump_class_definition_sfw.MySVC.transform()=epac.tests.test_dump_class_definition_sfw.MySVC-class.html#transform,Method epac.tests.test_warm_start_methods.TOY_CLF.transform()=epac.tests.test_warm_start_methods.TOY_CLF-class.html#transform,Method epac.workflow.base.BaseNode.transform()=epac.workflow.base.BaseNode-class.html#transform,Method epac.workflow.splitters.CRSlicer.transform()=epac.workflow.splitters.CRSlicer-class.html#transform,Method epac.workflow.splitters.CRSplitter.transform()=epac.workflow.splitters.CRSplitter-class.html#transform,Method epac.workflow.splitters.CV.transform()=epac.workflow.splitters.CV-class.html#transform,Method epac.workflow.splitters.CVBestSearchRefit.transform()=epac.workflow.splitters.CVBestSearchRefit-class.html#transform,Method epac.workflow.splitters.CVBestSearchRefitParallel.transform()=epac.workflow.splitters.CVBestSearchRefitParallel-class.html#transform,Method epac.workflow.splitters.Methods.transform()=epac.workflow.splitters.Methods-class.html#transform,Method epac.workflow.splitters.Perms.transform()=epac.workflow.splitters.Perms-class.html#transform,Method epac.workflow.splitters.WarmStartMethods.transform()=epac.workflow.splitters.WarmStartMethods-class.html#transform,Method epac.workflow.wrappers.TransformNode.transform()=epac.workflow.wrappers.TransformNode-class.html#transform"><a title="epac.sklearn_plugins.estimators.Estimator.transform
+epac.sklearn_plugins.resampling.FeatureRanking.transform
+epac.tests.test_dump_class_definition_sfw.MySVC.transform
+epac.tests.test_warm_start_methods.TOY_CLF.transform
+epac.workflow.base.BaseNode.transform
+epac.workflow.splitters.CRSlicer.transform
+epac.workflow.splitters.CRSplitter.transform
+epac.workflow.splitters.CV.transform
+epac.workflow.splitters.CVBestSearchRefit.transform
+epac.workflow.splitters.CVBestSearchRefitParallel.transform
+epac.workflow.splitters.Methods.transform
+epac.workflow.splitters.Perms.transform
+epac.workflow.splitters.WarmStartMethods.transform
+epac.workflow.wrappers.TransformNode.transform" class="py-name" href="#" onclick="return doclink('link-28', 'transform', 'link-28');">transform</a></tt><tt class="py-op">)</tt> \ </tt>
+<a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line">            <tt class="py-keyword">if</tt> <tt class="py-name">in_args_transform</tt> <tt class="py-keyword">is</tt> <tt class="py-name">None</tt> <tt class="py-keyword">else</tt> <tt class="py-name">in_args_transform</tt> </tt>
+</div><a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line"> </tt>
+<a name="TransformNode.transform"></a><div id="TransformNode.transform-def"><a name="L104"></a><tt class="py-lineno">104</tt> <a class="py-toggle" href="#" id="TransformNode.transform-toggle" onclick="return toggle('TransformNode.transform');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.workflow.wrappers.TransformNode-class.html#transform">transform</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-op">**</tt><tt class="py-param">Xy</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="TransformNode.transform-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="TransformNode.transform-expanded"><a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line">        <tt class="py-docstring">"""</tt> </tt>
+<a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line"><tt class="py-docstring">        Parameter</tt> </tt>
+<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line"><tt class="py-docstring">        ---------</tt> </tt>
+<a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line"><tt class="py-docstring">        Xy: dictionary</tt> </tt>
+<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line"><tt class="py-docstring">            parameters for transform</tt> </tt>
+<a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt id="link-29" class="py-name"><a title="epac.configuration.conf" class="py-name" href="#" onclick="return doclink('link-29', 'conf', 'link-14');">conf</a></tt><tt class="py-op">.</tt><tt id="link-30" class="py-name" targets="Variable epac.configuration.conf.KW_SPLIT_TRAIN_TEST=epac.configuration.conf-class.html#KW_SPLIT_TRAIN_TEST"><a title="epac.configuration.conf.KW_SPLIT_TRAIN_TEST" class="py-name" href="#" onclick="return doclink('link-30', 'KW_SPLIT_TRAIN_TEST', 'link-30');">KW_SPLIT_TRAIN_TEST</a></tt> <tt class="py-keyword">in</tt> <tt class="py-name">Xy</tt><tt class="py-op">:</tt> </tt>
+<a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line">            <tt class="py-name">Xy_train</tt><tt class="py-op">,</tt> <tt class="py-name">Xy_test</tt> <tt class="py-op">=</tt> <tt id="link-31" class="py-name"><a title="epac.utils.train_test_split" class="py-name" href="#" onclick="return doclink('link-31', 'train_test_split', 'link-8');">train_test_split</a></tt><tt class="py-op">(</tt><tt class="py-name">Xy</tt><tt class="py-op">)</tt> </tt>
+<a name="L113"></a><tt class="py-lineno">113</tt>  <tt class="py-line">            <tt class="py-comment"># catch args_transform in ds, transform, store output in a dict</tt> </tt>
+<a name="L114"></a><tt class="py-lineno">114</tt>  <tt class="py-line">            <tt class="py-name">Xy_out_tr</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">wrapped_node</tt><tt class="py-op">.</tt><tt id="link-32" class="py-name"><a title="epac.sklearn_plugins.estimators.Estimator.transform
+epac.sklearn_plugins.resampling.FeatureRanking.transform
+epac.tests.test_dump_class_definition_sfw.MySVC.transform
+epac.tests.test_warm_start_methods.TOY_CLF.transform
+epac.workflow.base.BaseNode.transform
+epac.workflow.splitters.CRSlicer.transform
+epac.workflow.splitters.CRSplitter.transform
+epac.workflow.splitters.CV.transform
+epac.workflow.splitters.CVBestSearchRefit.transform
+epac.workflow.splitters.CVBestSearchRefitParallel.transform
+epac.workflow.splitters.Methods.transform
+epac.workflow.splitters.Perms.transform
+epac.workflow.splitters.WarmStartMethods.transform
+epac.workflow.wrappers.TransformNode.transform" class="py-name" href="#" onclick="return doclink('link-32', 'transform', 'link-28');">transform</a></tt><tt class="py-op">(</tt><tt class="py-op">**</tt><tt id="link-33" class="py-name"><a title="epac.utils._sub_dict" class="py-name" href="#" onclick="return doclink('link-33', '_sub_dict', 'link-11');">_sub_dict</a></tt><tt class="py-op">(</tt> </tt>
+<a name="L115"></a><tt class="py-lineno">115</tt>  <tt class="py-line">                <tt class="py-name">Xy_train</tt><tt class="py-op">,</tt> </tt>
+<a name="L116"></a><tt class="py-lineno">116</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">in_args_transform</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L117"></a><tt class="py-lineno">117</tt>  <tt class="py-line">            <tt class="py-name">Xy_out_te</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">wrapped_node</tt><tt class="py-op">.</tt><tt id="link-34" class="py-name"><a title="epac.sklearn_plugins.estimators.Estimator.transform
+epac.sklearn_plugins.resampling.FeatureRanking.transform
+epac.tests.test_dump_class_definition_sfw.MySVC.transform
+epac.tests.test_warm_start_methods.TOY_CLF.transform
+epac.workflow.base.BaseNode.transform
+epac.workflow.splitters.CRSlicer.transform
+epac.workflow.splitters.CRSplitter.transform
+epac.workflow.splitters.CV.transform
+epac.workflow.splitters.CVBestSearchRefit.transform
+epac.workflow.splitters.CVBestSearchRefitParallel.transform
+epac.workflow.splitters.Methods.transform
+epac.workflow.splitters.Perms.transform
+epac.workflow.splitters.WarmStartMethods.transform
+epac.workflow.wrappers.TransformNode.transform" class="py-name" href="#" onclick="return doclink('link-34', 'transform', 'link-28');">transform</a></tt><tt class="py-op">(</tt><tt class="py-op">**</tt><tt id="link-35" class="py-name"><a title="epac.utils._sub_dict" class="py-name" href="#" onclick="return doclink('link-35', '_sub_dict', 'link-11');">_sub_dict</a></tt><tt class="py-op">(</tt> </tt>
+<a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line">                <tt class="py-name">Xy_test</tt><tt class="py-op">,</tt> </tt>
+<a name="L119"></a><tt class="py-lineno">119</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">in_args_transform</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line">            <tt class="py-keyword">if</tt> <tt class="py-name">type</tt><tt class="py-op">(</tt><tt class="py-name">Xy_out_tr</tt><tt class="py-op">)</tt> <tt class="py-keyword">is</tt> <tt class="py-keyword">not</tt> <tt class="py-name">dict</tt> <tt class="py-keyword">or</tt> <tt class="py-name">type</tt><tt class="py-op">(</tt><tt class="py-name">Xy_out_te</tt><tt class="py-op">)</tt> <tt class="py-keyword">is</tt> <tt class="py-keyword">not</tt> <tt class="py-name">dict</tt><tt class="py-op">:</tt> </tt>
+<a name="L121"></a><tt class="py-lineno">121</tt>  <tt class="py-line">                <tt class="py-keyword">raise</tt> <tt class="py-name">ValueError</tt><tt class="py-op">(</tt><tt class="py-string">"%s.transform should return a dictionary"</tt> </tt>
+<a name="L122"></a><tt class="py-lineno">122</tt>  <tt class="py-line">                                 <tt class="py-op">%</tt> <tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">wrapped_node</tt><tt class="py-op">.</tt><tt class="py-name">__class__</tt><tt class="py-op">.</tt><tt class="py-name">__name__</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L123"></a><tt class="py-lineno">123</tt>  <tt class="py-line">            <tt class="py-name">Xy_out</tt> <tt class="py-op">=</tt> <tt id="link-36" class="py-name"><a title="epac.utils.train_test_merge" class="py-name" href="#" onclick="return doclink('link-36', 'train_test_merge', 'link-7');">train_test_merge</a></tt><tt class="py-op">(</tt><tt class="py-name">Xy_out_tr</tt><tt class="py-op">,</tt> <tt class="py-name">Xy_out_te</tt><tt class="py-op">)</tt> </tt>
+<a name="L124"></a><tt class="py-lineno">124</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L125"></a><tt class="py-lineno">125</tt>  <tt class="py-line">            <tt class="py-comment"># catch args_transform in ds, transform, store output in a dict</tt> </tt>
+<a name="L126"></a><tt class="py-lineno">126</tt>  <tt class="py-line">            <tt class="py-name">Xy_out</tt> <tt class="py-op">=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">wrapped_node</tt><tt class="py-op">.</tt><tt id="link-37" class="py-name"><a title="epac.sklearn_plugins.estimators.Estimator.transform
+epac.sklearn_plugins.resampling.FeatureRanking.transform
+epac.tests.test_dump_class_definition_sfw.MySVC.transform
+epac.tests.test_warm_start_methods.TOY_CLF.transform
+epac.workflow.base.BaseNode.transform
+epac.workflow.splitters.CRSlicer.transform
+epac.workflow.splitters.CRSplitter.transform
+epac.workflow.splitters.CV.transform
+epac.workflow.splitters.CVBestSearchRefit.transform
+epac.workflow.splitters.CVBestSearchRefitParallel.transform
+epac.workflow.splitters.Methods.transform
+epac.workflow.splitters.Perms.transform
+epac.workflow.splitters.WarmStartMethods.transform
+epac.workflow.wrappers.TransformNode.transform" class="py-name" href="#" onclick="return doclink('link-37', 'transform', 'link-28');">transform</a></tt><tt class="py-op">(</tt><tt class="py-op">**</tt><tt id="link-38" class="py-name"><a title="epac.utils._sub_dict" class="py-name" href="#" onclick="return doclink('link-38', '_sub_dict', 'link-11');">_sub_dict</a></tt><tt class="py-op">(</tt><tt class="py-name">Xy</tt><tt class="py-op">,</tt> </tt>
+<a name="L127"></a><tt class="py-lineno">127</tt>  <tt class="py-line">                                                 <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">in_args_transform</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L128"></a><tt class="py-lineno">128</tt>  <tt class="py-line">            <tt class="py-keyword">if</tt> <tt class="py-name">type</tt><tt class="py-op">(</tt><tt class="py-name">Xy_out</tt><tt class="py-op">)</tt> <tt class="py-keyword">is</tt> <tt class="py-keyword">not</tt> <tt class="py-name">dict</tt><tt class="py-op">:</tt> </tt>
+<a name="L129"></a><tt class="py-lineno">129</tt>  <tt class="py-line">                <tt class="py-keyword">raise</tt> <tt class="py-name">ValueError</tt><tt class="py-op">(</tt><tt class="py-string">"%s.transform should return a dictionary"</tt> </tt>
+<a name="L130"></a><tt class="py-lineno">130</tt>  <tt class="py-line">                                 <tt class="py-op">%</tt> <tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">wrapped_node</tt><tt class="py-op">.</tt><tt class="py-name">__class__</tt><tt class="py-op">.</tt><tt class="py-name">__name__</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L131"></a><tt class="py-lineno">131</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">Xy_out</tt> </tt>
+</div></div><a name="L132"></a><tt class="py-lineno">132</tt>  <tt class="py-line"> </tt>
+<a name="L133"></a><tt class="py-lineno">133</tt>  <tt class="py-line"> </tt>
+<a name="L134"></a><tt class="py-lineno">134</tt>  <tt class="py-line"><tt class="py-keyword">if</tt> <tt class="py-name">__name__</tt> <tt class="py-op">==</tt> <tt class="py-string">"__main__"</tt><tt class="py-op">:</tt> </tt>
+<a name="L135"></a><tt class="py-lineno">135</tt>  <tt class="py-line">    <tt class="py-keyword">import</tt> <tt class="py-name">doctest</tt> </tt>
+<a name="L136"></a><tt class="py-lineno">136</tt>  <tt class="py-line">    <tt class="py-name">doctest</tt><tt class="py-op">.</tt><tt class="py-name">testmod</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L137"></a><tt class="py-lineno">137</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Tue Dec  3 11:19:33 2013
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

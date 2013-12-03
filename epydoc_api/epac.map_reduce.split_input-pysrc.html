@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>epac.map_reduce.split_input</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="epac-module.html">Package&nbsp;epac</a> ::
+        <a href="epac.map_reduce-module.html" onclick="show_private();">Package&nbsp;map_reduce</a> ::
+        Module&nbsp;split_input
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="epac.map_reduce.split_input-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="epac.map_reduce.split_input-module.html">Module epac.map_reduce.split_input</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno"> 1</tt>  <tt class="py-line"><tt class="py-comment"># -*- coding: utf-8 -*-</tt> </tt>
+<a name="L2"></a><tt class="py-lineno"> 2</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L3"></a><tt class="py-lineno"> 3</tt>  <tt class="py-line"><tt class="py-docstring">Created on Wed Jun 26 17:26:09 2013</tt> </tt>
+<a name="L4"></a><tt class="py-lineno"> 4</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L5"></a><tt class="py-lineno"> 5</tt>  <tt class="py-line"><tt class="py-docstring">@author: jinpeng.li@cea.fr</tt> </tt>
+<a name="L6"></a><tt class="py-lineno"> 6</tt>  <tt class="py-line"><tt class="py-docstring">@author: edouard.duchesnay@cea.fr</tt> </tt>
+<a name="L7"></a><tt class="py-lineno"> 7</tt>  <tt class="py-line"><tt class="py-docstring">@author: benoit.da_mota@inria.fr</tt> </tt>
+<a name="L8"></a><tt class="py-lineno"> 8</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L9"></a><tt class="py-lineno"> 9</tt>  <tt class="py-line"> </tt>
+<a name="L10"></a><tt class="py-lineno">10</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-0" class="py-name" targets="Package epac=epac-module.html"><a title="epac" class="py-name" href="#" onclick="return doclink('link-0', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-1" class="py-name" targets="Package epac.map_reduce=epac.map_reduce-module.html"><a title="epac.map_reduce" class="py-name" href="#" onclick="return doclink('link-1', 'map_reduce', 'link-1');">map_reduce</a></tt><tt class="py-op">.</tt><tt id="link-2" class="py-name" targets="Module epac.map_reduce.exports=epac.map_reduce.exports-module.html"><a title="epac.map_reduce.exports" class="py-name" href="#" onclick="return doclink('link-2', 'exports', 'link-2');">exports</a></tt> <tt class="py-keyword">import</tt> <tt id="link-3" class="py-name" targets="Function epac.map_reduce.exports.export_nodes2num_processes()=epac.map_reduce.exports-module.html#export_nodes2num_processes"><a title="epac.map_reduce.exports.export_nodes2num_processes" class="py-name" href="#" onclick="return doclink('link-3', 'export_nodes2num_processes', 'link-3');">export_nodes2num_processes</a></tt> </tt>
+<a name="L11"></a><tt class="py-lineno">11</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-4" class="py-name"><a title="epac" class="py-name" href="#" onclick="return doclink('link-4', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-5" class="py-name"><a title="epac.map_reduce" class="py-name" href="#" onclick="return doclink('link-5', 'map_reduce', 'link-1');">map_reduce</a></tt><tt class="py-op">.</tt><tt id="link-6" class="py-name" targets="Module epac.map_reduce.inputs=epac.map_reduce.inputs-module.html"><a title="epac.map_reduce.inputs" class="py-name" href="#" onclick="return doclink('link-6', 'inputs', 'link-6');">inputs</a></tt> <tt class="py-keyword">import</tt> <tt id="link-7" class="py-name" targets="Class epac.map_reduce.inputs.NodesInput=epac.map_reduce.inputs.NodesInput-class.html"><a title="epac.map_reduce.inputs.NodesInput" class="py-name" href="#" onclick="return doclink('link-7', 'NodesInput', 'link-7');">NodesInput</a></tt> </tt>
+<a name="L12"></a><tt class="py-lineno">12</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">multiprocessing</tt> </tt>
+<a name="L13"></a><tt class="py-lineno">13</tt>  <tt class="py-line"> </tt>
+<a name="L14"></a><tt class="py-lineno">14</tt>  <tt class="py-line"> </tt>
+<a name="SplitInput"></a><div id="SplitInput-def"><a name="L15"></a><tt class="py-lineno">15</tt> <a class="py-toggle" href="#" id="SplitInput-toggle" onclick="return toggle('SplitInput');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="epac.map_reduce.split_input.SplitInput-class.html">SplitInput</a><tt class="py-op">(</tt><tt class="py-base-class">object</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="SplitInput-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="SplitInput-expanded"><a name="L16"></a><tt class="py-lineno">16</tt>  <tt class="py-line"> </tt>
+<a name="SplitInput.__init__"></a><div id="SplitInput.__init__-def"><a name="L17"></a><tt class="py-lineno">17</tt> <a class="py-toggle" href="#" id="SplitInput.__init__-toggle" onclick="return toggle('SplitInput.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.map_reduce.split_input.SplitInput-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="SplitInput.__init__-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="SplitInput.__init__-expanded"><a name="L18"></a><tt class="py-lineno">18</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">input_list</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt> </tt>
+</div><a name="L19"></a><tt class="py-lineno">19</tt>  <tt class="py-line"> </tt>
+<a name="SplitInput.split"></a><div id="SplitInput.split-def"><a name="L20"></a><tt class="py-lineno">20</tt> <a class="py-toggle" href="#" id="SplitInput.split-toggle" onclick="return toggle('SplitInput.split');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.map_reduce.split_input.SplitInput-class.html#split">split</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">map_input</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="SplitInput.split-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="SplitInput.split-expanded"><a name="L21"></a><tt class="py-lineno">21</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">input_list</tt><tt class="py-op">.</tt><tt id="link-8" class="py-name" targets="Method epac.workflow.splitters.VirtualList.append()=epac.workflow.splitters.VirtualList-class.html#append"><a title="epac.workflow.splitters.VirtualList.append" class="py-name" href="#" onclick="return doclink('link-8', 'append', 'link-8');">append</a></tt><tt class="py-op">(</tt><tt class="py-name">map_input</tt><tt class="py-op">)</tt> </tt>
+<a name="L22"></a><tt class="py-lineno">22</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">input_list</tt> </tt>
+</div></div><a name="L23"></a><tt class="py-lineno">23</tt>  <tt class="py-line"> </tt>
+<a name="L24"></a><tt class="py-lineno">24</tt>  <tt class="py-line"> </tt>
+<a name="SplitNodesInput"></a><div id="SplitNodesInput-def"><a name="L25"></a><tt class="py-lineno">25</tt> <a class="py-toggle" href="#" id="SplitNodesInput-toggle" onclick="return toggle('SplitNodesInput');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="epac.map_reduce.split_input.SplitNodesInput-class.html">SplitNodesInput</a><tt class="py-op">(</tt><tt class="py-base-class">SplitInput</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="SplitNodesInput-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="SplitNodesInput-expanded"><a name="L26"></a><tt class="py-lineno">26</tt>  <tt class="py-line">    <tt class="py-docstring">""" Split NodesInput into a list of epac.map_reduce.NodesInput</tt> </tt>
+<a name="L27"></a><tt class="py-lineno">27</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L28"></a><tt class="py-lineno">28</tt>  <tt class="py-line"><tt class="py-docstring">    Parameters</tt> </tt>
+<a name="L29"></a><tt class="py-lineno">29</tt>  <tt class="py-line"><tt class="py-docstring">    ----------</tt> </tt>
+<a name="L30"></a><tt class="py-lineno">30</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L31"></a><tt class="py-lineno">31</tt>  <tt class="py-line"><tt class="py-docstring">    num_processes: integer</tt> </tt>
+<a name="L32"></a><tt class="py-lineno">32</tt>  <tt class="py-line"><tt class="py-docstring">       Building a list of num_processes node_inputs.</tt> </tt>
+<a name="L33"></a><tt class="py-lineno">33</tt>  <tt class="py-line"><tt class="py-docstring">       if num_processes is equal to -1, num_processes is set to #CPU</tt> </tt>
+<a name="L34"></a><tt class="py-lineno">34</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L35"></a><tt class="py-lineno">35</tt>  <tt class="py-line"><tt class="py-docstring">    Examples</tt> </tt>
+<a name="L36"></a><tt class="py-lineno">36</tt>  <tt class="py-line"><tt class="py-docstring">    --------</tt> </tt>
+<a name="L37"></a><tt class="py-lineno">37</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L38"></a><tt class="py-lineno">38</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; from epac.tests.wfexamples2test import WFExample2</tt> </tt>
+<a name="L39"></a><tt class="py-lineno">39</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; from epac.map_reduce.inputs import NodesInput</tt> </tt>
+<a name="L40"></a><tt class="py-lineno">40</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; from epac.map_reduce.split_input import SplitNodesInput</tt> </tt>
+<a name="L41"></a><tt class="py-lineno">41</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; tree_root_node = WFExample2().get_workflow()</tt> </tt>
+<a name="L42"></a><tt class="py-lineno">42</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; nodes_input = NodesInput(tree_root_node.get_key())</tt> </tt>
+<a name="L43"></a><tt class="py-lineno">43</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; split_node_input = SplitNodesInput(tree_root_node, num_processes=3)</tt> </tt>
+<a name="L44"></a><tt class="py-lineno">44</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; input_list = split_node_input.split(nodes_input)</tt> </tt>
+<a name="L45"></a><tt class="py-lineno">45</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; print repr(input_list)</tt> </tt>
+<a name="L46"></a><tt class="py-lineno">46</tt>  <tt class="py-line"><tt class="py-docstring">    [{'Perms/Perm(nb=0)': 'Perms/Perm(nb=0)'}, {'Perms/Perm(nb=1)': 'Perms/Perm(nb=1)'}, {'Perms/Perm(nb=2)': 'Perms/Perm(nb=2)'}]</tt> </tt>
+<a name="L47"></a><tt class="py-lineno">47</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L48"></a><tt class="py-lineno">48</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="SplitNodesInput.__init__"></a><div id="SplitNodesInput.__init__-def"><a name="L49"></a><tt class="py-lineno">49</tt> <a class="py-toggle" href="#" id="SplitNodesInput.__init__-toggle" onclick="return toggle('SplitNodesInput.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.map_reduce.split_input.SplitNodesInput-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">tree_root_node</tt><tt class="py-op">,</tt> <tt class="py-param">num_processes</tt><tt class="py-op">=</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="SplitNodesInput.__init__-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="SplitNodesInput.__init__-expanded"><a name="L50"></a><tt class="py-lineno">50</tt>  <tt class="py-line"> </tt>
+<a name="L51"></a><tt class="py-lineno">51</tt>  <tt class="py-line">        <tt class="py-name">super</tt><tt class="py-op">(</tt><tt id="link-9" class="py-name" targets="Class epac.map_reduce.split_input.SplitNodesInput=epac.map_reduce.split_input.SplitNodesInput-class.html"><a title="epac.map_reduce.split_input.SplitNodesInput" class="py-name" href="#" onclick="return doclink('link-9', 'SplitNodesInput', 'link-9');">SplitNodesInput</a></tt><tt class="py-op">,</tt> <tt class="py-name">self</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt id="link-10" class="py-name" targets="Method epac.map_reduce.engine.Engine.__init__()=epac.map_reduce.engine.Engine-class.html#__init__,Method epac.map_reduce.engine.LocalEngine.__init__()=epac.map_reduce.engine.LocalEngine-class.html#__init__,Method epac.map_reduce.engine.SomaWorkflowEngine.__init__()=epac.map_reduce.engine.SomaWorkflowEngine-class.html#__init__,Method epac.map_reduce.inputs.NodesInput.__init__()=epac.map_reduce.inputs.NodesInput-class.html#__init__,Method epac.map_reduce.mappers.MapperSubtrees.__init__()=epac.map_reduce.mappers.MapperSubtrees-class.html#__init__,Method epac.map_reduce.reducers.CVBestSearchRefitPReducer.__init__()=epac.map_reduce.reducers.CVBestSearchRefitPReducer-class.html#__init__,Method epac.map_reduce.reducers.ClassificationReport.__init__()=epac.map_reduce.reducers.ClassificationReport-class.html#__init__,Method epac.map_reduce.reducers.PvalPerms.__init__()=epac.map_reduce.reducers.PvalPerms-class.html#__init__,Method epac.map_reduce.results.Result.__init__()=epac.map_reduce.results.Result-class.html#__init__,Method epac.map_reduce.results.ResultSet.__init__()=epac.map_reduce.results.ResultSet-class.html#__init__,Method epac.map_reduce.split_input.SplitInput.__init__()=epac.map_reduce.split_input.SplitInput-class.html#__init__,Method epac.map_reduce.split_input.SplitNodesInput.__init__()=epac.map_reduce.split_input.SplitNodesInput-class.html#__init__,Method epac.map_reduce.wfdescriptors.BashWorkflowDescriptor.__init__()=epac.map_reduce.wfdescriptors.BashWorkflowDescriptor-class.html#__init__,Method epac.map_reduce.wfdescriptors.SharePathSomaWorkflowDescriptor.__init__()=epac.map_reduce.wfdescriptors.SharePathSomaWorkflowDescriptor-class.html#__init__,Method epac.map_reduce.wfdescriptors.SomaWorkflowDescriptor.__init__()=epac.map_reduce.wfdescriptors.SomaWorkflowDescriptor-class.html#__init__,Method epac.sklearn_plugins.estimators.Estimator.__init__()=epac.sklearn_plugins.estimators.Estimator-class.html#__init__,Method epac.sklearn_plugins.resampling.FeatureRanking.__init__()=epac.sklearn_plugins.resampling.FeatureRanking-class.html#__init__,Method epac.sklearn_plugins.resampling.Permutations.__init__()=epac.sklearn_plugins.resampling.Permutations-class.html#__init__,Method epac.stores.StoreFs.__init__()=epac.stores.StoreFs-class.html#__init__,Method epac.stores.StoreMem.__init__()=epac.stores.StoreMem-class.html#__init__,Method epac.stores.TagObject.__init__()=epac.stores.TagObject-class.html#__init__,Method epac.tests.test_dump_class_definition_sfw.MySVC.__init__()=epac.tests.test_dump_class_definition_sfw.MySVC-class.html#__init__,Method epac.tests.test_warm_start_methods.TOY_CLF.__init__()=epac.tests.test_warm_start_methods.TOY_CLF-class.html#__init__,Method epac.workflow.base.BaseNode.__init__()=epac.workflow.base.BaseNode-class.html#__init__,Method epac.workflow.splitters.BaseNodeSplitter.__init__()=epac.workflow.splitters.BaseNodeSplitter-class.html#__init__,Method epac.workflow.splitters.CRSlicer.__init__()=epac.workflow.splitters.CRSlicer-class.html#__init__,Method epac.workflow.splitters.CRSplitter.__init__()=epac.workflow.splitters.CRSplitter-class.html#__init__,Method epac.workflow.splitters.CV.__init__()=epac.workflow.splitters.CV-class.html#__init__,Method epac.workflow.splitters.CVBestSearchRefit.__init__()=epac.workflow.splitters.CVBestSearchRefit-class.html#__init__,Method epac.workflow.splitters.CVBestSearchRefitParallel.__init__()=epac.workflow.splitters.CVBestSearchRefitParallel-class.html#__init__,Method epac.workflow.splitters.ColumnSplitter.__init__()=epac.workflow.splitters.ColumnSplitter-class.html#__init__,Method epac.workflow.splitters.Methods.__init__()=epac.workflow.splitters.Methods-class.html#__init__,Method epac.workflow.splitters.Perms.__init__()=epac.workflow.splitters.Perms-class.html#__init__,Method epac.workflow.splitters.RowSplitter.__init__()=epac.workflow.splitters.RowSplitter-class.html#__init__,Method epac.workflow.splitters.Slicer.__init__()=epac.workflow.splitters.Slicer-class.html#__init__,Method epac.workflow.splitters.VirtualList.__init__()=epac.workflow.splitters.VirtualList-class.html#__init__,Method epac.workflow.splitters.WarmStartMethods.__init__()=epac.workflow.splitters.WarmStartMethods-class.html#__init__,Method epac.workflow.wrappers.TransformNode.__init__()=epac.workflow.wrappers.TransformNode-class.html#__init__,Method epac.workflow.wrappers.Wrapper.__init__()=epac.workflow.wrappers.Wrapper-class.html#__init__"><a title="epac.map_reduce.engine.Engine.__init__
+epac.map_reduce.engine.LocalEngine.__init__
+epac.map_reduce.engine.SomaWorkflowEngine.__init__
+epac.map_reduce.inputs.NodesInput.__init__
+epac.map_reduce.mappers.MapperSubtrees.__init__
+epac.map_reduce.reducers.CVBestSearchRefitPReducer.__init__
+epac.map_reduce.reducers.ClassificationReport.__init__
+epac.map_reduce.reducers.PvalPerms.__init__
+epac.map_reduce.results.Result.__init__
+epac.map_reduce.results.ResultSet.__init__
+epac.map_reduce.split_input.SplitInput.__init__
+epac.map_reduce.split_input.SplitNodesInput.__init__
+epac.map_reduce.wfdescriptors.BashWorkflowDescriptor.__init__
+epac.map_reduce.wfdescriptors.SharePathSomaWorkflowDescriptor.__init__
+epac.map_reduce.wfdescriptors.SomaWorkflowDescriptor.__init__
+epac.sklearn_plugins.estimators.Estimator.__init__
+epac.sklearn_plugins.resampling.FeatureRanking.__init__
+epac.sklearn_plugins.resampling.Permutations.__init__
+epac.stores.StoreFs.__init__
+epac.stores.StoreMem.__init__
+epac.stores.TagObject.__init__
+epac.tests.test_dump_class_definition_sfw.MySVC.__init__
+epac.tests.test_warm_start_methods.TOY_CLF.__init__
+epac.workflow.base.BaseNode.__init__
+epac.workflow.splitters.BaseNodeSplitter.__init__
+epac.workflow.splitters.CRSlicer.__init__
+epac.workflow.splitters.CRSplitter.__init__
+epac.workflow.splitters.CV.__init__
+epac.workflow.splitters.CVBestSearchRefit.__init__
+epac.workflow.splitters.CVBestSearchRefitParallel.__init__
+epac.workflow.splitters.ColumnSplitter.__init__
+epac.workflow.splitters.Methods.__init__
+epac.workflow.splitters.Perms.__init__
+epac.workflow.splitters.RowSplitter.__init__
+epac.workflow.splitters.Slicer.__init__
+epac.workflow.splitters.VirtualList.__init__
+epac.workflow.splitters.WarmStartMethods.__init__
+epac.workflow.wrappers.TransformNode.__init__
+epac.workflow.wrappers.Wrapper.__init__" class="py-name" href="#" onclick="return doclink('link-10', '__init__', 'link-10');">__init__</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L52"></a><tt class="py-lineno">52</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">tree_root_node</tt> <tt class="py-op">=</tt> <tt class="py-name">tree_root_node</tt> </tt>
+<a name="L53"></a><tt class="py-lineno">53</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">num_processes</tt> <tt class="py-op">!=</tt> <tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">:</tt> </tt>
+<a name="L54"></a><tt class="py-lineno">54</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">num_processes</tt> <tt class="py-op">=</tt> <tt class="py-name">num_processes</tt> </tt>
+<a name="L55"></a><tt class="py-lineno">55</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L56"></a><tt class="py-lineno">56</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">num_processes</tt> <tt class="py-op">=</tt> <tt class="py-name">multiprocessing</tt><tt class="py-op">.</tt><tt class="py-name">cpu_count</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L57"></a><tt class="py-lineno">57</tt>  <tt class="py-line"> </tt>
+<a name="SplitNodesInput.split"></a><div id="SplitNodesInput.split-def"><a name="L58"></a><tt class="py-lineno">58</tt> <a class="py-toggle" href="#" id="SplitNodesInput.split-toggle" onclick="return toggle('SplitNodesInput.split');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.map_reduce.split_input.SplitNodesInput-class.html#split">split</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">nodes_input</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="SplitNodesInput.split-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="SplitNodesInput.split-expanded"><a name="L59"></a><tt class="py-lineno">59</tt>  <tt class="py-line">        <tt class="py-docstring">'''</tt> </tt>
+<a name="L60"></a><tt class="py-lineno">60</tt>  <tt class="py-line"><tt class="py-docstring">        Parameters</tt> </tt>
+<a name="L61"></a><tt class="py-lineno">61</tt>  <tt class="py-line"><tt class="py-docstring">        ----------</tt> </tt>
+<a name="L62"></a><tt class="py-lineno">62</tt>  <tt class="py-line"><tt class="py-docstring">        nodes_input: epac.map_reduce.NodesInput</tt> </tt>
+<a name="L63"></a><tt class="py-lineno">63</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L64"></a><tt class="py-lineno">64</tt>  <tt class="py-line"><tt class="py-docstring">        Return Value</tt> </tt>
+<a name="L65"></a><tt class="py-lineno">65</tt>  <tt class="py-line"><tt class="py-docstring">        ------------</tt> </tt>
+<a name="L66"></a><tt class="py-lineno">66</tt>  <tt class="py-line"><tt class="py-docstring">        list of epac.map_reduce.NodesInput in terms of self.num_processes.</tt> </tt>
+<a name="L67"></a><tt class="py-lineno">67</tt>  <tt class="py-line"><tt class="py-docstring">        The length of this list is equal to self.num_processes</tt> </tt>
+<a name="L68"></a><tt class="py-lineno">68</tt>  <tt class="py-line"><tt class="py-docstring">        '''</tt> </tt>
+<a name="L69"></a><tt class="py-lineno">69</tt>  <tt class="py-line">        <tt class="py-name">dict_nodes_input</tt> <tt class="py-op">=</tt> <tt class="py-name">dict</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L70"></a><tt class="py-lineno">70</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt id="link-11" class="py-name" targets="Method epac.map_reduce.results.Result.key()=epac.map_reduce.results.Result-class.html#key"><a title="epac.map_reduce.results.Result.key" class="py-name" href="#" onclick="return doclink('link-11', 'key', 'link-11');">key</a></tt> <tt class="py-keyword">in</tt> <tt class="py-name">nodes_input</tt><tt class="py-op">:</tt> </tt>
+<a name="L71"></a><tt class="py-lineno">71</tt>  <tt class="py-line">            <tt class="py-name">dict_out</tt> <tt class="py-op">=</tt> <tt id="link-12" class="py-name"><a title="epac.map_reduce.exports.export_nodes2num_processes" class="py-name" href="#" onclick="return doclink('link-12', 'export_nodes2num_processes', 'link-3');">export_nodes2num_processes</a></tt><tt class="py-op">(</tt> </tt>
+<a name="L72"></a><tt class="py-lineno">72</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">tree_root_node</tt><tt class="py-op">.</tt><tt id="link-13" class="py-name" targets="Method epac.workflow.base.BaseNode.get_node()=epac.workflow.base.BaseNode-class.html#get_node"><a title="epac.workflow.base.BaseNode.get_node" class="py-name" href="#" onclick="return doclink('link-13', 'get_node', 'link-13');">get_node</a></tt><tt class="py-op">(</tt><tt class="py-name">nodes_input</tt><tt class="py-op">[</tt><tt id="link-14" class="py-name"><a title="epac.map_reduce.results.Result.key" class="py-name" href="#" onclick="return doclink('link-14', 'key', 'link-11');">key</a></tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> </tt>
+<a name="L73"></a><tt class="py-lineno">73</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">num_processes</tt><tt class="py-op">)</tt> </tt>
+<a name="L74"></a><tt class="py-lineno">74</tt>  <tt class="py-line">            <tt class="py-comment">## print "dict_out=" + repr(dict_out)</tt> </tt>
+<a name="L75"></a><tt class="py-lineno">75</tt>  <tt class="py-line">            <tt class="py-comment">## Convert dict_out to dict of NodesInput</tt> </tt>
+<a name="L76"></a><tt class="py-lineno">76</tt>  <tt class="py-line">            <tt class="py-keyword">for</tt> <tt class="py-name">key_dict_out</tt> <tt class="py-keyword">in</tt> <tt class="py-name">dict_out</tt><tt class="py-op">:</tt> </tt>
+<a name="L77"></a><tt class="py-lineno">77</tt>  <tt class="py-line">                <tt class="py-name">list_of_node_key</tt> <tt class="py-op">=</tt> <tt class="py-name">dict_out</tt><tt class="py-op">[</tt><tt class="py-name">key_dict_out</tt><tt class="py-op">]</tt> </tt>
+<a name="L78"></a><tt class="py-lineno">78</tt>  <tt class="py-line">                <tt class="py-comment"># print "list_of_node_key=" + repr(list_of_node_key)</tt> </tt>
+<a name="L79"></a><tt class="py-lineno">79</tt>  <tt class="py-line">                <tt class="py-keyword">for</tt> <tt class="py-name">each_node_key</tt> <tt class="py-keyword">in</tt> <tt class="py-name">list_of_node_key</tt><tt class="py-op">:</tt> </tt>
+<a name="L80"></a><tt class="py-lineno">80</tt>  <tt class="py-line">                    <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-op">(</tt><tt class="py-name">key_dict_out</tt> <tt class="py-keyword">in</tt> <tt class="py-name">dict_nodes_input</tt><tt class="py-op">.</tt><tt id="link-15" class="py-name" targets="Method epac.map_reduce.results.ResultSet.keys()=epac.map_reduce.results.ResultSet-class.html#keys"><a title="epac.map_reduce.results.ResultSet.keys" class="py-name" href="#" onclick="return doclink('link-15', 'keys', 'link-15');">keys</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L81"></a><tt class="py-lineno">81</tt>  <tt class="py-line">                        <tt class="py-name">dict_nodes_input</tt><tt class="py-op">[</tt><tt class="py-name">key_dict_out</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> \ </tt>
+<a name="L82"></a><tt class="py-lineno">82</tt>  <tt class="py-line">                            <tt id="link-16" class="py-name"><a title="epac.map_reduce.inputs.NodesInput" class="py-name" href="#" onclick="return doclink('link-16', 'NodesInput', 'link-7');">NodesInput</a></tt><tt class="py-op">(</tt><tt class="py-name">each_node_key</tt><tt class="py-op">)</tt> </tt>
+<a name="L83"></a><tt class="py-lineno">83</tt>  <tt class="py-line">                    <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L84"></a><tt class="py-lineno">84</tt>  <tt class="py-line">                        <tt class="py-name">dict_nodes_input</tt><tt class="py-op">[</tt><tt class="py-name">key_dict_out</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-17" class="py-name" targets="Method epac.map_reduce.inputs.NodesInput.add()=epac.map_reduce.inputs.NodesInput-class.html#add,Method epac.map_reduce.results.ResultSet.add()=epac.map_reduce.results.ResultSet-class.html#add"><a title="epac.map_reduce.inputs.NodesInput.add
+epac.map_reduce.results.ResultSet.add" class="py-name" href="#" onclick="return doclink('link-17', 'add', 'link-17');">add</a></tt><tt class="py-op">(</tt><tt class="py-name">each_node_key</tt><tt class="py-op">)</tt> </tt>
+<a name="L85"></a><tt class="py-lineno">85</tt>  <tt class="py-line">            <tt class="py-comment"># print "dict_nodes_input=" + repr(dict_nodes_input)</tt> </tt>
+<a name="L86"></a><tt class="py-lineno">86</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">input_list</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-op">]</tt> </tt>
+<a name="L87"></a><tt class="py-lineno">87</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt id="link-18" class="py-name"><a title="epac.map_reduce.results.Result.key" class="py-name" href="#" onclick="return doclink('link-18', 'key', 'link-11');">key</a></tt> <tt class="py-keyword">in</tt> <tt class="py-name">dict_nodes_input</tt><tt class="py-op">:</tt> </tt>
+<a name="L88"></a><tt class="py-lineno">88</tt>  <tt class="py-line">            <tt class="py-keyword">if</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">dict_nodes_input</tt><tt class="py-op">[</tt><tt id="link-19" class="py-name"><a title="epac.map_reduce.results.Result.key" class="py-name" href="#" onclick="return doclink('link-19', 'key', 'link-11');">key</a></tt><tt class="py-op">]</tt><tt class="py-op">)</tt> <tt class="py-op">&gt;</tt> <tt class="py-number">0</tt><tt class="py-op">:</tt> </tt>
+<a name="L89"></a><tt class="py-lineno">89</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">input_list</tt><tt class="py-op">.</tt><tt id="link-20" class="py-name"><a title="epac.workflow.splitters.VirtualList.append" class="py-name" href="#" onclick="return doclink('link-20', 'append', 'link-8');">append</a></tt><tt class="py-op">(</tt><tt class="py-name">dict_nodes_input</tt><tt class="py-op">[</tt><tt id="link-21" class="py-name"><a title="epac.map_reduce.results.Result.key" class="py-name" href="#" onclick="return doclink('link-21', 'key', 'link-11');">key</a></tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L90"></a><tt class="py-lineno">90</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">input_list</tt> </tt>
+</div></div><a name="L91"></a><tt class="py-lineno">91</tt>  <tt class="py-line"> </tt>
+<a name="L92"></a><tt class="py-lineno">92</tt>  <tt class="py-line"><tt class="py-keyword">if</tt> <tt class="py-name">__name__</tt> <tt class="py-op">==</tt> <tt class="py-string">"__main__"</tt><tt class="py-op">:</tt> </tt>
+<a name="L93"></a><tt class="py-lineno">93</tt>  <tt class="py-line">    <tt class="py-keyword">import</tt> <tt class="py-name">doctest</tt> </tt>
+<a name="L94"></a><tt class="py-lineno">94</tt>  <tt class="py-line">    <tt class="py-name">doctest</tt><tt class="py-op">.</tt><tt class="py-name">testmod</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L95"></a><tt class="py-lineno">95</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Tue Dec  3 11:19:33 2013
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

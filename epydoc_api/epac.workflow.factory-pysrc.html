@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>epac.workflow.factory</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="epac-module.html">Package&nbsp;epac</a> ::
+        <a href="epac.workflow-module.html" onclick="show_private();">Package&nbsp;workflow</a> ::
+        Module&nbsp;factory
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="epac.workflow.factory-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="epac.workflow.factory-module.html">Module epac.workflow.factory</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno"> 1</tt>  <tt class="py-line"><tt class="py-comment"># -*- coding: utf-8 -*-</tt> </tt>
+<a name="L2"></a><tt class="py-lineno"> 2</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L3"></a><tt class="py-lineno"> 3</tt>  <tt class="py-line"><tt class="py-docstring">Created on Fri Jul 19 16:58:40 2013</tt> </tt>
+<a name="L4"></a><tt class="py-lineno"> 4</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L5"></a><tt class="py-lineno"> 5</tt>  <tt class="py-line"><tt class="py-docstring">@author: jinpeng.li@cea.fr</tt> </tt>
+<a name="L6"></a><tt class="py-lineno"> 6</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L7"></a><tt class="py-lineno"> 7</tt>  <tt class="py-line"><tt class="py-docstring">Factory class to build BaseNode</tt> </tt>
+<a name="L8"></a><tt class="py-lineno"> 8</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L9"></a><tt class="py-lineno"> 9</tt>  <tt class="py-line"> </tt>
+<a name="L10"></a><tt class="py-lineno">10</tt>  <tt class="py-line"> </tt>
+<a name="L11"></a><tt class="py-lineno">11</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-0" class="py-name" targets="Package epac=epac-module.html"><a title="epac" class="py-name" href="#" onclick="return doclink('link-0', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-1" class="py-name" targets="Package epac.workflow=epac.workflow-module.html"><a title="epac.workflow" class="py-name" href="#" onclick="return doclink('link-1', 'workflow', 'link-1');">workflow</a></tt><tt class="py-op">.</tt><tt id="link-2" class="py-name" targets="Module epac.workflow.wrappers=epac.workflow.wrappers-module.html"><a title="epac.workflow.wrappers" class="py-name" href="#" onclick="return doclink('link-2', 'wrappers', 'link-2');">wrappers</a></tt> <tt class="py-keyword">import</tt> <tt id="link-3" class="py-name" targets="Class epac.workflow.wrappers.TransformNode=epac.workflow.wrappers.TransformNode-class.html"><a title="epac.workflow.wrappers.TransformNode" class="py-name" href="#" onclick="return doclink('link-3', 'TransformNode', 'link-3');">TransformNode</a></tt> </tt>
+<a name="L12"></a><tt class="py-lineno">12</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-4" class="py-name"><a title="epac" class="py-name" href="#" onclick="return doclink('link-4', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-5" class="py-name"><a title="epac.workflow" class="py-name" href="#" onclick="return doclink('link-5', 'workflow', 'link-1');">workflow</a></tt><tt class="py-op">.</tt><tt id="link-6" class="py-name" targets="Module epac.workflow.base=epac.workflow.base-module.html"><a title="epac.workflow.base" class="py-name" href="#" onclick="return doclink('link-6', 'base', 'link-6');">base</a></tt> <tt class="py-keyword">import</tt> <tt id="link-7" class="py-name" targets="Class epac.workflow.base.BaseNode=epac.workflow.base.BaseNode-class.html"><a title="epac.workflow.base.BaseNode" class="py-name" href="#" onclick="return doclink('link-7', 'BaseNode', 'link-7');">BaseNode</a></tt> </tt>
+<a name="L13"></a><tt class="py-lineno">13</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-8" class="py-name"><a title="epac" class="py-name" href="#" onclick="return doclink('link-8', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-9" class="py-name" targets="Package epac.sklearn_plugins=epac.sklearn_plugins-module.html"><a title="epac.sklearn_plugins" class="py-name" href="#" onclick="return doclink('link-9', 'sklearn_plugins', 'link-9');">sklearn_plugins</a></tt><tt class="py-op">.</tt><tt id="link-10" class="py-name" targets="Module epac.sklearn_plugins.estimators=epac.sklearn_plugins.estimators-module.html"><a title="epac.sklearn_plugins.estimators" class="py-name" href="#" onclick="return doclink('link-10', 'estimators', 'link-10');">estimators</a></tt> <tt class="py-keyword">import</tt> <tt id="link-11" class="py-name" targets="Class epac.sklearn_plugins.estimators.Estimator=epac.sklearn_plugins.estimators.Estimator-class.html"><a title="epac.sklearn_plugins.estimators.Estimator" class="py-name" href="#" onclick="return doclink('link-11', 'Estimator', 'link-11');">Estimator</a></tt> </tt>
+<a name="NodeFactory"></a><div id="NodeFactory-def"><a name="L14"></a><tt class="py-lineno">14</tt>  <tt class="py-line"> </tt>
+<a name="L15"></a><tt class="py-lineno">15</tt>  <tt class="py-line"> </tt>
+<a name="L16"></a><tt class="py-lineno">16</tt> <a class="py-toggle" href="#" id="NodeFactory-toggle" onclick="return toggle('NodeFactory');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="epac.workflow.factory.NodeFactory-class.html">NodeFactory</a><tt class="py-op">:</tt> </tt>
+</div><div id="NodeFactory-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="NodeFactory-expanded"><a name="L17"></a><tt class="py-lineno">17</tt>  <tt class="py-line"> </tt>
+<a name="L18"></a><tt class="py-lineno">18</tt>  <tt class="py-line">    <tt class="py-decorator">@</tt><tt class="py-decorator">staticmethod</tt> </tt>
+<a name="NodeFactory.build"></a><div id="NodeFactory.build-def"><a name="L19"></a><tt class="py-lineno">19</tt> <a class="py-toggle" href="#" id="NodeFactory.build-toggle" onclick="return toggle('NodeFactory.build');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.workflow.factory.NodeFactory-class.html#build">build</a><tt class="py-op">(</tt><tt class="py-param">node</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="NodeFactory.build-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="NodeFactory.build-expanded"><a name="L20"></a><tt class="py-lineno">20</tt>  <tt class="py-line">        <tt class="py-docstring">"""</tt> </tt>
+<a name="L21"></a><tt class="py-lineno">21</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L22"></a><tt class="py-lineno">22</tt>  <tt class="py-line"><tt class="py-docstring">        Parameters</tt> </tt>
+<a name="L23"></a><tt class="py-lineno">23</tt>  <tt class="py-line"><tt class="py-docstring">        ----------</tt> </tt>
+<a name="L24"></a><tt class="py-lineno">24</tt>  <tt class="py-line"><tt class="py-docstring">        node: any class</tt> </tt>
+<a name="L25"></a><tt class="py-lineno">25</tt>  <tt class="py-line"><tt class="py-docstring">            node to wraper which should implement methods</tt> </tt>
+<a name="L26"></a><tt class="py-lineno">26</tt>  <tt class="py-line"><tt class="py-docstring">            in one of below cases:</tt> </tt>
+<a name="L27"></a><tt class="py-lineno">27</tt>  <tt class="py-line"><tt class="py-docstring">            (-) fit and transform,</tt> </tt>
+<a name="L28"></a><tt class="py-lineno">28</tt>  <tt class="py-line"><tt class="py-docstring">            (-) fit and predict,</tt> </tt>
+<a name="L29"></a><tt class="py-lineno">29</tt>  <tt class="py-line"><tt class="py-docstring">            (-) transform.</tt> </tt>
+<a name="L30"></a><tt class="py-lineno">30</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L31"></a><tt class="py-lineno">31</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">isinstance</tt><tt class="py-op">(</tt><tt class="py-name">node</tt><tt class="py-op">,</tt> <tt id="link-12" class="py-name"><a title="epac.workflow.base.BaseNode" class="py-name" href="#" onclick="return doclink('link-12', 'BaseNode', 'link-7');">BaseNode</a></tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L32"></a><tt class="py-lineno">32</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-name">node</tt> </tt>
+<a name="L33"></a><tt class="py-lineno">33</tt>  <tt class="py-line">        <tt class="py-keyword">elif</tt> <tt class="py-op">(</tt><tt class="py-name">hasattr</tt><tt class="py-op">(</tt><tt class="py-name">node</tt><tt class="py-op">,</tt> <tt class="py-string">"fit"</tt><tt class="py-op">)</tt> </tt>
+<a name="L34"></a><tt class="py-lineno">34</tt>  <tt class="py-line">              <tt class="py-keyword">and</tt> <tt class="py-name">hasattr</tt><tt class="py-op">(</tt><tt class="py-name">node</tt><tt class="py-op">,</tt> <tt class="py-string">"transform"</tt><tt class="py-op">)</tt> </tt>
+<a name="L35"></a><tt class="py-lineno">35</tt>  <tt class="py-line">              <tt class="py-keyword">and</tt> <tt class="py-name">hasattr</tt><tt class="py-op">(</tt><tt class="py-name">node</tt><tt class="py-op">,</tt> <tt class="py-string">"predict"</tt><tt class="py-op">)</tt> </tt>
+<a name="L36"></a><tt class="py-lineno">36</tt>  <tt class="py-line">              <tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L37"></a><tt class="py-lineno">37</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt id="link-13" class="py-name"><a title="epac.sklearn_plugins.estimators.Estimator" class="py-name" href="#" onclick="return doclink('link-13', 'Estimator', 'link-11');">Estimator</a></tt><tt class="py-op">(</tt><tt class="py-name">node</tt><tt class="py-op">)</tt> </tt>
+<a name="L38"></a><tt class="py-lineno">38</tt>  <tt class="py-line">        <tt class="py-keyword">elif</tt> <tt class="py-op">(</tt><tt class="py-name">hasattr</tt><tt class="py-op">(</tt><tt class="py-name">node</tt><tt class="py-op">,</tt> <tt class="py-string">"fit"</tt><tt class="py-op">)</tt> </tt>
+<a name="L39"></a><tt class="py-lineno">39</tt>  <tt class="py-line">              <tt class="py-keyword">and</tt> <tt class="py-name">hasattr</tt><tt class="py-op">(</tt><tt class="py-name">node</tt><tt class="py-op">,</tt> <tt class="py-string">"transform"</tt><tt class="py-op">)</tt> </tt>
+<a name="L40"></a><tt class="py-lineno">40</tt>  <tt class="py-line">              <tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L41"></a><tt class="py-lineno">41</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt id="link-14" class="py-name"><a title="epac.sklearn_plugins.estimators.Estimator" class="py-name" href="#" onclick="return doclink('link-14', 'Estimator', 'link-11');">Estimator</a></tt><tt class="py-op">(</tt><tt class="py-name">node</tt><tt class="py-op">)</tt> </tt>
+<a name="L42"></a><tt class="py-lineno">42</tt>  <tt class="py-line">        <tt class="py-keyword">elif</tt> <tt class="py-op">(</tt><tt class="py-name">hasattr</tt><tt class="py-op">(</tt><tt class="py-name">node</tt><tt class="py-op">,</tt> <tt class="py-string">"fit"</tt><tt class="py-op">)</tt> </tt>
+<a name="L43"></a><tt class="py-lineno">43</tt>  <tt class="py-line">              <tt class="py-keyword">and</tt> <tt class="py-name">hasattr</tt><tt class="py-op">(</tt><tt class="py-name">node</tt><tt class="py-op">,</tt> <tt class="py-string">"predict"</tt><tt class="py-op">)</tt> </tt>
+<a name="L44"></a><tt class="py-lineno">44</tt>  <tt class="py-line">              <tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L45"></a><tt class="py-lineno">45</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt id="link-15" class="py-name"><a title="epac.sklearn_plugins.estimators.Estimator" class="py-name" href="#" onclick="return doclink('link-15', 'Estimator', 'link-11');">Estimator</a></tt><tt class="py-op">(</tt><tt class="py-name">node</tt><tt class="py-op">)</tt> </tt>
+<a name="L46"></a><tt class="py-lineno">46</tt>  <tt class="py-line">        <tt class="py-keyword">elif</tt> <tt class="py-name">hasattr</tt><tt class="py-op">(</tt><tt class="py-name">node</tt><tt class="py-op">,</tt> <tt class="py-string">"transform"</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L47"></a><tt class="py-lineno">47</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt id="link-16" class="py-name"><a title="epac.workflow.wrappers.TransformNode" class="py-name" href="#" onclick="return doclink('link-16', 'TransformNode', 'link-3');">TransformNode</a></tt><tt class="py-op">(</tt><tt class="py-name">node</tt><tt class="py-op">)</tt> </tt>
+<a name="L48"></a><tt class="py-lineno">48</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L49"></a><tt class="py-lineno">49</tt>  <tt class="py-line">            <tt class="py-keyword">raise</tt> <tt class="py-name">ValueError</tt><tt class="py-op">(</tt> </tt>
+<a name="L50"></a><tt class="py-lineno">50</tt>  <tt class="py-line">                <tt class="py-string">"Fail to find a wrapper for %s. "</tt> </tt>
+<a name="L51"></a><tt class="py-lineno">51</tt>  <tt class="py-line">                <tt class="py-string">"It should implement methods in one of below cases:\n"</tt> </tt>
+<a name="L52"></a><tt class="py-lineno">52</tt>  <tt class="py-line">                <tt class="py-string">"(-) fit and transform,\n"</tt> </tt>
+<a name="L53"></a><tt class="py-lineno">53</tt>  <tt class="py-line">                <tt class="py-string">"(-) fit and predict,\n"</tt> </tt>
+<a name="L54"></a><tt class="py-lineno">54</tt>  <tt class="py-line">                <tt class="py-string">"(-) transform.\n"</tt> <tt class="py-op">%</tt> </tt>
+<a name="L55"></a><tt class="py-lineno">55</tt>  <tt class="py-line">                <tt class="py-op">(</tt><tt class="py-name">node</tt><tt class="py-op">.</tt><tt class="py-name">__class__</tt><tt class="py-op">.</tt><tt class="py-name">__name__</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+</div></div><a name="L56"></a><tt class="py-lineno">56</tt>  <tt class="py-line"> </tt>
+<a name="L57"></a><tt class="py-lineno">57</tt>  <tt class="py-line"><tt class="py-keyword">if</tt> <tt class="py-name">__name__</tt> <tt class="py-op">==</tt> <tt class="py-string">"__main__"</tt><tt class="py-op">:</tt> </tt>
+<a name="L58"></a><tt class="py-lineno">58</tt>  <tt class="py-line">    <tt class="py-keyword">import</tt> <tt class="py-name">doctest</tt> </tt>
+<a name="L59"></a><tt class="py-lineno">59</tt>  <tt class="py-line">    <tt class="py-name">doctest</tt><tt class="py-op">.</tt><tt class="py-name">testmod</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L60"></a><tt class="py-lineno">60</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Tue Dec  3 11:19:33 2013
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

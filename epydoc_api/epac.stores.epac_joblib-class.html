@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>epac.stores.epac_joblib</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="epac-module.html">Package&nbsp;epac</a> ::
+        <a href="epac.stores-module.html" onclick="show_private();">Module&nbsp;stores</a> ::
+        Class&nbsp;epac_joblib
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="epac.stores.epac_joblib-class.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class epac_joblib</h1><p class="nomargin-top"><span class="codelink"><a href="epac.stores-pysrc.html#epac_joblib">source&nbsp;code</a></span></p>
+<pre class="literalblock">
+
+It is optimized for dictionary dump and load
+Since joblib produces too many small files for mamory mapping,
+we try to limit the produced files for dictionary.
+
+Example
+-------
+&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from epac.configuration import conf
+&gt;&gt;&gt; from epac.stores import epac_joblib
+&gt;&gt;&gt;
+&gt;&gt;&gt; conf.MEMM_THRESHOLD = 100
+&gt;&gt;&gt; npdata1 = np.random.random(size=(2, 2))
+&gt;&gt;&gt; npdata2 = np.random.random(size=(100, 5))
+&gt;&gt;&gt;
+&gt;&gt;&gt; dict_data = {&quot;1&quot;: npdata1, &quot;2&quot;: npdata2}
+&gt;&gt;&gt; epac_joblib.dump(dict_data, &quot;/tmp/123&quot;)
+&gt;&gt;&gt; dict_data2 = epac_joblib.load(&quot;/tmp/123&quot;)
+&gt;&gt;&gt;
+&gt;&gt;&gt; np.all(dict_data2[&quot;1&quot;] == npdata1)
+True
+&gt;&gt;&gt; np.all(dict_data2[&quot;2&quot;] == npdata2)
+memmap(True, dtype=bool)
+&gt;&gt;&gt; from epac.stores import StoreMem
+&gt;&gt;&gt; from epac import Result, ResultSet
+&gt;&gt;&gt;
+&gt;&gt;&gt; store = StoreMem()
+&gt;&gt;&gt;
+&gt;&gt;&gt; r1 = Result('SVC(C=1)', a=npdata1, b=npdata2)
+&gt;&gt;&gt; r2 = Result('SVC(C=2)', a=npdata2, b=npdata1)
+&gt;&gt;&gt; set1 = ResultSet(r1, r2)
+&gt;&gt;&gt; store.save('SVC', set1)
+&gt;&gt;&gt; epac_joblib.dump(store, &quot;/tmp/store&quot;)
+&gt;&gt;&gt; store = epac_joblib.load(&quot;/tmp/store&quot;)
+&gt;&gt;&gt;
+&gt;&gt;&gt; r3 = Result('SVC(C=3)', **dict(a=1, b=2))
+&gt;&gt;&gt; r4 = Result('SVC(C=4)', **dict(a=1, b=2))
+
+</pre>
+
+<!-- ==================== STATIC METHODS ==================== -->
+<a name="section-StaticMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Static Methods</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-StaticMethods"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_epac_is_need_memm"></a><span class="summary-sig-name">_epac_is_need_memm</span>(<span class="summary-sig-arg">obj</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="epac.stores-pysrc.html#epac_joblib._epac_is_need_memm">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_pickle_dump"></a><span class="summary-sig-name">_pickle_dump</span>(<span class="summary-sig-arg">obj</span>,
+        <span class="summary-sig-arg">filename</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="epac.stores-pysrc.html#epac_joblib._pickle_dump">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_pickle_load"></a><span class="summary-sig-name">_pickle_load</span>(<span class="summary-sig-arg">filename</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="epac.stores-pysrc.html#epac_joblib._pickle_load">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="dump"></a><span class="summary-sig-name">dump</span>(<span class="summary-sig-arg">obj</span>,
+        <span class="summary-sig-arg">filename</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="epac.stores-pysrc.html#epac_joblib.dump">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="load"></a><span class="summary-sig-name">load</span>(<span class="summary-sig-arg">filename</span>,
+        <span class="summary-sig-arg">mmap_mode</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">r+</code><code class="variable-quote">'</code></span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="epac.stores-pysrc.html#epac_joblib.load">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Tue Dec  3 11:19:33 2013
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

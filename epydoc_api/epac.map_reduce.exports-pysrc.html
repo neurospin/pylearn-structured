@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>epac.map_reduce.exports</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="epac-module.html">Package&nbsp;epac</a> ::
+        <a href="epac.map_reduce-module.html" onclick="show_private();">Package&nbsp;map_reduce</a> ::
+        Module&nbsp;exports
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="epac.map_reduce.exports-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="epac.map_reduce.exports-module.html">Module epac.map_reduce.exports</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno">  1</tt>  <tt class="py-line"><tt class="py-comment">#!/usr/bin/env python</tt> </tt>
+<a name="L2"></a><tt class="py-lineno">  2</tt>  <tt class="py-line"> </tt>
+<a name="L3"></a><tt class="py-lineno">  3</tt>  <tt class="py-line"><tt class="py-comment"># -*- coding: utf-8 -*-</tt> </tt>
+<a name="L4"></a><tt class="py-lineno">  4</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L5"></a><tt class="py-lineno">  5</tt>  <tt class="py-line"><tt class="py-docstring">Created on 2 May 2013</tt> </tt>
+<a name="L6"></a><tt class="py-lineno">  6</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L7"></a><tt class="py-lineno">  7</tt>  <tt class="py-line"><tt class="py-docstring">@author: edouard.duchesnay@cea.fr</tt> </tt>
+<a name="L8"></a><tt class="py-lineno">  8</tt>  <tt class="py-line"><tt class="py-docstring">@author: benoit.da_mota@inria.fr</tt> </tt>
+<a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line"><tt class="py-docstring">@author: jinpeng.li@cea.fr</tt> </tt>
+<a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line"> </tt>
+<a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">sys</tt> </tt>
+<a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">os</tt> </tt>
+<a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">socket</tt> </tt>
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">subprocess</tt> </tt>
+<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"> </tt>
+<a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-0" class="py-name" targets="Package epac=epac-module.html"><a title="epac" class="py-name" href="#" onclick="return doclink('link-0', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-1" class="py-name" targets="Module epac.errors=epac.errors-module.html"><a title="epac.errors" class="py-name" href="#" onclick="return doclink('link-1', 'errors', 'link-1');">errors</a></tt> <tt class="py-keyword">import</tt> <tt id="link-2" class="py-name" targets="Class epac.errors.NoSomaWFError=epac.errors.NoSomaWFError-class.html"><a title="epac.errors.NoSomaWFError" class="py-name" href="#" onclick="return doclink('link-2', 'NoSomaWFError', 'link-2');">NoSomaWFError</a></tt><tt class="py-op">,</tt> <tt id="link-3" class="py-name" targets="Class epac.errors.NoEpacTreeRootError=epac.errors.NoEpacTreeRootError-class.html"><a title="epac.errors.NoEpacTreeRootError" class="py-name" href="#" onclick="return doclink('link-3', 'NoEpacTreeRootError', 'link-3');">NoEpacTreeRootError</a></tt> </tt>
+<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-4" class="py-name"><a title="epac" class="py-name" href="#" onclick="return doclink('link-4', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-5" class="py-name" targets="Module epac.configuration=epac.configuration-module.html"><a title="epac.configuration" class="py-name" href="#" onclick="return doclink('link-5', 'configuration', 'link-5');">configuration</a></tt> <tt class="py-keyword">import</tt> <tt id="link-6" class="py-name" targets="Class epac.configuration.conf=epac.configuration.conf-class.html"><a title="epac.configuration.conf" class="py-name" href="#" onclick="return doclink('link-6', 'conf', 'link-6');">conf</a></tt> </tt>
+<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-7" class="py-name"><a title="epac" class="py-name" href="#" onclick="return doclink('link-7', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-8" class="py-name" targets="Module epac.tests.utils=epac.tests.utils-module.html,Module epac.utils=epac.utils-module.html"><a title="epac.tests.utils
+epac.utils" class="py-name" href="#" onclick="return doclink('link-8', 'utils', 'link-8');">utils</a></tt> <tt class="py-keyword">import</tt> <tt id="link-9" class="py-name" targets="Function epac.utils.which()=epac.utils-module.html#which"><a title="epac.utils.which" class="py-name" href="#" onclick="return doclink('link-9', 'which', 'link-9');">which</a></tt> </tt>
+<a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-10" class="py-name"><a title="epac" class="py-name" href="#" onclick="return doclink('link-10', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-11" class="py-name" targets="Package epac.workflow=epac.workflow-module.html"><a title="epac.workflow" class="py-name" href="#" onclick="return doclink('link-11', 'workflow', 'link-11');">workflow</a></tt><tt class="py-op">.</tt><tt id="link-12" class="py-name" targets="Module epac.workflow.splitters=epac.workflow.splitters-module.html"><a title="epac.workflow.splitters" class="py-name" href="#" onclick="return doclink('link-12', 'splitters', 'link-12');">splitters</a></tt> <tt class="py-keyword">import</tt> <tt id="link-13" class="py-name" targets="Class epac.workflow.splitters.CVBestSearchRefit=epac.workflow.splitters.CVBestSearchRefit-class.html"><a title="epac.workflow.splitters.CVBestSearchRefit" class="py-name" href="#" onclick="return doclink('link-13', 'CVBestSearchRefit', 'link-13');">CVBestSearchRefit</a></tt> </tt>
+<a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line"> </tt>
+<a name="L23"></a><tt class="py-lineno"> 23</tt>  <tt class="py-line"><tt class="py-comment"># _classes_cannot_be_splicted = [CVBestSearchRefit.__class__.__name__]</tt> </tt>
+<a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line"><tt id="link-14" class="py-name" targets="Variable epac.map_reduce.exports._classes_cannot_be_splicted=epac.map_reduce.exports-module.html#_classes_cannot_be_splicted"><a title="epac.map_reduce.exports._classes_cannot_be_splicted" class="py-name" href="#" onclick="return doclink('link-14', '_classes_cannot_be_splicted', 'link-14');">_classes_cannot_be_splicted</a></tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt id="link-15" class="py-name"><a title="epac.workflow.splitters.CVBestSearchRefit" class="py-name" href="#" onclick="return doclink('link-15', 'CVBestSearchRefit', 'link-13');">CVBestSearchRefit</a></tt><tt class="py-op">.</tt><tt class="py-name">__class__</tt><tt class="py-op">.</tt><tt class="py-name">__name__</tt><tt class="py-op">]</tt> </tt>
+<a name="L25"></a><tt class="py-lineno"> 25</tt>  <tt class="py-line"> </tt>
+<a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line"> </tt>
+<a name="_is_cannot_be_splicted"></a><div id="_is_cannot_be_splicted-def"><a name="L27"></a><tt class="py-lineno"> 27</tt> <a class="py-toggle" href="#" id="_is_cannot_be_splicted-toggle" onclick="return toggle('_is_cannot_be_splicted');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.map_reduce.exports-module.html#_is_cannot_be_splicted">_is_cannot_be_splicted</a><tt class="py-op">(</tt><tt class="py-param">signature</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="_is_cannot_be_splicted-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="_is_cannot_be_splicted-expanded"><a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt class="py-name">_class_cannot_be_splicted</tt> <tt class="py-keyword">in</tt> <tt id="link-16" class="py-name"><a title="epac.map_reduce.exports._classes_cannot_be_splicted" class="py-name" href="#" onclick="return doclink('link-16', '_classes_cannot_be_splicted', 'link-14');">_classes_cannot_be_splicted</a></tt><tt class="py-op">:</tt> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">_class_cannot_be_splicted</tt> <tt class="py-keyword">in</tt> <tt class="py-name">signature</tt><tt class="py-op">:</tt> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-name">True</tt> </tt>
+<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">False</tt> </tt>
+</div><a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line"> </tt>
+<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line"> </tt>
+<a name="_push_node_in_list"></a><div id="_push_node_in_list-def"><a name="L34"></a><tt class="py-lineno"> 34</tt> <a class="py-toggle" href="#" id="_push_node_in_list-toggle" onclick="return toggle('_push_node_in_list');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.map_reduce.exports-module.html#_push_node_in_list">_push_node_in_list</a><tt class="py-op">(</tt><tt class="py-param">node</tt><tt class="py-op">,</tt> <tt class="py-param">nodes_per_process_list</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="_push_node_in_list-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="_push_node_in_list-expanded"><a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line">    <tt class="py-docstring">'''Push node in the list which contains the minimun number of nodes</tt> </tt>
+<a name="L36"></a><tt class="py-lineno"> 36</tt>  <tt class="py-line"><tt class="py-docstring">    '''</tt> </tt>
+<a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line">    <tt class="py-name">min_len</tt> <tt class="py-op">=</tt> <tt class="py-op">-</tt><tt class="py-number">1</tt> </tt>
+<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line">    <tt class="py-name">min_key</tt> <tt class="py-op">=</tt> <tt class="py-op">-</tt><tt class="py-number">1</tt> </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt id="link-17" class="py-name" targets="Method epac.map_reduce.results.Result.key()=epac.map_reduce.results.Result-class.html#key"><a title="epac.map_reduce.results.Result.key" class="py-name" href="#" onclick="return doclink('link-17', 'key', 'link-17');">key</a></tt> <tt class="py-keyword">in</tt> <tt class="py-name">nodes_per_process_list</tt><tt class="py-op">.</tt><tt id="link-18" class="py-name" targets="Method epac.map_reduce.results.ResultSet.keys()=epac.map_reduce.results.ResultSet-class.html#keys"><a title="epac.map_reduce.results.ResultSet.keys" class="py-name" href="#" onclick="return doclink('link-18', 'keys', 'link-18');">keys</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L40"></a><tt class="py-lineno"> 40</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-op">(</tt><tt class="py-name">min_len</tt> <tt class="py-op">==</tt> <tt class="py-op">-</tt><tt class="py-number">1</tt> <tt class="py-keyword">or</tt> <tt class="py-name">min_len</tt> <tt class="py-op">&gt;</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">nodes_per_process_list</tt><tt class="py-op">[</tt><tt id="link-19" class="py-name"><a title="epac.map_reduce.results.Result.key" class="py-name" href="#" onclick="return doclink('link-19', 'key', 'link-17');">key</a></tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line">            <tt class="py-name">min_key</tt> <tt class="py-op">=</tt> <tt id="link-20" class="py-name"><a title="epac.map_reduce.results.Result.key" class="py-name" href="#" onclick="return doclink('link-20', 'key', 'link-17');">key</a></tt> </tt>
+<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line">            <tt class="py-name">min_len</tt> <tt class="py-op">=</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">nodes_per_process_list</tt><tt class="py-op">[</tt><tt id="link-21" class="py-name"><a title="epac.map_reduce.results.Result.key" class="py-name" href="#" onclick="return doclink('link-21', 'key', 'link-17');">key</a></tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">min_key</tt> <tt class="py-op">!=</tt> <tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">:</tt> </tt>
+<a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line">        <tt class="py-name">nodes_per_process_list</tt><tt class="py-op">[</tt><tt class="py-name">min_key</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-22" class="py-name" targets="Method epac.workflow.splitters.VirtualList.append()=epac.workflow.splitters.VirtualList-class.html#append"><a title="epac.workflow.splitters.VirtualList.append" class="py-name" href="#" onclick="return doclink('link-22', 'append', 'link-22');">append</a></tt><tt class="py-op">(</tt><tt class="py-name">node</tt><tt class="py-op">.</tt><tt id="link-23" class="py-name" targets="Method epac.workflow.base.BaseNode.get_key()=epac.workflow.base.BaseNode-class.html#get_key"><a title="epac.workflow.base.BaseNode.get_key" class="py-name" href="#" onclick="return doclink('link-23', 'get_key', 'link-23');">get_key</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">nodes_per_process_list</tt> </tt>
+</div><a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line"> </tt>
+<a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line"> </tt>
+<a name="_export_nodes_recursively"></a><div id="_export_nodes_recursively-def"><a name="L48"></a><tt class="py-lineno"> 48</tt> <a class="py-toggle" href="#" id="_export_nodes_recursively-toggle" onclick="return toggle('_export_nodes_recursively');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.map_reduce.exports-module.html#_export_nodes_recursively">_export_nodes_recursively</a><tt class="py-op">(</tt> </tt>
+<a name="L49"></a><tt class="py-lineno"> 49</tt>  <tt class="py-line">    <tt class="py-param">node</tt><tt class="py-op">,</tt> </tt>
+<a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line">    <tt class="py-param">num_processes</tt><tt class="py-op">,</tt> </tt>
+<a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line">    <tt class="py-param">nodes_per_process_list</tt><tt class="py-op">,</tt> </tt>
+<a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line">    <tt class="py-param">max_depth</tt><tt class="py-op">=</tt><tt id="link-24" class="py-name"><a title="epac.configuration.conf" class="py-name" href="#" onclick="return doclink('link-24', 'conf', 'link-6');">conf</a></tt><tt class="py-op">.</tt><tt id="link-25" class="py-name" targets="Variable epac.configuration.conf.MAX_DEPTH_SPLIT_TREE=epac.configuration.conf-class.html#MAX_DEPTH_SPLIT_TREE"><a title="epac.configuration.conf.MAX_DEPTH_SPLIT_TREE" class="py-name" href="#" onclick="return doclink('link-25', 'MAX_DEPTH_SPLIT_TREE', 'link-25');">MAX_DEPTH_SPLIT_TREE</a></tt><tt class="py-op">,</tt> </tt>
+<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line">    <tt class="py-param">cur_depth</tt><tt class="py-op">=</tt><tt class="py-number">0</tt> </tt>
+<a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line"><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="_export_nodes_recursively-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="_export_nodes_recursively-expanded"><a name="L55"></a><tt class="py-lineno"> 55</tt>  <tt class="py-line">    <tt class="py-docstring">'''Allocate recursively the nodes for list</tt> </tt>
+<a name="L56"></a><tt class="py-lineno"> 56</tt>  <tt class="py-line"><tt class="py-docstring">    '''</tt> </tt>
+<a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line">    <tt class="py-name">num_processes</tt> <tt class="py-op">=</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">nodes_per_process_list</tt><tt class="py-op">)</tt> </tt>
+<a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line">    <tt class="py-name">children_nodes</tt> <tt class="py-op">=</tt> <tt class="py-name">node</tt><tt class="py-op">.</tt><tt class="py-name">children</tt> </tt>
+<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line">    <tt class="py-name">len_children</tt> <tt class="py-op">=</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">children_nodes</tt><tt class="py-op">)</tt> </tt>
+<a name="L60"></a><tt class="py-lineno"> 60</tt>  <tt class="py-line">    <tt class="py-name">cur_depth</tt> <tt class="py-op">=</tt> <tt class="py-name">cur_depth</tt> <tt class="py-op">+</tt> <tt class="py-number">1</tt> </tt>
+<a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">len_children</tt> <tt class="py-op">==</tt> <tt class="py-number">0</tt> <tt class="py-keyword">or</tt> <tt class="py-name">cur_depth</tt> <tt class="py-op">&gt;=</tt> <tt class="py-name">max_depth</tt><tt class="py-op">:</tt> </tt>
+<a name="L62"></a><tt class="py-lineno"> 62</tt>  <tt class="py-line">        <tt class="py-name">nodes_per_process_list</tt> <tt class="py-op">=</tt> <tt id="link-26" class="py-name" targets="Function epac.map_reduce.exports._push_node_in_list()=epac.map_reduce.exports-module.html#_push_node_in_list"><a title="epac.map_reduce.exports._push_node_in_list" class="py-name" href="#" onclick="return doclink('link-26', '_push_node_in_list', 'link-26');">_push_node_in_list</a></tt><tt class="py-op">(</tt> </tt>
+<a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line">            <tt class="py-name">node</tt><tt class="py-op">,</tt> </tt>
+<a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line">            <tt class="py-name">nodes_per_process_list</tt><tt class="py-op">)</tt> </tt>
+<a name="L65"></a><tt class="py-lineno"> 65</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">nodes_per_process_list</tt> </tt>
+<a name="L66"></a><tt class="py-lineno"> 66</tt>  <tt class="py-line">    <tt class="py-name">left</tt> <tt class="py-op">=</tt> <tt class="py-name">len_children</tt> <tt class="py-op">%</tt> <tt class="py-name">num_processes</tt> </tt>
+<a name="L67"></a><tt class="py-lineno"> 67</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">len_children</tt> <tt class="py-op">&gt;=</tt> <tt class="py-name">num_processes</tt><tt class="py-op">:</tt> </tt>
+<a name="L68"></a><tt class="py-lineno"> 68</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">i</tt> <tt class="py-keyword">in</tt> <tt class="py-name">range</tt><tt class="py-op">(</tt><tt class="py-name">len_children</tt> <tt class="py-op">-</tt> <tt class="py-name">left</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L69"></a><tt class="py-lineno"> 69</tt>  <tt class="py-line">            <tt class="py-name">nodes_per_process_list</tt> <tt class="py-op">=</tt> <tt id="link-27" class="py-name"><a title="epac.map_reduce.exports._push_node_in_list" class="py-name" href="#" onclick="return doclink('link-27', '_push_node_in_list', 'link-26');">_push_node_in_list</a></tt><tt class="py-op">(</tt> </tt>
+<a name="L70"></a><tt class="py-lineno"> 70</tt>  <tt class="py-line">                <tt class="py-name">node</tt><tt class="py-op">=</tt><tt class="py-name">children_nodes</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt><tt class="py-op">,</tt> </tt>
+<a name="L71"></a><tt class="py-lineno"> 71</tt>  <tt class="py-line">                <tt class="py-name">nodes_per_process_list</tt><tt class="py-op">=</tt><tt class="py-name">nodes_per_process_list</tt><tt class="py-op">)</tt> </tt>
+<a name="L72"></a><tt class="py-lineno"> 72</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">left</tt> <tt class="py-op">&gt;</tt> <tt class="py-number">0</tt><tt class="py-op">:</tt> </tt>
+<a name="L73"></a><tt class="py-lineno"> 73</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">i</tt> <tt class="py-keyword">in</tt> <tt class="py-name">range</tt><tt class="py-op">(</tt><tt class="py-name">len_children</tt> <tt class="py-op">-</tt> <tt class="py-name">left</tt><tt class="py-op">,</tt> <tt class="py-name">len_children</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L74"></a><tt class="py-lineno"> 74</tt>  <tt class="py-line">            <tt class="py-keyword">if</tt> <tt class="py-op">(</tt><tt class="py-keyword">not</tt> <tt id="link-28" class="py-name" targets="Function epac.map_reduce.exports._is_cannot_be_splicted()=epac.map_reduce.exports-module.html#_is_cannot_be_splicted"><a title="epac.map_reduce.exports._is_cannot_be_splicted" class="py-name" href="#" onclick="return doclink('link-28', '_is_cannot_be_splicted', 'link-28');">_is_cannot_be_splicted</a></tt><tt class="py-op">(</tt><tt class="py-name">children_nodes</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt id="link-29" class="py-name" targets="Method epac.workflow.base.BaseNode.get_signature()=epac.workflow.base.BaseNode-class.html#get_signature,Method epac.workflow.splitters.CVBestSearchRefit.get_signature()=epac.workflow.splitters.CVBestSearchRefit-class.html#get_signature,Method epac.workflow.splitters.CVBestSearchRefitParallel.get_signature()=epac.workflow.splitters.CVBestSearchRefitParallel-class.html#get_signature,Method epac.workflow.splitters.Slicer.get_signature()=epac.workflow.splitters.Slicer-class.html#get_signature,Method epac.workflow.wrappers.Wrapper.get_signature()=epac.workflow.wrappers.Wrapper-class.html#get_signature"><a title="epac.workflow.base.BaseNode.get_signature
+epac.workflow.splitters.CVBestSearchRefit.get_signature
+epac.workflow.splitters.CVBestSearchRefitParallel.get_signature
+epac.workflow.splitters.Slicer.get_signature
+epac.workflow.wrappers.Wrapper.get_signature" class="py-name" href="#" onclick="return doclink('link-29', 'get_signature', 'link-29');">get_signature</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">)</tt>\ </tt>
+<a name="L75"></a><tt class="py-lineno"> 75</tt>  <tt class="py-line">               <tt class="py-keyword">and</tt> <tt class="py-op">(</tt><tt class="py-keyword">not</tt> <tt class="py-name">children_nodes</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt class="py-name">stop_top_down</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L76"></a><tt class="py-lineno"> 76</tt>  <tt class="py-line">                <tt class="py-name">nodes_per_process_list</tt> <tt class="py-op">=</tt> <tt id="link-30" class="py-name" targets="Function epac.map_reduce.exports._export_nodes_recursively()=epac.map_reduce.exports-module.html#_export_nodes_recursively"><a title="epac.map_reduce.exports._export_nodes_recursively" class="py-name" href="#" onclick="return doclink('link-30', '_export_nodes_recursively', 'link-30');">_export_nodes_recursively</a></tt><tt class="py-op">(</tt> </tt>
+<a name="L77"></a><tt class="py-lineno"> 77</tt>  <tt class="py-line">                    <tt class="py-name">children_nodes</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt><tt class="py-op">,</tt> </tt>
+<a name="L78"></a><tt class="py-lineno"> 78</tt>  <tt class="py-line">                    <tt class="py-name">num_processes</tt><tt class="py-op">,</tt> </tt>
+<a name="L79"></a><tt class="py-lineno"> 79</tt>  <tt class="py-line">                    <tt class="py-name">nodes_per_process_list</tt><tt class="py-op">,</tt> </tt>
+<a name="L80"></a><tt class="py-lineno"> 80</tt>  <tt class="py-line">                    <tt class="py-name">max_depth</tt><tt class="py-op">=</tt><tt class="py-name">max_depth</tt><tt class="py-op">,</tt> </tt>
+<a name="L81"></a><tt class="py-lineno"> 81</tt>  <tt class="py-line">                    <tt class="py-name">cur_depth</tt><tt class="py-op">=</tt><tt class="py-name">cur_depth</tt><tt class="py-op">)</tt> </tt>
+<a name="L82"></a><tt class="py-lineno"> 82</tt>  <tt class="py-line">            <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L83"></a><tt class="py-lineno"> 83</tt>  <tt class="py-line">                <tt class="py-name">nodes_per_process_list</tt> <tt class="py-op">=</tt> <tt id="link-31" class="py-name"><a title="epac.map_reduce.exports._push_node_in_list" class="py-name" href="#" onclick="return doclink('link-31', '_push_node_in_list', 'link-26');">_push_node_in_list</a></tt><tt class="py-op">(</tt> </tt>
+<a name="L84"></a><tt class="py-lineno"> 84</tt>  <tt class="py-line">                    <tt class="py-name">node</tt><tt class="py-op">=</tt><tt class="py-name">children_nodes</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt><tt class="py-op">,</tt> </tt>
+<a name="L85"></a><tt class="py-lineno"> 85</tt>  <tt class="py-line">                    <tt class="py-name">nodes_per_process_list</tt><tt class="py-op">=</tt><tt class="py-name">nodes_per_process_list</tt><tt class="py-op">)</tt> </tt>
+<a name="L86"></a><tt class="py-lineno"> 86</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">nodes_per_process_list</tt> </tt>
+</div><a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line"> </tt>
+<a name="L88"></a><tt class="py-lineno"> 88</tt>  <tt class="py-line"> </tt>
+<a name="export_nodes2num_processes"></a><div id="export_nodes2num_processes-def"><a name="L89"></a><tt class="py-lineno"> 89</tt> <a class="py-toggle" href="#" id="export_nodes2num_processes-toggle" onclick="return toggle('export_nodes2num_processes');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.map_reduce.exports-module.html#export_nodes2num_processes">export_nodes2num_processes</a><tt class="py-op">(</tt><tt class="py-param">node</tt><tt class="py-op">,</tt> <tt class="py-param">num_processes</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="export_nodes2num_processes-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="export_nodes2num_processes-expanded"><a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line">    <tt class="py-docstring">'''export nodes</tt> </tt>
+<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line"><tt class="py-docstring">    Try to build "num_processes" queues which contains almost equally number</tt> </tt>
+<a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line"><tt class="py-docstring">    of Epac nodes for computing.</tt> </tt>
+<a name="L93"></a><tt class="py-lineno"> 93</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line"><tt class="py-docstring">    Parameters</tt> </tt>
+<a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line"><tt class="py-docstring">    ----------</tt> </tt>
+<a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line"><tt class="py-docstring">    node:epac.base.WFNode</tt> </tt>
+<a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line"><tt class="py-docstring">        Epac tree root where you want to start to parallelly compute</tt> </tt>
+<a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line"><tt class="py-docstring">        using "in_num_processes" cores.</tt> </tt>
+<a name="L99"></a><tt class="py-lineno"> 99</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line"><tt class="py-docstring">    num_processes:integer</tt> </tt>
+<a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line"><tt class="py-docstring">        The number of processes you have.</tt> </tt>
+<a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line"><tt class="py-docstring">    '''</tt> </tt>
+<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line">    <tt class="py-name">nodes_per_process_list</tt> <tt class="py-op">=</tt> <tt class="py-name">dict</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt class="py-name">i</tt> <tt class="py-keyword">in</tt> <tt class="py-name">range</tt><tt class="py-op">(</tt><tt class="py-name">num_processes</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line">        <tt class="py-name">nodes_per_process_list</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> <tt class="py-name">list</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line">    <tt class="py-name">nodes_per_process_list</tt> <tt class="py-op">=</tt> <tt id="link-32" class="py-name"><a title="epac.map_reduce.exports._export_nodes_recursively" class="py-name" href="#" onclick="return doclink('link-32', '_export_nodes_recursively', 'link-30');">_export_nodes_recursively</a></tt><tt class="py-op">(</tt> </tt>
+<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line">        <tt class="py-name">node</tt><tt class="py-op">=</tt><tt class="py-name">node</tt><tt class="py-op">,</tt> </tt>
+<a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line">        <tt class="py-name">num_processes</tt><tt class="py-op">=</tt><tt class="py-name">num_processes</tt><tt class="py-op">,</tt> </tt>
+<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line">        <tt class="py-name">nodes_per_process_list</tt><tt class="py-op">=</tt><tt class="py-name">nodes_per_process_list</tt><tt class="py-op">)</tt> </tt>
+<a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">nodes_per_process_list</tt> </tt>
+</div><a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line"> </tt>
+<a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line"> </tt>
+<a name="_gen_keysfile_list_from_nodes_list"></a><div id="_gen_keysfile_list_from_nodes_list-def"><a name="L113"></a><tt class="py-lineno">113</tt> <a class="py-toggle" href="#" id="_gen_keysfile_list_from_nodes_list-toggle" onclick="return toggle('_gen_keysfile_list_from_nodes_list');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.map_reduce.exports-module.html#_gen_keysfile_list_from_nodes_list">_gen_keysfile_list_from_nodes_list</a><tt class="py-op">(</tt> </tt>
+<a name="L114"></a><tt class="py-lineno">114</tt>  <tt class="py-line">    <tt class="py-param">working_directory</tt><tt class="py-op">,</tt> </tt>
+<a name="L115"></a><tt class="py-lineno">115</tt>  <tt class="py-line">    <tt class="py-param">nodes_per_process_list</tt> </tt>
+<a name="L116"></a><tt class="py-lineno">116</tt>  <tt class="py-line"><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="_gen_keysfile_list_from_nodes_list-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="_gen_keysfile_list_from_nodes_list-expanded"><a name="L117"></a><tt class="py-lineno">117</tt>  <tt class="py-line">    <tt class="py-docstring">'''Generating a list of files where each file contains a set of keys.</tt> </tt>
+<a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line"><tt class="py-docstring">    Generating a list of files where each file contains a set of keys.</tt> </tt>
+<a name="L119"></a><tt class="py-lineno">119</tt>  <tt class="py-line"><tt class="py-docstring">    A key means a node which can be considered as a job. All node's leaves</tt> </tt>
+<a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line"><tt class="py-docstring">    should be computed in a job.</tt> </tt>
+<a name="L121"></a><tt class="py-lineno">121</tt>  <tt class="py-line"><tt class="py-docstring">    '''</tt> </tt>
+<a name="L122"></a><tt class="py-lineno">122</tt>  <tt class="py-line">    <tt class="py-name">keysfile_list</tt> <tt class="py-op">=</tt> <tt class="py-name">list</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L123"></a><tt class="py-lineno">123</tt>  <tt class="py-line">    <tt class="py-name">jobi</tt> <tt class="py-op">=</tt> <tt class="py-number">0</tt> </tt>
+<a name="L124"></a><tt class="py-lineno">124</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt class="py-name">npp_key</tt> <tt class="py-keyword">in</tt> <tt class="py-name">nodes_per_process_list</tt><tt class="py-op">.</tt><tt id="link-33" class="py-name"><a title="epac.map_reduce.results.ResultSet.keys" class="py-name" href="#" onclick="return doclink('link-33', 'keys', 'link-18');">keys</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L125"></a><tt class="py-lineno">125</tt>  <tt class="py-line">        <tt class="py-name">keysfile</tt> <tt class="py-op">=</tt> <tt class="py-string">"."</tt> <tt class="py-op">+</tt> <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">path</tt><tt class="py-op">.</tt><tt class="py-name">sep</tt> <tt class="py-op">+</tt> <tt class="py-name">repr</tt><tt class="py-op">(</tt><tt class="py-name">jobi</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">"."</tt> <tt class="py-op">+</tt> <tt id="link-34" class="py-name"><a title="epac.configuration.conf" class="py-name" href="#" onclick="return doclink('link-34', 'conf', 'link-6');">conf</a></tt><tt class="py-op">.</tt><tt id="link-35" class="py-name" targets="Variable epac.configuration.conf.SUFFIX_JOB=epac.configuration.conf-class.html#SUFFIX_JOB"><a title="epac.configuration.conf.SUFFIX_JOB" class="py-name" href="#" onclick="return doclink('link-35', 'SUFFIX_JOB', 'link-35');">SUFFIX_JOB</a></tt> </tt>
+<a name="L126"></a><tt class="py-lineno">126</tt>  <tt class="py-line">        <tt class="py-name">keysfile_list</tt><tt class="py-op">.</tt><tt id="link-36" class="py-name"><a title="epac.workflow.splitters.VirtualList.append" class="py-name" href="#" onclick="return doclink('link-36', 'append', 'link-22');">append</a></tt><tt class="py-op">(</tt><tt class="py-name">keysfile</tt><tt class="py-op">)</tt> </tt>
+<a name="L127"></a><tt class="py-lineno">127</tt>  <tt class="py-line">        <tt class="py-comment"># print "in_working_directory="+in_working_directory</tt> </tt>
+<a name="L128"></a><tt class="py-lineno">128</tt>  <tt class="py-line">        <tt class="py-comment"># print "keysfile="+keysfile</tt> </tt>
+<a name="L129"></a><tt class="py-lineno">129</tt>  <tt class="py-line">        <tt class="py-name">abs_keysfile</tt> <tt class="py-op">=</tt> <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">path</tt><tt class="py-op">.</tt><tt class="py-name">join</tt><tt class="py-op">(</tt><tt class="py-name">working_directory</tt><tt class="py-op">,</tt> <tt class="py-name">keysfile</tt><tt class="py-op">)</tt> </tt>
+<a name="L130"></a><tt class="py-lineno">130</tt>  <tt class="py-line">        <tt class="py-name">f</tt> <tt class="py-op">=</tt> <tt class="py-name">open</tt><tt class="py-op">(</tt><tt class="py-name">abs_keysfile</tt><tt class="py-op">,</tt> <tt class="py-string">'w'</tt><tt class="py-op">)</tt> </tt>
+<a name="L131"></a><tt class="py-lineno">131</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">key_signature</tt> <tt class="py-keyword">in</tt> <tt class="py-name">nodes_per_process_list</tt><tt class="py-op">[</tt><tt class="py-name">npp_key</tt><tt class="py-op">]</tt><tt class="py-op">:</tt> </tt>
+<a name="L132"></a><tt class="py-lineno">132</tt>  <tt class="py-line">            <tt class="py-name">f</tt><tt class="py-op">.</tt><tt class="py-name">write</tt><tt class="py-op">(</tt><tt class="py-string">"%s\n"</tt> <tt class="py-op">%</tt> <tt class="py-name">key_signature</tt><tt class="py-op">)</tt> </tt>
+<a name="L133"></a><tt class="py-lineno">133</tt>  <tt class="py-line">        <tt class="py-name">f</tt><tt class="py-op">.</tt><tt class="py-name">close</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L134"></a><tt class="py-lineno">134</tt>  <tt class="py-line">        <tt class="py-name">jobi</tt> <tt class="py-op">=</tt> <tt class="py-name">jobi</tt> <tt class="py-op">+</tt> <tt class="py-number">1</tt> </tt>
+<a name="L135"></a><tt class="py-lineno">135</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">keysfile_list</tt> </tt>
+</div><a name="L136"></a><tt class="py-lineno">136</tt>  <tt class="py-line"> </tt>
+<a name="L137"></a><tt class="py-lineno">137</tt>  <tt class="py-line"> </tt>
+<a name="save_job_list"></a><div id="save_job_list-def"><a name="L138"></a><tt class="py-lineno">138</tt> <a class="py-toggle" href="#" id="save_job_list-toggle" onclick="return toggle('save_job_list');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.map_reduce.exports-module.html#save_job_list">save_job_list</a><tt class="py-op">(</tt><tt class="py-param">working_directory</tt><tt class="py-op">,</tt> </tt>
+<a name="L139"></a><tt class="py-lineno">139</tt>  <tt class="py-line">                   <tt class="py-param">nodesinput_list</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="save_job_list-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="save_job_list-expanded"><a name="L140"></a><tt class="py-lineno">140</tt>  <tt class="py-line">    <tt class="py-docstring">'''Write job list into working_directory as 0.job, 1.job, etc.</tt> </tt>
+<a name="L141"></a><tt class="py-lineno">141</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L142"></a><tt class="py-lineno">142</tt>  <tt class="py-line"><tt class="py-docstring">    Parameters</tt> </tt>
+<a name="L143"></a><tt class="py-lineno">143</tt>  <tt class="py-line"><tt class="py-docstring">    ----------</tt> </tt>
+<a name="L144"></a><tt class="py-lineno">144</tt>  <tt class="py-line"><tt class="py-docstring">    working_directory: string</tt> </tt>
+<a name="L145"></a><tt class="py-lineno">145</tt>  <tt class="py-line"><tt class="py-docstring">        directory to write job list</tt> </tt>
+<a name="L146"></a><tt class="py-lineno">146</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L147"></a><tt class="py-lineno">147</tt>  <tt class="py-line"><tt class="py-docstring">    nodesinput_list: list of NodesInput</tt> </tt>
+<a name="L148"></a><tt class="py-lineno">148</tt>  <tt class="py-line"><tt class="py-docstring">        This is for parallel computing for each element in the list.</tt> </tt>
+<a name="L149"></a><tt class="py-lineno">149</tt>  <tt class="py-line"><tt class="py-docstring">        All of them are saved separately in working_directory.</tt> </tt>
+<a name="L150"></a><tt class="py-lineno">150</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L151"></a><tt class="py-lineno">151</tt>  <tt class="py-line"><tt class="py-docstring">    Example</tt> </tt>
+<a name="L152"></a><tt class="py-lineno">152</tt>  <tt class="py-line"><tt class="py-docstring">    -------</tt> </tt>
+<a name="L153"></a><tt class="py-lineno">153</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; from epac.map_reduce.exports import save_job_list</tt> </tt>
+<a name="L154"></a><tt class="py-lineno">154</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; nodesinput_list = [{'Perms/Perm(nb=0)': 'Perms/Perm(nb=0)'},</tt> </tt>
+<a name="L155"></a><tt class="py-lineno">155</tt>  <tt class="py-line"><tt class="py-docstring">    ...                    {'Perms/Perm(nb=1)': 'Perms/Perm(nb=1)'},</tt> </tt>
+<a name="L156"></a><tt class="py-lineno">156</tt>  <tt class="py-line"><tt class="py-docstring">    ...                    {'Perms/Perm(nb=2)': 'Perms/Perm(nb=2)'}]</tt> </tt>
+<a name="L157"></a><tt class="py-lineno">157</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; working_directory =  "/tmp"</tt> </tt>
+<a name="L158"></a><tt class="py-lineno">158</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; save_job_list(working_directory, nodesinput_list)</tt> </tt>
+<a name="L159"></a><tt class="py-lineno">159</tt>  <tt class="py-line"><tt class="py-docstring">    ['./0.job', './1.job', './2.job']</tt> </tt>
+<a name="L160"></a><tt class="py-lineno">160</tt>  <tt class="py-line"><tt class="py-docstring">    '''</tt> </tt>
+<a name="L161"></a><tt class="py-lineno">161</tt>  <tt class="py-line">    <tt class="py-name">keysfile_list</tt> <tt class="py-op">=</tt> <tt class="py-name">list</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L162"></a><tt class="py-lineno">162</tt>  <tt class="py-line">    <tt class="py-name">jobi</tt> <tt class="py-op">=</tt> <tt class="py-number">0</tt> </tt>
+<a name="L163"></a><tt class="py-lineno">163</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt class="py-name">nodesinput</tt> <tt class="py-keyword">in</tt> <tt class="py-name">nodesinput_list</tt><tt class="py-op">:</tt> </tt>
+<a name="L164"></a><tt class="py-lineno">164</tt>  <tt class="py-line">        <tt class="py-name">keysfile</tt> <tt class="py-op">=</tt> <tt class="py-string">"."</tt> <tt class="py-op">+</tt> <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">path</tt><tt class="py-op">.</tt><tt class="py-name">sep</tt> <tt class="py-op">+</tt> <tt class="py-name">repr</tt><tt class="py-op">(</tt><tt class="py-name">jobi</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-string">"."</tt> <tt class="py-op">+</tt> <tt id="link-37" class="py-name"><a title="epac.configuration.conf" class="py-name" href="#" onclick="return doclink('link-37', 'conf', 'link-6');">conf</a></tt><tt class="py-op">.</tt><tt id="link-38" class="py-name"><a title="epac.configuration.conf.SUFFIX_JOB" class="py-name" href="#" onclick="return doclink('link-38', 'SUFFIX_JOB', 'link-35');">SUFFIX_JOB</a></tt> </tt>
+<a name="L165"></a><tt class="py-lineno">165</tt>  <tt class="py-line">        <tt class="py-name">keysfile_list</tt><tt class="py-op">.</tt><tt id="link-39" class="py-name"><a title="epac.workflow.splitters.VirtualList.append" class="py-name" href="#" onclick="return doclink('link-39', 'append', 'link-22');">append</a></tt><tt class="py-op">(</tt><tt class="py-name">keysfile</tt><tt class="py-op">)</tt> </tt>
+<a name="L166"></a><tt class="py-lineno">166</tt>  <tt class="py-line">        <tt class="py-comment"># print "in_working_directory="+in_working_directory</tt> </tt>
+<a name="L167"></a><tt class="py-lineno">167</tt>  <tt class="py-line">        <tt class="py-comment"># print "keysfile="+keysfile</tt> </tt>
+<a name="L168"></a><tt class="py-lineno">168</tt>  <tt class="py-line">        <tt class="py-name">abs_keysfile</tt> <tt class="py-op">=</tt> <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">path</tt><tt class="py-op">.</tt><tt class="py-name">join</tt><tt class="py-op">(</tt><tt class="py-name">working_directory</tt><tt class="py-op">,</tt> <tt class="py-name">keysfile</tt><tt class="py-op">)</tt> </tt>
+<a name="L169"></a><tt class="py-lineno">169</tt>  <tt class="py-line">        <tt class="py-name">f</tt> <tt class="py-op">=</tt> <tt class="py-name">open</tt><tt class="py-op">(</tt><tt class="py-name">abs_keysfile</tt><tt class="py-op">,</tt> <tt class="py-string">'w'</tt><tt class="py-op">)</tt> </tt>
+<a name="L170"></a><tt class="py-lineno">170</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">key_signature</tt> <tt class="py-keyword">in</tt> <tt class="py-name">nodesinput</tt><tt class="py-op">:</tt> </tt>
+<a name="L171"></a><tt class="py-lineno">171</tt>  <tt class="py-line">            <tt class="py-name">f</tt><tt class="py-op">.</tt><tt class="py-name">write</tt><tt class="py-op">(</tt><tt class="py-string">"%s\n"</tt> <tt class="py-op">%</tt> <tt class="py-name">key_signature</tt><tt class="py-op">)</tt> </tt>
+<a name="L172"></a><tt class="py-lineno">172</tt>  <tt class="py-line">        <tt class="py-name">f</tt><tt class="py-op">.</tt><tt class="py-name">close</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L173"></a><tt class="py-lineno">173</tt>  <tt class="py-line">        <tt class="py-name">jobi</tt> <tt class="py-op">=</tt> <tt class="py-name">jobi</tt> <tt class="py-op">+</tt> <tt class="py-number">1</tt> </tt>
+<a name="L174"></a><tt class="py-lineno">174</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">keysfile_list</tt> </tt>
+</div><a name="L175"></a><tt class="py-lineno">175</tt>  <tt class="py-line"> </tt>
+<a name="L176"></a><tt class="py-lineno">176</tt>  <tt class="py-line"> </tt>
+<a name="L177"></a><tt class="py-lineno">177</tt>  <tt class="py-line"><tt class="py-keyword">if</tt> <tt class="py-name">__name__</tt> <tt class="py-op">==</tt> <tt class="py-string">"__main__"</tt><tt class="py-op">:</tt> </tt>
+<a name="L178"></a><tt class="py-lineno">178</tt>  <tt class="py-line">    <tt class="py-keyword">import</tt> <tt class="py-name">doctest</tt> </tt>
+<a name="L179"></a><tt class="py-lineno">179</tt>  <tt class="py-line">    <tt class="py-name">doctest</tt><tt class="py-op">.</tt><tt class="py-name">testmod</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L180"></a><tt class="py-lineno">180</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Tue Dec  3 11:19:33 2013
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

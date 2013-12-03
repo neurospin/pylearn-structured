@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>epac.tests.test_multi_processes</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="epac-module.html">Package&nbsp;epac</a> ::
+        <a href="epac.tests-module.html">Package&nbsp;tests</a> ::
+        Module&nbsp;test_multi_processes
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="epac.tests.test_multi_processes-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="epac.tests.test_multi_processes-module.html">Module epac.tests.test_multi_processes</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno"> 1</tt>  <tt class="py-line"><tt class="py-comment">#!/usr/bin/env python</tt> </tt>
+<a name="L2"></a><tt class="py-lineno"> 2</tt>  <tt class="py-line"> </tt>
+<a name="L3"></a><tt class="py-lineno"> 3</tt>  <tt class="py-line"><tt class="py-comment"># -*- coding: utf-8 -*-</tt> </tt>
+<a name="L4"></a><tt class="py-lineno"> 4</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L5"></a><tt class="py-lineno"> 5</tt>  <tt class="py-line"><tt class="py-docstring">Created on 20 June 2013</tt> </tt>
+<a name="L6"></a><tt class="py-lineno"> 6</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L7"></a><tt class="py-lineno"> 7</tt>  <tt class="py-line"><tt class="py-docstring">@author: jinpeng.li@cea.fr</tt> </tt>
+<a name="L8"></a><tt class="py-lineno"> 8</tt>  <tt class="py-line"><tt class="py-docstring">@author: edouard.duchesnay@cea.fr</tt> </tt>
+<a name="L9"></a><tt class="py-lineno"> 9</tt>  <tt class="py-line"><tt class="py-docstring">@author: benoit.da_mota@inria.fr</tt> </tt>
+<a name="L10"></a><tt class="py-lineno">10</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L11"></a><tt class="py-lineno">11</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L12"></a><tt class="py-lineno">12</tt>  <tt class="py-line"> </tt>
+<a name="L13"></a><tt class="py-lineno">13</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">unittest</tt> </tt>
+<a name="L14"></a><tt class="py-lineno">14</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">as</tt> <tt class="py-name">np</tt> </tt>
+<a name="L15"></a><tt class="py-lineno">15</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-0" class="py-name" targets="Package epac=epac-module.html"><a title="epac" class="py-name" href="#" onclick="return doclink('link-0', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-1" class="py-name" targets="Package epac.tests=epac.tests-module.html"><a title="epac.tests" class="py-name" href="#" onclick="return doclink('link-1', 'tests', 'link-1');">tests</a></tt><tt class="py-op">.</tt><tt id="link-2" class="py-name" targets="Module epac.tests.wfexamples2test=epac.tests.wfexamples2test-module.html"><a title="epac.tests.wfexamples2test" class="py-name" href="#" onclick="return doclink('link-2', 'wfexamples2test', 'link-2');">wfexamples2test</a></tt> <tt class="py-keyword">import</tt> <tt id="link-3" class="py-name" targets="Function epac.tests.wfexamples2test.get_wf_example_classes()=epac.tests.wfexamples2test-module.html#get_wf_example_classes"><a title="epac.tests.wfexamples2test.get_wf_example_classes" class="py-name" href="#" onclick="return doclink('link-3', 'get_wf_example_classes', 'link-3');">get_wf_example_classes</a></tt> </tt>
+<a name="L16"></a><tt class="py-lineno">16</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-4" class="py-name"><a title="epac" class="py-name" href="#" onclick="return doclink('link-4', 'epac', 'link-0');">epac</a></tt> <tt class="py-keyword">import</tt> <tt id="link-5" class="py-name" targets="Class epac.map_reduce.engine.LocalEngine=epac.map_reduce.engine.LocalEngine-class.html"><a title="epac.map_reduce.engine.LocalEngine" class="py-name" href="#" onclick="return doclink('link-5', 'LocalEngine', 'link-5');">LocalEngine</a></tt> </tt>
+<a name="L17"></a><tt class="py-lineno">17</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-6" class="py-name"><a title="epac" class="py-name" href="#" onclick="return doclink('link-6', 'epac', 'link-0');">epac</a></tt> <tt class="py-keyword">import</tt> <tt id="link-7" class="py-name" targets="Class epac.map_reduce.engine.SomaWorkflowEngine=epac.map_reduce.engine.SomaWorkflowEngine-class.html"><a title="epac.map_reduce.engine.SomaWorkflowEngine" class="py-name" href="#" onclick="return doclink('link-7', 'SomaWorkflowEngine', 'link-7');">SomaWorkflowEngine</a></tt> </tt>
+<a name="L18"></a><tt class="py-lineno">18</tt>  <tt class="py-line"> </tt>
+<a name="L19"></a><tt class="py-lineno">19</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-name">sklearn</tt> <tt class="py-keyword">import</tt> <tt class="py-name">datasets</tt> </tt>
+<a name="L20"></a><tt class="py-lineno">20</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-8" class="py-name"><a title="epac" class="py-name" href="#" onclick="return doclink('link-8', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-9" class="py-name"><a title="epac.tests" class="py-name" href="#" onclick="return doclink('link-9', 'tests', 'link-1');">tests</a></tt><tt class="py-op">.</tt><tt id="link-10" class="py-name" targets="Module epac.tests.utils=epac.tests.utils-module.html,Module epac.utils=epac.utils-module.html"><a title="epac.tests.utils
+epac.utils" class="py-name" href="#" onclick="return doclink('link-10', 'utils', 'link-10');">utils</a></tt> <tt class="py-keyword">import</tt> <tt id="link-11" class="py-name" targets="Function epac.tests.utils.comp_2wf_reduce_res()=epac.tests.utils-module.html#comp_2wf_reduce_res"><a title="epac.tests.utils.comp_2wf_reduce_res" class="py-name" href="#" onclick="return doclink('link-11', 'comp_2wf_reduce_res', 'link-11');">comp_2wf_reduce_res</a></tt> </tt>
+<a name="L21"></a><tt class="py-lineno">21</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-12" class="py-name"><a title="epac" class="py-name" href="#" onclick="return doclink('link-12', 'epac', 'link-0');">epac</a></tt><tt class="py-op">.</tt><tt id="link-13" class="py-name"><a title="epac.tests" class="py-name" href="#" onclick="return doclink('link-13', 'tests', 'link-1');">tests</a></tt><tt class="py-op">.</tt><tt id="link-14" class="py-name"><a title="epac.tests.utils
+epac.utils" class="py-name" href="#" onclick="return doclink('link-14', 'utils', 'link-10');">utils</a></tt> <tt class="py-keyword">import</tt> <tt id="link-15" class="py-name" targets="Function epac.tests.utils.compare_two_node()=epac.tests.utils-module.html#compare_two_node"><a title="epac.tests.utils.compare_two_node" class="py-name" href="#" onclick="return doclink('link-15', 'compare_two_node', 'link-15');">compare_two_node</a></tt> </tt>
+<a name="L22"></a><tt class="py-lineno">22</tt>  <tt class="py-line"> </tt>
+<a name="L23"></a><tt class="py-lineno">23</tt>  <tt class="py-line"> </tt>
+<a name="EpacWorkflowTest"></a><div id="EpacWorkflowTest-def"><a name="L24"></a><tt class="py-lineno">24</tt> <a class="py-toggle" href="#" id="EpacWorkflowTest-toggle" onclick="return toggle('EpacWorkflowTest');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="epac.tests.test_multi_processes.EpacWorkflowTest-class.html">EpacWorkflowTest</a><tt class="py-op">(</tt><tt class="py-base-class">unittest</tt><tt class="py-op">.</tt><tt class="py-base-class">TestCase</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="EpacWorkflowTest-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="EpacWorkflowTest-expanded"><a name="EpacWorkflowTest.setUp"></a><div id="EpacWorkflowTest.setUp-def"><a name="L25"></a><tt class="py-lineno">25</tt> <a class="py-toggle" href="#" id="EpacWorkflowTest.setUp-toggle" onclick="return toggle('EpacWorkflowTest.setUp');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.tests.test_multi_processes.EpacWorkflowTest-class.html#setUp">setUp</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="EpacWorkflowTest.setUp-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="EpacWorkflowTest.setUp-expanded"><a name="L26"></a><tt class="py-lineno">26</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">n_cores</tt> <tt class="py-op">=</tt> <tt class="py-number">3</tt> </tt>
+<a name="L27"></a><tt class="py-lineno">27</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">X</tt> <tt class="py-op">=</tt> <tt class="py-name">None</tt> </tt>
+<a name="L28"></a><tt class="py-lineno">28</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">y</tt> <tt class="py-op">=</tt> <tt class="py-name">None</tt> </tt>
+<a name="L29"></a><tt class="py-lineno">29</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">n_samples</tt> <tt class="py-op">=</tt> <tt class="py-number">100</tt> </tt>
+<a name="L30"></a><tt class="py-lineno">30</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">n_features</tt> <tt class="py-op">=</tt> <tt class="py-name">int</tt><tt class="py-op">(</tt><tt class="py-number">1E03</tt><tt class="py-op">)</tt> </tt>
+<a name="L31"></a><tt class="py-lineno">31</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">X</tt><tt class="py-op">,</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">y</tt> <tt class="py-op">=</tt> <tt class="py-name">datasets</tt><tt class="py-op">.</tt><tt class="py-name">make_classification</tt><tt class="py-op">(</tt> </tt>
+<a name="L32"></a><tt class="py-lineno">32</tt>  <tt class="py-line">            <tt class="py-name">n_samples</tt><tt class="py-op">=</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">n_samples</tt><tt class="py-op">,</tt> </tt>
+<a name="L33"></a><tt class="py-lineno">33</tt>  <tt class="py-line">            <tt class="py-name">n_features</tt><tt class="py-op">=</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">n_features</tt><tt class="py-op">,</tt> </tt>
+<a name="L34"></a><tt class="py-lineno">34</tt>  <tt class="py-line">            <tt class="py-name">n_informative</tt><tt class="py-op">=</tt><tt class="py-number">5</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L35"></a><tt class="py-lineno">35</tt>  <tt class="py-line"> </tt>
+<a name="EpacWorkflowTest.tearDown"></a><div id="EpacWorkflowTest.tearDown-def"><a name="L36"></a><tt class="py-lineno">36</tt> <a class="py-toggle" href="#" id="EpacWorkflowTest.tearDown-toggle" onclick="return toggle('EpacWorkflowTest.tearDown');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.tests.test_multi_processes.EpacWorkflowTest-class.html#tearDown">tearDown</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="EpacWorkflowTest.tearDown-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="EpacWorkflowTest.tearDown-expanded"><a name="L37"></a><tt class="py-lineno">37</tt>  <tt class="py-line">        <tt class="py-keyword">pass</tt> </tt>
+</div><a name="L38"></a><tt class="py-lineno">38</tt>  <tt class="py-line"> </tt>
+<a name="EpacWorkflowTest.test_examples_local_engine"></a><div id="EpacWorkflowTest.test_examples_local_engine-def"><a name="L39"></a><tt class="py-lineno">39</tt> <a class="py-toggle" href="#" id="EpacWorkflowTest.test_examples_local_engine-toggle" onclick="return toggle('EpacWorkflowTest.test_examples_local_engine');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="epac.tests.test_multi_processes.EpacWorkflowTest-class.html#test_examples_local_engine">test_examples_local_engine</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="EpacWorkflowTest.test_examples_local_engine-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="EpacWorkflowTest.test_examples_local_engine-expanded"><a name="L40"></a><tt class="py-lineno">40</tt>  <tt class="py-line">        <tt class="py-name">list_all_examples</tt> <tt class="py-op">=</tt> <tt id="link-16" class="py-name"><a title="epac.tests.wfexamples2test.get_wf_example_classes" class="py-name" href="#" onclick="return doclink('link-16', 'get_wf_example_classes', 'link-3');">get_wf_example_classes</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L41"></a><tt class="py-lineno">41</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">example</tt> <tt class="py-keyword">in</tt> <tt class="py-name">list_all_examples</tt><tt class="py-op">:</tt> </tt>
+<a name="L42"></a><tt class="py-lineno">42</tt>  <tt class="py-line"><tt class="py-comment">#            if example().__class__.__name__ == "WFExample1" or\</tt> </tt>
+<a name="L43"></a><tt class="py-lineno">43</tt>  <tt class="py-line"><tt class="py-comment">#                example().__class__.__name__ == "WFExample2":</tt> </tt>
+<a name="L44"></a><tt class="py-lineno">44</tt>  <tt class="py-line">                <tt class="py-comment"># example = list_all_examples[0]</tt> </tt>
+<a name="L45"></a><tt class="py-lineno">45</tt>  <tt class="py-line">                <tt class="py-name">wf</tt> <tt class="py-op">=</tt> <tt class="py-name">example</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt id="link-17" class="py-name" targets="Method epac.tests.wfexamples2test.WFExample1.get_workflow()=epac.tests.wfexamples2test.WFExample1-class.html#get_workflow,Method epac.tests.wfexamples2test.WFExample2.get_workflow()=epac.tests.wfexamples2test.WFExample2-class.html#get_workflow,Method epac.tests.wfexamples2test.WFExample3.get_workflow()=epac.tests.wfexamples2test.WFExample3-class.html#get_workflow,Method epac.tests.wfexamples2test.WFExample4.get_workflow()=epac.tests.wfexamples2test.WFExample4-class.html#get_workflow,Method epac.tests.wfexamples2test.WFExample5.get_workflow()=epac.tests.wfexamples2test.WFExample5-class.html#get_workflow,Method epac.tests.wfexamples2test.WFExample6.get_workflow()=epac.tests.wfexamples2test.WFExample6-class.html#get_workflow,Method epac.tests.wfexamples2test.WorkflowExample.get_workflow()=epac.tests.wfexamples2test.WorkflowExample-class.html#get_workflow"><a title="epac.tests.wfexamples2test.WFExample1.get_workflow
+epac.tests.wfexamples2test.WFExample2.get_workflow
+epac.tests.wfexamples2test.WFExample3.get_workflow
+epac.tests.wfexamples2test.WFExample4.get_workflow
+epac.tests.wfexamples2test.WFExample5.get_workflow
+epac.tests.wfexamples2test.WFExample6.get_workflow
+epac.tests.wfexamples2test.WorkflowExample.get_workflow" class="py-name" href="#" onclick="return doclink('link-17', 'get_workflow', 'link-17');">get_workflow</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L46"></a><tt class="py-lineno">46</tt>  <tt class="py-line">                <tt class="py-name">local_engine_wf</tt> <tt class="py-op">=</tt> <tt class="py-name">example</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt id="link-18" class="py-name"><a title="epac.tests.wfexamples2test.WFExample1.get_workflow
+epac.tests.wfexamples2test.WFExample2.get_workflow
+epac.tests.wfexamples2test.WFExample3.get_workflow
+epac.tests.wfexamples2test.WFExample4.get_workflow
+epac.tests.wfexamples2test.WFExample5.get_workflow
+epac.tests.wfexamples2test.WFExample6.get_workflow
+epac.tests.wfexamples2test.WorkflowExample.get_workflow" class="py-name" href="#" onclick="return doclink('link-18', 'get_workflow', 'link-17');">get_workflow</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L47"></a><tt class="py-lineno">47</tt>  <tt class="py-line">                <tt class="py-name">sfw_engine_wf</tt> <tt class="py-op">=</tt> <tt class="py-name">example</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt id="link-19" class="py-name"><a title="epac.tests.wfexamples2test.WFExample1.get_workflow
+epac.tests.wfexamples2test.WFExample2.get_workflow
+epac.tests.wfexamples2test.WFExample3.get_workflow
+epac.tests.wfexamples2test.WFExample4.get_workflow
+epac.tests.wfexamples2test.WFExample5.get_workflow
+epac.tests.wfexamples2test.WFExample6.get_workflow
+epac.tests.wfexamples2test.WorkflowExample.get_workflow" class="py-name" href="#" onclick="return doclink('link-19', 'get_workflow', 'link-17');">get_workflow</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L48"></a><tt class="py-lineno">48</tt>  <tt class="py-line">                <tt class="py-name">wf</tt><tt class="py-op">.</tt><tt id="link-20" class="py-name" targets="Method epac.map_reduce.engine.Engine.run()=epac.map_reduce.engine.Engine-class.html#run,Method epac.map_reduce.engine.LocalEngine.run()=epac.map_reduce.engine.LocalEngine-class.html#run,Method epac.map_reduce.engine.SomaWorkflowEngine.run()=epac.map_reduce.engine.SomaWorkflowEngine-class.html#run"><a title="epac.map_reduce.engine.Engine.run
+epac.map_reduce.engine.LocalEngine.run
+epac.map_reduce.engine.SomaWorkflowEngine.run" class="py-name" href="#" onclick="return doclink('link-20', 'run', 'link-20');">run</a></tt><tt class="py-op">(</tt><tt class="py-name">X</tt><tt class="py-op">=</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">X</tt><tt class="py-op">,</tt> <tt class="py-name">y</tt><tt class="py-op">=</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">y</tt><tt class="py-op">)</tt> </tt>
+<a name="L49"></a><tt class="py-lineno">49</tt>  <tt class="py-line">                <tt class="py-name">local_engine</tt> <tt class="py-op">=</tt> <tt id="link-21" class="py-name"><a title="epac.map_reduce.engine.LocalEngine" class="py-name" href="#" onclick="return doclink('link-21', 'LocalEngine', 'link-5');">LocalEngine</a></tt><tt class="py-op">(</tt><tt class="py-name">tree_root</tt><tt class="py-op">=</tt><tt class="py-name">local_engine_wf</tt><tt class="py-op">,</tt> </tt>
+<a name="L50"></a><tt class="py-lineno">50</tt>  <tt class="py-line">                                           <tt class="py-name">num_processes</tt><tt class="py-op">=</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">n_cores</tt><tt class="py-op">)</tt> </tt>
+<a name="L51"></a><tt class="py-lineno">51</tt>  <tt class="py-line">                <tt class="py-name">local_engine_wf</tt> <tt class="py-op">=</tt> <tt class="py-name">local_engine</tt><tt class="py-op">.</tt><tt id="link-22" class="py-name"><a title="epac.map_reduce.engine.Engine.run
+epac.map_reduce.engine.LocalEngine.run
+epac.map_reduce.engine.SomaWorkflowEngine.run" class="py-name" href="#" onclick="return doclink('link-22', 'run', 'link-20');">run</a></tt><tt class="py-op">(</tt><tt class="py-name">X</tt><tt class="py-op">=</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">X</tt><tt class="py-op">,</tt> <tt class="py-name">y</tt><tt class="py-op">=</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">y</tt><tt class="py-op">)</tt> </tt>
+<a name="L52"></a><tt class="py-lineno">52</tt>  <tt class="py-line">                <tt class="py-name">sfw_engine</tt> <tt class="py-op">=</tt> <tt id="link-23" class="py-name"><a title="epac.map_reduce.engine.SomaWorkflowEngine" class="py-name" href="#" onclick="return doclink('link-23', 'SomaWorkflowEngine', 'link-7');">SomaWorkflowEngine</a></tt><tt class="py-op">(</tt><tt class="py-name">tree_root</tt><tt class="py-op">=</tt><tt class="py-name">sfw_engine_wf</tt><tt class="py-op">,</tt> </tt>
+<a name="L53"></a><tt class="py-lineno">53</tt>  <tt class="py-line">                                                <tt class="py-name">num_processes</tt><tt class="py-op">=</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">n_cores</tt><tt class="py-op">,</tt> </tt>
+<a name="L54"></a><tt class="py-lineno">54</tt>  <tt class="py-line">                                                <tt class="py-comment">#resource_id="ed203246@gabriel",</tt> </tt>
+<a name="L55"></a><tt class="py-lineno">55</tt>  <tt class="py-line">                                                <tt class="py-comment">#login="ed203246",</tt> </tt>
+<a name="L56"></a><tt class="py-lineno">56</tt>  <tt class="py-line">                                                <tt class="py-name">remove_finished_wf</tt><tt class="py-op">=</tt><tt class="py-name">False</tt><tt class="py-op">,</tt> </tt>
+<a name="L57"></a><tt class="py-lineno">57</tt>  <tt class="py-line">                                                <tt class="py-name">remove_local_tree</tt><tt class="py-op">=</tt><tt class="py-name">False</tt> </tt>
+<a name="L58"></a><tt class="py-lineno">58</tt>  <tt class="py-line">                                                <tt class="py-op">)</tt> </tt>
+<a name="L59"></a><tt class="py-lineno">59</tt>  <tt class="py-line">                <tt class="py-name">sfw_engine_wf</tt> <tt class="py-op">=</tt> <tt class="py-name">sfw_engine</tt><tt class="py-op">.</tt><tt id="link-24" class="py-name"><a title="epac.map_reduce.engine.Engine.run
+epac.map_reduce.engine.LocalEngine.run
+epac.map_reduce.engine.SomaWorkflowEngine.run" class="py-name" href="#" onclick="return doclink('link-24', 'run', 'link-20');">run</a></tt><tt class="py-op">(</tt><tt class="py-name">X</tt><tt class="py-op">=</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">X</tt><tt class="py-op">,</tt> <tt class="py-name">y</tt><tt class="py-op">=</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">y</tt><tt class="py-op">)</tt> </tt>
+<a name="L60"></a><tt class="py-lineno">60</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">assertTrue</tt><tt class="py-op">(</tt><tt id="link-25" class="py-name"><a title="epac.tests.utils.compare_two_node" class="py-name" href="#" onclick="return doclink('link-25', 'compare_two_node', 'link-15');">compare_two_node</a></tt><tt class="py-op">(</tt><tt class="py-name">wf</tt><tt class="py-op">,</tt> <tt class="py-name">local_engine_wf</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L61"></a><tt class="py-lineno">61</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">assertTrue</tt><tt class="py-op">(</tt><tt id="link-26" class="py-name"><a title="epac.tests.utils.compare_two_node" class="py-name" href="#" onclick="return doclink('link-26', 'compare_two_node', 'link-15');">compare_two_node</a></tt><tt class="py-op">(</tt><tt class="py-name">wf</tt><tt class="py-op">,</tt> <tt class="py-name">sfw_engine_wf</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L62"></a><tt class="py-lineno">62</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">assertTrue</tt><tt class="py-op">(</tt><tt id="link-27" class="py-name"><a title="epac.tests.utils.comp_2wf_reduce_res" class="py-name" href="#" onclick="return doclink('link-27', 'comp_2wf_reduce_res', 'link-11');">comp_2wf_reduce_res</a></tt><tt class="py-op">(</tt><tt class="py-name">wf</tt><tt class="py-op">,</tt> <tt class="py-name">local_engine_wf</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L63"></a><tt class="py-lineno">63</tt>  <tt class="py-line">                <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">assertTrue</tt><tt class="py-op">(</tt><tt id="link-28" class="py-name"><a title="epac.tests.utils.comp_2wf_reduce_res" class="py-name" href="#" onclick="return doclink('link-28', 'comp_2wf_reduce_res', 'link-11');">comp_2wf_reduce_res</a></tt><tt class="py-op">(</tt><tt class="py-name">wf</tt><tt class="py-op">,</tt> <tt class="py-name">sfw_engine_wf</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+</div></div><a name="L64"></a><tt class="py-lineno">64</tt>  <tt class="py-line"> </tt>
+<a name="L65"></a><tt class="py-lineno">65</tt>  <tt class="py-line"> </tt>
+<a name="L66"></a><tt class="py-lineno">66</tt>  <tt class="py-line"><tt class="py-keyword">if</tt> <tt class="py-name">__name__</tt> <tt class="py-op">==</tt> <tt class="py-string">'__main__'</tt><tt class="py-op">:</tt> </tt>
+<a name="L67"></a><tt class="py-lineno">67</tt>  <tt class="py-line">    <tt class="py-name">unittest</tt><tt class="py-op">.</tt><tt class="py-name">main</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L68"></a><tt class="py-lineno">68</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Tue Dec  3 11:19:33 2013
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

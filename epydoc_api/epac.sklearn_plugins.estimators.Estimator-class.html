@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>epac.sklearn_plugins.estimators.Estimator</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="epac-module.html">Package&nbsp;epac</a> ::
+        <a href="epac.sklearn_plugins-module.html">Package&nbsp;sklearn_plugins</a> ::
+        <a href="epac.sklearn_plugins.estimators-module.html" onclick="show_private();">Module&nbsp;estimators</a> ::
+        Class&nbsp;Estimator
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="epac.sklearn_plugins.estimators.Estimator-class.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class Estimator</h1><p class="nomargin-top"><span class="codelink"><a href="epac.sklearn_plugins.estimators-pysrc.html#Estimator">source&nbsp;code</a></span></p>
+<pre class="base-tree">
+            object --+        
+                     |        
+<a href="epac.workflow.base.BaseNode-class.html">workflow.base.BaseNode</a> --+    
+                         |    
+ <a href="epac.workflow.wrappers.Wrapper-class.html">workflow.wrappers.Wrapper</a> --+
+                             |
+                            <strong class="uidshort">Estimator</strong>
+</pre>
+
+<hr />
+<pre class="literalblock">
+Estimator Wrapper: Automatically connect wrapped_node.fit and
+wrapped_node.transform to BaseNode.transform
+
+Parameters
+----------
+wrapped_node: any class with fit and transform or fit and predict functions
+    any class implementing fit and transform
+    or implementing fit and predict
+
+in_args_fit: list of strings
+    names of input arguments of the fit method. If missing,
+    discover it automatically.
+
+in_args_transform: list of strings
+    names of input arguments of the transform method. If missing,
+    discover it automatically.
+
+in_args_predict: list of strings
+    names of input arguments of the predict method. If missing,
+    discover it automatically
+
+Example
+-------
+&gt;&gt;&gt; from sklearn.lda import LDA
+&gt;&gt;&gt; from sklearn import datasets
+&gt;&gt;&gt; from sklearn.feature_selection import SelectKBest
+&gt;&gt;&gt; from sklearn.svm import SVC
+&gt;&gt;&gt; from epac import Pipe
+&gt;&gt;&gt; from epac import CV, Methods
+&gt;&gt;&gt; from epac.sklearn_plugins import Estimator
+&gt;&gt;&gt;
+&gt;&gt;&gt; X, y = datasets.make_classification(n_samples=15,
+...                                     n_features=10,
+...                                     n_informative=7,
+...                                     random_state=5)
+&gt;&gt;&gt; Xy = dict(X=X, y=y)
+&gt;&gt;&gt; lda_estimator = Estimator(LDA())
+&gt;&gt;&gt; lda_estimator.transform(**Xy)
+{'y/true': array([1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1]), 'y/pred': array([1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1])}
+&gt;&gt;&gt; pipe = Pipe(SelectKBest(k=7), lda_estimator)
+&gt;&gt;&gt; pipe.run(**Xy)
+{'y/true': array([1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1]), 'y/pred': array([1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1])}
+&gt;&gt;&gt; pipe2 = Pipe(lda_estimator, SVC())
+&gt;&gt;&gt; pipe2.run(**Xy)
+{'y/true': array([1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1]), 'y/pred': array([1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1])}
+&gt;&gt;&gt; cv = CV(Methods(pipe, SVC()), n_folds=3)
+&gt;&gt;&gt; cv.run(**Xy)
+[[{'y/test/pred': array([0, 0, 0, 0, 0, 0]), 'y/train/pred': array([0, 0, 0, 0, 1, 0, 1, 1, 1]), 'y/test/true': array([1, 0, 1, 1, 0, 0])}, {'y/test/pred': array([0, 0, 0, 1, 0, 0]), 'y/train/pred': array([0, 0, 0, 0, 1, 0, 1, 1, 1]), 'y/test/true': array([1, 0, 1, 1, 0, 0])}], [{'y/test/pred': array([0, 0, 0, 0, 1]), 'y/train/pred': array([1, 0, 1, 1, 0, 0, 0, 0, 1, 1]), 'y/test/true': array([0, 0, 0, 1, 1])}, {'y/test/pred': array([1, 0, 0, 1, 1]), 'y/train/pred': array([1, 0, 1, 1, 0, 0, 0, 0, 1, 1]), 'y/test/true': array([0, 0, 0, 1, 1])}], [{'y/test/pred': array([1, 1, 0, 0]), 'y/train/pred': array([1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1]), 'y/test/true': array([0, 0, 1, 1])}, {'y/test/pred': array([0, 0, 1, 0]), 'y/train/pred': array([1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1]), 'y/test/true': array([0, 0, 1, 1])}]]
+&gt;&gt;&gt; cv.reduce()
+ResultSet(
+[{'key': SelectKBest/LDA/SVC, 'y/test/score_precision': [ 0.5         0.33333333], 'y/test/score_recall': [ 0.75        0.14285714], 'y/test/score_accuracy': 0.466666666667, 'y/test/score_f1': [ 0.6  0.2], 'y/test/score_recall_mean': 0.446428571429},
+ {'key': SVC, 'y/test/score_precision': [ 0.7  0.8], 'y/test/score_recall': [ 0.875       0.57142857], 'y/test/score_accuracy': 0.733333333333, 'y/test/score_f1': [ 0.77777778  0.66666667], 'y/test/score_recall_mean': 0.723214285714}])
+&gt;&gt;&gt; cv2 = CV(Methods(pipe2, SVC()), n_folds=3)
+&gt;&gt;&gt; cv2.run(**Xy)
+[[{'y/test/pred': array([0, 0, 0, 0, 0, 0]), 'y/train/pred': array([0, 0, 0, 0, 1, 0, 1, 1, 1]), 'y/test/true': array([1, 0, 1, 1, 0, 0])}, {'y/test/pred': array([0, 0, 0, 1, 0, 0]), 'y/train/pred': array([0, 0, 0, 0, 1, 0, 1, 1, 1]), 'y/test/true': array([1, 0, 1, 1, 0, 0])}], [{'y/test/pred': array([0, 0, 0, 0, 0]), 'y/train/pred': array([1, 0, 1, 1, 0, 0, 0, 0, 1, 1]), 'y/test/true': array([0, 0, 0, 1, 1])}, {'y/test/pred': array([1, 0, 0, 1, 1]), 'y/train/pred': array([1, 0, 1, 1, 0, 0, 0, 0, 1, 1]), 'y/test/true': array([0, 0, 0, 1, 1])}], [{'y/test/pred': array([1, 1, 0, 0]), 'y/train/pred': array([1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1]), 'y/test/true': array([0, 0, 1, 1])}, {'y/test/pred': array([0, 0, 1, 0]), 'y/train/pred': array([1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1]), 'y/test/true': array([0, 0, 1, 1])}]]
+&gt;&gt;&gt; cv2.reduce()
+ResultSet(
+[{'key': LDA/SVC, 'y/test/score_precision': [ 0.46153846  0.        ], 'y/test/score_recall': [ 0.75  0.  ], 'y/test/score_accuracy': 0.4, 'y/test/score_f1': [ 0.57142857  0.        ], 'y/test/score_recall_mean': 0.375},
+ {'key': SVC, 'y/test/score_precision': [ 0.7  0.8], 'y/test/score_recall': [ 0.875       0.57142857], 'y/test/score_accuracy': 0.733333333333, 'y/test/score_f1': [ 0.77777778  0.66666667], 'y/test/score_recall_mean': 0.723214285714}])
+
+</pre>
+
+<!-- ==================== INSTANCE METHODS ==================== -->
+<a name="section-InstanceMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Instance Methods</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-InstanceMethods"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="epac.sklearn_plugins.estimators.Estimator-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">wrapped_node</span>,
+        <span class="summary-sig-arg">in_args_fit</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">in_args_transform</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">in_args_predict</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">out_args_predict</span>=<span class="summary-sig-default">None</span>)</span><br />
+      x.__init__(...) initializes x; see help(type(x)) for signature</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="epac.sklearn_plugins.estimators-pysrc.html#Estimator.__init__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_wrapped_node_transform"></a><span class="summary-sig-name">_wrapped_node_transform</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">**Xy</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="epac.sklearn_plugins.estimators-pysrc.html#Estimator._wrapped_node_transform">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_wrapped_node_predict"></a><span class="summary-sig-name">_wrapped_node_predict</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">**Xy</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="epac.sklearn_plugins.estimators-pysrc.html#Estimator._wrapped_node_predict">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="epac.sklearn_plugins.estimators.Estimator-class.html#transform" class="summary-sig-name">transform</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">**Xy</span>)</span><br />
+      Parameter...</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="epac.sklearn_plugins.estimators-pysrc.html#Estimator.transform">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="epac.workflow.wrappers.Wrapper-class.html">workflow.wrappers.Wrapper</a></code></b>:
+      <code><a href="epac.workflow.wrappers.Wrapper-class.html#get_parameters">get_parameters</a></code>,
+      <code><a href="epac.workflow.wrappers.Wrapper-class.html#get_signature">get_signature</a></code>
+      </p>
+    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="epac.workflow.base.BaseNode-class.html">workflow.base.BaseNode</a></code></b>:
+      <code><a href="epac.workflow.base.BaseNode-class.html#__repr__">__repr__</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#add_child">add_child</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#add_children">add_children</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#collect_save">collect_save</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#get_children_top_down">get_children_top_down</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#get_key">get_key</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#get_leftmost_leaf">get_leftmost_leaf</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#get_node">get_node</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#get_path_from_node">get_path_from_node</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#get_path_from_root">get_path_from_root</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#get_rightmost_leaf">get_rightmost_leaf</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#get_root">get_root</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#get_signature_args">get_signature_args</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#get_store">get_store</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#initialization">initialization</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#load_results">load_results</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#load_state">load_state</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#merge_tree_store">merge_tree_store</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#reduce">reduce</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#run">run</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#save_node">save_node</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#save_results">save_results</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#save_state">save_state</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#save_tree">save_tree</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#stats">stats</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#top_down">top_down</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#walk_leaves">walk_leaves</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#walk_nodes">walk_nodes</a></code>,
+      <code><a href="epac.workflow.base.BaseNode-class.html#walk_true_nodes">walk_true_nodes</a></code>
+      </p>
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__delattr__</code>,
+      <code>__format__</code>,
+      <code>__getattribute__</code>,
+      <code>__hash__</code>,
+      <code>__new__</code>,
+      <code>__reduce__</code>,
+      <code>__reduce_ex__</code>,
+      <code>__setattr__</code>,
+      <code>__sizeof__</code>,
+      <code>__str__</code>,
+      <code>__subclasshook__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== PROPERTIES ==================== -->
+<a name="section-Properties"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Properties</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Properties"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__class__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== METHOD DETAILS ==================== -->
+<a name="section-MethodDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Method Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-MethodDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="__init__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">wrapped_node</span>,
+        <span class="sig-arg">in_args_fit</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">in_args_transform</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">in_args_predict</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">out_args_predict</span>=<span class="sig-default">None</span>)</span>
+    <br /><em class="fname">(Constructor)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="epac.sklearn_plugins.estimators-pysrc.html#Estimator.__init__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>x.__init__(...) initializes x; see help(type(x)) for signature</p>
+  <dl class="fields">
+    <dt>Overrides:
+        object.__init__
+        <dd><em class="note">(inherited documentation)</em></dd>
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="transform"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">transform</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">**Xy</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="epac.sklearn_plugins.estimators-pysrc.html#Estimator.transform">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Parameter
+---------
+Xy: dictionary
+    parameters for fit and transform
+
+</pre>
+  <dl class="fields">
+    <dt>Overrides:
+        <a href="epac.workflow.base.BaseNode-class.html#transform">workflow.base.BaseNode.transform</a>
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Tue Dec  3 11:19:33 2013
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

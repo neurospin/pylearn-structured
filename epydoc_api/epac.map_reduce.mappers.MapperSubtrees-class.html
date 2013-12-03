@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>epac.map_reduce.mappers.MapperSubtrees</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="epac-module.html">Package&nbsp;epac</a> ::
+        <a href="epac.map_reduce-module.html" onclick="show_private();">Package&nbsp;map_reduce</a> ::
+        <a href="epac.map_reduce.mappers-module.html">Module&nbsp;mappers</a> ::
+        Class&nbsp;MapperSubtrees
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="epac.map_reduce.mappers.MapperSubtrees-class.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class MapperSubtrees</h1><p class="nomargin-top"><span class="codelink"><a href="epac.map_reduce.mappers-pysrc.html#MapperSubtrees">source&nbsp;code</a></span></p>
+<pre class="base-tree">
+object --+    
+         |    
+    <a href="epac.map_reduce.mappers.Mapper-class.html">Mapper</a> --+
+             |
+            <strong class="uidshort">MapperSubtrees</strong>
+</pre>
+
+<hr />
+<pre class="literalblock">
+The mapper runs function (usually as &quot;transform&quot;) for NodesInput
+which is a dictionary of nodes.
+
+Parameters
+----------
+Xy:X matrix and y vertor
+
+tree_root: epac.BaseNode
+    the root node of the epac tree
+
+store_fs:
+    where the node want to save
+
+function:
+    function of node
+
+Example
+-------
+
+&gt;&gt;&gt; import tempfile
+&gt;&gt;&gt; import os
+&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; import shutil
+&gt;&gt;&gt; from functools import partial
+&gt;&gt;&gt; from multiprocessing import Pool
+&gt;&gt;&gt;
+&gt;&gt;&gt; from epac import StoreFs
+&gt;&gt;&gt; from epac.tests.wfexamples2test import WFExample2
+&gt;&gt;&gt; from epac.map_reduce.inputs import NodesInput
+&gt;&gt;&gt; from epac.map_reduce.split_input import SplitNodesInput
+&gt;&gt;&gt; from epac.map_reduce.mappers import MapperSubtrees
+&gt;&gt;&gt; from epac.map_reduce.mappers import map_process
+&gt;&gt;&gt; from sklearn import datasets
+&gt;&gt;&gt;
+&gt;&gt;&gt; ## Build dataset
+&gt;&gt;&gt; ## =============
+&gt;&gt;&gt; X, y = datasets.make_classification(n_samples=10,
+...                                     n_features=20,
+...                                     n_informative=5,
+...                                     random_state=1)
+&gt;&gt;&gt; Xy = {'X':X, 'y':y}
+&gt;&gt;&gt; ## Build epac tree and save it on the disk
+&gt;&gt;&gt; ## =======================================
+&gt;&gt;&gt; tree_root_node = WFExample2().get_workflow()
+&gt;&gt;&gt; ## Split input into several parts and create mapper
+&gt;&gt;&gt; ## ================================================
+&gt;&gt;&gt; num_processes = 3
+&gt;&gt;&gt; node_input = NodesInput(tree_root_node.get_key())
+&gt;&gt;&gt; split_node_input = SplitNodesInput(tree_root_node, num_processes=num_processes)
+&gt;&gt;&gt; input_list = split_node_input.split(node_input)
+&gt;&gt;&gt; mapper = MapperSubtrees(Xy=Xy,
+...                         tree_root=tree_root_node,
+...                         function=&quot;transform&quot;)
+&gt;&gt;&gt; ## Run map processes in parallel
+&gt;&gt;&gt; ## =============================
+&gt;&gt;&gt; partial_map_process = partial(map_process,mapper=mapper)
+&gt;&gt;&gt; pool = Pool(processes=num_processes)
+&gt;&gt;&gt; res_tree_root_list = pool.map(partial_map_process, input_list)
+&gt;&gt;&gt;
+&gt;&gt;&gt; ## Merge results from pool
+&gt;&gt;&gt; for each_tree_root in res_tree_root_list:
+...     tree_root_node.merge_tree_store(each_tree_root)
+&gt;&gt;&gt; ## Run map processes in single process
+&gt;&gt;&gt; ## ===================================
+&gt;&gt;&gt; #for input in input_list:
+&gt;&gt;&gt; #    # input = input_list[0]
+&gt;&gt;&gt; #    mapper.map(input)
+&gt;&gt;&gt; ## Run reduce process
+&gt;&gt;&gt; ## ==================
+&gt;&gt;&gt; tree_root_node.reduce()
+ResultSet(
+[{'key': SelectKBest/SVC(C=1), 'y/test/score_f1': [ 0.6  0.6], 'y/test/score_recall_mean/pval': [ 0.5], 'y/test/score_recall/pval': [ 0.   0.5], 'y/test/score_accuracy/pval': [ 0.], 'y/test/score_f1/pval': [ 0.   0.5], 'y/test/score_precision/pval': [ 0.5  0. ], 'y/test/score_precision': [ 0.6  0.6], 'y/test/score_recall': [ 0.6  0.6], 'y/test/score_accuracy': 0.6, 'y/test/score_recall_mean': 0.6},
+ {'key': SelectKBest/SVC(C=3), 'y/test/score_f1': [ 0.6  0.6], 'y/test/score_recall_mean/pval': [ 0.5], 'y/test/score_recall/pval': [ 0.   0.5], 'y/test/score_accuracy/pval': [ 0.], 'y/test/score_f1/pval': [ 0.   0.5], 'y/test/score_precision/pval': [ 0.5  0. ], 'y/test/score_precision': [ 0.6  0.6], 'y/test/score_recall': [ 0.6  0.6], 'y/test/score_accuracy': 0.6, 'y/test/score_recall_mean': 0.6}])
+
+</pre>
+
+<!-- ==================== NESTED CLASSES ==================== -->
+<a name="section-NestedClasses"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Nested Classes</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-NestedClasses"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="epac.map_reduce.mappers.Mapper-class.html">Mapper</a></code></b>:
+      <code><a href="abc.ABCMeta-class.html">__metaclass__</a></code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== INSTANCE METHODS ==================== -->
+<a name="section-InstanceMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Instance Methods</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-InstanceMethods"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="epac.map_reduce.mappers.MapperSubtrees-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">Xy</span>,
+        <span class="summary-sig-arg">tree_root</span>,
+        <span class="summary-sig-arg">store_fs</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">function</span>=<span class="summary-sig-default"><code class="variable-quote">'</code><code class="variable-string">transform</code><code class="variable-quote">'</code></span>)</span><br />
+      x.__init__(...) initializes x; see help(type(x)) for signature</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="epac.map_reduce.mappers-pysrc.html#MapperSubtrees.__init__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="epac.map_reduce.mappers.MapperSubtrees-class.html#map" class="summary-sig-name">map</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">nodes_input</span>)</span><br />
+      Run self.function for each sub_tree of map_input</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="epac.map_reduce.mappers-pysrc.html#MapperSubtrees.map">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__delattr__</code>,
+      <code>__format__</code>,
+      <code>__getattribute__</code>,
+      <code>__hash__</code>,
+      <code>__new__</code>,
+      <code>__reduce__</code>,
+      <code>__reduce_ex__</code>,
+      <code>__repr__</code>,
+      <code>__setattr__</code>,
+      <code>__sizeof__</code>,
+      <code>__str__</code>,
+      <code>__subclasshook__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS VARIABLES ==================== -->
+<a name="section-ClassVariables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Class Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-ClassVariables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="__abstractmethods__"></a><span class="summary-name">__abstractmethods__</span> = <code title="frozenset([])"><code class="variable-group">frozenset([</code><code class="variable-group">])</code></code>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="epac.map_reduce.mappers.Mapper-class.html">Mapper</a></code></b> (private):
+      <code><a href="epac.map_reduce.mappers.Mapper-class.html#_abc_cache" onclick="show_private();">_abc_cache</a></code>,
+      <code><a href="epac.map_reduce.mappers.Mapper-class.html#_abc_negative_cache" onclick="show_private();">_abc_negative_cache</a></code>,
+      <code><a href="epac.map_reduce.mappers.Mapper-class.html#_abc_negative_cache_version" onclick="show_private();">_abc_negative_cache_version</a></code>,
+      <code><a href="epac.map_reduce.mappers.Mapper-class.html#_abc_registry" onclick="show_private();">_abc_registry</a></code>
+      </p></div>
+    </td>
+  </tr>
+</table>
+<!-- ==================== PROPERTIES ==================== -->
+<a name="section-Properties"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Properties</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Properties"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__class__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== METHOD DETAILS ==================== -->
+<a name="section-MethodDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Method Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-MethodDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="__init__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">Xy</span>,
+        <span class="sig-arg">tree_root</span>,
+        <span class="sig-arg">store_fs</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">function</span>=<span class="sig-default"><code class="variable-quote">'</code><code class="variable-string">transform</code><code class="variable-quote">'</code></span>)</span>
+    <br /><em class="fname">(Constructor)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="epac.map_reduce.mappers-pysrc.html#MapperSubtrees.__init__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>x.__init__(...) initializes x; see help(type(x)) for signature</p>
+  <dl class="fields">
+    <dt>Overrides:
+        object.__init__
+        <dd><em class="note">(inherited documentation)</em></dd>
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="map"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">map</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">nodes_input</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="epac.map_reduce.mappers-pysrc.html#MapperSubtrees.map">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+Run self.function for each sub_tree of map_input
+
+Parameters
+----------
+nodes_input: epac.map_reduce.inputs.NodesInput
+
+</pre>
+  <dl class="fields">
+    <dt>Overrides:
+        <a href="epac.map_reduce.mappers.Mapper-class.html#map">Mapper.map</a>
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Tue Dec  3 11:19:33 2013
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>
