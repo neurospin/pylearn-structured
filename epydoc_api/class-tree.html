@@ -16,7 +16,7 @@
   <tr valign="middle">
   <!-- Home link -->
       <th>&nbsp;&nbsp;&nbsp;<a
-        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+        href="parsimony-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
 
   <!-- Tree link -->
       <th bgcolor="#70b0f0" class="navbar-select"
@@ -55,79 +55,74 @@
 </b></center><br />
 <h1 class="epydoc">Class Hierarchy</h1>
 <ul class="nomargin-top">
-    <li> <strong class="uidlink"><a href="epac.sklearn_plugins.resampling.FeatureRanking-class.html">epac.sklearn_plugins.resampling.FeatureRanking</a></strong>:
-      <em class="summary">Parameters
-----------
-score_func : callable
-    Function taking two arrays X and y, and returning a pair of arrays
-    (scores, pvalues).</em>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.test_dump_class_definition_sfw.MySVC-class.html">epac.tests.test_dump_class_definition_sfw.MySVC</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.workflow.factory.NodeFactory-class.html">epac.workflow.factory.NodeFactory</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.reducers.Reducer-class.html">epac.map_reduce.reducers.Reducer</a></strong>:
-      <em class="summary">Reducer abstract class, called within the reduce method to process 
-        up-stream data flow of Result.</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.reducers.CVBestSearchRefitPReducer-class.html">epac.map_reduce.reducers.CVBestSearchRefitPReducer</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.reducers.ClassificationReport-class.html">epac.map_reduce.reducers.ClassificationReport</a></strong>:
-      <em class="summary">Reducer that computes classification statistics.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.test_dump_class_definition_sfw.MyReducer-class.html">epac.tests.test_dump_class_definition_sfw.MyReducer</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.reducers.PvalPerms-class.html">epac.map_reduce.reducers.PvalPerms</a></strong>:
-      <em class="summary">Reducer that computes p-values of stattistics.</em>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.wfdescriptors.SharePathSomaWorkflowDescriptor-class.html">epac.map_reduce.wfdescriptors.SharePathSomaWorkflowDescriptor</a></strong>:
-      <em class="summary">Example
--------
-# =======================================================================
-# Configuration on computing resource
-#   (which means cluster, or distributed resource management system DRMS)
-#   ! Replace $HOME as the working directory on computing resource
-#     1 Define a translation file, for example, in $HOME/translation_example as
-#         ```
-#         tr_soma_workflow_shared_dir $HOME/soma_workflow_shared_dir
-#         ```
-#     2 Add an option in soma-workflow configuration
-#         for example, $HOME/.soma-workflow.cfg
-#         ```
-#         PATH_TRANSLATION_FILES = EPAC{$HOME/translation_example}
-#         ```
-# =======================================================================</em>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.test_warm_start_methods.TOY_CLF-class.html">epac.tests.test_warm_start_methods.TOY_CLF</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.stores.TagObject-class.html">epac.stores.TagObject</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.configuration.conf-class.html">epac.configuration.conf</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.configuration.debug-class.html">epac.configuration.debug</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.stores.epac_joblib-class.html">epac.stores.epac_joblib</a></strong>:
-      <em class="summary">It is optimized for dictionary dump and load
-Since joblib produces too many small files for mamory mapping,
-we try to limit the produced files for dictionary.</em>
-    </li>
     <li> <strong class="uidlink">object</strong>:
       <em class="summary">The most base type</em>
     <ul>
+    <li> <strong class="uidlink"><a href="parsimony.algorithms.BaseAlgorithm-class.html">parsimony.algorithms.BaseAlgorithm</a></strong>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.algorithms.ExplicitAlgorithm-class.html">parsimony.algorithms.ExplicitAlgorithm</a></strong>:
+      <em class="summary">Explicit algorithms are algorithms that minimises a given function 
+        explicitly from properties of the function.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.algorithms.CONESTA-class.html">parsimony.algorithms.CONESTA</a></strong>:
+      <em class="summary">COntinuation with NEsterov smoothing in a Soft-Thresholding 
+        Algorithm, or CONESTA for short.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.algorithms.DynamicCONESTA-class.html">parsimony.algorithms.DynamicCONESTA</a></strong>:
+      <em class="summary">COntinuation with NEsterov smoothing in a Soft-Thresholding 
+        Algorithm, or CONESTA for short, with a dynamically decreasing \mu.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.algorithms.StaticCONESTA-class.html">parsimony.algorithms.StaticCONESTA</a></strong>:
+      <em class="summary">COntinuation with NEsterov smoothing in a Soft-Thresholding 
+        Algorithm, or CONESTA for short, with a statically decreasing \mu.</em>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.algorithms.ExcessiveGapMethod-class.html">parsimony.algorithms.ExcessiveGapMethod</a></strong>:
+      <em class="summary">Nesterov's excessive gap method for strongly convex functions.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.algorithms.FISTA-class.html">parsimony.algorithms.FISTA</a></strong>:
+      <em class="summary">The fast iterative shrinkage threshold algorithm.</em>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.algorithms.ImplicitAlgorithm-class.html">parsimony.algorithms.ImplicitAlgorithm</a></strong>:
+      <em class="summary">Implicit algorithms are algorithms that do not use a loss function,
+        but instead minimise or maximise some underlying function 
+        implicitly, from the data.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.algorithms.FastSVD-class.html">parsimony.algorithms.FastSVD</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.algorithms.FastSparseSVD-class.html">parsimony.algorithms.FastSparseSVD</a></strong>
+    </li>
+    </ul>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.estimators.BaseEstimator-class.html">parsimony.estimators.BaseEstimator</a></strong>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.estimators.RegressionEstimator-class.html">parsimony.estimators.RegressionEstimator</a></strong>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.estimators.RidgeRegression_L1_TV-class.html">parsimony.estimators.RidgeRegression_L1_TV</a></strong>:
+      <em class="summary">Parameters
+----------
+l : The L1 regularization parameter.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.estimators.RidgeRegression_SmoothedL1TV-class.html">parsimony.estimators.RidgeRegression_SmoothedL1TV</a></strong>:
+      <em class="summary">Parameters
+----------
+l : The L1 regularisation parameter.</em>
+    </li>
+    </ul>
+    </li>
+    </ul>
+    </li>
     <li> <strong class="uidlink">exceptions.BaseException</strong>:
       <em class="summary">Common base class for all exceptions</em>
     <ul>
     <li> <strong class="uidlink">exceptions.Exception</strong>:
       <em class="summary">Common base class for all non-exit exceptions.</em>
     <ul>
-    <li> <strong class="uidlink"><a href="epac.errors.NoEpacTreeRootError-class.html">epac.errors.NoEpacTreeRootError</a></strong>:
-      <em class="summary">The tree root is none</em>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.errors.NoSomaWFError-class.html">epac.errors.NoSomaWFError</a></strong>:
-      <em class="summary">The soma-workflow is not found</em>
-    </li>
     <li> <strong class="uidlink">exceptions.StandardError</strong>:
       <em class="summary">Base class for all standard Python exceptions that do not represent
         interpreter exiting.</em>
@@ -141,262 +136,238 @@ we try to limit the produced files for dictionary.</em>
     </li>
     </ul>
     </li>
-    <li> <strong class="uidlink"><a href="epac.workflow.base.BaseNode-class.html">epac.workflow.base.BaseNode</a></strong>:
-      <em class="summary">WorkFlow Node base abstract class</em>
+    <li> <strong class="uidlink"><a href="parsimony.start_vectors.BaseStartVector-class.html">parsimony.start_vectors.BaseStartVector</a></strong>
     <ul>
-    <li> <strong class="uidlink"><a href="epac.workflow.splitters.BaseNodeSplitter-class.html">epac.workflow.splitters.BaseNodeSplitter</a></strong>:
-      <em class="summary">Splitters are are non leaf node (degree &gt;= 1) with children.</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="epac.workflow.splitters.CRSplitter-class.html">epac.workflow.splitters.CRSplitter</a></strong>:
-      <em class="summary">Column or Row Splitter parallelization.</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="epac.workflow.splitters.ColumnSplitter-class.html">epac.workflow.splitters.ColumnSplitter</a></strong>:
-      <em class="summary">Column Splitter parallelization.</em>
+    <li> <strong class="uidlink"><a href="parsimony.start_vectors.IdentityStartVector-class.html">parsimony.start_vectors.IdentityStartVector</a></strong>:
+      <em class="summary">A pre-determined start vector.</em>
     </li>
-    <li> <strong class="uidlink"><a href="epac.workflow.splitters.RowSplitter-class.html">epac.workflow.splitters.RowSplitter</a></strong>:
-      <em class="summary">Column Splitter parallelization.</em>
+    <li> <strong class="uidlink"><a href="parsimony.start_vectors.OnesStartVector-class.html">parsimony.start_vectors.OnesStartVector</a></strong>:
+      <em class="summary">A start vector of ones.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.start_vectors.RandomStartVector-class.html">parsimony.start_vectors.RandomStartVector</a></strong>:
+      <em class="summary">A start vector of uniformly distributed random values.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.start_vectors.ZerosStartVector-class.html">parsimony.start_vectors.ZerosStartVector</a></strong>:
+      <em class="summary">A start vector of zeros.</em>
     </li>
     </ul>
     </li>
-    <li> <strong class="uidlink"><a href="epac.workflow.splitters.CV-class.html">epac.workflow.splitters.CV</a></strong>:
-      <em class="summary">Cross-validation parallelization.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.workflow.splitters.Methods-class.html">epac.workflow.splitters.Methods</a></strong>:
-      <em class="summary">Parallelization is based on several runs of different methods</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.Constraint-class.html" onclick="show_private();">parsimony.functions.Constraint</a></strong>
     <ul>
-    <li> <strong class="uidlink"><a href="epac.workflow.splitters.WarmStartMethods-class.html">epac.workflow.splitters.WarmStartMethods</a></strong>:
-      <em class="summary">Run like methods but with previous state for initialization</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.L1-class.html">parsimony.functions.L1</a></strong>:
+      <em class="summary">The proximal operator of the L1 function</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.QuadraticConstraint-class.html" onclick="show_private();">parsimony.functions.QuadraticConstraint</a></strong>:
+      <em class="summary">The proximal operator of the quadratic function</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RGCCAConstraint-class.html" onclick="show_private();">parsimony.functions.RGCCAConstraint</a></strong>:
+      <em class="summary">The proximal operator of the quadratic function</em>
     </li>
     </ul>
     </li>
-    <li> <strong class="uidlink"><a href="epac.workflow.splitters.Perms-class.html">epac.workflow.splitters.Perms</a></strong>:
-      <em class="summary">Permutation parallelization.</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.SmoothedL1-class.html">parsimony.functions.SmoothedL1</a></strong>:
+      <em class="summary">The proximal operator of the smoothed L1 function</em>
     </li>
     </ul>
     </li>
-    <li> <strong class="uidlink"><a href="epac.workflow.splitters.Slicer-class.html">epac.workflow.splitters.Slicer</a></strong>:
-      <em class="summary">Slicers are Splitters' children, they re-sclice the downstream 
-        blocs.</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.Continuation-class.html" onclick="show_private();">parsimony.functions.Continuation</a></strong>
     <ul>
-    <li> <strong class="uidlink"><a href="epac.workflow.splitters.CRSlicer-class.html">epac.workflow.splitters.CRSlicer</a></strong>:
-      <em class="summary">column or row sampling
-Parameters
-----------
-signature_name: string</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RR_L1_TV-class.html">parsimony.functions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
     </li>
     </ul>
     </li>
-    <li> <strong class="uidlink"><a href="epac.workflow.wrappers.Wrapper-class.html">epac.workflow.wrappers.Wrapper</a></strong>:
-      <em class="summary">Node that wrap any class</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.DualFunction-class.html" onclick="show_private();">parsimony.functions.DualFunction</a></strong>
     <ul>
-    <li> <strong class="uidlink"><a href="epac.workflow.splitters.CVBestSearchRefit-class.html">epac.workflow.splitters.CVBestSearchRefit</a></strong>:
-      <em class="summary">Cross-validation + grid-search then refit with optimals parameters.</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RR_L1_TV-class.html">parsimony.functions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
     </li>
-    <li> <strong class="uidlink"><a href="epac.workflow.splitters.CVBestSearchRefitParallel-class.html">epac.workflow.splitters.CVBestSearchRefitParallel</a></strong>:
-      <em class="summary">Cross-validation + grid-search then refit with optimals parameters.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.sklearn_plugins.estimators.Estimator-class.html">epac.sklearn_plugins.estimators.Estimator</a></strong>:
-      <em class="summary">Estimator Wrapper: Automatically connect wrapped_node.fit and
-wrapped_node.transform to BaseNode.transform</em>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.workflow.wrappers.TransformNode-class.html">epac.workflow.wrappers.TransformNode</a></strong>:
-      <em class="summary">Wrapping a class has a &quot;transform&quot; method</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RR_SmoothedL1TV-class.html">parsimony.functions.RR_SmoothedL1TV</a></strong>
     </li>
     </ul>
     </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.wfdescriptors.BashWorkflowDescriptor-class.html">epac.map_reduce.wfdescriptors.BashWorkflowDescriptor</a></strong>:
-      <em class="summary">Parameters
-----------
-dataset_dir_path: string
-    The path which the saved dataset located.</em>
-    </li>
-    <li> <strong class="uidlink">_abcoll.Container</strong>
+    <li> <strong class="uidlink"><a href="parsimony.functions.Eigenvalues-class.html" onclick="show_private();">parsimony.functions.Eigenvalues</a></strong>
     <ul>
-    <li> <strong class="uidlink">_abcoll.Sequence</strong>:
-      <em class="summary">All the operations on a read-only sequence.</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="epac.workflow.splitters.VirtualList-class.html">epac.workflow.splitters.VirtualList</a></strong>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RidgeRegression-class.html">parsimony.functions.RidgeRegression</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.SmoothedL1TV-class.html">parsimony.functions.SmoothedL1TV</a></strong>
     </li>
     </ul>
     </li>
-    <li> <strong class="uidlink">_abcoll.Set</strong>:
-      <em class="summary">A set is a finite, iterable container.</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.Function-class.html" onclick="show_private();">parsimony.functions.Function</a></strong>
     <ul>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.results.ResultSet-class.html">epac.map_reduce.results.ResultSet</a></strong>:
-      <em class="summary">ResultSet is a set of Result</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.AtomicFunction-class.html" onclick="show_private();">parsimony.functions.AtomicFunction</a></strong>:
+      <em class="summary">This is a function that is not in general supposed to be minimised 
+        by itself.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.L1-class.html">parsimony.functions.L1</a></strong>:
+      <em class="summary">The proximal operator of the L1 function</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.QuadraticConstraint-class.html" onclick="show_private();">parsimony.functions.QuadraticConstraint</a></strong>:
+      <em class="summary">The proximal operator of the quadratic function</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RGCCAConstraint-class.html" onclick="show_private();">parsimony.functions.RGCCAConstraint</a></strong>:
+      <em class="summary">The proximal operator of the quadratic function</em>
     </li>
     </ul>
     </li>
-    </ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.SmoothedL1-class.html">parsimony.functions.SmoothedL1</a></strong>:
+      <em class="summary">The proximal operator of the smoothed L1 function</em>
     </li>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.engine.Engine-class.html">epac.map_reduce.engine.Engine</a></strong>
-    <ul>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.engine.LocalEngine-class.html">epac.map_reduce.engine.LocalEngine</a></strong>:
-      <em class="summary">LocalEngine run function for each node of epac tree in parallel</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.engine.SomaWorkflowEngine-class.html">epac.map_reduce.engine.SomaWorkflowEngine</a></strong>:
-      <em class="summary">Using soma-workflow to run epac tree in parallel</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.SmoothedL1TV-class.html">parsimony.functions.SmoothedL1TV</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.TotalVariation-class.html">parsimony.functions.TotalVariation</a></strong>:
+      <em class="summary">The proximal operator of the smoothed Total variation (TV) function</em>
     </li>
     </ul>
     </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.CompositeFunction-class.html" onclick="show_private();">parsimony.functions.CompositeFunction</a></strong>:
+      <em class="summary">This is a function that is the combination (i.e.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.MultiblockFunction-class.html" onclick="show_private();">parsimony.functions.MultiblockFunction</a></strong>:
+      <em class="summary">This is a function that is the combination (i.e.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.GeneralisedMultiblock-class.html" onclick="show_private();">parsimony.functions.GeneralisedMultiblock</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.LatentVariableCovariance-class.html" onclick="show_private();">parsimony.functions.LatentVariableCovariance</a></strong>
+    </li>
     </ul>
     </li>
-    <li> <strong class="uidlink">_abcoll.Iterable</strong>
-    <ul>
-    <li> <strong class="uidlink">_abcoll.Sequence</strong>:
-      <em class="summary">All the operations on a read-only sequence.</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="epac.workflow.splitters.VirtualList-class.html">epac.workflow.splitters.VirtualList</a></strong>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RR_L1_TV-class.html">parsimony.functions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
     </li>
-    </ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RR_SmoothedL1TV-class.html">parsimony.functions.RR_SmoothedL1TV</a></strong>
     </li>
-    <li> <strong class="uidlink">_abcoll.Set</strong>:
-      <em class="summary">A set is a finite, iterable container.</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.results.ResultSet-class.html">epac.map_reduce.results.ResultSet</a></strong>:
-      <em class="summary">ResultSet is a set of Result</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RidgeRegression-class.html">parsimony.functions.RidgeRegression</a></strong>
     </li>
     </ul>
     </li>
     </ul>
     </li>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.mappers.Mapper-class.html">epac.map_reduce.mappers.Mapper</a></strong>
+    <li> <strong class="uidlink"><a href="parsimony.functions.Gradient-class.html" onclick="show_private();">parsimony.functions.Gradient</a></strong>
     <ul>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.mappers.MapperSubtrees-class.html">epac.map_reduce.mappers.MapperSubtrees</a></strong>:
-      <em class="summary">The mapper runs function (usually as &quot;transform&quot;) for NodesInput
-which is a dictionary of nodes.</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.QuadraticConstraint-class.html" onclick="show_private();">parsimony.functions.QuadraticConstraint</a></strong>:
+      <em class="summary">The proximal operator of the quadratic function</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RGCCAConstraint-class.html" onclick="show_private();">parsimony.functions.RGCCAConstraint</a></strong>:
+      <em class="summary">The proximal operator of the quadratic function</em>
     </li>
     </ul>
     </li>
-    <li> <strong class="uidlink"><a href="epac.sklearn_plugins.resampling.Permutations-class.html">epac.sklearn_plugins.resampling.Permutations</a></strong>:
-      <em class="summary">Example
--------
-&gt;&gt;&gt; from epac.sklearn_plugins.resampling import Permutations
-&gt;&gt;&gt; permutations = Permutations(10, 5)
-&gt;&gt;&gt; for pdata in permutations:  # doctest: +SKIP
-...</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RR_L1_TV-class.html">parsimony.functions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
     </li>
-    <li> <strong class="uidlink">_abcoll.Sized</strong>
-    <ul>
-    <li> <strong class="uidlink">_abcoll.Sequence</strong>:
-      <em class="summary">All the operations on a read-only sequence.</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="epac.workflow.splitters.VirtualList-class.html">epac.workflow.splitters.VirtualList</a></strong>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RidgeRegression-class.html">parsimony.functions.RidgeRegression</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.SmoothedL1-class.html">parsimony.functions.SmoothedL1</a></strong>:
+      <em class="summary">The proximal operator of the smoothed L1 function</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.TotalVariation-class.html">parsimony.functions.TotalVariation</a></strong>:
+      <em class="summary">The proximal operator of the smoothed Total variation (TV) function</em>
     </li>
     </ul>
     </li>
-    <li> <strong class="uidlink">_abcoll.Set</strong>:
-      <em class="summary">A set is a finite, iterable container.</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.GradientMap-class.html" onclick="show_private();">parsimony.functions.GradientMap</a></strong>
     <ul>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.results.ResultSet-class.html">epac.map_reduce.results.ResultSet</a></strong>:
-      <em class="summary">ResultSet is a set of Result</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RR_SmoothedL1TV-class.html">parsimony.functions.RR_SmoothedL1TV</a></strong>
     </li>
     </ul>
     </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.wfdescriptors.SomaWorkflowDescriptor-class.html">epac.map_reduce.wfdescriptors.SomaWorkflowDescriptor</a></strong>:
-      <em class="summary">Parameters
-----------
-dataset_dir_path: string
-    The path which the saved dataset located.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.split_input.SplitInput-class.html">epac.map_reduce.split_input.SplitInput</a></strong>
+    <li> <strong class="uidlink"><a href="parsimony.functions.GradientStep-class.html" onclick="show_private();">parsimony.functions.GradientStep</a></strong>
     <ul>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.split_input.SplitNodesInput-class.html">epac.map_reduce.split_input.SplitNodesInput</a></strong>:
-      <em class="summary">Split NodesInput into a list of epac.map_reduce.NodesInput</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.GeneralisedMultiblock-class.html" onclick="show_private();">parsimony.functions.GeneralisedMultiblock</a></strong>
     </li>
     </ul>
     </li>
-    <li> <strong class="uidlink"><a href="epac.stores.Store-class.html">epac.stores.Store</a></strong>:
-      <em class="summary">Abstract Store</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="epac.stores.StoreFs-class.html">epac.stores.StoreFs</a></strong>:
-      <em class="summary">Store based of file system</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.Hessian-class.html" onclick="show_private();">parsimony.functions.Hessian</a></strong>
     </li>
-    <li> <strong class="uidlink"><a href="epac.stores.StoreMem-class.html">epac.stores.StoreMem</a></strong>:
-      <em class="summary">Store based on memory</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.LipschitzContinuousGradient-class.html" onclick="show_private();">parsimony.functions.LipschitzContinuousGradient</a></strong>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RR_L1_TV-class.html">parsimony.functions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RR_SmoothedL1TV-class.html">parsimony.functions.RR_SmoothedL1TV</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RidgeRegression-class.html">parsimony.functions.RidgeRegression</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.SmoothedL1-class.html">parsimony.functions.SmoothedL1</a></strong>:
+      <em class="summary">The proximal operator of the smoothed L1 function</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.TotalVariation-class.html">parsimony.functions.TotalVariation</a></strong>:
+      <em class="summary">The proximal operator of the smoothed Total variation (TV) function</em>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.MultiblockGradient-class.html" onclick="show_private();">parsimony.functions.MultiblockGradient</a></strong>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.GeneralisedMultiblock-class.html" onclick="show_private();">parsimony.functions.GeneralisedMultiblock</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.LatentVariableCovariance-class.html" onclick="show_private();">parsimony.functions.LatentVariableCovariance</a></strong>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.MultiblockProximalOperator-class.html" onclick="show_private();">parsimony.functions.MultiblockProximalOperator</a></strong>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.GeneralisedMultiblock-class.html" onclick="show_private();">parsimony.functions.GeneralisedMultiblock</a></strong>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.NesterovFunction-class.html" onclick="show_private();">parsimony.functions.NesterovFunction</a></strong>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RR_L1_TV-class.html">parsimony.functions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RR_SmoothedL1TV-class.html">parsimony.functions.RR_SmoothedL1TV</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.SmoothedL1-class.html">parsimony.functions.SmoothedL1</a></strong>:
+      <em class="summary">The proximal operator of the smoothed L1 function</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.SmoothedL1TV-class.html">parsimony.functions.SmoothedL1TV</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.TotalVariation-class.html">parsimony.functions.TotalVariation</a></strong>:
+      <em class="summary">The proximal operator of the smoothed Total variation (TV) function</em>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.datasets.samples_generator_struct.ObjImage-class.html">parsimony.datasets.samples_generator_struct.ObjImage</a></strong>:
+      <em class="summary">Parameters:
+-----------
+c_x, c_y: Center of object</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.datasets.samples_generator_struct.Dimaond-class.html">parsimony.datasets.samples_generator_struct.Dimaond</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.datasets.samples_generator_struct.Dot-class.html">parsimony.datasets.samples_generator_struct.Dot</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.datasets.samples_generator_struct.Square-class.html">parsimony.datasets.samples_generator_struct.Square</a></strong>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.ProximalOperator-class.html" onclick="show_private();">parsimony.functions.ProximalOperator</a></strong>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.L1-class.html">parsimony.functions.L1</a></strong>:
+      <em class="summary">The proximal operator of the L1 function</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.RR_L1_TV-class.html">parsimony.functions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.datasets.simulated.utils.RandomUniform-class.html">parsimony.datasets.simulated.utils.RandomUniform</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.Regularisation-class.html" onclick="show_private();">parsimony.functions.Regularisation</a></strong>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.SmoothedL1TV-class.html">parsimony.functions.SmoothedL1TV</a></strong>
     </li>
     </ul>
     </li>
     <li> <strong class="uidlink">unittest.case.TestCase</strong>:
       <em class="summary">A class whose instances are single test cases.</em>
     <ul>
-    <li> <strong class="uidlink"><a href="epac.tests.test_multi_processes.EpacWorkflowTest-class.html">epac.tests.test_multi_processes.EpacWorkflowTest</a></strong>
+    <li> <strong class="uidlink"><a href="parsimony.tests.test_algorithms.TestFISTA-class.html">parsimony.tests.test_algorithms.TestFISTA</a></strong>
     </li>
-    <li> <strong class="uidlink"><a href="epac.tests.test_primitives.TestCV-class.html">epac.tests.test_primitives.TestCV</a></strong>
+    <li> <strong class="uidlink"><a href="parsimony.tests.test_functions.TestFunctions-class.html">parsimony.tests.test_functions.TestFunctions</a></strong>
     </li>
-    <li> <strong class="uidlink"><a href="epac.tests.test_primitives.TestCVBestSearchRefit-class.html">epac.tests.test_primitives.TestCVBestSearchRefit</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.test_workflow.TestCVBestSearchRefit-class.html">epac.tests.test_workflow.TestCVBestSearchRefit</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.test_cv_best_search_refit_parallel_reduce.TestCVBestSearchRefitParallelReduce-class.html">epac.tests.test_cv_best_search_refit_parallel_reduce.TestCVBestSearchRefitParallelReduce</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.test_dump_class_definition_sfw.TestDumpClass-class.html">epac.tests.test_dump_class_definition_sfw.TestDumpClass</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.test_primitives.TestMethods-class.html">epac.tests.test_primitives.TestMethods</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.test_workflow.TestPermCV-class.html">epac.tests.test_workflow.TestPermCV</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.test_primitives.TestPerms-class.html">epac.tests.test_primitives.TestPerms</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.test_primitives.TestPipeline-class.html">epac.tests.test_primitives.TestPipeline</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.test_store.TestStore-class.html">epac.tests.test_store.TestStore</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.test_persistence.TestWorkFlow-class.html">epac.tests.test_persistence.TestWorkFlow</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.test_warm_start_methods.TestWorkFlow-class.html">epac.tests.test_warm_start_methods.TestWorkFlow</a></strong>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.wfexamples2test.WorkflowExample-class.html">epac.tests.wfexamples2test.WorkflowExample</a></strong>
-    <ul>
-    <li> <strong class="uidlink"><a href="epac.tests.wfexamples2test.WFExample1-class.html">epac.tests.wfexamples2test.WFExample1</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.wfexamples2test.WFExample2-class.html">epac.tests.wfexamples2test.WFExample2</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.wfexamples2test.WFExample3-class.html">epac.tests.wfexamples2test.WFExample3</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.wfexamples2test.WFExample4-class.html">epac.tests.wfexamples2test.WFExample4</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.wfexamples2test.WFExample5-class.html">epac.tests.wfexamples2test.WFExample5</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.tests.wfexamples2test.WFExample6-class.html">epac.tests.wfexamples2test.WFExample6</a></strong>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink">dict</strong>:
-      <em class="summary">dict() -&gt; new empty dictionary
-dict(mapping) -&gt; new dictionary initialized from a mapping object's
-    (key, value) pairs
-dict(iterable) -&gt; new dictionary initialized as if via:
-    d = {}
-    for k, v in iterable:
-        d[k] = v
-dict(**kwargs) -&gt; new dictionary initialized with the name=value pairs
-    in the keyword argument list.</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.inputs.Input-class.html">epac.map_reduce.inputs.Input</a></strong>
-    <ul>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.inputs.MapInput-class.html">epac.map_reduce.inputs.MapInput</a></strong>
-    <ul>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.inputs.NodesInput-class.html">epac.map_reduce.inputs.NodesInput</a></strong>:
-      <em class="summary">NodesInput for map
-This can be splited by split_input.</em>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.inputs.ReduceInput-class.html">epac.map_reduce.inputs.ReduceInput</a></strong>
-    <ul>
-    <li> <strong class="uidlink"><a href="epac.map_reduce.results.Result-class.html">epac.map_reduce.results.Result</a></strong>:
-      <em class="summary">Result is a record with a &quot;key&quot;, and a &quot;payload&quot;.</em>
-    </li>
-    </ul>
-    </li>
-    </ul>
+    <li> <strong class="uidlink"><a href="parsimony.tests.test_fast_svd.TestSVD-class.html">parsimony.tests.test_fast_svd.TestSVD</a></strong>
     </li>
     </ul>
     </li>
@@ -418,7 +389,7 @@ This can be splited by split_input.</em>
   <tr valign="middle">
   <!-- Home link -->
       <th>&nbsp;&nbsp;&nbsp;<a
-        href="epac-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+        href="parsimony-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
 
   <!-- Tree link -->
       <th bgcolor="#70b0f0" class="navbar-select"
@@ -438,7 +409,7 @@ This can be splited by split_input.</em>
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Tue Dec  3 11:19:32 2013
+    Generated by Epydoc 3.0.1 on Wed Dec  4 17:31:13 2013
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

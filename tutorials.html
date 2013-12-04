@@ -1,0 +1,281 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>General framework &mdash; ParsimonY 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="static/default.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <link rel="top" title="ParsimonY 1.0 documentation" href="index.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="installation.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="installation.html" title="&lt;no title&gt;"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">ParsimonY 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="general-framework">
+<span id="tutorials"></span><h1>General framework<a class="headerlink" href="#general-framework" title="Permalink to this headline">¶</a></h1>
+<p>Three principle modules have been defined: <strong>algorithms</strong>, <strong>estimators</strong>, and <strong>functions</strong>.</p>
+<ul class="simple">
+<li><strong>functions</strong> define the loss function OLS (ordinary least squares) with different penalties
+(for instance, L1 Lasso, L2 Ridge Regression, etc.). We need to minimize this functions.</li>
+<li><strong>algorithms</strong> define algorithms (Fast Iterative Shrinkage-Thresholding Algorithm (FISTA) <a class="reference internal" href="#fista2009">[FISTA2009]</a>,
+COntinuation of NESTerov&#8217;s smoothing Algorithm (conesta), Excessive gap method)
+to minimize the above function.</li>
+<li><strong>estimators</strong> define the combination of function and algorithm.</li>
+</ul>
+<p>A general framework for our package:</p>
+<ul class="simple">
+<li>Functions<ul>
+<li>Loss function<ul>
+<li>OLS</li>
+</ul>
+</li>
+<li>Penalties<ul>
+<li>L1 (Lasso)</li>
+<li>L2 (Ridge)</li>
+<li>L1 + L2 (Elastic net)</li>
+<li>Total variation (TV)</li>
+</ul>
+</li>
+<li>Any combination of the above</li>
+</ul>
+</li>
+<li>Algorithms<ul>
+<li>Fast Iterative Shrinkage-Thresholding Algorithm (FISTA)</li>
+<li>COntinuation of NESTerov&#8217;s smoothing Algorithm (conesta)</li>
+<li>Excessive gap method</li>
+</ul>
+</li>
+<li>Estimators<ul>
+<li>RidgeRegression_L1_TV</li>
+<li>RidgeRegression_SmoothedL1TV</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="build-simulated-dataset">
+<h1>Build Simulated Dataset<a class="headerlink" href="#build-simulated-dataset" title="Permalink to this headline">¶</a></h1>
+<p>We build a simple simulated dataset as <img class="math" src="images/math/7b092047e27618310678effd4c689969a8a3d878.png" alt="y = X \beta + noise"/>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="c"># Three-dimension matrix is defined as:</span>
+<span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="c"># The number of samples is defined as:</span>
+<span class="n">num_samples</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="c"># The number of features per sample is defined as:</span>
+<span class="n">num_ft</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+<span class="c"># Define X randomly as simulated data</span>
+<span class="n">X_raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">X_raw</span><span class="p">,</span> <span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">num_ft</span><span class="p">))</span>
+<span class="c"># Define beta randomly</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">num_ft</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="c"># Define y by adding noise</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.001</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">num_samples</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>In later sessions, we want to discover <img class="math" src="images/math/fdb63b9e51abe6bbb16acfb5d7b773ddbb5bf4a8.png" alt="\beta"/> using different loss functions.</p>
+</div>
+<div class="section" id="ols-l1-l2-tv-functions">
+<h1>OLS + L1 + L2 + TV Functions<a class="headerlink" href="#ols-l1-l2-tv-functions" title="Permalink to this headline">¶</a></h1>
+<p>Knowing <img class="math" src="images/math/6a47ca0fe7cb276abc022af6ac88ddae1a9d6894.png" alt="X"/> and <img class="math" src="images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y"/>, we want to discover <img class="math" src="images/math/fdb63b9e51abe6bbb16acfb5d7b773ddbb5bf4a8.png" alt="\beta"/> by minimizing only OLS loss function by FISTA algorithm:</p>
+<div class="math">
+<p><img src="images/math/9a63cb33ce76f6406054bd8a6f208966bcddf9d8.png" alt="min ||y - X\beta||^2_2"/></p>
+</div><div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">parsimony.estimators</span> <span class="kn">as</span> <span class="nn">estimators</span>
+<span class="kn">import</span> <span class="nn">parsimony.algorithms</span> <span class="kn">as</span> <span class="nn">algorithms</span>
+<span class="kn">import</span> <span class="nn">parsimony.tv</span>
+<span class="n">k</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c"># l2 ridge regression coefficient</span>
+<span class="n">l</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c"># l1 lasso coefficient</span>
+<span class="n">g</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c"># tv coefficient</span>
+<span class="n">A</span><span class="p">,</span> <span class="n">n_compacts</span> <span class="o">=</span> <span class="n">parsimony</span><span class="o">.</span><span class="n">tv</span><span class="o">.</span><span class="n">A_from_shape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>  <span class="c"># Memory allocation for TV</span>
+<span class="n">ols_estimator</span> <span class="o">=</span> <span class="n">estimators</span><span class="o">.</span><span class="n">RidgeRegression_L1_TV</span><span class="p">(</span>
+                    <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span>
+                    <span class="n">algorithm</span><span class="o">=</span><span class="n">algorithms</span><span class="o">.</span><span class="n">FISTA</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">1000</span><span class="p">))</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">ols_estimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="k">print</span> <span class="s">&quot;Estimated beta error =&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">ols_estimator</span><span class="o">.</span><span class="n">beta</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>By adding l2 ridge regression coefficient <img class="math" src="images/math/c962dcd1cb551cc8ae1641abd7abc9c3eaece10d.png" alt="k=0.1, l=0.0, g=0.0"/></p>
+<div class="math">
+<p><img src="images/math/8e61a0c6ed29b54f4fc13796985670fb0d8fe0db.png" alt="min (1/2 ||y - X\beta||2 + k/2 * ||\beta||_2 + l * ||\beta||_1 + g * TV)"/></p>
+</div><p>where p-norm is defined as</p>
+<div class="math">
+<p><img src="images/math/00f1bfba1c608a6168372c13e9248517d8723a89.png" alt="||V||_p = (\sum\limits_{i=1, v_i \in V}^n |v_i|^p)^{1/p}"/></p>
+</div><div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">parsimony.estimators</span> <span class="kn">as</span> <span class="nn">estimators</span>
+<span class="kn">import</span> <span class="nn">parsimony.algorithms</span> <span class="kn">as</span> <span class="nn">algorithms</span>
+<span class="kn">import</span> <span class="nn">parsimony.tv</span>
+<span class="n">k</span> <span class="o">=</span> <span class="mf">0.1</span>  <span class="c"># l2 ridge regression coefficient</span>
+<span class="n">l</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c"># l1 lasso coefficient</span>
+<span class="n">g</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c"># tv coefficient</span>
+<span class="n">A</span><span class="p">,</span> <span class="n">n_compacts</span> <span class="o">=</span> <span class="n">parsimony</span><span class="o">.</span><span class="n">tv</span><span class="o">.</span><span class="n">A_from_shape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">ridge_estimator</span> <span class="o">=</span> <span class="n">estimators</span><span class="o">.</span><span class="n">RidgeRegression_L1_TV</span><span class="p">(</span>
+                    <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span>
+                    <span class="n">algorithm</span><span class="o">=</span><span class="n">algorithms</span><span class="o">.</span><span class="n">FISTA</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">1000</span><span class="p">))</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">ridge_estimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="k">print</span> <span class="s">&quot;Estimated beta error =&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">ridge_estimator</span><span class="o">.</span><span class="n">beta</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Similarly, you can add l1 coefficient and TV coefficient <img class="math" src="images/math/8e9f83afeac4a3d9848db1795e0c189f81cdf517.png" alt="k=0.0, l=0.1, g=0.1"/></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">parsimony.estimators</span> <span class="kn">as</span> <span class="nn">estimators</span>
+<span class="kn">import</span> <span class="nn">parsimony.algorithms</span> <span class="kn">as</span> <span class="nn">algorithms</span>
+<span class="kn">import</span> <span class="nn">parsimony.tv</span>
+<span class="n">k</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c"># l2 ridge regression coefficient</span>
+<span class="n">l</span> <span class="o">=</span> <span class="mf">0.1</span>  <span class="c"># l1 lasso coefficient</span>
+<span class="n">g</span> <span class="o">=</span> <span class="mf">0.1</span>  <span class="c"># tv coefficient</span>
+<span class="n">A</span><span class="p">,</span> <span class="n">n_compacts</span> <span class="o">=</span> <span class="n">parsimony</span><span class="o">.</span><span class="n">tv</span><span class="o">.</span><span class="n">A_from_shape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">estimator</span> <span class="o">=</span> <span class="n">estimators</span><span class="o">.</span><span class="n">RidgeRegression_L1_TV</span><span class="p">(</span>
+                    <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span>
+                    <span class="n">algorithm</span><span class="o">=</span><span class="n">algorithms</span><span class="o">.</span><span class="n">FISTA</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">1000</span><span class="p">))</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">estimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="k">print</span> <span class="s">&quot;Estimated beta error =&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">estimator</span><span class="o">.</span><span class="n">beta</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="algorithms">
+<h1>Algorithms<a class="headerlink" href="#algorithms" title="Permalink to this headline">¶</a></h1>
+<p>In the previous sections, only the FISTA algorithm (c.f. <a class="reference internal" href="#fista2009">[FISTA2009]</a>) has been applied.
+In this section, we switch to the other algorithms (CONESTA dynamic and CONESTA static) to minimize the function.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Atv</span><span class="p">,</span> <span class="n">n_compacts</span> <span class="o">=</span> <span class="n">parsimony</span><span class="o">.</span><span class="n">tv</span><span class="o">.</span><span class="n">A_from_shape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">tvl1l2_conesta_static</span> <span class="o">=</span> <span class="n">estimators</span><span class="o">.</span><span class="n">RidgeRegression_L1_TV</span><span class="p">(</span>
+                        <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">Atv</span><span class="p">,</span>
+                        <span class="n">algorithm</span><span class="o">=</span><span class="n">algorithms</span><span class="o">.</span><span class="n">CONESTA</span><span class="p">(</span><span class="n">dynamic</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">tvl1l2_conesta_static</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="k">print</span> <span class="s">&quot;Estimated beta error =&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">tvl1l2_conesta_static</span><span class="o">.</span><span class="n">beta</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span>
+<span class="n">tvl1l2_conesta_dynamic</span> <span class="o">=</span> <span class="n">estimators</span><span class="o">.</span><span class="n">RidgeRegression_L1_TV</span><span class="p">(</span>
+                        <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">Atv</span><span class="p">,</span>
+                        <span class="n">algorithm</span><span class="o">=</span><span class="n">algorithms</span><span class="o">.</span><span class="n">CONESTA</span><span class="p">(</span><span class="n">dynamic</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">tvl1l2_conesta_dynamic</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="k">print</span> <span class="s">&quot;Estimated beta error =&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">tvl1l2_conesta_dynamic</span><span class="o">.</span><span class="n">beta</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="excessive-gap-method">
+<h2>Excessive gap method<a class="headerlink" href="#excessive-gap-method" title="Permalink to this headline">¶</a></h2>
+<p>Excessive gap method algorithm (ExcessiveGapMethod) only works with the function smoothed l1 &#8220;RidgeRegression_SmoothedL1TV&#8221;.
+<img class="math" src="images/math/8c325612684d41304b9751c175df7bcc0f61f64f.png" alt="k"/>, <img class="math" src="images/math/9b25f8e64b484493fda944d25cad453423041fe6.png" alt="l"/>, and <img class="math" src="images/math/311cabda3a9b09f0dde217303ca9d1cd9201dcf6.png" alt="g"/> should be large than zero otherwise you will get Nan <img class="math" src="images/math/fdb63b9e51abe6bbb16acfb5d7b773ddbb5bf4a8.png" alt="\beta"/>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">scipy.sparse</span> <span class="kn">as</span> <span class="nn">sparse</span>
+<span class="n">Atv</span><span class="p">,</span> <span class="n">n_compacts</span> <span class="o">=</span> <span class="n">parsimony</span><span class="o">.</span><span class="n">tv</span><span class="o">.</span><span class="n">A_from_shape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">Al1</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">num_ft</span><span class="p">,</span> <span class="n">num_ft</span><span class="p">)</span>
+<span class="n">k</span> <span class="o">=</span> <span class="mf">0.05</span>  <span class="c"># ridge regression coefficient</span>
+<span class="n">l</span> <span class="o">=</span> <span class="mf">0.05</span>  <span class="c"># l1 coefficient</span>
+<span class="n">g</span> <span class="o">=</span> <span class="mf">0.05</span>  <span class="c"># tv coefficient</span>
+<span class="n">rr_smoothed_l1_tv</span> <span class="o">=</span> <span class="n">estimators</span><span class="o">.</span><span class="n">RidgeRegression_SmoothedL1TV</span><span class="p">(</span>
+            <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span>
+            <span class="n">Atv</span><span class="o">=</span><span class="n">Atv</span><span class="p">,</span> <span class="n">Al1</span><span class="o">=</span><span class="n">Al1</span><span class="p">,</span>
+            <span class="n">algorithm</span><span class="o">=</span><span class="n">algorithms</span><span class="o">.</span><span class="n">ExcessiveGapMethod</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">1000</span><span class="p">))</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">rr_smoothed_l1_tv</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="k">print</span> <span class="s">&quot;Estimated beta error =&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">tvl1l2_conesta_dynamic</span><span class="o">.</span><span class="n">beta</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="references">
+<h1>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h1>
+<table class="docutils citation" frame="void" id="fista2009" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[FISTA2009]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Amir Beck and Marc Teboulle, A Fast Iterative Shrinkage-Thresholding Algorithm for Linear Inverse Problems, SIAM Journal on Imaging Sciences, 2009</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="nesta2011" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[NESTA2011]</td><td>Stephen Becker, Jerome Bobin, and Emmanuel J. Candes, NESTA: A Fast and Accurate First-Order Method for Sparse Recovery, SIAM Journal on Imaging Sciences, 2011</td></tr>
+</tbody>
+</table>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">General framework</a></li>
+<li><a class="reference internal" href="#build-simulated-dataset">Build Simulated Dataset</a></li>
+<li><a class="reference internal" href="#ols-l1-l2-tv-functions">OLS + L1 + L2 + TV Functions</a></li>
+<li><a class="reference internal" href="#algorithms">Algorithms</a><ul>
+<li><a class="reference internal" href="#excessive-gap-method">Excessive gap method</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="installation.html"
+                        title="previous chapter">&lt;no title&gt;</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="sources/tutorials.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="installation.html" title="&lt;no title&gt;"
+             >previous</a> |</li>
+        <li><a href="index.html">ParsimonY 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, tommy.loefstedt etc.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

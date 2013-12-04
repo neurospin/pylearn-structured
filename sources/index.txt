@@ -19,18 +19,6 @@ ParsimonY provides structured and sparse penalties in machine learning:
     - COntinuation of NESTsterov’s smoothing Algorithm (conesta)
     - Excessive gap method
 
-.. _introduction: ./introduction.html
-
-.. _installation: ./installation.html
-
-.. _tutorials: ./tutorials.html
-
-Introduction
-============
-
-.. toctree::
-
-   introduction.rst
 
 Installation
 ============
@@ -53,13 +41,6 @@ API_
    
 .. _API: ./epydoc_api/index.html
 
-
-Reference Material
-==================
-
-.. toctree::
-
-   glossary.rst
 
 Indices and tables
 ==================
