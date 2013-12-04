@@ -4,7 +4,7 @@
 
 # build html page on your machine
 make html
-epydoc -v --html epac -o ./_build/html/epydoc_api
+epydoc -v --html parsimony -o ./_build/html/epydoc_api
 
 
 # build tmp directory
