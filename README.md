@@ -19,9 +19,14 @@ ParsimonY contains the following features:
 
 Dependencies
 ------------
+
 * Python 2.7.x
 * NumPy >= 1.6.1
 * Scipy >= 0.9.0
 
 
+Important links
+----------------
+
+[Tutorials](http://neurospin.github.io/pylearn-parsimony/tutorials.html)
 [Documentation](http://neurospin.github.io/pylearn-parsimony/)
