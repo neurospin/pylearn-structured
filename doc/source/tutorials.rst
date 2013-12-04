@@ -28,6 +28,8 @@ A general framework for our package:
     * L1 + L2 (Elastic net)
     * Total variation (TV)
 
+  * Any combination of the above
+
 * Algorithms
 
   * Fast Iterative Shrinkage-Thresholding Algorithm (FISTA)
@@ -67,7 +69,7 @@ In later sessions, we want to discover :math:`\beta` using different loss functi
 OLS + L1 + L2 + TV Functions
 ============================
 
-Knowing :math:`X` and :math:`y`, we want to discover :math:`\beta` by minimizing only OLS loss function:
+Knowing :math:`X` and :math:`y`, we want to discover :math:`\beta` by minimizing only OLS loss function by FISTA algorithm:
 
 .. math::
 
@@ -181,4 +183,4 @@ Excessive gap method algorithm (ExcessiveGapMethod) only works with the function
 References
 ==========
 .. [FISTA2009] Amir Beck and Marc Teboulle, A Fast Iterative Shrinkage-Thresholding Algorithm for Linear Inverse Problems, SIAM Journal on Imaging Sciences, 2009
-.. [NESTA2011] Stephen Becker, Jérôme Bobin, and Emmanuel J. Candès, NESTA: A Fast and Accurate First-Order Method for Sparse Recovery, SIAM Journal on Imaging Sciences, 2011
+.. [NESTA2011] Stephen Becker, Jerome Bobin, and Emmanuel J. Candes, NESTA: A Fast and Accurate First-Order Method for Sparse Recovery, SIAM Journal on Imaging Sciences, 2011
