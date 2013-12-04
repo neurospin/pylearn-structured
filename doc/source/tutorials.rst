@@ -36,7 +36,6 @@ A general framework for our package:
 
 * Estimators
 
-  * RegressionEstimator
   * RidgeRegression_L1_TV
   * RidgeRegression_SmoothedL1TV
 
