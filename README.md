@@ -28,5 +28,6 @@ Dependencies
 Important links
 ----------------
 
-[Tutorials](http://neurospin.github.io/pylearn-parsimony/tutorials.html)
-[Documentation](http://neurospin.github.io/pylearn-parsimony/)
+* [Tutorials](http://neurospin.github.io/pylearn-parsimony/tutorials.html)
+
+* [Documentation](http://neurospin.github.io/pylearn-parsimony/)
