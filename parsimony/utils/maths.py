@@ -15,22 +15,78 @@ __all__ = ['norm', 'norm1', 'norm0', 'normInf', 'sign', 'cov', 'corr']
 
 
 def norm(x):
+    '''Return the 2-norm for vectors, the Frobenius norm for matrices
+
+    Examples
+    --------
+    >>> from parsimony.utils.maths import norm
+    >>> matrix = np.array([[0.2, 1.0, 0.4], [2.0, 1.5, 0.1]])
+    >>> norm(matrix)
+    2.7313000567495327
+    >>> vector = np.array([[0.2], [1.0], [0.4]])
+    >>> norm(vector)
+    1.0954451150103324
+    '''
     return np.linalg.norm(x)
 
 
 def norm1(x):
+    '''Return the 1-norm
+
+    For vectors : sum(abs(x)**2)**(1./2)
+    For matrices : max(sum(abs(x), axis=0))
+
+    Examples
+    --------
+    >>> from parsimony.utils.maths import norm1
+    >>> matrix = np.array([[0.2, 1.0, 0.4], [2.0, 1.5, 0.1]])
+    >>> norm1(matrix)
+    2.5
+    >>> vector = np.array([[0.2], [1.0], [0.4]])
+    >>> norm1(vector)
+    1.6000000000000001
+    '''
     return np.linalg.norm(x, ord=1)
 
 
 def norm0(x):
+    '''Return the number of non-zero elements
+
+    Examples
+    --------
+    >>> from parsimony.utils.maths import norm0
+    >>> matrix = np.array([[0.2, 1.0, 0.4], [2.0, 1.5, 0.1]])
+    >>> norm0(matrix)
+    6
+    >>> vector = np.array([[0.2], [1.0], [0.4]])
+    >>> norm0(vector)
+    3
+    '''
     return np.count_nonzero(np.absolute(x))
 
 
 def normInf(x):
+    '''Return the max of the absolute sum for each column of the matrix
+
+    For vectors : max(abs(x))
+    For matrices : max(sum(abs(x), axis=1))
+
+    Examples
+    --------
+    >>> from parsimony.utils.maths import normInf
+    >>> matrix = np.array([[0.2, 1.0, 0.4], [2.0, 1.5, 0.1]])
+    >>> normInf(matrix)
+    3.6000000000000001
+    >>> vector = np.array([[0.2], [1.0], [0.4]])
+    >>> normInf(vector)
+    1.0
+    '''
     return np.linalg.norm(x, ord=float('inf'))
 
 
 def sign(v):
+    """Return the sign of v, or 0 if v is null
+    """
     if v < 0.0:
         return -1.0
     elif v > 0.0:
