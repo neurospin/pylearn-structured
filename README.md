@@ -12,12 +12,17 @@ ParsimonY contains the following features:
         * Total variation (TV)
         * Any combination of the above
     * Algorithms:
-        * _F_ast _I_terative _S_hi-_T_hresholding _A_lgorithm (fista)
+        * _F_ast _I_terative _S_hrinkage-_T_hresholding _A_lgorithm (fista)
         * _CO_ntinuation of _NEST_sterov’s smoothing _A_lgorithm (conesta)
         * Excessive gap method
+    * Estimators
+        * RidgeRegression_L1_TV
+        * RidgeRegression_SmoothedL1TV
 
 Quick start
 -----------
+
+To quick start an algorithm, we need to 
 
 ```
     import numpy as np
