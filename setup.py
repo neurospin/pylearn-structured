@@ -25,10 +25,10 @@ setup(
     packages=['parsimony',
               'parsimony.datasets',
               'parsimony.datasets.simulated',
-              'parsimony.datasets.tests',
-              'parsimony.datasets.tv',
-              'parsimony.datasets.utils',
-              'parsimony.datasets.utils._math'
+              'parsimony.tests',
+              'parsimony.tv',
+              'parsimony.utils',
+              'parsimony.utils._math'
               ],
     long_description=read('README.md'),
     classifiers=[
