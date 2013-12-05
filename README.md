@@ -22,7 +22,9 @@ ParsimonY contains the following features:
 Quick start
 -----------
 
-To quick start an algorithm, we need to 
+To quick start an algorithm, we first build a simulated dataset `X` and `y`.
+
+$$ \underline{x}_{1} x_{2} $$
 
 ```
     import numpy as np
