@@ -43,7 +43,7 @@ y_test = y[6:10]
 ```
 
 We build a simple estimator using the function OLS (ordinary least squares)
-minimized by FISTA algorithm
+minimized by FISTA algorithm.
 
 ```python
 import parsimony.estimators as estimators
