@@ -12,10 +12,46 @@ ParsimonY contains the following features:
         * Total variation (TV)
         * Any combination of the above
     * Algorithms:
-        * _F_ast _I_terative _S_oft-_T_hresholding _A_lgorithm (fista)
+        * _F_ast _I_terative _S_hi-_T_hresholding _A_lgorithm (fista)
         * _CO_ntinuation of _NEST_sterov’s smoothing _A_lgorithm (conesta)
         * Excessive gap method
 
+Quick start
+-----------
+
+```
+    import numpy as np
+    np.random.seed(seed=1)
+    # Three-dimension matrix is defined as:
+    shape = (4, 4, 1)
+    # The number of samples is defined as:
+    num_samples = 10
+    # The number of features per sample is defined as:
+    num_ft = shape[0] * shape[1] * shape[2]
+    # Define X randomly as simulated data
+    X_raw = np.random.random((num_samples, shape[0], shape[1], shape[2]))
+    X = np.reshape(X_raw, (num_samples, num_ft))
+    # Define beta randomly
+    beta = np.random.random((num_ft, 1))
+    # Define y by adding noise
+    y = np.dot(X, beta) + 0.001 * np.random.random((num_samples, 1))
+```
+
+
+```
+    import parsimony.estimators as estimators
+    import parsimony.algorithms as algorithms
+    import parsimony.tv
+    k = 0.0  # l2 ridge regression coefficient
+    l = 0.0  # l1 lasso coefficient
+    g = 0.0  # tv coefficient
+    A, n_compacts = parsimony.tv.A_from_shape(shape)  # Memory allocation for TV
+    ols_estimator = estimators.RidgeRegression_L1_TV(
+                        k, l, g, A,
+                        algorithm=algorithms.FISTA(max_iter=1000))
+    res = ols_estimator.fit(X, y)
+    print "Estimated beta error =", np.linalg.norm(ols_estimator.beta - beta)
+```
 
 Dependencies
 ------------

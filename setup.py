@@ -14,12 +14,12 @@ def read(fname):
 
 setup(
     name="parsimony",
-    version='1.0-git',
+    version='0.1.1-git',
     author="Check contributors on https://github.com/neurospin/pylearn-parsimony",
     author_emai="tommy.loefstedt@cea.fr",
     description=("ParsimonY: structured and sparse machine learning in Python"),
     license="TBD",
-    keywords="structured, sparse matrix, python",
+    keywords="structured, sparse matrix, machine learning",
     url="https://github.com/neurospin/pylearn-parsimony",
     package_dir={'': './'},
     packages=['parsimony',
