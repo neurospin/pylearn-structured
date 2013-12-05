@@ -34,5 +34,9 @@ setup(
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Machine learning"
+    ],
+    setup_requires=[
+        "numpy",
+        "scipy",
     ]
 )

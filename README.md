@@ -72,6 +72,17 @@ Dependencies
 * Scipy >= 0.9.0
 
 
+
+Installation
+------------
+Download pylearn-parsimony and then goto the directory:
+
+```
+$ sudo apt-get install python-numpy python-scipy python-matplotlib ipython ipython-notebook python-pandas python-sympy python-nose
+$ sudo python setup.py install
+```
+
+
 Important links
 ----------------
 
