@@ -24,22 +24,16 @@ Quick start
 
 To quick start an algorithm, we first build a simulated dataset `X` and `y`.
 
-\( \underline{x}_{1} x_{2} )\
-
-```
+```python
     import numpy as np
     np.random.seed(seed=1)
-    # Three-dimension matrix is defined as:
-    shape = (4, 4, 1)
-    # The number of samples is defined as:
-    num_samples = 10
-    # The number of features per sample is defined as:
-    num_ft = shape[0] * shape[1] * shape[2]
+    shape = (4, 4, 1)  # Three-dimension matrix
+    num_samples = 10  # The number of samples
+    num_ft = shape[0] * shape[1] * shape[2] # The number of features per sample
     # Define X randomly as simulated data
     X_raw = np.random.random((num_samples, shape[0], shape[1], shape[2]))
     X = np.reshape(X_raw, (num_samples, num_ft))
-    # Define beta randomly
-    beta = np.random.random((num_ft, 1))
+    beta = np.random.random((num_ft, 1)) # Define beta randomly
     # Define y by adding noise
     y = np.dot(X, beta) + 0.001 * np.random.random((num_samples, 1))
 ```
