@@ -56,6 +56,9 @@ A, n_compacts = parsimony.tv.A_from_shape(shape)  # Memory allocation for TV
 ols_estimator = estimators.RidgeRegression_L1_TV(
 		    k, l, g, A,
 		    algorithm=algorithms.FISTA(max_iter=1000))
+```
+Therefore we can fit model, get estimated beta, and do the prediction on test part.
+```python
 res = ols_estimator.fit(X_train, y_train)
 print "Estimated beta error = ", np.linalg.norm(ols_estimator.beta - beta)
 print "Prediction error = ", np.linalg.norm(ols_estimator.predict(X_test) - y_test)
