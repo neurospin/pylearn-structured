@@ -23,7 +23,12 @@ __all__ = ['BaseEstimator', 'RegressionEstimator',
 
 
 class BaseEstimator(object):
+    """Base estimator for all kinds of estimation
 
+    Parameters
+    ----------
+    algorithm : Which algorithm will be applied
+    """
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, algorithm):
@@ -31,37 +36,52 @@ class BaseEstimator(object):
         self.algorithm = algorithm
 
     def fit(self, X):
-        raise NotImplementedError('Abstract method "fit" must be ' \
+        """Fit the estimator to the data
+        """
+        raise NotImplementedError('Abstract method "fit" must be '
                                   'specialised!')
 
     def set_params(self, **kwargs):
-
         for k in kwargs:
             self.__setattr__(k, kwargs[k])
 
     @abc.abstractmethod
     def get_params(self):
-        raise NotImplementedError('Abstract method "get_params" must be ' \
+        """Return a dictionary containing all the estimator's parameters
+        """
+        raise NotImplementedError('Abstract method "get_params" must be '
                                   'specialised!')
 
     @abc.abstractmethod
     def predict(self, X):
-        raise NotImplementedError('Abstract method "predict" must be ' \
+        """Return a predicted y corresponding to the X given and the beta
+        previously determined
+        """
+        raise NotImplementedError('Abstract method "predict" must be '
                                   'specialised!')
 
     # TODO: Is this a good name?
     @abc.abstractmethod
     def score(self, X, y):
-        raise NotImplementedError('Abstract method "score" must be ' \
+        raise NotImplementedError('Abstract method "score" must be '
                                   'specialised!')
 
 
 class RegressionEstimator(BaseEstimator):
+    """Base estimator for regression estimation
 
+    Parameters
+    ----------
+    algorithm : Which algorithm will be applied
+
+    output : Boolean. Get output information
+
+    start_vector : Determine what kind of beta will be initiated
+    """
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, algorithm, output=False,
-                       start_vector=start_vectors.RandomStartVector()):
+                 start_vector=start_vectors.RandomStartVector()):
 
         self.output = output
         self.start_vector = start_vector
@@ -70,7 +90,9 @@ class RegressionEstimator(BaseEstimator):
 
     @abc.abstractmethod
     def fit(self, X, y):
-        raise NotImplementedError('Abstract method "fit" must be ' \
+        """Fit the estimator to the data
+        """
+        raise NotImplementedError('Abstract method "fit" must be '
                                   'specialised!')
 
 #        self.function.set_params(X=X, y=y)
@@ -82,6 +104,9 @@ class RegressionEstimator(BaseEstimator):
 #            self.beta = self.algorithm(X, y, self.function, beta)
 
     def predict(self, X):
+        """Return a predicted y corresponding to the X given and the beta
+        previously determined
+        """
         return np.dot(X, self.beta)
 
     def score(self, X, y):
@@ -102,13 +127,13 @@ class RidgeRegression_L1_TV(RegressionEstimator):
 
     g : The total variation regularization parameter.
 
-    A : Matrix allocation for regression
+    A : The linear operator for the total variation Nesterov function
 
     mu : The regularisation constant for the smoothing.
 
-    output : boolean, need output information
+    output : Boolean. Get output information
 
-    algorithm : which algorithm willbe applied :
+    algorithm : which algorithm will be applied :
         1. algorithms.StaticCONESTA()
         2. algorithms.DynamicCONESTA()
         3. algorithms.FISTA()
@@ -166,21 +191,24 @@ class RidgeRegression_L1_TV(RegressionEstimator):
                                                     output=output)
 
     def get_params(self):
-
+        """Return a dictionary containing all the estimator's parameters
+        """
         return {"k": self.k, "l": self.l, "g": self.g,
                 "A": self.A, "mu": self.mu}
 
     def fit(self, X, y):
+        """Fit the estimator to the data
+        """
 
         self.function = functions.RR_L1_TV(X, y, self.k, self.l, self.g,
                                            A=self.A)
-        self.algorithm.check_compatability(self.function,
+        self.algorithm.check_compatibility(self.function,
                                            self.algorithm.INTERFACES)
 
         # TODO: Should we use a seed here so that we get deterministic results?
         beta = self.start_vector.get_vector((X.shape[1], 1))
 
-        if self.mu == None:
+        if self.mu is None:
             self.mu = 0.9 * self.function.estimate_mu(beta)
         else:
             self.mu = float(self.mu)
@@ -206,17 +234,15 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
 
     g : The total variation regularization parameter.
 
-    # TODO : what is Atv?
-    Atv :
+    Atv : The linear operator for the total variation Nesterov function
 
-    # TODO : what is Al1?
-    Al1 :
+    Al1 : Matrix allocation for regression
 
     mu : The regularisation constant for the smoothing.
 
-    output : boolean, store output information
+    output : Boolean, get output information
 
-    algorithm : the algorithm that will be applied
+    algorithm : The algorithm that will be applied
 
     Example
     -------
@@ -260,19 +286,20 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
         super(RidgeRegression_SmoothedL1TV, self).__init__(algorithm=algorithm,
                                                            output=output)
 
-
     def get_params(self):
-
+        """Return a dictionary containing all the estimator's parameters
+        """
         return {"k": self.k, "l": self.l, "g": self.g,
                 "A": self.A, "mu": self.mu}
 
     def fit(self, X, y):
-
+        """Fit the estimator to the data
+        """
         self.function = functions.RR_SmoothedL1TV(X, y,
                                                   self.k, self.l, self.g,
                                                   Atv=self.Atv, Al1=self.Al1)
 
-        self.algorithm.check_compatability(self.function,
+        self.algorithm.check_compatibility(self.function,
                                            self.algorithm.INTERFACES)
 
         self.algorithm.set_params(output=self.output)

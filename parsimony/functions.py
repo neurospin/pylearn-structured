@@ -5,8 +5,8 @@ throughout the package. These represent mathematical functions and should thus
 have properties used by the corresponding algorithms.
 
 Loss functions should be stateless. Loss functions may be shared and copied and
-should therefore not hold anythig that cannot be recomputed the next time it is
-called.
+should therefore not hold anything that cannot be recomputed the next time it
+is called.
 
 Created on Mon Apr 22 10:54:29 2013
 
@@ -38,7 +38,7 @@ class Function(object):
     def f(self, *args, **kwargs):
         """Function value.
         """
-        raise NotImplementedError('Abstract method "f" must be ' \
+        raise NotImplementedError('Abstract method "f" must be '
                                   'specialised!')
 
     def reset(self):
@@ -87,7 +87,7 @@ class Constraint(object):
     def feasible(self):
         """Feasibility of the constraint.
         """
-        raise NotImplementedError('Abstract method "feasible" must be ' \
+        raise NotImplementedError('Abstract method "feasible" must be '
                                   'specialised!')
 
 
@@ -99,7 +99,7 @@ class ProximalOperator(object):
     def prox(self, beta, factor=1.0):
         """The proximal operator corresponding to the function.
         """
-        raise NotImplementedError('Abstract method "prox" must be ' \
+        raise NotImplementedError('Abstract method "prox" must be '
                                   'specialised!')
 
 
@@ -111,12 +111,25 @@ class MultiblockProximalOperator(object):
     def prox(self, beta, index, factor=1.0):
         """The proximal operator corresponding to the function with the index.
         """
-        raise NotImplementedError('Abstract method "prox" must be ' \
+        raise NotImplementedError('Abstract method "prox" must be '
                                   'specialised!')
 
 
 class NesterovFunction(object):
     # TODO: We need a superclass for NesterovFunction wrappers.
+    """
+    Parameters
+    ----------
+    l : The Lagrange multiplier, or regularisation constant, of the function.
+
+    c : Float. The limit of the constraint. The function is feasible if
+            sqrt(x'Mx) <= c. The default value is c=0, i.e. the default is a
+            regularisation formulation.
+
+    A : The linear operator for the Nesterov formulation. May not be None!
+
+    mu: The regularisation constant for the smoothing
+    """
 
     __metaclass__ = abc.ABCMeta
 
@@ -129,8 +142,14 @@ class NesterovFunction(object):
 
     def fmu(self, beta, mu=None):
         """Returns the smoothed function value.
+
+        Parameters
+        ----------
+        beta : A weight vector
+
+        mu : The regularisation constant for the smoothing
         """
-        if mu == None:
+        if mu is None:
             mu = self.get_mu()
 
         alpha = self.alpha(beta)
@@ -140,11 +159,15 @@ class NesterovFunction(object):
 
         Aa = self.Aa(alpha)
 
-        return self.l * ((np.dot(beta.T, Aa)[0, 0] \
+        return self.l * ((np.dot(beta.T, Aa)[0, 0]
                           - (mu / 2.0) * alpha_sqsum) - self.c)
 
     def grad(self, beta):
         """ Gradient of the function at beta.
+
+        Parameters
+        ----------
+        beta : The point at which to evaluate the gradient.
         """
         if self.l < consts.TOLERANCE:
             return 0.0
@@ -154,19 +177,19 @@ class NesterovFunction(object):
         return self.l * self.Aa(alpha)
 
     def get_mu(self):
-        """Returns the regularisation constant for the smoothing.
+        """Return the regularisation constant for the smoothing.
         """
         return self.mu
 
     def set_mu(self, mu):
-        """Sets the regularisation constant for the smoothing.
+        """Set the regularisation constant for the smoothing.
 
-        Arguments:
-        =========
+        Parameters
+        ----------
         mu: The regularisation constant for the smoothing to use from now on.
 
-        Returns:
-        =======
+        Returns
+        -------
         old_mu: The old regularisation constant for the smoothing that was
                 overwritten and is no longer used.
         """
@@ -180,7 +203,7 @@ class NesterovFunction(object):
     def phi(self, alpha, beta):
         """ Function value with known alpha.
         """
-        raise NotImplementedError('Abstract method "phi" must be ' \
+        raise NotImplementedError('Abstract method "phi" must be '
                                   'specialised!')
 
     def alpha(self, beta):
@@ -203,7 +226,7 @@ class NesterovFunction(object):
         return self._A
 
     def Aa(self, alpha):
-        """ Computes A^\T\alpha.
+        """ Compute A^\T\alpha.
         """
         A = self.A()
         Aa = A[0].T.dot(alpha[0])
@@ -216,7 +239,7 @@ class NesterovFunction(object):
     def project(self, a):
         """ Projection onto the compact space of the Nesterov function.
         """
-        raise NotImplementedError('Abstract method "project" must be ' \
+        raise NotImplementedError('Abstract method "project" must be '
                                   'specialised!')
 
     @abc.abstractmethod
@@ -226,14 +249,14 @@ class NesterovFunction(object):
 
             M = max_{\alpha \in K} 0.5*|\alpha|²_2.
         """
-        raise NotImplementedError('Abstract method "M" must be ' \
+        raise NotImplementedError('Abstract method "M" must be '
                                   'specialised!')
 
     @abc.abstractmethod
     def estimate_mu(self, beta):
-        """ Computes a "good" value of \mu with respect to the given \beta.
+        """ Compute a "good" value of \mu with respect to the given \beta.
         """
-        raise NotImplementedError('Abstract method "mu" must be ' \
+        raise NotImplementedError('Abstract method "mu" must be '
                                   'specialised!')
 
 
@@ -245,21 +268,21 @@ class Continuation(object):
     def mu_opt(self, eps):
         """The optimal value of \mu given \epsilon.
         """
-        raise NotImplementedError('Abstract method "mu_opt" must be ' \
+        raise NotImplementedError('Abstract method "mu_opt" must be '
                                   'specialised!')
 
     @abc.abstractmethod
     def eps_opt(self, mu):
         """The optimal value of \epsilon given \mu.
         """
-        raise NotImplementedError('Abstract method "eps_opt" must be ' \
+        raise NotImplementedError('Abstract method "eps_opt" must be '
                                   'specialised!')
 
     @abc.abstractmethod
     def eps_max(self, mu):
         """The maximum value of \epsilon.
         """
-        raise NotImplementedError('Abstract method "eps_max" must be ' \
+        raise NotImplementedError('Abstract method "eps_max" must be '
                                   'specialised!')
 
 
@@ -270,8 +293,12 @@ class Gradient(object):
     @abc.abstractmethod
     def grad(self, beta):
         """Gradient of the function.
+
+        Parameters
+        ----------
+        beta : The point at which to evaluate the gradient.
         """
-        raise NotImplementedError('Abstract method "grad" must be ' \
+        raise NotImplementedError('Abstract method "grad" must be '
                                   'specialised!')
 
 
@@ -282,8 +309,12 @@ class MultiblockGradient(object):
     @abc.abstractmethod
     def grad(self, beta, index):
         """Gradient of the function.
+
+        Parameters
+        ----------
+        beta : The point at which to evaluate the gradient.
         """
-        raise NotImplementedError('Abstract method "grad" must be ' \
+        raise NotImplementedError('Abstract method "grad" must be '
                                   'specialised!')
 
 
@@ -301,7 +332,7 @@ class Hessian(object):
 
         vector : If not None, it is multiplied with the Hessian from the right.
         """
-        raise NotImplementedError('Abstract method "hessian" must be ' \
+        raise NotImplementedError('Abstract method "hessian" must be '
                                   'specialised!')
 
     @abc.abstractmethod
@@ -319,7 +350,7 @@ class Hessian(object):
         vector : If not None, it is multiplied with the inverse of the Hessian
                 from the right.
         """
-        raise NotImplementedError('Abstract method "hessian_inverse" must be '\
+        raise NotImplementedError('Abstract method "hessian_inverse" must be '
                                   'specialised!')
 
 
@@ -331,7 +362,7 @@ class LipschitzContinuousGradient(object):
     def L(self):
         """Lipschitz constant of the gradient.
         """
-        raise NotImplementedError('Abstract method "L" must be ' \
+        raise NotImplementedError('Abstract method "L" must be '
                                   'specialised!')
 
 
@@ -348,7 +379,7 @@ class GradientStep(object):
         beta : A weight vector. Optional, since some functions may determine
                 the step without knowing beta.
         """
-        raise NotImplementedError('Abstract method "step" must be ' \
+        raise NotImplementedError('Abstract method "step" must be '
                                   'specialised!')
 
 
@@ -360,7 +391,7 @@ class GradientMap(object):
     def V(self, alpha, beta, L):
         """The gradient map associated to the function.
         """
-        raise NotImplementedError('Abstract method "V" must be ' \
+        raise NotImplementedError('Abstract method "V" must be '
                                   'specialised!')
 
 
@@ -372,14 +403,14 @@ class DualFunction(object):
     def gap(self, beta, beta_hat):
         """Compute the duality gap.
         """
-        raise NotImplementedError('Abstract method "gap" must be ' \
+        raise NotImplementedError('Abstract method "gap" must be '
                                   'specialised!')
 
     @abc.abstractmethod
     def betahat(self, alpha, beta=None):
-        """Returns the beta that minimises the dual function.
+        """Return the beta that minimises the dual function.
         """
-        raise NotImplementedError('Abstract method "betahat" must be ' \
+        raise NotImplementedError('Abstract method "betahat" must be '
                                   'specialised!')
 
 
@@ -391,18 +422,28 @@ class Eigenvalues(object):
     def lambda_max(self):
         """Largest eigenvalue of the corresponding covariance matrix.
         """
-        raise NotImplementedError('Abstract method "lambda_max" must be ' \
+        raise NotImplementedError('Abstract method "lambda_max" must be '
                                   'specialised!')
 
     def lambda_min(self):
         """Smallest eigenvalue of the corresponding covariance matrix.
         """
-        raise NotImplementedError('Abstract method "lambda_min" is not ' \
+        raise NotImplementedError('Abstract method "lambda_min" is not '
                                   'implemented!')
 
 
 class RidgeRegression(CompositeFunction, Gradient, LipschitzContinuousGradient,
                       Eigenvalues):
+    """ The Ridge Regression function
+
+    Parameters
+    ----------
+    X : Regressor
+
+    y : Regressand
+
+    k : Float. Ridge Regression weight coefficient
+    """
 
     def __init__(self, X, y, k):
 
@@ -413,12 +454,18 @@ class RidgeRegression(CompositeFunction, Gradient, LipschitzContinuousGradient,
         self.reset()
 
     def reset(self):
+        """Reset the value of _lambda_max and _lambda_min
+        """
 
         self._lambda_max = None
         self._lambda_min = None
 
     def f(self, beta):
         """Function value of Ridge regression.
+
+        Parameters
+        ----------
+        beta : Regression coefficient vector
         """
         return (1.0 / 2.0) * np.sum((np.dot(self.X, beta) - self.y) ** 2.0) \
              + (self.k / 2.0) * np.sum(beta ** 2.0)
@@ -427,6 +474,10 @@ class RidgeRegression(CompositeFunction, Gradient, LipschitzContinuousGradient,
         """Gradient of the function at beta.
 
         From the interface "Gradient".
+
+        Parameters
+        ----------
+        beta : The point at which to evaluate the gradient.
         """
         return np.dot((np.dot(self.X, beta) - self.y).T, self.X).T \
              + self.k * beta
@@ -443,7 +494,7 @@ class RidgeRegression(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
         From the interface "Eigenvalues".
         """
-        if self._lambda_max == None:
+        if self._lambda_max is None:
             s = np.linalg.svd(self.X, full_matrices=False, compute_uv=False)
 
             self._lambda_max = np.max(s) ** 2.0
@@ -460,7 +511,7 @@ class RidgeRegression(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
         From the interface "Eigenvalues".
         """
-        if self._lambda_min == None:
+        if self._lambda_min is None:
             s = np.linalg.svd(self.X, full_matrices=False, compute_uv=False)
 
             self._lambda_max = np.max(s) ** 2.0
@@ -491,6 +542,8 @@ class QuadraticConstraint(AtomicFunction, Gradient, Constraint):
     c : Float. The limit of the constraint. The function is feasible if
             sqrt(x'Mx) <= c. The default value is c=0, i.e. the default is a
             regularisation formulation.
+
+    M : Array. The given positive definite matrix
     """
     def __init__(self, l=1.0, c=0.0, M=None):
 
@@ -501,8 +554,8 @@ class QuadraticConstraint(AtomicFunction, Gradient, Constraint):
     def f(self, beta):
         """Function value.
         """
-        return self.l * (np.sqrt(np.dot(beta.T, np.dot(self.M, beta))) \
-                            - self.c)
+        return self.l * (np.sqrt(np.dot(beta.T, np.dot(self.M, beta)))
+                         - self.c)
 
     def grad(self, beta):
         """Gradient of the function.
@@ -537,6 +590,10 @@ class RGCCAConstraint(QuadraticConstraint):
     c : Float. The limit of the constraint. The function is feasible if
             sqrt(x'(\tau * I + ((1 - \tau) / n) * X'X)x) <= c. The default
             value is c=0, i.e. the default is a regularisation formulation.
+
+    tau : Float. Given regularisation constant
+
+    unbiased : Boolean.
     """
     def __init__(self, l=1.0, c=0.0, tau=1.0, X=None, unbiased=True):
 
@@ -683,7 +740,7 @@ class SmoothedL1(AtomicFunction, Constraint, NesterovFunction, Gradient,
         if self.l < consts.TOLERANCE:
             return 0.0
 
-        return self.l * ((np.dot(alpha[0].T, beta)[0, 0] \
+        return self.l * ((np.dot(alpha[0].T, beta)[0, 0]
                          - (self.mu / 2.0) * np.sum(alpha[0] ** 2.0)) - self.c)
 
     def grad(self, beta):
@@ -787,8 +844,8 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
             return 0.0
 
         A = self.A()
-        return self.l * (np.sum(np.sqrt(A[0].dot(beta) ** 2.0 + \
-                                        A[1].dot(beta) ** 2.0 + \
+        return self.l * (np.sum(np.sqrt(A[0].dot(beta) ** 2.0 +
+                                        A[1].dot(beta) ** 2.0 +
                                         A[2].dot(beta) ** 2.0)) - self.c)
 
     def phi(self, alpha, beta):
@@ -805,7 +862,7 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
         for a in alpha:
             alpha_sqsum += np.sum(a ** 2.0)
 
-        return self.l * ((np.dot(beta.T, Aa)[0, 0] \
+        return self.l * ((np.dot(beta.T, Aa)[0, 0]
                           - (self.mu / 2.0) * alpha_sqsum) - self.c)
 
     def feasible(self, beta):
@@ -814,8 +871,8 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
         From the interface "Constraint".
         """
         A = self.A()
-        val = np.sum(np.sqrt(A[0].dot(beta) ** 2.0 + \
-                             A[1].dot(beta) ** 2.0 + \
+        val = np.sum(np.sqrt(A[0].dot(beta) ** 2.0 +
+                             A[1].dot(beta) ** 2.0 +
                              A[2].dot(beta) ** 2.0))
         return val <= self.c
 
@@ -838,14 +895,14 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
         """
         # Note that we can save the state here since lmax(A) does not change.
         if len(self._A) == 3 \
-            and self._A[1].nnz == 0 and self._A[2].nnz == 0:
+                and self._A[1].nnz == 0 and self._A[2].nnz == 0:
             # TODO: Instead of p, this should really be the number of non-zero
             # rows of A.
-            self._lambda_max = 2.0 * (1.0 - math.cos(float(self._p - 1) \
-                                                     * math.pi \
+            self._lambda_max = 2.0 * (1.0 - math.cos(float(self._p - 1)
+                                                     * math.pi
                                                      / float(self._p)))
 
-        elif self._lambda_max == None:
+        elif self._lambda_max is None:
 
             from parsimony.algorithms import FastSparseSVD
 
@@ -1029,23 +1086,25 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
 
 
 class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
-                 ProximalOperator, NesterovFunction, Continuation,
-                 DualFunction):
+               ProximalOperator, NesterovFunction, Continuation,
+               DualFunction):
     """Combination (sum) of RidgeRegression, L1 and TotalVariation
 
     Parameters
     ----------
     X : Ridge Regression parameter.
 
-    y : Ridge REgression parameter.
+    y : Ridge Regression parameter.
 
     k : Ridge Regression parameter.
 
     l : L1 parameter.
-            The Lagrange multiplier, or regularisation constant, of the function.
+            The Lagrange multiplier, or regularisation constant, of the
+            function.
 
     g : Total Variation parameter
-            The Lagrange multiplier, or regularisation constant, of the function.
+            The Lagrange multiplier, or regularisation constant, of the
+            function.
 
     A : Total Variation parameter.
             The linear operator for the Nesterov formulation. May not be None!
@@ -1053,7 +1112,6 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
     mu : Total Variation parameter.
             The regularisation constant for the smoothing.
     """
-
 
     def __init__(self, X, y, k, l, g, A=None, mu=0.0):
 
@@ -1095,12 +1153,12 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
         From the interface "NesterovFunction".
 
-        Arguments:
-        =========
+        Parameters
+        ----------
         mu: The regularisation constant for the smoothing to use from now on.
 
-        Returns:
-        =======
+        Returns
+        -------
         old_mu: The old regularisation constant for the smoothing that was
                 overwritten and is no longer used.
         """
@@ -1176,7 +1234,7 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
         Lg = self.rr.L()
 
-        return (-gM * gA2 + np.sqrt((gM * gA2) ** 2.0 \
+        return (-gM * gA2 + np.sqrt((gM * gA2) ** 2.0
              + gM * Lg * gA2 * eps)) \
              / (gM * Lg)
 
@@ -1195,7 +1253,7 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
         Lg = self.rr.L()
 
-        return (2.0 * gM * gA2 * mu \
+        return (2.0 * gM * gA2 * mu
              + gM * Lg * mu ** 2.0) \
              / gA2
 
@@ -1214,7 +1272,7 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
         From the interface "DualFunction".
         """
-        if self._Xty == None:
+        if self._Xty is None:
             self._Xty = np.dot(self.X.T, self.y)
 
         Ata_tv = self.tv.l * self.tv.Aa(alphak)
@@ -1226,7 +1284,7 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
         if shape[0] > shape[1]:  # If n > p
 
             # Ridge solution
-            if self._invXXkI == None:
+            if self._invXXkI is None:
                 XtXkI = np.dot(self.X.T, self.X)
                 index = np.arange(min(XtXkI.shape))
                 XtXkI[index, index] += self.rr.k
@@ -1236,7 +1294,7 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
         else:  # If p > n
             # Ridge solution using the Woodbury matrix identity:
-            if self._XtinvXXtkI == None:
+            if self._XtinvXXtkI is None:
                 XXtkI = np.dot(self.X, self.X.T)
                 index = np.arange(min(XXtkI.shape))
                 XXtkI[index, index] += self.rr.k
@@ -1291,14 +1349,30 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
 class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
                    Eigenvalues):
+    """
+    Parameters
+    ----------
+    l : L1 parameter.
+            The Lagrange multiplier, or regularisation constant, of the
+            function.
 
+    g : Total Variation parameter
+            The Lagrange multiplier, or regularisation constant, of the
+            function.
+
+    Atv : The linear operator for the total variation Nesterov function
+
+    Al1 : Matrix allocation for regression
+
+    mu: The regularisation constant for the smoothing
+    """
     def __init__(self, l, g, Atv=None, Al1=None, mu=0.0):
 
         self.l = float(l)
         self.g = float(g)
 
         self._p = Atv[0].shape[1]  # WARNING: Number of rows may differ from p.
-        if Al1 == None:
+        if Al1 is None:
             Al1 = sparse.eye(self._p, self._p)
         self._A = [l * Al1,
                    g * Atv[0],
@@ -1322,8 +1396,8 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
 
         A = self.A()
         return maths.norm1(A[0].dot(beta)) + \
-               np.sum(np.sqrt(A[1].dot(beta) ** 2.0 + \
-                              A[2].dot(beta) ** 2.0 + \
+               np.sum(np.sqrt(A[1].dot(beta) ** 2.0 +
+                              A[2].dot(beta) ** 2.0 +
                               A[3].dot(beta) ** 2.0))
 
     def phi(self, alpha, beta):
@@ -1349,17 +1423,17 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
         """
         # Note that we can save the state here since lmax(A) does not change.
         if len(self._A) == 4 \
-            and self._A[2].nnz == 0 and self._A[3].nnz == 0:
+                and self._A[2].nnz == 0 and self._A[3].nnz == 0:
 #        if len(self._shape) == 3 \
 #            and self._shape[0] == 1 and self._shape[1] == 1:
             # TODO: Instead of p, this should really be the number of non-zero
             # rows of A.
             p = self._A[1].shape[0]
-            lmaxTV = 2.0 * (1.0 - math.cos(float(p - 1) * math.pi \
+            lmaxTV = 2.0 * (1.0 - math.cos(float(p - 1) * math.pi
                                            / float(p)))
             self._lambda_max = lmaxTV * self.g ** 2.0 + self.l ** 2.0
 
-        elif self._lambda_max == None:
+        elif self._lambda_max is None:
 
             from parsimony.algorithms import FastSparseSVD
 
@@ -1462,8 +1536,30 @@ class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
 
 
 class RR_SmoothedL1TV(CompositeFunction, LipschitzContinuousGradient,
-                        GradientMap, DualFunction, NesterovFunction):
+                      GradientMap, DualFunction, NesterovFunction):
+    """
+    Parameters
+    ----------
+    X : Ridge Regression parameter.
 
+    y : Ridge Regression parameter.
+
+    k : Ridge Regression parameter.
+
+    l : L1 parameter.
+            The Lagrange multiplier, or regularisation constant, of the
+            function.
+
+    g : Total Variation parameter.
+            The Lagrange multiplier, or regularisation constant, of the
+            function.
+
+    Atv : The linear operator for the total variation Nesterov function.
+
+    Al1 : Matrix allocation for regression.
+
+    mu: The regularisation constant for the smoothing.
+    """
     def __init__(self, X, y, k, l, g, Atv=None, Al1=None, mu=0.0):
 
         self.X = X
@@ -1503,12 +1599,12 @@ class RR_SmoothedL1TV(CompositeFunction, LipschitzContinuousGradient,
 
         From the interface "NesterovFunction".
 
-        Arguments:
-        =========
+        Parameters
+        ----------
         mu: The regularisation constant for the smoothing to use from now on.
 
-        Returns:
-        =======
+        Returns
+        -------
         old_mu: The old regularisation constant for the smoothing that was
                 overwritten and is no longer used.
         """
@@ -1570,7 +1666,7 @@ class RR_SmoothedL1TV(CompositeFunction, LipschitzContinuousGradient,
 
 #        XXkI = np.dot(X.T, X) + self.g.k * np.eye(X.shape[1])
 
-        if self._Xy == None:
+        if self._Xy is None:
             self._Xy = np.dot(self.X.T, self.y)
 
         Xty_grad = (self._Xy - grad) / self.g.k
@@ -1583,7 +1679,7 @@ class RR_SmoothedL1TV(CompositeFunction, LipschitzContinuousGradient,
 #        print "t:", time() - t
 #        beta = np.dot(invXXkI, Xty_grad)
 
-        if self._XtinvXXtkI == None:
+        if self._XtinvXXtkI is None:
             XXtkI = np.dot(self.X, self.X.T)
             index = np.arange(min(XXtkI.shape))
             XXtkI[index, index] += self.g.k
@@ -1663,7 +1759,7 @@ class LatentVariableCovariance(MultiblockFunction, MultiblockGradient):
 
 
 class GeneralisedMultiblock(MultiblockFunction, MultiblockGradient,
-                            MultiblockProximalOperator, GradientStep
+                            MultiblockProximalOperator, GradientStep,
 #                            LipschitzContinuousGradient,
 #                            NesterovFunction, Continuation, DualFunction
                             ):

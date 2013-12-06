@@ -45,11 +45,12 @@ __all__ = ['BaseAlgorithm',
 
 class BaseAlgorithm(object):
 
-    def check_compatability(self, function, interfaces):
-
+    def check_compatibility(self, function, interfaces):
+        """Check if the function considered implements the given interfaces
+        """
         for interface in interfaces:
             if not isinstance(function, interface):
-                raise ValueError("%s does not implement interface %s" % \
+                raise ValueError("%s does not implement interface %s" %
                                 (str(function), str(interface)))
 
     def set_params(self, **kwargs):
@@ -62,12 +63,16 @@ class ImplicitAlgorithm(BaseAlgorithm):
     """Implicit algorithms are algorithms that do not use a loss function, but
     instead minimise or maximise some underlying function implicitly, from the
     data.
+
+    Parameters
+    ----------
+    X : Regressor
     """
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def __call__(X, **kwargs):
-        raise NotImplementedError('Abstract method "__call__" must be ' \
+        raise NotImplementedError('Abstract method "__call__" must be '
                                   'specialised!')
 
 
@@ -81,15 +86,13 @@ class ExplicitAlgorithm(BaseAlgorithm):
     def __call__(function, beta, **kwargs):
         """Call this object to obtain the variable that gives the minimum.
 
-        Arguments:
-        =========
-        X : The data.
-
+        Parameters
+        ----------
         function : The function to minimise.
 
         beta : A start vector.
         """
-        raise NotImplementedError('Abstract method "__call__" must be ' \
+        raise NotImplementedError('Abstract method "__call__" must be '
                                   'specialised!')
 
 
@@ -102,16 +105,20 @@ class FastSVD(ImplicitAlgorithm):
         Particularly, this is a lot faster than np.linalg.svd when M << N or
         M >> N, for an M-by-N matrix.
 
-        Arguments:
-        ---------
+        Parameters
+        ----------
         X : The matrix to decompose.
 
-        Returns:
+        max_iter : maximum allowed number of iterations
+
+        start_vector : a start vector
+
+        Returns
         -------
         v : The right singular vector of X that corresponds to the largest
                 singular value.
-        
-        Example:
+
+        Example
         -------
         >>> import numpy as np
         >>> from parsimony.algorithms import FastSVD
@@ -180,15 +187,19 @@ class FastSparseSVD(ImplicitAlgorithm):
 
         These are ballpark estimates that may differ on your computer.
 
-        Arguments:
-        ---------
+        Parameters
+        ----------
         X : The matrix to decompose
 
-        Returns:
+        max_iter : maximum allowed number of iterations
+
+        start_vector : a start vector
+
+        Returns
         -------
         v : The right singular vector.
-        
-        Example:
+
+        Example
         -------
         >>> import numpy as np
         >>> from parsimony.algorithms import FastSparseSVD
@@ -207,7 +218,7 @@ class FastSparseSVD(ImplicitAlgorithm):
                [ 0.42311297],
                [ 0.27656382]])
 
-        
+
         """
         M, N = X.shape
         if M < N:
@@ -247,6 +258,18 @@ class FastSparseSVD(ImplicitAlgorithm):
 
 class FISTA(ExplicitAlgorithm):
     """ The fast iterative shrinkage threshold algorithm.
+
+    Parameters
+    ----------
+    step : Step for each iteration
+
+    output : Boolean. Get output information
+
+    eps : Float. Tolerance
+
+    max_iter : Maximum allowed number of iterations
+
+    min_iter : Minimum allowed number of iterations
 
     Example
     -------
@@ -324,7 +347,7 @@ class FISTA(ExplicitAlgorithm):
                   # Updated: Use GradientStep instead!!
                   functions.LipschitzContinuousGradient,
                   functions.ProximalOperator,
-                 ]
+                  ]
 
     def __init__(self, step=None, output=False,
                  eps=consts.TOLERANCE,
@@ -337,12 +360,19 @@ class FISTA(ExplicitAlgorithm):
         self.min_iter = min_iter
 
     def __call__(self, function, beta):
+        """Call this object to obtain the variable that gives the minimum.
 
-        self.check_compatability(function, self.INTERFACES)
+        Parameters
+        ----------
+        function : The function to minimise.
+
+        beta : A start vector.
+        """
+        self.check_compatibility(function, self.INTERFACES)
 
         z = betanew = betaold = beta
 
-        if self.step == None:
+        if self.step is None:
             self.step = 1.0 / function.L()
 
         if self.output:
@@ -375,6 +405,19 @@ class FISTA(ExplicitAlgorithm):
 class CONESTA(ExplicitAlgorithm):
     """COntinuation with NEsterov smoothing in a Soft-Thresholding Algorithm,
     or CONESTA for short.
+
+    Parameters
+    ----------
+    mu_start :
+
+    mu_min :
+
+    tau :
+
+    dynamic : Boolean. Switch for dynamically or statically decreasing \mu
+
+    continuations : maximum iteration
+
     """
     INTERFACES = [functions.NesterovFunction,
                   functions.Continuation,
@@ -382,7 +425,7 @@ class CONESTA(ExplicitAlgorithm):
                   functions.ProximalOperator,
                   functions.Gradient,
                   functions.DualFunction
-                 ]
+                  ]
 
     def __init__(self, mu_start=None, mu_min=consts.TOLERANCE, tau=0.5,
                  dynamic=True, continuations=30,
@@ -408,9 +451,9 @@ class CONESTA(ExplicitAlgorithm):
 
     def __call__(self, function, beta):
 
-        self.check_compatability(function, self.INTERFACES)
+        self.check_compatibility(function, self.INTERFACES)
 
-        if self.mu_start != None:
+        if self.mu_start is not None:
             mu = [self.mu_start]
         else:
             mu = [0.9 * function.estimate_mu(beta)]
@@ -529,12 +572,23 @@ class DynamicCONESTA(CONESTA):
 
 class ExcessiveGapMethod(ExplicitAlgorithm):
     """Nesterov's excessive gap method for strongly convex functions.
+
+    Parameters
+    ----------
+    output : Boolean. Get output information
+
+    eps : Float. Tolerance
+
+    max_iter : Maximum allowed number of iterations
+
+    min_iter : Minimum allowed number of iterations
+
     """
     INTERFACES = [functions.NesterovFunction,
                   functions.LipschitzContinuousGradient,
                   functions.GradientMap,
                   functions.DualFunction
-                 ]
+                  ]
 
     def __init__(self, output=False,
                  eps=consts.TOLERANCE,
@@ -553,6 +607,8 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
         function : The function to minimise. It contains two parts, function.g
                 is the strongly convex part and function.h is the smoothed part
                 of the function.
+
+        beta : Regression coefficient vector
         """
         A = function.h.A()
 
