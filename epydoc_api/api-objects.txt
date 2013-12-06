@@ -133,6 +133,7 @@ parsimony.tests.test_algorithms.__package__	parsimony.tests.test_algorithms-modu
 parsimony.tests.test_all	parsimony.tests.test_all-module.html
 parsimony.tests.test_all.test	parsimony.tests.test_all-module.html#test
 parsimony.tests.test_all.__package__	parsimony.tests.test_all-module.html#__package__
+parsimony.tests.test_estimator	parsimony.tests.test_estimator-module.html
 parsimony.tests.test_fast_svd	parsimony.tests.test_fast_svd-module.html
 parsimony.tests.test_fast_svd.__package__	parsimony.tests.test_fast_svd-module.html#__package__
 parsimony.tests.test_fast_svd.generate_sparse_matrix	parsimony.tests.test_fast_svd-module.html#generate_sparse_matrix
@@ -787,6 +788,8 @@ parsimony.start_vectors.ZerosStartVector.__init__	parsimony.start_vectors.ZerosS
 parsimony.tests.test_algorithms.TestFISTA	parsimony.tests.test_algorithms.TestFISTA-class.html
 unittest.case.TestCase.failureException	exceptions.AssertionError-class.html
 parsimony.tests.test_algorithms.TestFISTA.test_fista	parsimony.tests.test_algorithms.TestFISTA-class.html#test_fista
+parsimony.tests.test_estimator.TestEstimators	parsimony.tests.test_estimator.TestEstimators-class.html
+parsimony.tests.test_estimator.TestEstimators.test_linear_regression_L1L2TV	parsimony.tests.test_estimator.TestEstimators-class.html#test_linear_regression_L1L2TV
 parsimony.tests.test_fast_svd.TestSVD	parsimony.tests.test_fast_svd.TestSVD-class.html
 parsimony.tests.test_fast_svd.TestSVD.get_err_fast_svd	parsimony.tests.test_fast_svd.TestSVD-class.html#get_err_fast_svd
 parsimony.tests.test_fast_svd.TestSVD.test_fast_sparse_svd	parsimony.tests.test_fast_svd.TestSVD-class.html#test_fast_sparse_svd
