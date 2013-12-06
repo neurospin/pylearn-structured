@@ -22,7 +22,7 @@ ParsimonY contains the following features:
 Quick start
 -----------
 
-To quick start an algorithm, we first build a simulated dataset `X` and `y`.
+To quick start, we first build a simulated dataset `X` and `y`.
 
 ```python
 import numpy as np
@@ -57,20 +57,12 @@ ols_estimator = estimators.RidgeRegression_L1_TV(
 		    k, l, g, A,
 		    algorithm=algorithms.FISTA(max_iter=1000))
 ```
-Therefore we can fit model, get estimated beta, and do the prediction on test part.
+Therefore we can fit model, estimate beta, and predict on test part.
 ```python
 res = ols_estimator.fit(X_train, y_train)
 print "Estimated beta error = ", np.linalg.norm(ols_estimator.beta - beta)
 print "Prediction error = ", np.linalg.norm(ols_estimator.predict(X_test) - y_test)
 ```
-
-Dependencies
-------------
-
-* Python 2.7.x
-* NumPy >= 1.6.1
-* Scipy >= 0.9.0
-
 
 Important links
 ----------------
@@ -78,3 +70,11 @@ Important links
 * [Tutorials](http://neurospin.github.io/pylearn-parsimony/tutorials.html)
 
 * [Documentation](http://neurospin.github.io/pylearn-parsimony/)
+
+
+Dependencies
+------------
+
+* Python 2.7.x
+* NumPy >= 1.6.1
+* Scipy >= 0.9.0
