@@ -199,7 +199,6 @@ class RidgeRegression_L1_TV(RegressionEstimator):
     def fit(self, X, y):
         """Fit the estimator to the data
         """
-
         self.function = functions.RR_L1_TV(X, y, self.k, self.l, self.g,
                                            A=self.A)
         self.algorithm.check_compatibility(self.function,

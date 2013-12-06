@@ -4,56 +4,63 @@
 -------------------------
 33: #TODO: This depends on the OS. We should try to be clever here ...
 
-120: # TODO: Use module for this!
+147: # TODO: Use module for this!
 
-136: # TODO: Use module for this!
+163: # TODO: Use module for this!
 
-175: # TODO: Use module for this!
+227: # TODO: Use module for this!
 
-191: # TODO: Use module for this!
+243: # TODO: Use module for this!
 
-353: # TODO: Warn if G_new < 0.
+344: # TODO: We should use a step size here instead of the
+345: # Lipschitz constant. All functions don't have L, but will
+346: # still run in FISTA with a small enough step size.
+347: # Updated: Use GradientStep instead!!
+
+509: # TODO: Warn if G_new < 0.
+
+774: for it in xrange(10):  # TODO: Get number of iterations!
 
 ./parsimony/functions.py:
 ------------------------
-95: # TODO: We need a superclass for NesterovFunction wrappers.
+121: # TODO: We need a superclass for NesterovFunction wrappers.
 
-677: # TODO: Instead of p, this should really be the number of non-zero
-678: # rows of A.
+912: # TODO: Instead of p, this should really be the number of non-zero
+913: # rows of A.
 
-688: # TODO: Add max_iter here!
+923: # TODO: Add max_iter here!
 
-1112: self._p = Atv[0].shape[1]  # WARNING: Number of rows may differ from p.
+1387: self._p = Atv[0].shape[1]  # WARNING: Number of rows may differ from p.
 
-1122: # TODO: Is reset still necessary?
+1397: # TODO: Is reset still necessary?
 
-1167: # TODO: Instead of p, this should really be the number of non-zero
-1168: # rows of A.
+1442: # TODO: Instead of p, this should really be the number of non-zero
+1443: # rows of A.
 
-1184: # TODO: Add max_iter here!!
+1459: # TODO: Add max_iter here!!
 
-1347: # TODO: Use max_iter here!!
+1644: # TODO: Use max_iter here!!
 
-1375: # TODO: Kernelise this function! See how I did in LRL2_L1_TV._beta_hat.
+1672: # TODO: Kernelise this function! See how I did in LRL2_L1_TV._beta_hat.
 
-1414: # TODO: Add this function!
+1711: # TODO: Add this function!
 
+1813: # TODO: Check instead if it is a numpy array.
+
+1870: return 0.01  # TODO: Fix this!! Add backtracking?
 ./parsimony/estimators.py:
 -------------------------
-52: # TODO: Is this a good name?
+63: # TODO: Is this a good name?
 
-158: # TODO: Should we use a seed here so that we get deterministic results?
+207: # TODO: Should we use a seed here so that we get deterministic results?
 
 ./parsimony/datasets/samples_generator_struct.py:
 ------------------------------------------------
 9: # TODO: Remove dependence on scikit learn.
 
-556: # TODO: We cannot return the A matrices separately like this, we must
-557: # return a list or tuple A such that A = [Ax, Ay, Az].
-
 ./parsimony/datasets/simulated/grad.py:
 --------------------------------------
-74: # TODO: Only works for up to 3 dimensions ...
+104: # TODO: Only works for up to 3 dimensions ...
 
 ./parsimony/utils/consts.py:
 ---------------------------
