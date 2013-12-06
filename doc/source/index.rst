@@ -20,13 +20,6 @@ ParsimonY provides structured and sparse penalties in machine learning:
     - Excessive gap method
 
 
-Installation
-============
-
-.. toctree::
-
-   installation.rst
-
 Tutorials
 =========
 
