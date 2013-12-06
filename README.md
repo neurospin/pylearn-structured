@@ -19,6 +19,15 @@ ParsimonY contains the following features:
         * RidgeRegression_L1_TV
         * RidgeRegression_SmoothedL1TV
 
+Installation
+------------
+Download pylearn-parsimony, and then goto the directory:
+
+```
+$ sudo apt-get install python-numpy python-scipy python-matplotlib ipython ipython-notebook python-pandas python-sympy python-nose
+$ sudo python setup.py install
+```
+        
 Quick start
 -----------
 
@@ -70,11 +79,3 @@ Important links
 * [Tutorials](http://neurospin.github.io/pylearn-parsimony/tutorials.html)
 
 * [Documentation](http://neurospin.github.io/pylearn-parsimony/)
-
-
-Dependencies
-------------
-
-* Python 2.7.x
-* NumPy >= 1.6.1
-* Scipy >= 0.9.0
