@@ -23,3 +23,4 @@ git add .
 git commit -a -m "DOC: update pages"
 git push origin gh-pages
 cd $curdir
+rm -rf $outdir
