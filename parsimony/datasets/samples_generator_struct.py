@@ -405,7 +405,7 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
     for k in xrange(len(objects)):
         o = objects[k]
         beta[o.get_mask()] += o.coef_info
-
+    beta = ndimage.gaussian_filter(beta, sigma=sigma_spatial_smoothing)
     beta_flat = beta.ravel()
     # Fix a scaling to get the desire r2, ie.:
     # y = coef * X * beta + noize
@@ -553,11 +553,9 @@ if __name__ == '__main__':
     l1_ratio = .9
     l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
 
-    # TODO: We cannot return the A matrices separately like this, we must
-    # return a list or tuple A such that A = [Ax, Ay, Az].
-    A, n_compacts = parsimony.tv.tv_As_from_shape(shape)
-    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, A,
-                                       algorithm=algorithms.conesta_static)
+    A, n_compacts = parsimony.tv.A_from_shape(shape)
+    tvl1l2 = estimators.RidgeRegression_L1_TV(k, l, g, A,
+                        algorithm=algorithms.StaticCONESTA(max_iter=100))
     tvl1l2.fit(Xtr, ytr)
     plot = plt.subplot(337)
     plot_map(tvl1l2.beta.reshape(nx, ny), plot)
@@ -568,8 +566,8 @@ if __name__ == '__main__':
     tv_ratio = .5
     l1_ratio = .45
     l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
-    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, A,
-                                       algorithm=algorithms.conesta_static)
+    tvl1l2 = estimators.RidgeRegression_L1_TV(k, l, g, A,
+                        algorithm=algorithms.StaticCONESTA(max_iter=100))
     tvl1l2.fit(Xtr, ytr)
     plot = plt.subplot(338)
     plot_map(tvl1l2.beta.reshape(nx, ny), plot)
@@ -580,8 +578,8 @@ if __name__ == '__main__':
     tv_ratio = .9
     l1_ratio = .05
     l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
-    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, A,
-                                       algorithm=algorithms.conesta_static)
+    tvl1l2 = estimators.RidgeRegression_L1_TV(k, l, g, A,
+                        algorithm=algorithms.StaticCONESTA(max_iter=100))
     tvl1l2.fit(Xtr, ytr)
     plot = plt.subplot(339)
     plot_map(tvl1l2.beta.reshape(nx, ny), plot)

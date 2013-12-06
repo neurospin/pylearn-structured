@@ -30,12 +30,26 @@ class BaseStartVector(object):
     @abc.abstractmethod
     def get_vector(self, shape):
 
-        raise NotImplementedError('Abstract method "get_vector" must be '\
+        raise NotImplementedError('Abstract method "get_vector" must be '
                                   'specialised!')
 
 
 class IdentityStartVector(BaseStartVector):
     """A pre-determined start vector.
+
+    Parameters
+    ----------
+    vector : nx1 Array. Value of the predetermined start vector
+
+    Examples
+    --------
+    >>> from parsimony.start_vectors import IdentityStartVector
+    >>> start_vector = IdentityStartVector(np.array([[0.5], [2.0], [0.3], [1.0]]))
+    >>> start_vector.get_vector()
+    array([[ 0.5],
+           [ 2. ],
+           [ 0.3],
+           [ 1. ]])
     """
     def __init__(self, vector, **kwargs):
 
@@ -44,18 +58,75 @@ class IdentityStartVector(BaseStartVector):
         self.vector = vector
 
     def get_vector(self, *args, **kwargs):
+        '''Return the predetermined start vector
 
+        Examples
+        --------
+        >>> from parsimony.start_vectors import IdentityStartVector
+        >>> start_vector = IdentityStartVector(np.array([[0.5], [2.0], [0.3], [1.0]]))
+        >>> start_vector.get_vector()
+        array([[ 0.5],
+               [ 2. ],
+               [ 0.3],
+               [ 1. ]])
+        '''
         return self.vector
 
 
 class RandomStartVector(BaseStartVector):
     """A start vector of uniformly distributed random values.
+
+    Parameters
+    ----------
+    normalise : Bool. If True, normalise the randomly created vectors
+            Default is True
+
+    Examples
+    --------
+    >>> from parsimony.start_vectors import RandomStartVector
+
+    # Without normalization
+    >>> start_vector = RandomStartVector(normalise=False)
+    >>> random = start_vector.get_vector((3,1))
+    >>> print random  # doctest: +SKIP
+    [[ 0.98716579]
+     [ 0.12228144]
+     [ 0.80464505]]
+    >>> print maths.norm(random)  # doctest: +SKIP
+    0.370257678561
+
+    # With normalization
+    >>> start_vector_normalized = RandomStartVector(normalise=True)
+    >>> random_normalized = start_vector_normalized.get_vector((3,1))
+    >>> print random_normalized  # doctest: +SKIP
+    [[ 0.71286161]
+     [ 0.52456579]
+     [ 0.46546651]]
+    >>> print maths.norm(random_normalized)
+    1.0
+
     """
     def __init__(self, **kwargs):
 
         super(RandomStartVector, self).__init__(**kwargs)
 
     def get_vector(self, shape):
+        """Return randomly generated vector of chosen shape
+
+        Parameters
+        ----------
+        shape : tuple. Size of the vector to generate
+
+        Examples
+        --------
+        >>> from parsimony.start_vectors import RandomStartVector
+        >>> start_vector = RandomStartVector(normalise=False)
+        >>> random = start_vector.get_vector((3,1))
+        >>> print random  # doctest: +SKIP
+        [[ 0.98716579]
+         [ 0.12228144]
+         [ 0.80464505]]
+        """
 
         vector = np.random.rand(*shape)  # Random start vector
 
@@ -66,14 +137,58 @@ class RandomStartVector(BaseStartVector):
 
 
 class OnesStartVector(BaseStartVector):
-    """A start vector of zeros.
-    """
-    def __init__(self, **kwargs):
+    """A start vector of ones.
 
-        super(OnesStartVector, self).__init__(**kwargs)
+    Parameters
+    ----------
+    normalise : Bool. If True, normalise the randomly created vectors
+            Default is False
+
+    Examples
+    --------
+    >>> from parsimony.start_vectors import OnesStartVector
+
+    # Without normalization
+    >>> start_vector = OnesStartVector(normalise=False)
+    >>> ones = start_vector.get_vector((3,1))
+    >>> print ones
+    [[ 1.]
+     [ 1.]
+     [ 1.]]
+    >>> print maths.norm(ones)
+    1.73205080757
+
+    # With normalization
+    >>> start_vector_normalized = OnesStartVector(normalise=True)
+    >>> ones_normalized = start_vector_normalized.get_vector((3,1))
+    >>> print ones_normalized
+    [[ 0.57735027]
+     [ 0.57735027]
+     [ 0.57735027]]
+    >>> print maths.norm(ones_normalized)
+    1.0
+    """
+    def __init__(self, normalise=False, **kwargs):
+
+        super(OnesStartVector, self).__init__(normalise=normalise, **kwargs)
 
     def get_vector(self, shape):
+        '''Return vector of ones of chosen shape
 
+        Parameters
+        ----------
+        shape : tuple. Size of the vector to generate
+
+        Examples
+        --------
+        >>> from parsimony.start_vectors import OnesStartVector
+        >>> start_vector = OnesStartVector()
+        >>> ones = start_vector.get_vector((3,1))
+        >>> print ones
+        [[ 1.]
+         [ 1.]
+         [ 1.]]
+        '''
         vector = np.ones(shape)  # Using a vector of ones.
 
         if self.normalise:
@@ -87,6 +202,16 @@ class ZerosStartVector(BaseStartVector):
 
     Use with care! Be aware that using this in algorithms that are not aware
     may result in division by zero since the norm of this start vector is 0.
+
+    Examples
+    --------
+    >>> from parsimony.start_vectors import ZerosStartVector
+    >>> start_vector = ZerosStartVector()
+    >>> zeros = start_vector.get_vector((3,1))
+    >>> print zeros
+    [[ 0.]
+     [ 0.]
+     [ 0.]]
     """
     def __init__(self, **kwargs):
 
@@ -95,7 +220,22 @@ class ZerosStartVector(BaseStartVector):
         super(ZerosStartVector, self).__init__(normalise=False, **kwargs)
 
     def get_vector(self, shape):
+        '''Return vector of zeros of chosen shape
 
+        Parameters
+        ----------
+        shape : tuple. Size of the vector to generate
+
+        Examples
+        --------
+        >>> from parsimony.start_vectors import ZerosStartVector
+        >>> start_vector = ZerosStartVector()
+        >>> zeros = start_vector.get_vector((3,1))
+        >>> print zeros
+        [[ 0.]
+         [ 0.]
+         [ 0.]]
+        '''
         w = np.zeros(shape)  # Using a vector of zeros.
 
         return w
@@ -316,3 +456,8 @@ class ZerosStartVector(BaseStartVector):
 #            return w / norm(w)
 #        else:
 #            return w
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

@@ -45,11 +45,12 @@ __all__ = ['BaseAlgorithm',
 
 class BaseAlgorithm(object):
 
-    def check_compatability(self, function, interfaces):
-
+    def check_compatibility(self, function, interfaces):
+        """Check if the function considered implements the given interfaces
+        """
         for interface in interfaces:
             if not isinstance(function, interface):
-                raise ValueError("%s does not implement interface %s" % \
+                raise ValueError("%s does not implement interface %s" %
                                 (str(function), str(interface)))
 
     def set_params(self, **kwargs):
@@ -62,6 +63,10 @@ class ImplicitAlgorithm(BaseAlgorithm):
     """Implicit algorithms are algorithms that do not use a loss function, but
     instead minimise or maximise some underlying function implicitly, from the
     data.
+
+    Parameters
+    ----------
+    X : Regressor
     """
     __metaclass__ = abc.ABCMeta
 
@@ -81,10 +86,8 @@ class ExplicitAlgorithm(BaseAlgorithm):
     def __call__(function, beta, **kwargs):
         """Call this object to obtain the variable that gives the minimum.
 
-        Arguments:
-        =========
-        X : The data.
-
+        Parameters
+        ----------
         function : The function to minimise.
 
         beta : A start vector.
@@ -102,14 +105,38 @@ class FastSVD(ImplicitAlgorithm):
         Particularly, this is a lot faster than np.linalg.svd when M << N or
         M >> N, for an M-by-N matrix.
 
-        Arguments:
-        ---------
+        Parameters
+        ----------
         X : The matrix to decompose.
 
-        Returns:
+        max_iter : maximum allowed number of iterations
+
+        start_vector : a start vector
+
+        Returns
         -------
         v : The right singular vector of X that corresponds to the largest
                 singular value.
+
+        Example
+        -------
+        >>> import numpy as np
+        >>> from parsimony.algorithms import FastSVD
+        >>> np.random.seed(0)
+        >>> X = np.random.random((10,10))
+        >>> fast_svd = FastSVD()
+        >>> fast_svd(X)
+        array([[-0.3522974 ],
+               [-0.35647707],
+               [-0.35190104],
+               [-0.34715338],
+               [-0.19594198],
+               [-0.24103104],
+               [-0.25578904],
+               [-0.29501092],
+               [-0.42311297],
+               [-0.27656382]])
+
         """
         M, N = X.shape
         if M < 80 and N < 80:  # Very arbitrary threshold for my computer ;-)
@@ -160,13 +187,38 @@ class FastSparseSVD(ImplicitAlgorithm):
 
         These are ballpark estimates that may differ on your computer.
 
-        Arguments:
-        ---------
+        Parameters
+        ----------
         X : The matrix to decompose
 
-        Returns:
+        max_iter : maximum allowed number of iterations
+
+        start_vector : a start vector
+
+        Returns
         -------
         v : The right singular vector.
+
+        Example
+        -------
+        >>> import numpy as np
+        >>> from parsimony.algorithms import FastSparseSVD
+        >>> np.random.seed(0)
+        >>> X = np.random.random((10,10))
+        >>> fast_sparse_svd = FastSparseSVD()
+        >>> fast_sparse_svd(X)
+        array([[ 0.3522974 ],
+               [ 0.35647707],
+               [ 0.35190103],
+               [ 0.34715338],
+               [ 0.19594198],
+               [ 0.24103104],
+               [ 0.25578904],
+               [ 0.29501092],
+               [ 0.42311297],
+               [ 0.27656382]])
+
+
         """
         M, N = X.shape
         if M < N:
@@ -206,6 +258,87 @@ class FastSparseSVD(ImplicitAlgorithm):
 
 class FISTA(ExplicitAlgorithm):
     """ The fast iterative shrinkage threshold algorithm.
+
+    Parameters
+    ----------
+    step : Step for each iteration
+
+    output : Boolean. Get output information
+
+    eps : Float. Tolerance
+
+    max_iter : Maximum allowed number of iterations
+
+    min_iter : Minimum allowed number of iterations
+
+    Example
+    -------
+    import numpy as np
+    import parsimony.estimators as estimators
+    import parsimony.algorithms as algorithms
+    import parsimony.tv
+    from parsimony.functions import OLSL2_L1_TV
+    from parsimony.algorithms import fista
+    from parsimony.start_vectors import RandomStartVector
+
+    shape = (100, 100, 1)
+    num_samples = 500
+
+    num_ft = shape[0] * shape[1] * shape[2]
+    X = np.random.random((num_samples, num_ft))
+    y = np.random.randint(0, 2, (num_samples, 1))
+    random_start_vector = np.random.random((X.shape[1], 1))
+
+    def ratio2coef(alpha, tv_ratio, l1_ratio):
+        l2_ratio = 1 - tv_ratio - l1_ratio
+        l, k, g = alpha * l1_ratio,  alpha * l2_ratio, alpha * tv_ratio
+        return l, k, g
+
+    eps = 0.01
+    alpha = 10.
+
+    tv_ratio = .05
+    l1_ratio = .9
+
+    l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
+
+    Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
+
+    tvl1l2_conesta = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
+                                        algorithm=algorithms.conesta_static)
+    tvl1l2_conesta.fit(X, y)
+
+    tvl1l2_fista = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
+                                        algorithm=algorithms.fista)
+    tvl1l2_fista.fit(X, y)
+
+    residual = np.sum(tvl1l2_fista.beta - tvl1l2_conesta.beta)
+
+    import spams
+    spams_X = np.asfortranarray(X)
+    spams_Y = np.asfortranarray(y)
+    W0 = np.asfortranarray(np.random.random((spams_X.shape[1],
+                                             spams_Y.shape[1])))
+    spams_X = np.asfortranarray(spams_X - np.tile(np.mean(spams_X, 0),
+                                                  (spams_X.shape[0], 1)))
+    spams_Y = np.asfortranarray(spams_Y - np.tile(np.mean(spams_Y,0),
+                                                         (spams_Y.shape[0],1)))
+    param = {'numThreads' : 1,'verbose' : True,
+         'lambda1' : 0.05, 'it0' : 10, 'max_it' : 200,
+         'L0' : 0.1, 'tol' : 1e-3, 'intercept' : False,
+         'pos' : False}
+    (W, optim_info) = spams.fistaFlat(spams_Y,
+                                      spams_X,
+                                      W0,
+                                      True,
+                                      **param)
+
+#    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
+#                                algorithm=algorithms.conesta_static)
+#    tvl1l2.fit(X, y)
+#    start_beta_vector = random_start_vector.get_vector([X.shape[1], 1])
+#    fista(X, y, olsl2_L1_TV, start_beta_vector)
+
     """
     INTERFACES = [functions.Gradient,
                   # TODO: We should use a step size here instead of the
@@ -227,12 +360,19 @@ class FISTA(ExplicitAlgorithm):
         self.min_iter = min_iter
 
     def __call__(self, function, beta):
+        """Call this object to obtain the variable that gives the minimum.
 
-        self.check_compatability(function, self.INTERFACES)
+        Parameters
+        ----------
+        function : The function to minimise.
+
+        beta : A start vector.
+        """
+        self.check_compatibility(function, self.INTERFACES)
 
         z = betanew = betaold = beta
 
-        if self.step == None:
+        if self.step is None:
             self.step = 1.0 / function.L()
 
         if self.output:
@@ -265,6 +405,19 @@ class FISTA(ExplicitAlgorithm):
 class CONESTA(ExplicitAlgorithm):
     """COntinuation with NEsterov smoothing in a Soft-Thresholding Algorithm,
     or CONESTA for short.
+
+    Parameters
+    ----------
+    mu_start :
+
+    mu_min :
+
+    tau :
+
+    dynamic : Boolean. Switch for dynamically or statically decreasing \mu
+
+    continuations : maximum iteration
+
     """
     INTERFACES = [functions.NesterovFunction,
                   functions.Continuation,
@@ -298,9 +451,9 @@ class CONESTA(ExplicitAlgorithm):
 
     def __call__(self, function, beta):
 
-        self.check_compatability(function, self.INTERFACES)
+        self.check_compatibility(function, self.INTERFACES)
 
-        if self.mu_start != None:
+        if self.mu_start is not None:
             mu = [self.mu_start]
         else:
             mu = [0.9 * function.estimate_mu(beta)]
@@ -419,6 +572,17 @@ class DynamicCONESTA(CONESTA):
 
 class ExcessiveGapMethod(ExplicitAlgorithm):
     """Nesterov's excessive gap method for strongly convex functions.
+
+    Parameters
+    ----------
+    output : Boolean. Get output information
+
+    eps : Float. Tolerance
+
+    max_iter : Maximum allowed number of iterations
+
+    min_iter : Minimum allowed number of iterations
+
     """
     INTERFACES = [functions.NesterovFunction,
                   functions.LipschitzContinuousGradient,
@@ -443,6 +607,8 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
         function : The function to minimise. It contains two parts, function.g
                 is the strongly convex part and function.h is the smoothed part
                 of the function.
+
+        beta : Regression coefficient vector
         """
         A = function.h.A()
 
@@ -624,3 +790,8 @@ class GeneralisedMultiblockISTA(ExplicitAlgorithm):
 #                w[i] = wi
 
         return w
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

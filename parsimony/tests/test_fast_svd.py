@@ -12,13 +12,19 @@ from parsimony.algorithms import FastSparseSVD
 import parsimony.utils as utils
 
 
+
 def generate_sparse_matrix(shape, density=0.10):
     '''
     Example
     -------
-    shape = (5, 5)
-    density = 0.2
-    print generate_sparse_matrix(shape, density)
+    >>> shape = (5, 5)
+    >>> density = 0.2
+    >>> print generate_sparse_matrix(shape, density)  # doctest: +SKIP
+    [[ 0.          0.          0.          0.          0.        ]
+     [ 0.          0.          0.95947611  0.          0.        ]
+     [ 0.          0.          0.          0.12626569  0.        ]
+     [ 0.          0.51318651  0.          0.          0.        ]
+     [ 0.          0.          0.          0.          0.92133575]]
     '''
     # shape = (5, 5)
     # density = 0.1
@@ -40,40 +46,61 @@ class TestSVD(unittest.TestCase):
         # svd from numpy array
         U, s_np, V = np.linalg.svd(X)
         np_v = V[[0], :].T
-        err = np.sum(
-            np.absolute(computed_v / np_v) - np.ones((np_v.shape[0], 1),
-            dtype=computed_v.dtype))
+        
+        sign = np.dot(computed_v.T, np_v)[0][0]
+        np_v_new = np_v * sign
+        err = np.linalg.norm(computed_v - np_v_new)
+
         return err
 
     def get_err_fast_svd(self, nrow, ncol):
+        np.random.seed(0)
         X = np.random.random((nrow, ncol))
         # svd from parsimony
-        parsimony_v = FastSVD(X, max_iter=1000)
+        fast_svd = FastSVD()
+        parsimony_v = fast_svd(X, max_iter=1000)
         return self.get_err_by_np_linalg_svd(parsimony_v, X)
 
     def test_fast_svd(self):
         err = self.get_err_fast_svd(50, 50)
-        self.assertTrue(err < utils.TOLERANCE)
+        self.assertTrue(err < utils.consts.TOLERANCE,
+                        "Error too big : %g > %g tolerance" %
+                        (err, utils.consts.TOLERANCE))
         err = self.get_err_fast_svd(5000, 5)
-        self.assertTrue(err < utils.TOLERANCE)
+        self.assertTrue(err < utils.consts.TOLERANCE,
+                        "Error too big : %g > %g tolerance" %
+                        (err, utils.consts.TOLERANCE))
         err = self.get_err_fast_svd(5, 5000)
-        self.assertTrue(err < utils.TOLERANCE)
+        self.assertTrue(err < utils.consts.TOLERANCE * 1000,
+                        "Error too big : %g > %g tolerance" %
+                        (err, utils.consts.TOLERANCE * 1000))
 
     def get_err_fast_sparse_svd(self, nrow, ncol, density):
         X = generate_sparse_matrix(shape=(nrow, ncol),
                                    density=density)
+        # For debug
+        np.save("/tmp/X_%d_%d.npy" % (nrow, ncol), X)
         # svd from parsimony
-        parsimony_v = FastSparseSVD(X, max_iter=10000)
+        fast_sparse_svd = FastSparseSVD()
+        parsimony_v = fast_sparse_svd(X, max_iter=1000)
         return self.get_err_by_np_linalg_svd(parsimony_v, X)
 
     def test_fast_sparse_svd(self):
         err = self.get_err_fast_sparse_svd(50, 50, density=0.1)
-        self.assertTrue(err < (utils.TOLERANCE * 100))
+        self.assertTrue(err < (utils.consts.TOLERANCE * 100),
+                        "Error too big : %g > %g tolerance" %
+                        (err, utils.consts.TOLERANCE * 100))
         err = self.get_err_fast_sparse_svd(500, 5000, density=0.1)
-        self.assertTrue(err < (utils.TOLERANCE * 100))
+        self.assertTrue(err < (utils.consts.TOLERANCE * 100),
+                        "Error too big : %g > %g tolerance" %
+                        (err, utils.consts.TOLERANCE))
         err = self.get_err_fast_sparse_svd(5000, 500, density=0.1)
-        self.assertTrue(err < (utils.TOLERANCE * 100))
+        self.assertTrue(err < (utils.consts.TOLERANCE * 100),
+                        "Error too big : %g > %g tolerance" %
+                        (err, utils.consts.TOLERANCE))
 
 
 if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
     unittest.main()

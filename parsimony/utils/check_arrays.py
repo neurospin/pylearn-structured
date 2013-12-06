@@ -27,9 +27,9 @@ def check_arrays(*arrays):
     >>> import numpy as np
     >>> check_arrays([1, 2], np.array([3, 4]), np.array([[1., 2.], [3., 4.]]))
     [array([[ 1.],
-       [ 2.]]), array([[ 3.],
-       [ 4.]]), array([[ 1.,  2.],
-       [ 3.,  4.]])]
+           [ 2.]]), array([[ 3.],
+           [ 4.]]), array([[ 1.,  2.],
+           [ 3.,  4.]])]
     """
     if len(arrays) == 0:
         return None
@@ -51,3 +51,8 @@ def check_arrays(*arrays):
         checked_arrays.append(array)
 
     return checked_arrays
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
