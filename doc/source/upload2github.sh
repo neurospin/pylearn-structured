@@ -1,5 +1,8 @@
 #!/bin/bash
 
+
+# If you NEVER use this file before,
+# please run command by command manually in case of destroying your files
 # This script has only been test on ubuntu
 
 # build html page on your machine
