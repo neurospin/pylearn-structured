@@ -1,10 +1,3 @@
-Architecture
-============
-
-- Do we have any architechtural constraints?
-
-
-
 General guidelines
 ==================
 
@@ -12,12 +5,11 @@ General guidelines
 - Make functions and classes, or code in general, as clear as possible. Use explicit and descriptive names as far as possible.
 - Some comments are very important, for example when choices have been made or if something is an opition.
 - Use standard comment prefixes, that are easy to search, and which are adequate for: TODO, FIXME, WARNING, ERROR, BUG, XXX, etc.
-- Boy scout rule: Leave the campground cleaner than you found it. 
+- Boy scout rule: Leave the campground cleaner than you found it.
 - Write your method from top to down. For example: if a method A use a method B, write A before you write B.
 - Class order: top -> down, high level code -> low level code.
 - Don't leave prints (writes to stdout).
 - Don't optimise prematurely. Make it work well, before you spend time making it fast.
-
 
 
 Python code format
@@ -41,19 +33,19 @@ Use PEP 257 convention. Here is a useful example using the same style as numpy:
 
     """
     Descriptive explanation of the function/class.
-    
+
     Parameters
     ----------
     a : Datatype. Descriptive text that explains the parameter. Then a blank line.
-    
+
     b : List or tuple. Descriptive texts that span multiple lines should be broken
             to be less than 80 characters wide. The second, third and so on, lines
             of the same descriptive text should be indented two tabs or eight
             spaces.
-    
+
     c : Int or Float. Note that the variable name is preceded by a space, such
             that we have "name : Datatype."
-    
+
     Returns
     -------
     out1 : Datatype. A descriptive text for the output parameters. Then a blank
@@ -80,6 +72,14 @@ Use PEP 257 convention. Here is a useful example using the same style as numpy:
 
 You may omit any parts you feel are not relevant for your function.
 
+Variable naming
+---------------
+Matrix: upper case, e.g. 
+
+```python
+X = np.asarray([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+```
+
 
 
 Commit Message
@@ -94,8 +94,6 @@ Git format
 
 Possible tag list for the first line
 ------------------------------------
-
-Should we use this?
 
 - **ENH**: When adding or improving an existing or new class in term of capabilities,
 - **COMP**: When fixing a compilation error or warning,
