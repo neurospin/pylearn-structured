@@ -74,14 +74,14 @@ You may omit any parts you feel are not relevant for your function.
 
 Variable naming
 ---------------
-Matrix: upper case, e.g. 
+Matrix: upper case, for instance
 
 ```python
 import numpy as np
 X = np.asarray([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 ```
 
-Vector with _p_ dimension: low case with a shape of (p, 1), e.g. 
+Vector with _p_ dimension: low case with a shape of (p, 1), for instance
 
 ```python
 y = np.random.random((p, 1))
