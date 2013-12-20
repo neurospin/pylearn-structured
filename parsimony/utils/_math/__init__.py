@@ -11,7 +11,6 @@ from .math import norm
 from .math import norm1
 from .math import norm_inf
 from .math import norm0
-from .math import sign
 from .math import corr
 
-__all__ = ['norm', 'norm1', 'norm_inf', 'norm0', 'sign', 'corr']
+__all__ = ['norm', 'norm1', 'norm_inf', 'norm0', 'corr']

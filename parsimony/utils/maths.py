@@ -11,7 +11,7 @@ import numpy as np
 #import parsimony.utils as utils
 from parsimony.utils.consts import TOLERANCE
 
-__all__ = ['norm', 'norm1', 'norm0', 'norm_inf', 'sign', 'corr']
+__all__ = ['norm', 'norm1', 'norm0', 'norm_inf', 'corr']
 
 
 def norm(x):
@@ -82,18 +82,6 @@ def norm_inf(x):
     1.0
     '''
     return np.linalg.norm(x, ord=float('inf'))
-
-# TODO Remove this function and use np.sign
-def sign(v):
-    """Return the sign of v, or 0 if v is null
-    """
-    if v < 0.0:
-        return -1.0
-    elif v > 0.0:
-        return 1.0
-    else:
-        return 0.0
-
 
 def corr(a, b):
     """

@@ -724,7 +724,7 @@ class Bisection(ExplicitAlgorithm):
             f_low = function.f(low)
             f_high = function.f(high)
 
-            if maths.sign(f_low) != maths.sign(f_high):
+            if np.sign(f_low) != np.sign(f_high):
                 break
             else:
                 low -= abs(low) * 2.0 ** i
@@ -735,7 +735,7 @@ class Bisection(ExplicitAlgorithm):
             mid = (low + high) / 2.0
             f_mid = function.f(mid)
 
-            if maths.sign(f_mid) == maths.sign(f_low):
+            if np.sign(f_mid) == np.sign(f_low):
                 low = mid
                 f_low = f_mid
             else:
