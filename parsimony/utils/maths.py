@@ -11,7 +11,7 @@ import numpy as np
 #import parsimony.utils as utils
 from parsimony.utils.consts import TOLERANCE
 
-__all__ = ['norm', 'norm1', 'norm0', 'normInf', 'sign', 'cov', 'corr']
+__all__ = ['norm', 'norm1', 'norm0', 'norm_inf', 'sign', 'corr']
 
 
 def norm(x):
@@ -65,7 +65,7 @@ def norm0(x):
     return np.count_nonzero(np.absolute(x))
 
 
-def normInf(x):
+def norm_inf(x):
     '''Return the max of the absolute sum for each column of the matrix
 
     For vectors : max(abs(x))
@@ -73,17 +73,17 @@ def normInf(x):
 
     Examples
     --------
-    >>> from parsimony.utils.maths import normInf
+    >>> from parsimony.utils.maths import norm_inf
     >>> matrix = np.array([[0.2, 1.0, 0.4], [2.0, 1.5, 0.1]])
-    >>> normInf(matrix)
+    >>> norm_inf(matrix)
     3.6000000000000001
     >>> vector = np.array([[0.2], [1.0], [0.4]])
-    >>> normInf(vector)
+    >>> norm_inf(vector)
     1.0
     '''
     return np.linalg.norm(x, ord=float('inf'))
 
-
+# TODO Remove this function and use np.sign
 def sign(v):
     """Return the sign of v, or 0 if v is null
     """
@@ -130,33 +130,33 @@ def corr(a, b):
     else:
         return ip
 
-
-def cov(a, b):
-    """
-    Example
-    -------
-    >>> import numpy as np
-    >>> from parsimony.utils.maths import cov
-    >>> v1 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
-    >>> v2 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
-    >>> print cov(v1, v2)
-    [[ 1.  1.  1.  1.]
-     [ 1.  1.  1.  1.]
-     [ 1.  1.  1.  1.]
-     [ 1.  1.  1.  1.]]
-    """
-    ma = np.mean(a)
-    mb = np.mean(b)
-
-    a_ = a - ma
-    b_ = b - mb
-
-    ip = np.dot(a_.T, b_) / (a_.shape[0] - 1.0)
-
-    if ip.shape == (1, 1):
-        return ip[0, 0]
-    else:
-        return ip
+# TODO: remove commented code
+#def cov(a, b):
+#    """
+#    Example
+#    -------
+#    >>> import numpy as np
+#    >>> from parsimony.utils.maths import cov
+#    >>> v1 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
+#    >>> v2 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
+#    >>> print cov(v1, v2)
+#    [[ 1.  1.  1.  1.]
+#     [ 1.  1.  1.  1.]
+#     [ 1.  1.  1.  1.]
+#     [ 1.  1.  1.  1.]]
+#    """
+#    ma = np.mean(a)
+#    mb = np.mean(b)
+#
+#    a_ = a - ma
+#    b_ = b - mb
+#
+#    ip = np.dot(a_.T, b_) / (a_.shape[0] - 1.0)
+#
+#    if ip.shape == (1, 1):
+#        return ip[0, 0]
+#    else:
+#        return ip
 
 if __name__ == "__main__":
     import doctest
