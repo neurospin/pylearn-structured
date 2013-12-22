@@ -8,9 +8,9 @@ Created on Mon Sep  9 14:16:37 2013
 """
 
 import numpy as np
-from grad import grad_L1
-from grad import grad_L2
-from grad import grad_TVmu
+from grad import grad_l1
+from grad import grad_l2
+from grad import grad_tvmu
 from utils import bisection_method
 
 __all__ = ['load']
@@ -98,9 +98,9 @@ def _generate(l, k, g, beta, M, e, mu, shape):
 
     p = np.prod(shape)
 
-    gradL1 = grad_L1(beta)
-    gradL2 = grad_L2(beta)
-    gradTVmu = grad_TVmu(beta, shape, mu)
+    gradL1 = grad_l1(beta)
+    gradL2 = grad_l2(beta)
+    gradTVmu = grad_tvmu(beta, shape, mu)
 
     alpha = -(l * gradL1 + k * gradL2 + g * gradTVmu)
     alpha = np.divide(alpha, np.dot(M.T, e))

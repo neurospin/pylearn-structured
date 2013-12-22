@@ -13,32 +13,19 @@ from utils import RandomUniform, ConstantValue
 from utils import norm2
 import scipy.sparse as sparse
 
-__all__ = ['grad_L1', 'grad_L1mu', 'grad_L2', 'grad_norm2',
-           'grad_TV', 'grad_TVmu', 'grad_TV_sparse']
+__all__ = ['grad_l1', 'grad_l1mu', 'grad_l2', 'grad_norm2',
+           'grad_tv', 'grad_tvmu']
 
 
-def grad_L1(beta, rnd=RandomUniform(-1, 1)):
+def grad_l1(beta, rnd=RandomUniform(-1, 1)):
     grad = np.zeros((beta.shape[0], 1))
     grad[beta > TOLERANCE] = 1.
     grad[beta < -TOLERANCE] = -1.
     between = (beta >= -TOLERANCE) & (beta < TOLERANCE)
     grad[between] = rnd(between.sum())
     return grad
-    #plot_beta(grad, shape, coupe=62);plt.show()
 
-#    grad = np.zeros((p, 1))
-#    for i in range(p):
-#        if beta[i, 0] > TOLERANCE:
-#            grad[i, 0] = 1.0
-#        elif beta[i, 0] < -TOLERANCE:
-#            grad[i, 0] = -1.0
-#        else:
-#            grad[i, 0] = rnd(1)
-#
-#    return grad
-
-
-def grad_L1mu(beta, mu):
+def grad_l1mu(beta, mu):
 
     alpha = (1.0 / mu) * beta
     asnorm = np.abs(alpha)
@@ -48,17 +35,17 @@ def grad_L1mu(beta, mu):
     return alpha
 
 
-def grad_L2(beta):
+def grad_l2(beta):
 
     return beta
 
-## TODO check grad_tv with grad_TV_tommy, see code in __main__
-## if ok remove grad_TV_tommy, _generate_A, _generate_Ai and modify
-## modify grad_TVmu
+
+## TODO check grad_tv with grad_tv_tommy, see code in __main__
+## if ok remove grad_tv_tommy, _generate_A, _generate_Ai and modify
+## modify grad_tvmu
 def grad_tv(beta, A, rnd=np.random.rand):
     beta_flat = beta.ravel()
     Ab = np.vstack([Ai.dot(beta_flat) for Ai in A]).T
-    #Ab = np.vstack([A.dot(beta_flat), Ay.dot(beta_flat), Az.dot(beta_flat)]).T
     Ab_norm2 = np.sqrt(np.sum(Ab ** 2.0, axis=1))    
     upper = Ab_norm2 > TOLERANCE
     grad_Ab_norm2 = Ab
@@ -72,11 +59,9 @@ def grad_tv(beta, A, rnd=np.random.rand):
         a = rnd(n_lower)
         grad_Ab_norm2[lower] = (vec_rnd.T * (a / norm_vec)).T
     grad = np.vstack([A[i].T.dot(grad_Ab_norm2[:, i]) for i in xrange(len(A))])
-#    grad = np.vstack([Ax.T.dot(grad_Ab_norm2[:, 0]),
-#                      Ay.T.dot(grad_Ab_norm2[:, 1]),
-#                      Az.T.dot(grad_Ab_norm2[:, 2])])
     grad = grad.sum(axis=0)
     return grad.reshape(beta.shape)
+
 
 def grad_norm2(beta, rnd=np.random.rand):
 
@@ -123,27 +108,11 @@ def _generate_Ai(i, A, shape):
     v = []
     for k in xrange(D):
         v.append(A[k][i, :])
-
     Ai = np.vstack(v)
-
-#    Ai = np.zeros((D, p))
-#    for d in xrange(D - 1, -1, -1):
-#        if d == D - 1:
-#            x = i % shape[d]
-#            if x + 1 < shape[d]:
-#                Ai[D - d - 1, i] = -1
-#                Ai[D - d - 1, i + 1] = 1
-#        else:
-#            b = np.prod(shape[d + 1:])
-#            y = int(i / b)
-#            if y + 1 < shape[d]:
-#                Ai[D - d - 1, i] = -1
-#                Ai[D - d - 1, i + b] = 1
-
     return Ai
 
 
-def grad_TV(beta, shape, rnd=np.random.rand):
+def grad_tv_tommy(beta, shape, rnd=np.random.rand):
 
     p = np.prod(shape)
 #    D = len(shape)
@@ -174,7 +143,7 @@ def grad_TV(beta, shape, rnd=np.random.rand):
     return grad
 
 
-def grad_TVmu(beta, shape, mu):
+def grad_tvmu(beta, shape, mu):
 
     p = np.prod(shape)
 #    D = len(shape)
@@ -194,29 +163,6 @@ def grad_TVmu(beta, shape, mu):
         grad += np.dot(Ai.T, alphai)
 
     return grad
-
-#def _find_mask_ind(mask, ind):
-#
-#    xshift = np.concatenate((mask[:, :, 1:], -np.ones((mask.shape[0],
-#                                                      mask.shape[1],
-#                                                      1))),
-#                            axis=2)
-#    yshift = np.concatenate((mask[:, 1:, :], -np.ones((mask.shape[0],
-#                                                      1,
-#                                                      mask.shape[2]))),
-#                            axis=1)
-#    zshift = np.concatenate((mask[1:, :, :], -np.ones((1,
-#                                                      mask.shape[1],
-#                                                      mask.shape[2]))),
-#                            axis=0)
-#
-#    xind = ind[(mask - xshift) > 0]
-#    yind = ind[(mask - yshift) > 0]
-#    zind = ind[(mask - zshift) > 0]
-#
-#    return xind.flatten().tolist(), \
-#           yind.flatten().tolist(), \
-#           zind.flatten().tolist()
 
 
 def delete_sparse_csr_row(mat, i):
@@ -240,115 +186,6 @@ def delete_sparse_csr_row(mat, i):
     mat._shape = (mat._shape[0] - 1, mat._shape[1])
 
 
-
-#def generate_A_from_mask(mask):
-#    while len(mask.shape) < 3:
-#        mask = mask[:, np.newaxis]
-#    nx, ny, nz = mask.shape
-#    mask = mask.astype(bool)
-#    xyz_mask = np.where(mask)
-#    Ax_i = list()
-#    Ax_j = list()
-#    Ax_v = list()
-#    Ay_i = list()
-#    Ay_j = list()
-#    Ay_v = list()
-#    Az_i = list()
-#    Az_j = list()
-#    Az_v = list()
-#    n_compacts = 0
-#    p = np.sum(mask)
-#    # mapping from image coordinate to flat masked array
-#    im2flat = np.zeros(mask.shape, dtype=int)
-#    im2flat[:] = -1
-#    im2flat[mask] = np.arange(p)
-#    for pt in xrange(len(xyz_mask[0])):
-#        found = False
-#        x, y, z = xyz_mask[0][pt], xyz_mask[1][pt], xyz_mask[2][pt]
-#        i_pt = im2flat[x, y, z]
-#        if x + 1 < nx and mask[x + 1, y, z]:
-#            found = True
-#            Ax_i += [i_pt, i_pt]
-#            Ax_j += [i_pt, im2flat[x + 1, y, z]]
-#            Ax_v += [-1., 1.]
-#        if y + 1 < ny and mask[x, y + 1, z]:
-#            found = True
-#            Ay_i += [i_pt, i_pt]
-#            Ay_j += [i_pt, im2flat[x, y + 1, z]]
-#            Ay_v += [-1., 1.]
-#        if z + 1 < nz and mask[x, y, z + 1]:
-#            found = True
-#            Az_i += [i_pt, i_pt]
-#            Az_j += [i_pt, im2flat[x, y, z + 1]]
-#            Az_v += [-1., 1.]
-#        if found:
-#            n_compacts += 1
-#    Ax = sparse.csr_matrix((Ax_v, (Ax_i, Ax_j)), shape=(p, p))
-#    Ay = sparse.csr_matrix((Ay_v, (Ay_i, Ay_j)), shape=(p, p))
-#    Az = sparse.csr_matrix((Az_v, (Az_i, Az_j)), shape=(p, p))
-#    return Ax, Ay, Az, n_compacts
-
-#def  _generate_sparse_masked_A(shape,mask):
-#    Z = shape[0]
-#    Y = shape[1]
-#    X = shape[2]
-#    p = X * Y * Z
-#
-#    smtype = 'csr'
-#    Ax = sparse.eye(p, p, 1, format=smtype) - sparse.eye(p, p)
-#    Ay = sparse.eye(p, p, X, format=smtype) - sparse.eye(p, p)
-#    Az = sparse.eye(p, p, X * Y, format=smtype) - sparse.eye(p, p)
-#
-#    ind = np.reshape(xrange(p), (Z, Y, X))
-#    if mask != None:
-#        _mask = np.reshape(mask, (Z, Y, X))
-#        xind, yind, zind = _find_mask_ind(_mask, ind)
-#    else:
-#        xind = ind[:, :, -1].flatten().tolist()
-#        yind = ind[:, -1, :].flatten().tolist()
-#        zind = ind[-1, :, :].flatten().tolist()
-#
-#    for i in xrange(len(xind)):
-#        Ax.data[Ax.indptr[xind[i]]: \
-#                Ax.indptr[xind[i] + 1]] = 0
-#    Ax.eliminate_zeros()
-#
-#    for i in xrange(len(yind)):
-#        Ay.data[Ay.indptr[yind[i]]: \
-#                Ay.indptr[yind[i] + 1]] = 0
-#    Ay.eliminate_zeros()
-#
-#    Az.data[Az.indptr[zind[0]]: \
-#            Az.indptr[zind[-1] + 1]] = 0
-#    Az.eliminate_zeros()
-#
-#    # Remove rows corresponding to indices excluded in all dimensions
-#    toremove = list(set(xind).intersection(yind).intersection(zind))
-#    toremove.sort()
-#    # Remove from the end so that indices are not changed
-#    toremove.reverse()
-#    for i in toremove:
-#        delete_sparse_csr_row(Ax, i)
-#        delete_sparse_csr_row(Ay, i)
-#        delete_sparse_csr_row(Az, i)
-#
-#    # Remove columns of A corresponding to masked-out variables
-#    if mask != None:
-#        Ax = Ax.T.tocsr()
-#        Ay = Ay.T.tocsr()
-#        Az = Az.T.tocsr()
-#        for i in reversed(xrange(p)):
-#            if mask[i] == 0:
-#                delete_sparse_csr_row(Ax, i)
-#                delete_sparse_csr_row(Ay, i)
-#                delete_sparse_csr_row(Az, i)
-#
-#        Ax = Ax.T
-#        Ay = Ay.T
-#        Az = Az.T
-#
-#    return [Ax, Ay, Az]
-
 def _generate_sparse_Ai(i, A, shape):
 
     D = len(shape)
@@ -359,21 +196,6 @@ def _generate_sparse_Ai(i, A, shape):
     Ai = sparse.vstack(v)
     return Ai
 
-#def grad_TV_sparse(beta, shape, mask, rnd=np.random.rand):
-#
-#    p = np.prod(shape)
-#    if mask != None:
-#        A = generate_A_from_mask(mask)
-#    else:
-#        A = _generate_sparse_masked_A(shape,mask)
-#    grad = np.zeros((p, 1))
-#    for i in xrange(p):
-#        #print i
-#        Ai = _generate_sparse_Ai(i, A, shape)
-#        gradnorm2 = grad_norm2(Ai.dot(beta), rnd=rnd)
-#        grad += Ai.transpose().dot(gradnorm2)
-#
-#    return grad
 
 if __name__ == '__main__':
     from parsimony.datasets import make_regression_struct
@@ -392,6 +214,6 @@ if __name__ == '__main__':
     #plt.matshow(beta.reshape(shape[:2]));plt.show()
     #plt.matshow(g1.reshape(shape[:2]));plt.show()
     #np.random.seed(seed)
-    g2 = grad_TV(beta, shape, rnd=ConstantValue(0))
-    #g2 = grad_TV(beta, shape)
+    g2 = grad_tv_tommy(beta, shape, rnd=ConstantValue(0))
+    #g2 = grad_tv(beta, shape)
     print np.allclose(g1, g2)

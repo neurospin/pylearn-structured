@@ -8,7 +8,6 @@ Created on Tue Jul 30 20:55:58 2013
 """
 
 import numpy as np
-#import parsimony.utils as utils
 from parsimony.utils.consts import TOLERANCE
 
 __all__ = ['norm', 'norm1', 'norm0', 'norm_inf', 'corr']
@@ -82,6 +81,7 @@ def norm_inf(x):
     1.0
     '''
     return np.linalg.norm(x, ord=float('inf'))
+
 
 def corr(a, b):
     """
