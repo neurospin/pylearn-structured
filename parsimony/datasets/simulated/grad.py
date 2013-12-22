@@ -2,8 +2,7 @@
 """
 Created on Thu Sep 26 12:06:07 2013
 
-@author:  Tommy Löfstedt
-@email:   tommy.loefstedt@cea.fr
+@email:   tommy.loefstedt@cea.fr, edouard.duchesnay@cea.fr
 @license: TBD.
 """
 
