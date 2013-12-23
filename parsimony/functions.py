@@ -536,6 +536,106 @@ class RidgeRegression(CompositeFunction, Gradient, LipschitzContinuousGradient,
         return self._lambda_min + self.k
 
 
+class RidgeLogisticRegression(AtomicFunction, Gradient,
+                         LipschitzContinuousGradient, Eigenvalues):
+    """ The Logistic Regression function
+
+    Parameters
+    ----------
+    X : Regressor
+
+    y : Regressand
+
+    weights : A vector with weights for each sample.
+    """
+    def __init__(self, X, y, k=0, weights=None):
+        self.X = X
+        self.y = y
+        self.k = float(k)
+        if weights is None:
+            # TODO: Make the weights sparse.
+            weights = np.eye(self.X.shape[0])
+        self.W = weights
+
+        self.reset()
+
+    def reset(self):
+        """Reset the value of _lambda_max and _lambda_min
+        """
+        self.lipschitz = None
+#        self._lambda_max = None
+#        self._lambda_min = None
+
+    def f(self, beta):
+        """Function value of Logistic regression at beta.
+
+        Parameters
+        ----------
+        beta : Regression coefficient vector
+        """
+        # TODO adapt code according to previous equation
+        n = self.X.shape[0]
+        s = 0
+        Xbeta = np.dot(self.X, beta)
+        for i in xrange(n):
+            s = s + self.W[i, i] * (self.y[i, 0] * Xbeta[i, 0] \
+                                    - np.log(1 + np.exp(Xbeta[i, 0])))
+        return -s  + (self.k / 2.0) * np.sum(beta ** 2.0) ## TOCHECK
+
+
+    def grad(self, beta):
+        """Gradient of the function at beta.
+
+        From the interface "Gradient".
+
+        Parameters
+        ----------
+        beta : The point at which to evaluate the gradient.
+        """
+        Xbeta = np.dot(self.X, beta)
+        pi = 1.0 / (1.0 + np.exp(-Xbeta))
+        return -np.dot(self.X.T,
+                       np.dot(self.W, (self.y - pi))) \
+                       + self.k * beta ## TOCHECK
+
+    def L(self):
+        """Lipschitz constant of the gradient.
+
+        From the interface "LipschitzContinuousGradient".
+        max eigen value of (1/4 Xt W X)
+        """
+        if self.lipschitz == None:
+            # pi(x) * (1 - pi(x)) <= 0.25 = 0.5 * 0.5
+            # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
+            PW = 0.5 * np.sqrt(self.W) ## TODO CHECK WITH FOUAD
+            PWX = np.dot(PW, self.X)
+
+            # TODO: Use FastSVD for speedup!
+            s = np.linalg.svd(PWX, full_matrices=False, compute_uv=False)
+
+            self.lipschitz = np.max(s) ** 2.0 + self.k  ## TOCHECK
+
+        return self.lipschitz
+#        return self.lambda_max()
+
+#    def lambda_max(self):
+#        """Largest eigenvalue of the corresponding covariance matrix.
+#
+#        From the interface "Eigenvalues".
+#        """
+#        if self._lambda_max is None:
+#            s = np.linalg.svd(self.X, full_matrices=False, compute_uv=False)
+#
+#            self._lambda_max = np.max(s) ** 2.0
+#
+#            if len(s) < self.X.shape[1]:
+#                self._lambda_min = 0.0
+#            else:
+#                self._lambda_min = np.min(s) ** 2.0
+#
+#        return self._lambda_max + self.k
+
+
 class QuadraticConstraint(AtomicFunction, Gradient, Constraint):
     """The proximal operator of the quadratic function
 

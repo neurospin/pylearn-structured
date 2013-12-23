@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import parsimony.datasets
 import parsimony.tv
 import parsimony.estimators as estimators
-import parsimony.algorithms as algorithms
 
 n_samples = 100
 shape = (30, 30, 1)
@@ -26,8 +25,7 @@ k, l, g = alpha * .1,  alpha * .4, alpha * .5
 A, n_compacts = parsimony.tv.A_from_shape(shape)
 
 
-tvl1l2 = estimators.RidgeRegression_L1_TV(k, l, g, A,
-                        algorithm=algorithms.StaticCONESTA(max_iter=100))
+tvl1l2 = estimators.RidgeRegression_L1_TV(k, l, g, A)
 tvl1l2.fit(X, y)
 
 plot = plt.subplot(121)
