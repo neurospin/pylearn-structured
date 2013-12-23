@@ -329,7 +329,7 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
         - Betas are null outside dots, and 1 or -1 depending on the dot:
             X1: 1, X2: -1, X3: 1, X4: 1, X5: -1.
         - Sample noise e ~ N(0, 1)
-        - Compute X beta then scale beta such that: r_squred(y, X beta) = r2
+        - Compute X beta then scale beta such that: r_squared(y, X beta) = r2
         Return X, y, beta
 
         Note that we get:

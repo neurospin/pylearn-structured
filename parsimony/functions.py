@@ -28,7 +28,6 @@ __all__ = ['RidgeRegression', 'L1', 'SmoothedL1', 'TotalVariation',
            'SmoothedL1TV',
            'RR_L1_TV',
            'RR_SmoothedL1TV',
-
            'AnonymousFunction']
 
 
