@@ -10,9 +10,10 @@ is called.
 
 Created on Mon Apr 22 10:54:29 2013
 
-@author:  Tommy Löfstedt, Vincent Guillemot and Fouad Hadj Selem
-@email:   tommy.loefstedt@cea.fr
-@license: TBD.
+@author:  Tommy Löfstedt, Vincent Guillemot, Edouard Duchesnay and \
+Fouad Hadj Selem
+@email:   tommy.loefstedt@cea.fr, edouard.duchesnay@cea.fr
+@license: BSD 3-Clause
 """
 import abc
 import math
@@ -24,9 +25,9 @@ import scipy.sparse as sparse
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
 
-__all__ = ['RidgeRegression', 'L1', 'SmoothedL1', 'TotalVariation',
+__all__ = ['RidgeRegression', 'RidgeLogisticRegression', 'L1', 'SmoothedL1', 'TotalVariation',
            'SmoothedL1TV',
-           'RR_L1_TV',
+           'RR_L1_TV', 'RLR_L1_TV',
            'RR_SmoothedL1TV',
            'AnonymousFunction']
 
@@ -539,7 +540,17 @@ class RidgeRegression(CompositeFunction, Gradient, LipschitzContinuousGradient,
 class RidgeLogisticRegression(AtomicFunction, Gradient,
                          LipschitzContinuousGradient, Eigenvalues):
     """ The Logistic Regression function
-
+    Ridge (re-weighted) log-likelihood (cross-entropy):
+    * f(beta) = -log L(beta) + k/2 ||beta||^2_2
+              = -Sum_i wi[yi log(pi) + (1−yi) log(1−pi)] + k/2||beta||^2_2
+              = -Sum_i wi[yi xi'beta − log(1 + e(xi'beta) )] + k/2||beta||^2_2
+    
+    * grad f(beta) = -sum_i[ xi (yi - pi)] + k beta
+    
+    pi = p(y=1|xi,beta) = 1 / (1 + exp(-xi'beta))
+    wi: sample i weight
+    
+    [Hastie 2009, p.: 102, 119 and 161, Bishop 2006 p.: 206]
     Parameters
     ----------
     X : Regressor
@@ -554,8 +565,9 @@ class RidgeLogisticRegression(AtomicFunction, Gradient,
         self.k = float(k)
         if weights is None:
             # TODO: Make the weights sparse.
-            weights = np.eye(self.X.shape[0])
-        self.W = weights
+            #weights = np.eye(self.X.shape[0])
+            weights = np.ones(y.shape).reshape(y.shape)
+        self.weights = weights
 
         self.reset()
 
@@ -573,14 +585,17 @@ class RidgeLogisticRegression(AtomicFunction, Gradient,
         ----------
         beta : Regression coefficient vector
         """
-        # TODO adapt code according to previous equation
-        n = self.X.shape[0]
-        s = 0
+        # TODO check the correctness of the re-weighted loglike
         Xbeta = np.dot(self.X, beta)
-        for i in xrange(n):
-            s = s + self.W[i, i] * (self.y[i, 0] * Xbeta[i, 0] \
-                                    - np.log(1 + np.exp(Xbeta[i, 0])))
-        return -s  + (self.k / 2.0) * np.sum(beta ** 2.0) ## TOCHECK
+        loglike = np.sum(self.weights * 
+            ((self.y * Xbeta) - np.log(1 + np.exp(Xbeta))))
+        return -loglike + (self.k / 2.0) * np.sum(beta ** 2.0)
+#        n = self.X.shape[0]
+#        s = 0
+#        for i in xrange(n):
+#            s = s + self.W[i, i] * (self.y[i, 0] * Xbeta[i, 0] \
+#                                    - np.log(1 + np.exp(Xbeta[i, 0])))
+#        return -s  + (self.k / 2.0) * np.sum(beta ** 2.0) ## TOCHECK
 
 
     def grad(self, beta):
@@ -594,9 +609,10 @@ class RidgeLogisticRegression(AtomicFunction, Gradient,
         """
         Xbeta = np.dot(self.X, beta)
         pi = 1.0 / (1.0 + np.exp(-Xbeta))
-        return -np.dot(self.X.T,
-                       np.dot(self.W, (self.y - pi))) \
-                       + self.k * beta ## TOCHECK
+        return -np.dot(X.T, self.weights * (y - pi)) + self.k * beta  
+#        return -np.dot(self.X.T,
+#                       np.dot(self.W, (self.y - pi))) \
+#                       + self.k * beta
 
     def L(self):
         """Lipschitz constant of the gradient.
@@ -606,15 +622,13 @@ class RidgeLogisticRegression(AtomicFunction, Gradient,
         """
         if self.lipschitz == None:
             # pi(x) * (1 - pi(x)) <= 0.25 = 0.5 * 0.5
+            PWX = 0.5 * np.sqrt(self.weights) * self.X  # TODO CHECK WITH FOUAD
             # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
-            PW = 0.5 * np.sqrt(self.W) ## TODO CHECK WITH FOUAD
-            PWX = np.dot(PW, self.X)
-
+            #PW = 0.5 * np.sqrt(self.W)
+            #PWX = np.dot(PW, self.X)
             # TODO: Use FastSVD for speedup!
             s = np.linalg.svd(PWX, full_matrices=False, compute_uv=False)
-
             self.lipschitz = np.max(s) ** 2.0 + self.k  ## TOCHECK
-
         return self.lipschitz
 #        return self.lambda_max()
 
@@ -1366,6 +1380,44 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
         From the interface "NesterovFunction".
         """
         return self.tv.project(a)
+
+
+class RLR_L1_TV(RR_L1_TV):
+    """Combination (sum) of RidgeLogisticRegression, L1 and TotalVariation
+
+    Parameters
+    ----------
+    X : Ridge Regression parameter.
+
+    y : Ridge Regression parameter.
+
+    k : Ridge Regression parameter.
+
+    l : L1 parameter.
+            The Lagrange multiplier, or regularisation constant, of the
+            function.
+
+    g : Total Variation parameter
+            The Lagrange multiplier, or regularisation constant, of the
+            function.
+
+    A : Total Variation parameter.
+            The linear operator for the Nesterov formulation. May not be None!
+
+    mu : Total Variation parameter.
+            The regularisation constant for the smoothing.
+    """
+
+    def __init__(self, X, y, k, l, g, A=None, mu=0.0):
+
+        self.X = X
+        self.y = y
+
+        self.rr = RidgeLogisticRegression(X, y, k)
+        self.l1 = L1(l)
+        self.tv = TotalVariation(g, A=A, mu=0.0)
+
+        self.reset()
 
 
 class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,

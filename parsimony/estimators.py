@@ -223,6 +223,81 @@ class RidgeRegression_L1_TV(RegressionEstimator):
         return self
 
 
+class RidgeLogisticRegression_L1_TV(RegressionEstimator):
+    """
+
+    Parameters
+    ----------
+    l : The L1 regularization parameter.
+
+    k : The L2 regularization parameter.
+
+    g : The total variation regularization parameter.
+
+    A : The linear operator for the total variation Nesterov function
+
+    mu : The regularisation constant for the smoothing.
+
+    output : Boolean. Get output information
+
+    algorithm : which algorithm will be applied :
+        1. algorithms.StaticCONESTA()
+        2. algorithms.DynamicCONESTA()
+        3. algorithms.FISTA()
+
+    Example
+    -------
+    """
+    def __init__(self, k, l, g, A, mu=None, output=False,
+                 algorithm=algorithms.StaticCONESTA()):
+#                 algorithm=algorithms.DynamicCONESTA()):
+#                 algorithm=algorithms.FISTA()):
+
+        self.k = float(k)
+        self.l = float(l)
+        self.g = float(g)
+        self.A = A
+        if isinstance(mu, numbers.Number):
+            self.mu = float(mu)
+        else:
+            self.mu = None
+
+        super(RidgeLogisticRegression_L1_TV, self).__init__(algorithm=algorithm,
+                                                    output=output)
+
+    def get_params(self):
+        """Return a dictionary containing all the estimator's parameters
+        """
+        return {"k": self.k, "l": self.l, "g": self.g,
+                "A": self.A, "mu": self.mu}
+
+    def fit(self, X, y):
+        """Fit the estimator to the data
+        """
+        self.function = functions.RLR_L1_TV(X, y, self.k, self.l, self.g,
+                                           A=self.A)
+        self.algorithm.check_compatibility(self.function,
+                                           self.algorithm.INTERFACES)
+
+        # TODO: Should we use a seed here so that we get deterministic results?
+        beta = self.start_vector.get_vector((X.shape[1], 1))
+
+        if self.mu is None:
+            self.mu = 0.9 * self.function.estimate_mu(beta)
+        else:
+            self.mu = float(self.mu)
+
+        self.function.set_params(mu=self.mu)
+        self.algorithm.set_params(output=self.output)
+
+        if self.output:
+            (self.beta, self.info) = self.algorithm(self.function, beta)
+        else:
+            self.beta = self.algorithm(self.function, beta)
+
+        return self
+
+
 class RidgeRegression_SmoothedL1TV(RegressionEstimator):
     """
     Parameters
