@@ -538,7 +538,7 @@ class RidgeRegression(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
 
 class RidgeLogisticRegression(AtomicFunction, Gradient,
-                         LipschitzContinuousGradient, Eigenvalues):
+                         LipschitzContinuousGradient):#, Eigenvalues):
     """ The Logistic Regression function
     Ridge (re-weighted) log-likelihood (cross-entropy):
     * f(beta) = -log L(beta) + k/2 ||beta||^2_2
@@ -609,7 +609,7 @@ class RidgeLogisticRegression(AtomicFunction, Gradient,
         """
         Xbeta = np.dot(self.X, beta)
         pi = 1.0 / (1.0 + np.exp(-Xbeta))
-        return -np.dot(X.T, self.weights * (y - pi)) + self.k * beta  
+        return -np.dot(self.X.T, self.weights * (self.y - pi)) + self.k * beta  
 #        return -np.dot(self.X.T,
 #                       np.dot(self.W, (self.y - pi))) \
 #                       + self.k * beta

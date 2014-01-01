@@ -299,13 +299,13 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
 
     Return
     ------
-    X: array of shape [n_sample, shape]
-        the input features.
+    X3d: array of shape [n_sample, shape]
+        The input features.
 
     y: array of shape [n_sample, 1]
-        the target variable.
+        The target variable.
 
-    beta: float array of shape [shape]
+    beta3d: float array of shape [shape]
        It is the beta such that y = X * beta + noize
 
     Details
@@ -348,14 +348,14 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
     >>> n_samples = 100
     >>> shape = (11, 11, 1)
     >>> r2 = .5
-    >>> X, y, beta = make_regression_struct(n_samples=n_samples, shape=shape,
+    >>> X3d, y, beta3d = make_regression_struct(n_samples=n_samples, shape=shape,
     ...                            r2=r2, random_seed=1)
-    >>> X_flat = X.reshape(n_samples, np.prod(shape))
-    >>> beta_flat = beta.ravel()
+    >>> X = X3d.reshape(n_samples, np.prod(shape))
+    >>> beta = beta3d.ravel()
     >>> from sklearn.metrics import r2_score
-    >>> print np.round(r2_score(y, np.dot(X_flat, beta_flat)), 2)
-    0.5
-    >>> cax = plt.matshow(beta.squeeze())
+    >>> print np.round(r2_score(y, np.dot(X, beta)), 2)
+    0.47
+    >>> cax = plt.matshow(beta3d.squeeze())
     >>> plt.colorbar(cax)
     >>> plt.title("Beta")
     >>> plt.show()
@@ -378,7 +378,7 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
         rnd_state = np.random.get_state()
         np.random.seed(random_seed)
     Noise = np.random.normal(mu_e, sigma_e, n_samples * n_features)
-    Noise = Noise.reshape(n_samples, nx, ny, nz)
+    Noise3d = Noise.reshape(n_samples, nx, ny, nz)
     #########################################################################
     ## 2. Build Objects
     if objects is None:
@@ -386,46 +386,46 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
                                                 coef_noise=sigma_e)
     #########################################################################
     ## 3. Object-level structured noise N
-    Noise, support = ObjImage.object_model(objects, Noise)
+    Noise3d, support = ObjImage.object_model(objects, Noise3d)
     #########################################################################
     ## 4. Pixel-level noize structure: spatial smoothing
     if sigma_spatial_smoothing != 0:
-        Noise = spatial_smoothing(Noise, sigma_spatial_smoothing, mu_e,
+        Noise3d = spatial_smoothing(Noise3d, sigma_spatial_smoothing, mu_e,
                                   sigma_e)
 
-    Noise_flat = Noise.reshape((Noise.shape[0], np.prod(Noise.shape[1:])))
-    Noise_flat -= Noise_flat.mean(axis=0)
-    Noise_flat /= Noise_flat.std(axis=0)
+    Noise = Noise3d.reshape((Noise3d.shape[0], np.prod(Noise3d.shape[1:])))
+    Noise -= Noise.mean(axis=0)
+    Noise /= Noise.std(axis=0)
 
     #########################################################################
     ## 5. Model: y = X beta + noise
-    X = Noise
-    beta = np.zeros(X.shape[1:])
+    X3d = Noise3d
+    beta3d = np.zeros(X3d.shape[1:])
 
     for k in xrange(len(objects)):
         o = objects[k]
-        beta[o.get_mask()] += o.coef_info
-    beta = ndimage.gaussian_filter(beta, sigma=sigma_spatial_smoothing)
-    beta_flat = beta.ravel()
+        beta3d[o.get_mask()] += o.coef_info
+    beta3d = ndimage.gaussian_filter(beta3d, sigma=sigma_spatial_smoothing)
+    beta = beta3d.ravel()
     # Fix a scaling to get the desire r2, ie.:
     # y = coef * X * beta + noize
     # Fix coef such r2(y, coef * X * beta) = r2
-    X_flat = X.reshape(n_samples, np.prod(shape))
-    Xbeta = np.dot(X_flat, beta_flat)
+    X = X3d.reshape(n_samples, np.prod(shape))
+    Xbeta = np.dot(X, beta)
 
     if r2 < 1:
         noise = np.random.normal(0, 1, Xbeta.shape[0])
         coef = corr_to_coef(v_x=np.var(Xbeta), v_e=np.var(noise),
                      cov_xe=np.cov(Xbeta, noise)[0, 1], cor=np.sqrt(r2))
-        beta_flat *= coef
-        y = np.dot(X_flat, beta_flat) + noise
+        beta *= coef
+        y = np.dot(X, beta) + noise
     else:
         noise = np.zeros(Xbeta.shape[0])
-        y = np.dot(X_flat, beta_flat)
+        y = np.dot(X, beta)
 
     if False:
-        Xflat = X.reshape((n_samples, nx * ny))
-        Xc = (Xflat - Xflat.mean(axis=0)) / Xflat.std(axis=0)
+        X = X3d.reshape((n_samples, nx * ny))
+        Xc = (X - X.mean(axis=0)) / X.std(axis=0)
         yc = (y - y.mean()) / y.std()
         cor = np.dot(Xc.T, yc).reshape(nx, ny) / y.shape[0]
         cax = plt.matshow(cor, cmap=plt.cm.coolwarm)
@@ -435,157 +435,4 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
     if random_seed is not None:   # If random seed, restore random state
         np.random.set_state(rnd_state)
 
-    return X, y.reshape((n_samples, 1)), beta
-
-
-if __name__ == '__main__':
-    # utils
-    def plot_map(im, plot=None):
-        if plot is None:
-            plot = plt
-        cax = plot.matshow(im, cmap=plt.cm.coolwarm)
-        frame = plt.gca()
-        frame.get_xaxis().set_visible(False)
-        frame.get_yaxis().set_visible(False)
-        mx = np.abs(im).max()
-        k = 1
-        while (10 ** k * mx) < 1 and k < 10:
-            k += 1
-        ticks = np.array([-mx, -mx / 4 - mx / 2, 0, mx / 2, mx / 2,
-                          mx]).round(k + 2)
-        cbar = plt.colorbar(cax, ticks=ticks)
-        cbar.set_clim(vmin=-mx, vmax=mx)
-
-    n_samples = 500
-    shape = (100, 100, 1)
-    r2 = .75
-    sigma_spatial_smoothing = 1
-    random_seed = None
-    noize_object_pixel_ratio = .25
-    objects = None
-    Xim, y, beta = make_regression_struct(n_samples=n_samples,
-        shape=shape, r2=r2, sigma_spatial_smoothing=sigma_spatial_smoothing,
-        noize_object_pixel_ratio=noize_object_pixel_ratio,
-        random_seed=random_seed)
-    _, nx, ny, nz = Xim.shape
-
-    X = Xim.reshape((n_samples, nx * ny))
-    from sklearn.metrics import r2_score
-    n_train = min(100, int(X.shape[1] / 10))
-    Xtr = X[:n_train, :]
-    ytr = y[:n_train]
-    Xte = X[n_train:, :]
-    yte = y[n_train:]
-
-    plot = plt.subplot(331)
-    if beta is not None:
-        plot_map(beta.reshape(nx, ny), plot)
-    plt.title("beta")
-
-    Xtrc = (Xtr - Xtr.mean(axis=0)) / Xtr.std(axis=0)
-    ytrc = (ytr - ytr.mean()) / ytr.std()
-    cor = np.dot(Xtrc.T, ytrc).reshape(nx, ny) / ytr.shape[0]
-    plot = plt.subplot(332)
-    plot_map(cor, plot)
-    plt.title("Corr(X, y)")
-    #plt.show()
-
-    from sklearn.linear_model import Lasso
-    from sklearn.linear_model import ElasticNet, ElasticNetCV
-    from sklearn.linear_model import Ridge
-
-    # Global penalization paapeter: alpha according to:
-    # ||y - Xw||^2_2 + alpha penalization
-    alpha_g = 10.
-    # Ridge ================================================================
-    # Min ||y - Xw||^2_2 + alpha ||w||^2_2
-    plot = plt.subplot(333)
-    alpha = alpha_g
-    l2 = Ridge(alpha=alpha)
-    pred = l2.fit(Xtr, ytr).predict(Xte)
-    plot_map(l2.coef_.reshape((nx, ny)), plot)
-    plt.title("L2 (R2=%.2f)" % r2_score(yte, pred))
-
-    # Lasso  ================================================================
-    # Min (1 / (2 * n_samples)) * ||y - Xw||^2_2 + alpha * ||w||_1
-    alpha = alpha_g * 1. / (2. * n_train)
-    l1 = Lasso(alpha=alpha)
-    pred = l1.fit(Xtr, ytr).predict(Xte)
-    plot = plt.subplot(334)
-    plot_map(l1.coef_.reshape((nx, ny)), plot)
-    plt.title("Lasso (R2=%.2f)" % r2_score(yte, pred))
-
-    # Enet  ================================================================
-    #    Min: 1 / (2 * n_samples) * ||y - Xw||^2_2 +
-    #        + alpha * l1_ratio * ||w||_1
-    #        + 0.5 * alpha * (1 - l1_ratio) * ||w||^2_2
-    alpha = alpha_g * 1. / (2. * n_train)
-    l1_ratio = .5
-    l1l2 = ElasticNet(alpha=alpha, l1_ratio=l1_ratio)
-    pred = l1l2.fit(Xtr, ytr).predict(Xte)
-    plot = plt.subplot(335)
-    plot_map(l1l2.coef_.reshape((nx, ny)), plot)
-    plt.title("Elasticnet(a:%.2f, l1:%.2f) (R2=%.2f)" % (l1l2.alpha,
-              l1l2.l1_ratio, r2_score(yte, pred)))
-
-#    l1l2cv = ElasticNetCV()
-#    pred = l1l2cv.fit(Xtr, ytr).predict(Xte)
-#    plot = plt.subplot(336)
-#    plot_map(l1l2cv.coef_.reshape((nx, ny)), plot)
-#    plt.title("ElasticnetCV(a:%.2f, l1:%.2f) (R2=%.2f)" % (l1l2cv.alpha_,
-#              l1l2cv.l1_ratio, r2_score(yte, pred)))
-#    #plt.show()
-
-    # TVL1L2 ===============================================================
-    import parsimony.estimators as estimators
-    import parsimony.algorithms as algorithms
-    import parsimony.tv
-
-    def ratio2coef(alpha, tv_ratio, l1_ratio):
-        l2_ratio = 1 - tv_ratio - l1_ratio
-        l, k, g = alpha * l1_ratio,  alpha * l2_ratio, alpha * tv_ratio
-        return l, k, g
-
-    eps = 0.01
-    alpha = alpha_g
-
-    tv_ratio = .05
-    l1_ratio = .9
-    l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
-
-    A, n_compacts = parsimony.tv.A_from_shape(shape)
-    tvl1l2 = estimators.RidgeRegression_L1_TV(k, l, g, A,
-                        algorithm=algorithms.StaticCONESTA(max_iter=100))
-    tvl1l2.fit(Xtr, ytr)
-    plot = plt.subplot(337)
-    plot_map(tvl1l2.beta.reshape(nx, ny), plot)
-    r2 = r2_score(yte, np.dot(Xte, tvl1l2.beta).ravel())
-    plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % \
-        (alpha, tv_ratio, l1_ratio, r2))
-
-    tv_ratio = .5
-    l1_ratio = .45
-    l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
-    tvl1l2 = estimators.RidgeRegression_L1_TV(k, l, g, A,
-                        algorithm=algorithms.StaticCONESTA(max_iter=100))
-    tvl1l2.fit(Xtr, ytr)
-    plot = plt.subplot(338)
-    plot_map(tvl1l2.beta.reshape(nx, ny), plot)
-    r2 = r2_score(yte, np.dot(Xte, tvl1l2.beta).ravel())
-    plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % \
-        (alpha, tv_ratio, l1_ratio, r2))
-
-    tv_ratio = .9
-    l1_ratio = .05
-    l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
-    tvl1l2 = estimators.RidgeRegression_L1_TV(k, l, g, A,
-                        algorithm=algorithms.StaticCONESTA(max_iter=100))
-    tvl1l2.fit(Xtr, ytr)
-    plot = plt.subplot(339)
-    plot_map(tvl1l2.beta.reshape(nx, ny), plot)
-    r2 = r2_score(yte, np.dot(Xte, tvl1l2.beta).ravel())
-    plt.title("L1L2TV(a:%.2f, tv: %.2f, l1:%.2f) (R2=%.2f)" % \
-        (alpha, tv_ratio, l1_ratio, r2))
-
-    plt.show()
-    #run pylearn-parsimony/parsimony/datasets/samples_generator_struct.py
+    return X3d, y.reshape((n_samples, 1)), beta3d

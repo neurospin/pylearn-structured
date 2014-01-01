@@ -17,7 +17,7 @@ import parsimony.start_vectors as start_vectors
 
 __all__ = ['BaseEstimator', 'RegressionEstimator',
 
-           'RidgeRegression_L1_TV',
+           'RidgeRegression_L1_TV', 'RidgeLogisticRegression_L1_TV',
 
            'RidgeRegression_SmoothedL1TV']
 
