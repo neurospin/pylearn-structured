@@ -8,6 +8,7 @@ Created on Sat Nov  2 15:19:17 2013
 """
 import abc
 import numbers
+import warnings
 
 import numpy as np
 
@@ -350,6 +351,13 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
         self.k = float(k)
         self.l = float(l)
         self.g = float(g)
+        warn_msg = 'zero %s will result in nan regression coefficient'
+        if self.k == 0:
+            warnings.warn(warn_msg % 'k')
+        if self.l == 0:
+            warnings.warn(warn_msg % 'l')
+        if self.g == 0:
+            warnings.warn(warn_msg % 'g')
         self.Atv = Atv
         self.Al1 = Al1
         if isinstance(mu, numbers.Number):
