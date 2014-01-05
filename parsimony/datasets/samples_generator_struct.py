@@ -241,23 +241,21 @@ def spatial_smoothing(Xim, sigma, mu_e=None, sigma_e=None):
 def make_regression_struct(n_samples=100, shape=(30, 30, 1),
                            r2=.75,
                            sigma_spatial_smoothing=1,
-                           noize_object_pixel_ratio=.5,
+                           object_pixel_ratio=.5,
                            objects=None,
                            random_seed=None):
     """Generate regression samples (images + target variable) and beta.
-    Input features (X) have a covariance structure controled both at a pixel
-    level (spatial smoothing) and at an object. Objects are component
+
+    Input features (X) covariance structure is controled both at a pixel
+    level (spatial smoothing) and object level. Objects are component
     of pixels sharing a covariance that stem from a latent variable.
-
-
-    Noise is sampled according to N(0, 1).
+    beta is non null within objects (default is five dots).
     Then y is obtained with y = X * beta + noise, where beta is scalled such
-    that r_square(y, X * beta) = r2.
-
-    The sructure of covariance of X is
+    that r_square(y, X * beta) = r2 and noise is sampled according to N(0, 1).
 
     Parameters
     ----------
+
     n_samples: int
         nb of samples, (default 100).
 
@@ -266,25 +264,21 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
 
     r2: float
         The desire R-squared (explained variance) ie.:
-
-            r_square(y, X * beta) = r2
-
-        Default is .75
+        r_square(y, X * beta) = r2 (Default is .75)
 
     sigma_spatial_smoothing: scalar
         Standard deviation for Gaussian kernel (default 1). High value promotes
         spatial correlation pixels.
 
-    noize_object_pixel_ratio: float
-        Controls the ratio between object-level noize and pixel-level noize for
-        pixels within objects. If noize_object_pixel_ratio == 1 then 100% of
-        the noize of pixels within the same object is shared (ie.: no pixel
-        level) noize. If noize_object_pixel_ratio == 0 then all the noize is
-        pixel specific. High noize_object_pixel_ratio promotes spatial
+    object_pixel_ratio: float
+        Controls the ratio between object-level signal and pixel-level signal for
+        pixels within objects. If object_pixel_ratio == 1 then 100% of
+        the signal of pixels within the same object is shared (ie.: no pixel
+        level) signal. If object_pixel_ratio == 0 then all the signal is
+        pixel specific. High object_pixel_ratio promotes spatial
         correlation between pixels of the same object.
 
     objects: list of objects
-        Define objects .
         Objects carying information to be drawn in the image. If not provide
         a dice with five points (object) will be drawn. Point 1, 3, 4 are
         carying predictive information while point 2 is a suppressor of point
@@ -299,6 +293,7 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
 
     Return
     ------
+
     X3d: array of shape [n_sample, shape]
         The input features.
 
@@ -310,6 +305,7 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
 
     Details
     -------
+
     The general procedure is:
         1) For each pixel i, Generate independant variables Xi ~ N(0, 1)
         2) Add object level structure. By default there are five dots
@@ -319,16 +315,16 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
         X3i = 2 * l3 + Ni
         X4i = l4 + l45 + Xi
         X5i = l45 + Xi
-        Where l1, l12, l3, l4, l45 are latent variables ~ N(0, 1)
-        So pixels of X1 share a common variance that stem from l1 + l12.
-        So pixels of X2 share a common variance that stem from l12.
-        So pixels of X1 and X2 share a common variance that stem from l12.
+        Where l1, l12, l3, l4, l45 are latent variables ~ N(0, 1). So:
+        Pixels of X1 share a common variance that stem from l1 + l12.
+        Pixels of X2 share a common variance that stem from l12.
+        Pixels of X1 and X2 share a common variance that stem from l12.
         etc.
         4) Spatial Smoothing.
-        5) Model: y = X beta + e
+        5) Model: y = X beta + noise
         - Betas are null outside dots, and 1 or -1 depending on the dot:
             X1: 1, X2: -1, X3: 1, X4: 1, X5: -1.
-        - Sample noise e ~ N(0, 1)
+        - Sample noise ~ N(0, 1)
         - Compute X beta then scale beta such that: r_squared(y, X beta) = r2
         Return X, y, beta
 
@@ -372,34 +368,32 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
     nx, ny, nz = shape
 
     ##########################################################################
-    ## 1. Build images with noize => e_ij
-    # Sample Noize: N
+    ## 1. Build images with signal => e_ij
+    # Sample signal: X
     if random_seed is not None:  # If random seed, save current random state
         rnd_state = np.random.get_state()
         np.random.seed(random_seed)
-    Noise = np.random.normal(mu_e, sigma_e, n_samples * n_features)
-    Noise3d = Noise.reshape(n_samples, nx, ny, nz)
+    X = np.random.normal(mu_e, sigma_e, n_samples * n_features)
+    X3d = X.reshape(n_samples, nx, ny, nz)
     #########################################################################
     ## 2. Build Objects
     if objects is None:
         objects = dice_five_with_union_of_pairs(shape, coef_info=1.,
                                                 coef_noise=sigma_e)
     #########################################################################
-    ## 3. Object-level structured noise N
-    Noise3d, support = ObjImage.object_model(objects, Noise3d)
+    ## 3. Object-level structured signal
+    X3d, support = ObjImage.object_model(objects, X3d)
     #########################################################################
-    ## 4. Pixel-level noize structure: spatial smoothing
+    ## 4. Pixel-level signal structure: spatial smoothing
     if sigma_spatial_smoothing != 0:
-        Noise3d = spatial_smoothing(Noise3d, sigma_spatial_smoothing, mu_e,
+        X3d = spatial_smoothing(X3d, sigma_spatial_smoothing, mu_e,
                                   sigma_e)
-
-    Noise = Noise3d.reshape((Noise3d.shape[0], np.prod(Noise3d.shape[1:])))
-    Noise -= Noise.mean(axis=0)
-    Noise /= Noise.std(axis=0)
+    X = X3d.reshape((X3d.shape[0], np.prod(X3d.shape[1:])))
+    X -= X.mean(axis=0)
+    X /= X.std(axis=0)
 
     #########################################################################
     ## 5. Model: y = X beta + noise
-    X3d = Noise3d
     beta3d = np.zeros(X3d.shape[1:])
 
     for k in xrange(len(objects)):
@@ -420,7 +414,6 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
         beta *= coef
         y = np.dot(X, beta) + noise
     else:
-        noise = np.zeros(Xbeta.shape[0])
         y = np.dot(X, beta)
 
     if False:
