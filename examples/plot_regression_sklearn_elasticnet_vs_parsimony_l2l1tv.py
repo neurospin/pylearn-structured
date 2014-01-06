@@ -6,6 +6,7 @@ Created on Wed Jan  1 18:54:46 2014
 """
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.metrics import r2_score
 from parsimony.datasets import make_regression_struct
 
 if __name__ == '__main__':
@@ -40,7 +41,6 @@ if __name__ == '__main__':
     _, nx, ny, nz = Xim.shape
 
     X = Xim.reshape((n_samples, nx * ny))
-    from sklearn.metrics import r2_score
     n_train = min(100, int(X.shape[1] / 10))
     Xtr = X[:n_train, :]
     ytr = y[:n_train]
