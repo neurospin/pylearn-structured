@@ -117,6 +117,58 @@ class RegressionEstimator(BaseEstimator):
         return self.function.f(self.beta)
 
 
+class LogisticRegressionEstimator(BaseEstimator):
+    """Base estimator for logistic regression estimation
+
+    Parameters
+    ----------
+    algorithm : Which algorithm will be applied
+
+    output : Boolean. Get output information
+
+    start_vector : Determine what kind of beta will be initiated
+    """
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, algorithm, output=False,
+                 start_vector=start_vectors.RandomStartVector()):
+
+        self.output = output
+        self.start_vector = start_vector
+
+        super(LogisticRegressionEstimator, self).__init__(algorithm=algorithm)
+
+    @abc.abstractmethod
+    def fit(self, X, y):
+        """Fit the estimator to the data
+        """
+        raise NotImplementedError('Abstract method "fit" must be '
+                                  'specialised!')
+
+#        self.function.set_params(X=X, y=y)
+#        # TODO: Should we use a seed here so that we get deterministic results?
+#        beta = self.start_vector.get_vector((X.shape[1], 1))
+#        if self.output:
+#            self.beta, self.output = self.algorithm(X, y, self.function, beta)
+#        else:
+#            self.beta = self.algorithm(X, y, self.function, beta)
+
+    def predict(self, X):
+        """Return a predicted y corresponding to the X given and the beta
+        previously determined
+        """
+        logit = np.dot(X, self.beta)
+        proba = 1. / (1. + np.exp(-logit))
+        y = np.ones((X.shape[0], 1))
+        y[proba < .5] = 0
+        return y
+
+    def score(self, X, y):
+
+        self.function.reset()
+        self.function.set_params(X=X, y=y)
+        return self.function.f(self.beta)
+
 class RidgeRegression_L1_TV(RegressionEstimator):
     """
 
@@ -224,7 +276,7 @@ class RidgeRegression_L1_TV(RegressionEstimator):
         return self
 
 
-class RidgeLogisticRegression_L1_TV(RegressionEstimator):
+class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
     """
 
     Parameters

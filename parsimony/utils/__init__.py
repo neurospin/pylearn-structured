@@ -2,9 +2,8 @@
 """
 Created on Thu Feb 8 09:22:00 2013
 
-@author:  Tommy Löfstedt
-@email:   tommy.loefstedt@cea.fr
-@license: TBD.
+@author:   tommy.loefstedt@cea.fr, edouard.duchesnay@cea.fr
+@license: BSD-3-Clause
 """
 
 #from parsimony.utils import math
@@ -13,8 +12,9 @@ import maths
 import consts
 
 from .utils import AnonymousClass
-
-__all__ = ['maths', 'consts', 'AnonymousClass']
+from .plot import plot_map2d
+ 
+__all__ = ['maths', 'consts', 'AnonymousClass', 'plot_map2d']
 
 #from .utils import norm
 #from .utils import norm1
