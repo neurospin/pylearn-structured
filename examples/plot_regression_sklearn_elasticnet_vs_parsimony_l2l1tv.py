@@ -31,11 +31,11 @@ if __name__ == '__main__':
     r2 = .75
     sigma_spatial_smoothing = 1
     random_seed = None
-    noize_object_pixel_ratio = .25
+    object_pixel_ratio = .25
     objects = None
     Xim, y, beta = make_regression_struct(n_samples=n_samples,
         shape=shape, r2=r2, sigma_spatial_smoothing=sigma_spatial_smoothing,
-        noize_object_pixel_ratio=noize_object_pixel_ratio,
+        object_pixel_ratio=object_pixel_ratio,
         random_seed=random_seed)
     _, nx, ny, nz = Xim.shape
 

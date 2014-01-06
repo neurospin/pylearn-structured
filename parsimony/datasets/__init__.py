@@ -12,6 +12,8 @@ import simulated
 
 from .samples_generator_nostruct import make_classification
 from .samples_generator_struct import make_regression_struct
+from .samples_generator_struct import make_classification_struct
 
 __all__ = ['Russett', 'simulated',
-           'make_classification', 'make_regression_struct']
+           'make_classification',
+           'make_regression_struct', 'make_classification_struct']
