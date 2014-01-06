@@ -4,7 +4,7 @@ Created on Wed Aug  7 10:35:12 2013
 
 @author:  Edouard Duchesnay
 @email:   edouard.duchesnay@cea.fr
-@license: TBD.
+@license: BSD-3-Clause
 """
 # TODO: Remove dependence on scikit learn.
 
@@ -12,9 +12,10 @@ import numpy as np
 from scipy import ndimage
 import matplotlib.pyplot as plt
 
+
 ############################################################################
 def make_classification_struct(n_samples=100, shape=(30, 30, 1),
-                           snr=2,
+                           snr=2., sigma_logit=5., random_seed=None,
                            **kwargs):
     """Generate classification samples (images + target variable) and beta.
     Call make_regression_struct then apply the logistic function:
@@ -23,11 +24,17 @@ def make_classification_struct(n_samples=100, shape=(30, 30, 1),
 
     Parameters
     ----------
-    See make_regression_struct, exept for r2 which is replace by snr
 
-    snr: float
-        Signal to noise ratio: std(X * beta) / std(noise) in 
+    See make_regression_struct, exept for r2 which is replaced by snr
+
+    snr: float (default 2.)
+        Signal to noise ratio: std(X * beta) / std(noise) in
         1. / (1 + exp(-(X * beta + noise))
+
+    sigma_logit: float (default 5.)
+        standard deviation of logit = X * beta + noise
+        large sigma_logit promotes sharp shape of logistic function, ie:
+        probabilities are close to 0 or 1, which increases likekihood.
 
     Return
     ------
@@ -43,15 +50,47 @@ def make_classification_struct(n_samples=100, shape=(30, 30, 1),
 
     proba: array of shape [n_sample, 1]
         Samples posterior probabilities
+
+    See also
+    --------
+
+    make_regression_struct
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    >>> from parsimony.datasets import make_classification_struct
+    >>> n_samples = 100
+    >>> shape = (11, 11, 1)
+    >>> X3d, y, beta3d, proba = make_classification_struct(n_samples=n_samples,
+    ...     shape=shape, sigma_logit=1., random_seed=1)
+    >>> print "Likelihood=", np.prod(proba[y.ravel()==1]) * np.prod(1-proba[y.ravel()==0])
+    Likelihood= 1.98405647549e-18
+    >>> plt.plot(proba[y.ravel()==1], "ro", proba[y.ravel()==0], "bo")
+    >>> plt.show()
+    >>> X3d, y, beta3d, proba = make_classification_struct(n_samples=n_samples,
+    ...     shape=shape, sigma_logit=5., random_seed=1)
+    >>> print "Likelihood=", np.prod(proba[y.ravel()==1]) * np.prod(1-proba[y.ravel()==0])
+    Likelihood= 2.19102268035e-06
+    >>> plt.plot(proba[y.ravel()==1], "ro", proba[y.ravel()==0], "bo")
+    >>> plt.show()
     """
     X3d, y, beta3d = make_regression_struct(n_samples=n_samples, shape=shape, r2=1.,
-                                            **kwargs)
+                                            random_seed=random_seed, **kwargs)
     X = X3d.reshape((n_samples, np.prod(shape)))
     beta = beta3d.ravel()
-    beta *= snr / np.std(np.dot(X, beta))    
-    #np.std(np.dot(X, beta))
-    noise = np.random.normal(0, 1, X.shape[0])
+    coef = float(sigma_logit) / np.sqrt(snr ** 2 + 1)
+    beta *= coef * snr / np.std(np.dot(X, beta))
+    if random_seed is not None:  # If random seed, save current random state
+        rnd_state = np.random.get_state()
+        np.random.seed(random_seed)
+    noise = coef * np.random.normal(0, 1, X.shape[0])
+    if random_seed is not None:   # If random seed, restore random state
+        np.random.set_state(rnd_state)
     logit = np.dot(X, beta) + noise
+    #np.std(np.dot(X, beta)) / np.std(noise)
+    #np.std(logit)
     proba = 1. / (1. + np.exp(-logit))
     y = np.ones(y.shape)
     y[proba < .5] = 0
@@ -92,8 +131,8 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
         spatial correlation pixels.
 
     object_pixel_ratio: float
-        Controls the ratio between object-level signal and pixel-level signal for
-        pixels within objects. If object_pixel_ratio == 1 then 100% of
+        Controls the ratio between object-level signal and pixel-level signal
+        for pixels within objects. If object_pixel_ratio == 1 then 100% of
         the signal of pixels within the same object is shared (ie.: no pixel
         level) signal. If object_pixel_ratio == 0 then all the signal is
         pixel specific. High object_pixel_ratio promotes spatial
@@ -153,7 +192,7 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
 
         Note that negative coeficients for X2 and X5 combined with the shared
         latent variable l12 and l45 make X2 and X5 suppressor regions ie.:
-        regions are not correlated with y but 
+        regions are not correlated with y but
             y = X1 - X2 + X3 + X4 -X5 + noise
             y = l1 + l3 + l4 + noise
             So pixels of X2 and X5 are not correlated with the target y so they
@@ -168,9 +207,8 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
     >>> from parsimony.datasets import make_regression_struct
     >>> n_samples = 100
     >>> shape = (11, 11, 1)
-    >>> r2 = .5
     >>> X3d, y, beta3d = make_regression_struct(n_samples=n_samples, shape=shape,
-    ...                            r2=r2, random_seed=1)
+    ...                            r2=.5, random_seed=1)
     >>> X = X3d.reshape(n_samples, np.prod(shape))
     >>> beta = beta3d.ravel()
     >>> from sklearn.metrics import r2_score
