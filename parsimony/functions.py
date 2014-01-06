@@ -541,23 +541,25 @@ class RidgeLogisticRegression(AtomicFunction, Gradient,
                          LipschitzContinuousGradient):#, Eigenvalues):
     """ The Logistic Regression function
     Ridge (re-weighted) log-likelihood (cross-entropy):
-    * f(beta) = -log L(beta) + k/2 ||beta||^2_2
-              = -Sum_i wi[yi log(pi) + (1−yi) log(1−pi)] + k/2||beta||^2_2
-              = -Sum_i wi[yi xi'beta − log(1 + e(xi'beta) )] + k/2||beta||^2_2
+    * f(beta) = -Sum wi[yi log(pi) + (1 − yi) log(1 − pi)] + k/2 ||beta||^2_2
+              = -Sum wi[yi xi' beta − log(1 + e(xi' beta))] + k/2 ||beta||^2_2
     
-    * grad f(beta) = -sum_i[ xi (yi - pi)] + k beta
+    * grad f(beta) = -Sum wi[ xi (yi - pi)] + k beta
     
-    pi = p(y=1|xi,beta) = 1 / (1 + exp(-xi'beta))
+    pi = p(y=1|xi, beta) = 1 / (1 + exp(-xi' beta))
     wi: sample i weight
     
     [Hastie 2009, p.: 102, 119 and 161, Bishop 2006 p.: 206]
+
     Parameters
     ----------
+
     X : Regressor
 
     y : Regressand
 
-    weights : A vector with weights for each sample.
+    weights:
+        samples weights
     """
     def __init__(self, X, y, k=0, weights=None):
         self.X = X

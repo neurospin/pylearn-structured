@@ -157,11 +157,15 @@ class LogisticRegressionEstimator(BaseEstimator):
         """Return a predicted y corresponding to the X given and the beta
         previously determined
         """
-        logit = np.dot(X, self.beta)
-        proba = 1. / (1. + np.exp(-logit))
+        proba = self.predict_proba(X)
         y = np.ones((X.shape[0], 1))
         y[proba < .5] = 0
         return y
+
+    def predict_proba(self, X):
+        logit = np.dot(X, self.beta)
+        proba = 1. / (1. + np.exp(-logit))
+        return proba
 
     def score(self, X, y):
 

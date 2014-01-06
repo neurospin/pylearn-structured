@@ -2,7 +2,8 @@
 """
 Created on Mon Dec 23 15:00:10 2013
 
-@author: ed203246
+@author: edouard.duchesnay@cea.fr
+@license: BSD-3-Clause
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -43,7 +44,7 @@ yte_pred_enet = enet.fit(Xtr, ytr).predict(Xte)
 k, l, g = alpha_g * np.array((.1, .4, .5))  # l2, l1, tv penalties
 A, n_compacts = tv.A_from_shape(shape)
 ridgel1tv = RidgeRegression_L1_TV(k, l, g, A)
-%time yte_pred_ridgel1tv = ridgel1tv.fit(X, y).predict(Xte)
+yte_pred_ridgel1tv = ridgel1tv.fit(X, y).predict(Xte)
 
 ###########################################################################
 ## Plot
