@@ -540,25 +540,24 @@ class RidgeRegression(CompositeFunction, Gradient, LipschitzContinuousGradient,
 class RidgeLogisticRegression(AtomicFunction, Gradient,
                          LipschitzContinuousGradient):#, Eigenvalues):
     """ The Logistic Regression function
+
     Ridge (re-weighted) log-likelihood (cross-entropy):
-    * f(beta) = -Sum wi[yi log(pi) + (1 − yi) log(1 − pi)] + k/2 ||beta||^2_2
-              = -Sum wi[yi xi' beta − log(1 + e(xi' beta))] + k/2 ||beta||^2_2
-    
+    * f(beta) = -Sum wi (yi log(pi) + (1 − yi) log(1 − pi)) + k/2 ||beta||^2_2
+              = -Sum wi (yi xi' beta − log(1 + e(xi' beta))) + k/2 ||beta||^2_2
+
     * grad f(beta) = -Sum wi[ xi (yi - pi)] + k beta
-    
+
     pi = p(y=1|xi, beta) = 1 / (1 + exp(-xi' beta))
     wi: sample i weight
-    
     [Hastie 2009, p.: 102, 119 and 161, Bishop 2006 p.: 206]
 
     Parameters
     ----------
-
     X : Regressor
 
     y : Regressand
 
-    weights:
+    weights: array, shape = [n_samples]
         samples weights
     """
     def __init__(self, X, y, k=0, weights=None):
@@ -1408,14 +1407,17 @@ class RLR_L1_TV(RR_L1_TV):
 
     mu : Total Variation parameter.
             The regularisation constant for the smoothing.
+
+    weights: array, shape = [n_samples]
+        samples weights
     """
 
-    def __init__(self, X, y, k, l, g, A=None, mu=0.0):
+    def __init__(self, X, y, k, l, g, A=None, mu=0.0, weights=None):
 
         self.X = X
         self.y = y
 
-        self.rr = RidgeLogisticRegression(X, y, k)
+        self.rr = RidgeLogisticRegression(X, y, k, weights=weights)
         self.l1 = L1(l)
         self.tv = TotalVariation(g, A=A, mu=0.0)
 

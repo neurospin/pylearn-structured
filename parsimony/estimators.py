@@ -282,6 +282,15 @@ class RidgeRegression_L1_TV(RegressionEstimator):
 
 class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
     """
+    Minimize RidgeLogisticRegression (re-weighted log-likelihood
+    aka cross-entropy) with L1 and TV penalties:
+    Ridge (re-weighted) log-likelihood (cross-entropy):
+    f(beta, X, y) = - Sum wi * (yi * log(pi) + (1 − yi) * log(1 − pi))
+                    + k/2 * ||beta||^2_2 
+                    + l * ||beta||_1
+                    + g * TV(beta)
+    With pi = p(y=1|xi, beta) = 1 / (1 + exp(-xi' beta)) and wi: sample i
+    weight
 
     Parameters
     ----------
@@ -292,6 +301,9 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
     g : The total variation regularization parameter.
 
     A : The linear operator for the total variation Nesterov function
+
+    weights: array, shape = [n_samples]
+        samples weights
 
     mu : The regularisation constant for the smoothing.
 
@@ -305,20 +317,19 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
     Example
     -------
     """
-    def __init__(self, k, l, g, A, mu=None, output=False,
+    def __init__(self, k, l, g, A, weigths=None, mu=None, output=False,
                  algorithm=algorithms.StaticCONESTA()):
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
-
         self.k = float(k)
         self.l = float(l)
         self.g = float(g)
         self.A = A
+        self.weigths = weigths
         if isinstance(mu, numbers.Number):
             self.mu = float(mu)
         else:
             self.mu = None
-
         super(RidgeLogisticRegression_L1_TV, self).__init__(algorithm=algorithm,
                                                     output=output)
 
@@ -326,13 +337,13 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
         """Return a dictionary containing all the estimator's parameters
         """
         return {"k": self.k, "l": self.l, "g": self.g,
-                "A": self.A, "mu": self.mu}
+                "A": self.A, "mu": self.mu, "weigths": self.weigths}
 
     def fit(self, X, y):
         """Fit the estimator to the data
         """
         self.function = functions.RLR_L1_TV(X, y, self.k, self.l, self.g,
-                                           A=self.A)
+                                           A=self.A, weights=self.weigths)
         self.algorithm.check_compatibility(self.function,
                                            self.algorithm.INTERFACES)
 

@@ -17,7 +17,7 @@ from parsimony.utils import plot_map2d
 ###########################################################################
 ## Dataset
 n_samples = 500
-shape = (30, 30, 1)
+shape = (100, 100, 1)
 X3d, y, beta3d, proba = make_classification_struct(n_samples=n_samples,
                                                     shape=shape, snr=5)
 X = X3d.reshape((n_samples, np.prod(beta3d.shape)))
@@ -35,23 +35,26 @@ alpha_g = 1.  # global penalty
 ###########################################################################
 ## Use sklearn LogisticRegression
 # Minimize:
-# f(beta) = - C Sum wi[yi log(pi) + (1 − yi) log(1 − pi)] + k/2 * ||beta||^2_2
+# f(beta) = - C Sum wi[yi log(pi) + (1 − yi) log(1 − pi)] + 1/2 * ||beta||^2_2
 ridgelr = LogisticRegression(C=1.0 / alpha_g, fit_intercept=False)
-yte_pred_ridgelr = ridgelr.fit(Xtr, ytr).predict(Xte)
+%time yte_pred_ridgelr = ridgelr.fit(Xtr, ytr).predict(Xte)
 _, recall_ridgelr, _, _ = precision_recall_fscore_support(yte, yte_pred_ridgelr, average=None)
 
 ###########################################################################
 ## RidgeLogisticRegression_L1_TV
 # Minimize:
-# f(beta) = - Sum wi[yi log(pi) + (1 − yi) log(1 − pi)] + k/2 * ||beta||^2_2
-# + l * ||beta||_1 + g * TV(beta)
-#k, l, g = alpha * .1,  alpha * .4, alpha * .5
+#    f(beta, X, y) = - Sum wi * (yi * log(pi) + (1 − yi) * log(1 − pi))
+#                    + k/2 * ||beta||^2_2 
+#                    + l * ||beta||_1
+#                    + g * TV(beta)
 k, l, g = alpha_g * np.array((.1, .4, .5))  # l2, l1, tv penalties
 
 A, n_compacts = tv.A_from_shape(beta3d.shape)
 ridgel1tv = RidgeLogisticRegression_L1_TV(k, l, g, A)
-yte_pred_ridgel1tv = ridgel1tv.fit(Xtr, ytr).predict(Xte)
+%time yte_pred_ridgel1tv = ridgel1tv.fit(Xtr, ytr).predict(Xte)
 _, recall_ridgel1tv, _, _ = precision_recall_fscore_support(yte, yte_pred_ridgel1tv, average=None)
+# 100 x 100 Wall time: 479.72 s
+# 500 x 500 Wall time: 10116.70 s
 
 ###########################################################################
 ## Plot
