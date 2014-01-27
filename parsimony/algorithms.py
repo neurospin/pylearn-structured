@@ -19,28 +19,30 @@ Created on Fri Feb  8 17:24:11 2013
 
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
-@license: TBD.
+@license: BSD 3-clause.
 """
 import abc
+import copy
 from time import time, clock
 
 import numpy as np
 
+import parsimony.start_vectors as start_vectors
+import parsimony.functions as functions
 import parsimony.utils.consts as consts
 import parsimony.utils.maths as maths
-import parsimony.functions as functions
 
 #TODO: This depends on the OS. We should try to be clever here ...
 time_func = clock
 #time_func = time
 
-__all__ = ['BaseAlgorithm',
-           'ImplicitAlgorithm',
-           'FastSVD', 'FastSparseSVD',
+__all__ = ["BaseAlgorithm",
+           "ImplicitAlgorithm",
+           "FastSVD", "FastSparseSVD", "FastSVDProduct",
 
-           'ExplicitAlgorithm',
-           'FISTA', 'CONESTA', 'StaticCONESTA', 'DynamicCONESTA',
-           'ExcessiveGapMethod']
+           "ExplicitAlgorithm",
+           "ISTA", "FISTA", "CONESTA", "StaticCONESTA", "DynamicCONESTA",
+           "ExcessiveGapMethod"]
 
 
 class BaseAlgorithm(object):
@@ -254,6 +256,146 @@ class FastSparseSVD(ImplicitAlgorithm):
                     break
 
         return v
+
+
+class FastSVDProduct(ImplicitAlgorithm):
+
+    def __call__(self, X, Y, start_vector=None,
+                 eps=consts.TOLERANCE, max_iter=100, min_iter=1):
+        """A kernel SVD implementation of a product of two matrices, X and Y.
+        I.e. the SVD of np.dot(X, Y), but the SVD is computed without actually
+        computing the matrix product.
+
+        Performs SVD of a given matrix. This is always faster than
+        np.linalg.svd when extracting only one, or a few, vectors.
+
+        Parameters
+        ----------
+        X : The first matrix of the product.
+
+        Y : The second matrix of the product.
+
+        start_vector : The start vector.
+
+        eps : Float. Tolerance.
+
+        max_iter : Maximum number of iterations.
+
+        min_iter : Minimum number of iterations.
+
+        Returns
+        -------
+        v : The right singular vector of np.dot(X, Y) that corresponds to the
+                largest singular value of np.dot(X, Y).
+
+        Example
+        -------
+        >>> import numpy as np
+        >>> from parsimony.algorithms import FastSVDProduct
+        >>> np.random.seed(0)
+        >>> X = np.random.random((15,10))
+        >>> Y = np.random.random((10,5))
+        >>> fast_svd = FastSVDProduct()
+        >>> fast_svd(X, Y)
+        array([[ 0.47169804],
+               [ 0.38956366],
+               [ 0.41397845],
+               [ 0.52493576],
+               [ 0.42285389]])
+        """
+        M, N = X.shape
+
+        if start_vector is None:
+            start_vector = start_vectors.RandomStartVector(normalise=True)
+        v = start_vector.get_vector((Y.shape[1], 1))
+
+        for it in xrange(1, max_iter + 1):
+            v_ = v
+            v = np.dot(X, np.dot(Y, v_))
+            v = np.dot(Y.T, np.dot(X.T, v))
+            v /= np.sqrt(np.sum(v ** 2.0))
+
+            if np.sqrt(np.sum((v_ - v) ** 2.0)) < eps \
+                    and it >= min_iter:
+                break
+
+        return v
+
+
+class ISTA(ExplicitAlgorithm):
+    """ The iterative shrinkage threshold algorithm.
+
+    Parameters
+    ----------
+    step : Step for each iteration.
+
+    output : Boolean. Get output information.
+
+    eps : Float. Tolerance.
+
+    max_iter : Maximum allowed number of iterations.
+
+    min_iter : Minimum allowed number of iterations.
+    """
+    INTERFACES = [functions.Gradient,
+                  # TODO: We should use a step size here instead of the
+                  # Lipschitz constant. All functions don't have L, but will
+                  # still run in FISTA with a small enough step size.
+                  # Updated: Use GradientStep instead!!
+                  functions.LipschitzContinuousGradient,
+                  functions.ProximalOperator,
+                 ]
+
+    def __init__(self, step=None, output=False,
+                 eps=consts.TOLERANCE,
+                 max_iter=consts.MAX_ITER, min_iter=1):
+
+        self.step = step
+        self.output = output
+        self.eps = eps
+        self.max_iter = max_iter
+        self.min_iter = min_iter
+
+    def __call__(self, function, beta):
+        """Call this object to obtain the variable that gives the minimum.
+
+        Parameters
+        ----------
+        function : The function to minimise.
+
+        beta : A start vector.
+        """
+        self.check_compatibility(function, self.INTERFACES)
+
+        betanew = betaold = beta
+
+        if self.step is None:
+            self.step = 1.0 / function.L()
+
+        if self.output:
+            t = []
+            f = []
+        for i in xrange(1, self.max_iter + 1):
+            if self.output:
+                tm = time_func()
+
+            betaold = betanew
+            betanew = function.prox(betaold - self.step * function.grad(betaold),
+                                    self.step)
+
+            if self.output:
+                t.append(time_func() - tm)
+                f.append(function.f(betanew))
+
+            if (1.0 / self.step) * maths.norm(betanew - betaold) < self.eps \
+                    and i >= self.min_iter:
+                break
+
+        if self.output:
+            output = {"t": t, "f": f}
+            return betanew, output
+        else:
+            return betanew
 
 
 class FISTA(ExplicitAlgorithm):
@@ -579,10 +721,9 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
 
     eps : Float. Tolerance
 
-    max_iter : Maximum allowed number of iterations
+    max_iter : Maximum allowed number of iterations.
 
-    min_iter : Minimum allowed number of iterations
-
+    min_iter : Minimum allowed number of iterations.
     """
     INTERFACES = [functions.NesterovFunction,
                   functions.LipschitzContinuousGradient,
@@ -680,6 +821,10 @@ class Bisection(ExplicitAlgorithm):
 
     Parameters
     ----------
+    force_negative : Boolean, default is False. Will try, by running more
+            iterations, to make the result negative. It may fail, but it is
+            unlikely.
+
     eps : A positive value such that |f(x)|_2 <= eps. Only guaranteed if
             |f(x)|_2 <= eps in less than maxiter iterations.
 
@@ -690,9 +835,11 @@ class Bisection(ExplicitAlgorithm):
     INTERFACES = [functions.Function,
                  ]
 
-    def __init__(self, eps=consts.TOLERANCE,
+    def __init__(self, force_negative=False,
+                 eps=consts.TOLERANCE,
                  max_iter=50, min_iter=1):
 
+        self.force_negative = force_negative
         self.eps = eps
         self.max_iter = max_iter
         self.min_iter = min_iter
@@ -711,9 +858,9 @@ class Bisection(ExplicitAlgorithm):
                 Finding them may be slow, though, if the function is expensive
                 to evaluate.
         """
-        if x != None:
-            low = min(x)
-            high = max(x)
+        if x is not None:
+            low = x[0]
+            high = x[1]
         else:
             low = 0
             high = 1
@@ -731,10 +878,11 @@ class Bisection(ExplicitAlgorithm):
                 high += abs(high) * 2.0 ** i
 
         # Use the bisection method to find where |f(x)|_2 <= eps.
-        for i in xrange(self.max_iter):
-            mid = (low + high) / 2.0
-            f_mid = function.f(mid)
+        neg_count = 0
 
+        mid = (low + high) / 2.0
+        f_mid = function.f(mid)
+        for i in xrange(self.max_iter):
             if np.sign(f_mid) == np.sign(f_low):
                 low = mid
                 f_low = f_mid
@@ -742,54 +890,323 @@ class Bisection(ExplicitAlgorithm):
                 high = mid
                 f_high = f_mid
 
+            mid = (low + high) / 2.0
+            f_mid = function.f(mid)
+
+            # TODO: Include min_iter!
             if np.sqrt(np.sum((high - low) ** 2.0)) <= self.eps:
-                break
+                if self.force_negative and f_mid > 0.0:
+                    if neg_count < self.max_iter:
+                        neg_count += 1
+                    else:
+                        break
+                else:
+                    break
 
-        return (low + high) / 2.0
+        return mid
 
 
-class GeneralisedMultiblockISTA(ExplicitAlgorithm):
-    """ The iterative shrinkage threshold algorithm in a multiblock setting.
+#class GeneralisedMultiblockISTA(ExplicitAlgorithm):
+#    """ The iterative shrinkage threshold algorithm in a multiblock setting.
+#    """
+#    INTERFACES = [functions.MultiblockFunction,
+#                  functions.MultiblockGradient,
+#                  functions.MultiblockProximalOperator,
+#                  functions.GradientStep,
+#                 ]
+#
+#    def __init__(self, step=None, output=False,
+#                 eps=consts.TOLERANCE,
+#                 max_iter=consts.MAX_ITER, min_iter=1):
+#
+#        self.step = step
+#        self.output = output
+#        self.eps = eps
+#        self.max_iter = max_iter
+#        self.min_iter = min_iter
+#
+#    def __call__(self, function, w):
+#
+#        self.check_compatability(function, self.INTERFACES)
+#
+#        for it in xrange(10):  # TODO: Get number of iterations!
+#            print "it:", it
+#
+#            for i in xrange(len(w)):
+#                print "  i:", i
+#
+#                for k in xrange(10000):
+#                    print "    k:", k
+#
+#                    t = function.step(w, i)
+#                    w[i] = w[i] - t * function.grad(w, i)
+#                    w = function.prox(w, i, t)
+##                    = w[:i] + [wi] + w[i+1:]
+#
+#                    print "    f:", function.f(w)
+#
+##                w[i] = wi
+#
+#        return w
+
+
+class MultiblockProjectedGradientMethod(ExplicitAlgorithm):
+    """ The projected gradient algorithm with alternating minimisations in a
+    multiblock setting.
     """
     INTERFACES = [functions.MultiblockFunction,
                   functions.MultiblockGradient,
-                  functions.MultiblockProximalOperator,
-                  functions.GradientStep,
-                 ]
+                  functions.MultiblockProjectionOperator,
+                  functions.GradientStep]
 
     def __init__(self, step=None, output=False,
                  eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
+                 outer_iter=25, max_iter=consts.MAX_ITER, min_iter=1):
 
         self.step = step
         self.output = output
         self.eps = eps
+        self.outer_iter = outer_iter
         self.max_iter = max_iter
         self.min_iter = min_iter
 
     def __call__(self, function, w):
 
-        self.check_compatability(function, self.INTERFACES)
+        self.check_compatibility(function, self.INTERFACES)
 
-        for it in xrange(10):  # TODO: Get number of iterations!
-            print "it:", it
+        print "outer_iter:", self.outer_iter
+        print "len(w):", len(w)
+        print "max_iter:", self.max_iter
 
+        z = w_old = w
+
+        if self.output:
+            f = [function.f(w)]
+
+        t = [1.0] * len(w)
+
+        for it in xrange(self.outer_iter):  # TODO: Get number of iterations!
+#            all_converged = True
             for i in xrange(len(w)):
-                print "  i:", i
+#                step_dec = 1.0
+#                for k in xrange(int(self.max_iter / np.sqrt(it + 1))):
+                for k in xrange(self.max_iter):
+                    print "it: %d, i: %d, k: %d" % (it, i, k)
 
-                for k in xrange(10000):
-                    print "    k:", k
+#                    z = w[i] + ((k - 2.0) / (k + 1.0)) * (w[i] - w_old[i])
 
-                    t = function.step(w, i)
-                    w[i] = w[i] - t * function.grad(w, i)
-                    w = function.prox(w, i, t)
-#                    = w[:i] + [wi] + w[i+1:]
+                    w_old = copy.deepcopy(w)
 
-                    print "    f:", function.f(w)
+#                    _t = time()
+                    t[i] = function.step(w_old, i)  # / step_dec
+                    print "t:", t[i]
+#                    print "step:", time() - _t
 
-#                w[i] = wi
+#                    _t = time()
+                    w[i] = w_old[i] - t[i] * function.grad(w_old, i)
+#                    w[i] = z[i] - t[i] * function.grad(w_old[:i] +
+#                                                       [z] +
+#                                                       w_old[i + 1:], i)
+#                    print "grad:", time() - _t
 
-        return w
+#                    _t = time()
+                    w = function.proj(w, i)
+#                    print "proj:", time() - _t
+
+                    print "l0:", maths.norm0(w[i]), \
+                        ", l1:", maths.norm1(w[i]), \
+                        ", l2:", maths.norm(w[i])
+
+                    if self.output:
+                        f_ = function.f(w)
+                        print "f:", f_
+                        if f_ > f[-1]:
+                            print "ERROR! Function increased!"
+#                            step_dec *= 1.1
+                            break
+#                        else:
+#                            step_dec = 1.0
+                        f.append(f_)
+
+                    err = maths.norm(w_old[i] - w[i])
+#                    print "err: %.10f < %.10f * %.10f = %.10f" \
+#                        % (err, t[i], self.eps, t[i] * self.eps)
+                    if err <= t[i] * self.eps:
+                        print "Converged!"
+                        break
+
+#            import cPickle as pickle
+#            filename = "result_%d.p" % (it)
+#            pickle.dump((w, f) open("", "wb"))
+
+#            if all_converged:
+#                print "All converged!"
+#                break
+
+        if self.output:
+#            output = {"t": t, "f": f}
+            output = {"f": f}
+            return (w, output)
+        else:
+            return w
+
+
+class ProjectionADMM(ExplicitAlgorithm):
+    """ The Alternating direction method of multipliers, where the functions
+    have projection operators onto the corresponding convex sets.
+    """
+    INTERFACES = [functions.Function,
+                  functions.ProjectionOperator]
+
+    def __init__(self, output=False,
+                 eps=consts.TOLERANCE,
+                 max_iter=consts.MAX_ITER, min_iter=1):
+
+        self.output = output
+        self.eps = eps
+        self.max_iter = max_iter
+        self.min_iter = min_iter
+
+    def __call__(self, function, x):
+        """Finds the projection onto the intersection of two sets.
+
+        Parameters:
+        ----------
+        function: List or tuple with two elements. The two functions.
+
+        x: The point that we wish to project.
+        """
+        self.check_compatibility(function[0], self.INTERFACES)
+        self.check_compatibility(function[1], self.INTERFACES)
+
+        z = x
+        u = np.zeros(x.shape)
+        for i in xrange(1, self.max_iter + 1):
+            x = function[0].proj(z - u)
+            z = function[1].proj(x + u)
+            u = u + x - z
+
+            if maths.norm(z - x) / maths.norm(z) < self.eps \
+                    and i >= self.min_iter:
+                break
+
+        return z
+
+
+class DykstrasProjectionAlgorithm(ExplicitAlgorithm):
+    """Dykstra's projection algorithm. Computes the projection onto the
+    intersection of two convex sets.
+
+    The functions have projection operators onto the corresponding convex sets.
+    """
+    INTERFACES = [functions.Function,
+                  functions.ProjectionOperator]
+
+    def __init__(self, output=False,
+                 eps=consts.TOLERANCE,
+                 max_iter=consts.MAX_ITER, min_iter=1):
+
+        self.output = output
+        self.eps = eps
+        self.max_iter = max_iter
+        self.min_iter = min_iter
+
+    def __call__(self, function, r):
+        """Finds the projection onto the intersection of two sets.
+
+        Parameters:
+        ----------
+        function: List or tuple with two elements. The two functions.
+
+        r: The point that we wish to project.
+        """
+        self.check_compatibility(function[0], self.INTERFACES)
+        self.check_compatibility(function[1], self.INTERFACES)
+
+        x_new = r
+        p_new = np.zeros(r.shape)
+        q_new = np.zeros(r.shape)
+        for i in xrange(1, self.max_iter + 1):
+
+            x_old = x_new
+            p_old = p_new
+            q_old = q_new
+
+            y_old = function[0].proj(x_old + p_old)
+            p_new = x_old + p_old - y_old
+            x_new = function[1].proj(y_old + q_old)
+            q_new = y_old + q_old - x_new
+
+            if maths.norm(x_new - x_old) / maths.norm(x_old) < self.eps \
+                    and i >= self.min_iter:
+                break
+
+        return x_new
+
+
+class BacktrackingLineSearch(ExplicitAlgorithm):
+    INTERFACES = [functions.Function,
+                  functions.Gradient]
+
+    def __init__(self, condition=None,
+                 output=False,
+                 max_iter=30, min_iter=1,
+                 eps=consts.TOLERANCE):  # Note that tolerance is never used!
+        """Finds a step length a that fulfills a given descent criterion.
+
+        Parameters:
+        ----------
+        condition : The class of the descent condition. If not given, defaults
+                to the StrongWolfeCondition.
+
+        output : Boolean. Whether or not to return additional output.
+
+        max_iter : The maximum allowed number of iterations.
+
+        max_iter : The minimum number of iterations that must be made.
+        """
+        self.condition = condition
+        if self.condition is None:
+            self.condition = functions.StrongWolfeCondition
+        self.output = output
+        self.max_iter = max_iter
+        self.min_iter = min_iter
+
+    def __call__(self, function, x, p, rho=0.5, a=1.0, **kwargs):
+        """Finds the step length for a descent algorithm.
+
+        Parameters:
+        ----------
+        function : A Loss function. The function to minimise.
+
+        x : Vector. The current point.
+
+        p : Vector. The descent direction.
+
+        rho : Float. 0 < rho < 1. The rate at which to decrease a in each
+                iteration. Smaller will finish faster, but may yield a lesser
+                descent.
+
+        a : Float. The upper bound on the step length. Defaults to 1, which is
+                suitable for e.g. Newton's method.
+
+        kwargs : Parameters for the descent condition.
+        """
+        self.check_compatibility(function, self.INTERFACES)
+
+        line_search = self.condition(function, p, **kwargs)
+        it = 0
+        while True:
+            if line_search.feasible(x, a):
+                print "Broke after %d iterations of %d iterations." \
+                    % (it, self.max_iter)
+                return a
+
+            it += 1
+            if it >= self.max_iter:
+                return 0.0  # If we did not find a feasible point, don't move!
+
+            a = a * rho
 
 
 if __name__ == "__main__":

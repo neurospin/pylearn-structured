@@ -118,33 +118,34 @@ def corr(a, b):
     else:
         return ip
 
-# TODO: remove commented code
-#def cov(a, b):
-#    """
-#    Example
-#    -------
-#    >>> import numpy as np
-#    >>> from parsimony.utils.maths import cov
-#    >>> v1 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
-#    >>> v2 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
-#    >>> print cov(v1, v2)
-#    [[ 1.  1.  1.  1.]
-#     [ 1.  1.  1.  1.]
-#     [ 1.  1.  1.  1.]
-#     [ 1.  1.  1.  1.]]
-#    """
-#    ma = np.mean(a)
-#    mb = np.mean(b)
-#
-#    a_ = a - ma
-#    b_ = b - mb
-#
-#    ip = np.dot(a_.T, b_) / (a_.shape[0] - 1.0)
-#
-#    if ip.shape == (1, 1):
-#        return ip[0, 0]
-#    else:
-#        return ip
+
+def cov(a, b):
+    """
+    Example
+    -------
+    >>> import numpy as np
+    >>> from parsimony.utils.maths import cov
+    >>> v1 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
+    >>> v2 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
+    >>> print cov(v1, v2)
+    [[ 1.  1.  1.  1.]
+     [ 1.  1.  1.  1.]
+     [ 1.  1.  1.  1.]
+     [ 1.  1.  1.  1.]]
+    """
+    ma = np.mean(a)
+    mb = np.mean(b)
+
+    a_ = a - ma
+    b_ = b - mb
+
+    ip = np.dot(a_.T, b_) / (a_.shape[0] - 1.0)
+
+    if ip.shape == (1, 1):
+        return ip[0, 0]
+    else:
+        return ip
+
 
 if __name__ == "__main__":
     import doctest

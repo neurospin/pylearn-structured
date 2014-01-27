@@ -173,9 +173,9 @@ class LogisticRegressionEstimator(BaseEstimator):
         self.function.set_params(X=X, y=y)
         return self.function.f(self.beta)
 
+
 class RidgeRegression_L1_TV(RegressionEstimator):
     """
-
     Parameters
     ----------
     l : The L1 regularization parameter.
@@ -286,7 +286,7 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
     aka cross-entropy) with L1 and TV penalties:
     Ridge (re-weighted) log-likelihood (cross-entropy):
     f(beta, X, y) = - Sum wi * (yi * log(pi) + (1 − yi) * log(1 − pi))
-                    + k/2 * ||beta||^2_2 
+                    + k/2 * ||beta||^2_2
                     + l * ||beta||_1
                     + g * TV(beta)
     With pi = p(y=1|xi, beta) = 1 / (1 + exp(-xi' beta)) and wi: sample i

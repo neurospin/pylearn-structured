@@ -11,10 +11,12 @@ Created on Thu Feb 8 09:22:00 2013
 import maths
 import consts
 
-from .utils import AnonymousClass
+from .utils import AnonymousClass, optimal_shrinkage, approx_grad
 from .plot import plot_map2d
- 
-__all__ = ['maths', 'consts', 'AnonymousClass', 'plot_map2d']
+
+__all__ = ["maths", "consts",
+           "AnonymousClass", "optimal_shrinkage", "approx_grad",
+           "plot_map2d"]
 
 #from .utils import norm
 #from .utils import norm1

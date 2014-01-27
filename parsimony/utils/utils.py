@@ -10,18 +10,18 @@ Created on Thu Feb 8 09:22:00 2013
 
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
-@license: TBD.
+@license: BSD 3-clause.
 """
+import numpy as np
 
 #import scipy
-#import numpy as np
 #from numpy.linalg import norm
 #from numpy.random import rand
 #from numpy import sqrt
 #from copy import copy
 #import traceback
 
-__all__ = ['AnonymousClass']
+__all__ = ["optimal_shrinkage", "AnonymousClass", "approx_grad"]
 
 #__all__ = ['norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
 #           'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy', 'sstot', 'ssvar',
@@ -29,6 +29,20 @@ __all__ = ['AnonymousClass']
 #           'optimal_shrinkage', 'delete_sparse_csr_row', 'AnonymousClass']
 
 #_DEBUG = True
+
+
+def approx_grad(f, x, eps=1e-4):
+    p = x.shape[0]
+    grad = np.zeros(x.shape)
+    for i in xrange(p):
+        x[i, 0] -= eps
+        loss1 = f(x)
+        x[i, 0] += 2.0 * eps
+        loss2 = f(x)
+        x[i, 0] -= eps
+        grad[i, 0] = (loss2 - loss1) / (2.0 * eps)
+
+    return grad
 
 #def make_list(a, n, default=None):
 #    # If a list, but empty
@@ -155,55 +169,70 @@ __all__ = ['AnonymousClass']
 #            s = s + str(a)
 ##        traceback.print_stack()
 #        print "WARNING:", s
-#
-#
-#def optimal_shrinkage(*X, **kwargs):
-#
-#    tau = []
-#
-#    T = kwargs.pop('T', None)
-#
-#    if T == None:
-#        T = [T] * len(X)
-#    if len(X) != len(T):
-#        if T == None:
-#            T = [T] * len(X)
-#        else:
-#            T = [T[0]] * len(X)
-#
-#    for i in xrange(len(X)):
-#        Xi = X[i]
-#        Ti = T[i]
-#
-#        M, N = Xi.shape
-#        Si = np.cov(Xi.T)
-#        if Ti == None:
-#            Ti = np.diag(np.diag(Si))
-#
-##        R = _np.corrcoef(X.T)
-#        Wm = Si * ((M - 1.0) / M)  # 1 / N instead of 1 / N - 1
-#
-#        Var_sij = 0
-#        for i in xrange(N):
-#            for j in xrange(N):
-#                wij = np.multiply(Xi[:, [i]], Xi[:, [j]]) - Wm[i, j]
-#                Var_sij += np.dot(wij.T, wij)
-#        Var_sij = Var_sij[0, 0] * (M / ((M - 1.0) ** 3.0))
-#
-##        diag = _np.diag(C)
-##        SS_sij = _np.sum((C - _np.diag(diag)) ** 2.0)
-##        SS_sij += _np.sum((diag - 1.0) ** 2.0)
-#
+
+
+def optimal_shrinkage(X, T=None):
+
+    tau = []
+
+    if T is None:
+        T = [T] * len(X)
+    if len(X) != len(T):
+        if T is None:
+            T = [T] * len(X)
+        else:
+            T = [T[0]] * len(X)
+
+    import sys
+    for i in xrange(len(X)):
+        Xi = X[i]
+        Ti = T[i]
+        print "Here1"
+        sys.stdout.flush()
+        M, N = Xi.shape
+        Si = np.cov(Xi.T)
+        print "Here2"
+        sys.stdout.flush()
+        if Ti is None:
+            Ti = np.diag(np.diag(Si))
+        print "Here3"
+        sys.stdout.flush()
+
+        # R = _np.corrcoef(X.T)
+        Wm = Si * ((M - 1.0) / M)  # 1 / N instead of 1 / N - 1
+        print "Here4"
+        sys.stdout.flush()
+        sum_d = np.sum((Ti - Si) ** 2.0)
+        print "Here5"
+        sys.stdout.flush()
+        del Si
+        del Ti
+        print "Here6"
+        sys.stdout.flush()
+
+        Var_sij = 0
+        for i in xrange(N):
+            for j in xrange(N):
+                wij = np.multiply(Xi[:, [i]], Xi[:, [j]]) - Wm[i, j]
+                Var_sij += np.dot(wij.T, wij)
+        Var_sij = Var_sij[0, 0] * (M / ((M - 1.0) ** 3.0))
+
+        # diag = _np.diag(C)
+        # SS_sij = _np.sum((C - _np.diag(diag)) ** 2.0)
+        # SS_sij += _np.sum((diag - 1.0) ** 2.0)
+
 #        d = (Ti - Si) ** 2.0
-#
+
 #        l = Var_sij / np.sum(d)
-#        l = max(0, min(1, l))
-#
-#        tau.append(l)
-#
-#    return tau
-#
-#
+        l = Var_sij / sum_d
+        l = max(0, min(1, l))
+
+        tau.append(l)
+        print "tau %d: %f" % (i, l)
+
+    return tau
+
+
 #def delete_sparse_csr_row(mat, i):
 #    """Delete row i in-place from sparse matrix mat (CSR format).
 #

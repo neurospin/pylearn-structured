@@ -4,13 +4,11 @@ Created on Thu Mar 28 15:35:26 2013
 
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
-@license: TBD.
+@license: BSD 3-clause.
 """
-
 import abc
 import numpy as np
 
-#import parsimony.utils as utils
 import parsimony.utils.maths as maths
 
 __all__ = ['BaseStartVector', 'IdentityStartVector', 'RandomStartVector',

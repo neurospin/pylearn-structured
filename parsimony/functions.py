@@ -13,7 +13,7 @@ Created on Mon Apr 22 10:54:29 2013
 @author:  Tommy Löfstedt, Vincent Guillemot, Edouard Duchesnay and \
 Fouad Hadj Selem
 @email:   tommy.loefstedt@cea.fr, edouard.duchesnay@cea.fr
-@license: BSD 3-Clause
+@license: BSD 3-clause.
 """
 import abc
 import math
@@ -22,6 +22,7 @@ import numbers
 import numpy as np
 import scipy.sparse as sparse
 
+import parsimony.utils as utils
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
 
@@ -61,10 +62,23 @@ class AtomicFunction(Function):
 
 
 class CompositeFunction(Function):
-    """ This is a function that is the combination (i.e. sum) of other
-    composite or atomic functions.
+    """ This is a function that is the combination (e.g. sum) of other
+    composite or atomic functions. It may also be a constrained function.
     """
     __metaclass__ = abc.ABCMeta
+
+#    constraints = list()
+#
+#    def add_constraint(self, function):
+#        """Add a constraint to this function.
+#        """
+#        self.constraints.append(function)
+#
+#    def get_constraints(self):
+#        """Returns the constraint functions for this function. Returns an empty
+#        list if no constraint functions exist.
+#        """
+#        return self.constraints
 
 
 class MultiblockFunction(CompositeFunction):
@@ -74,6 +88,26 @@ class MultiblockFunction(CompositeFunction):
     accept an index, i, that is the block we are working with.
     """
     __metaclass__ = abc.ABCMeta
+
+    constraints = dict()
+
+    def add_constraint(self, function, index):
+        """Add a constraint to this function.
+        """
+        if index in self.constraints:
+            self.constraints[index].append(function)
+        else:
+            self.constraints[index] = [function]
+
+    def get_constraints(self, index):
+        """Returns the constraint functions for the function with the given
+        index. Returns an empty list if no constraint functions exist for the
+        given index.
+        """
+        if index in self.constraints:
+            return self.constraints[index]
+        else:
+            return []
 
 
 class Regularisation(object):
@@ -86,8 +120,8 @@ class Constraint(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def feasible(self):
-        """Feasibility of the constraint.
+    def feasible(self, x):
+        """Feasibility of the constraint at point x.
         """
         raise NotImplementedError('Abstract method "feasible" must be '
                                   'specialised!')
@@ -105,15 +139,41 @@ class ProximalOperator(object):
                                   'specialised!')
 
 
+class ProjectionOperator(object):
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def proj(self, beta):
+        """The projection operator corresponding to the function.
+        """
+        raise NotImplementedError('Abstract method "proj" must be '
+                                  'specialised!')
+
+
 class MultiblockProximalOperator(object):
 
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def prox(self, beta, index, factor=1.0):
-        """The proximal operator corresponding to the function with the index.
+        """The proximal operator corresponding to the function with the given
+        index.
         """
         raise NotImplementedError('Abstract method "prox" must be '
+                                  'specialised!')
+
+
+class MultiblockProjectionOperator(object):
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def proj(self, beta, index):
+        """The projection operator corresponding to the function with the
+        given index.
+        """
+        raise NotImplementedError('Abstract method "proj" must be '
                                   'specialised!')
 
 
@@ -132,7 +192,6 @@ class NesterovFunction(object):
 
     mu: The regularisation constant for the smoothing
     """
-
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, l, c=0.0, A=None, mu=consts.TOLERANCE):
@@ -164,6 +223,13 @@ class NesterovFunction(object):
         return self.l * ((np.dot(beta.T, Aa)[0, 0]
                           - (mu / 2.0) * alpha_sqsum) - self.c)
 
+    @abc.abstractmethod
+    def phi(self, alpha, beta):
+        """ Function value with known alpha.
+        """
+        raise NotImplementedError('Abstract method "phi" must be '
+                                  'specialised!')
+
     def grad(self, beta):
         """ Gradient of the function at beta.
 
@@ -176,7 +242,12 @@ class NesterovFunction(object):
 
         alpha = self.alpha(beta)
 
-        return self.l * self.Aa(alpha)
+        grad = self.l * self.Aa(alpha)
+
+#        approx_grad = utils.approx_grad(self.f, beta, eps=1e-4)
+#        print maths.norm(grad - approx_grad)
+
+        return grad
 
     def get_mu(self):
         """Return the regularisation constant for the smoothing.
@@ -200,13 +271,6 @@ class NesterovFunction(object):
         self.mu = mu
 
         return old_mu
-
-    @abc.abstractmethod
-    def phi(self, alpha, beta):
-        """ Function value with known alpha.
-        """
-        raise NotImplementedError('Abstract method "phi" must be '
-                                  'specialised!')
 
     def alpha(self, beta):
         """ Dual variable of the Nesterov function.
@@ -368,6 +432,18 @@ class LipschitzContinuousGradient(object):
                                   'specialised!')
 
 
+class MultiblockLipschitzContinuousGradient(object):
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def L(self, w, index):
+        """Lipschitz constant of the gradient with given index.
+        """
+        raise NotImplementedError('Abstract method "L" must be '
+                                  'specialised!')
+
+
 class GradientStep(object):
 
     __metaclass__ = abc.ABCMeta
@@ -380,6 +456,9 @@ class GradientStep(object):
         ---------
         beta : A weight vector. Optional, since some functions may determine
                 the step without knowing beta.
+
+        index : For multiblock functions, to know which variable the gradient
+                is for.
         """
         raise NotImplementedError('Abstract method "step" must be '
                                   'specialised!')
@@ -588,7 +667,7 @@ class RidgeLogisticRegression(AtomicFunction, Gradient,
         """
         # TODO check the correctness of the re-weighted loglike
         Xbeta = np.dot(self.X, beta)
-        loglike = np.sum(self.weights * 
+        loglike = np.sum(self.weights *
             ((self.y * Xbeta) - np.log(1 + np.exp(Xbeta))))
         return -loglike + (self.k / 2.0) * np.sum(beta ** 2.0)
 #        n = self.X.shape[0]
@@ -610,7 +689,7 @@ class RidgeLogisticRegression(AtomicFunction, Gradient,
         """
         Xbeta = np.dot(self.X, beta)
         pi = 1.0 / (1.0 + np.exp(-Xbeta))
-        return -np.dot(self.X.T, self.weights * (self.y - pi)) + self.k * beta  
+        return -np.dot(self.X.T, self.weights * (self.y - pi)) + self.k * beta
 #        return -np.dot(self.X.T,
 #                       np.dot(self.W, (self.y - pi))) \
 #                       + self.k * beta
@@ -654,12 +733,12 @@ class RidgeLogisticRegression(AtomicFunction, Gradient,
 class QuadraticConstraint(AtomicFunction, Gradient, Constraint):
     """The proximal operator of the quadratic function
 
-        f(x) = l * (sqrt(x'Mx) - c),
+        f(x) = l * (x'Mx - c),
 
     where M is a given positive definite matrix. The constrained version has
     the form
 
-        sqrt(x'Mx) <= c.
+        x'Mx <= c.
 
     Parameters:
     ----------
@@ -667,7 +746,7 @@ class QuadraticConstraint(AtomicFunction, Gradient, Constraint):
             function.
 
     c : Float. The limit of the constraint. The function is feasible if
-            sqrt(x'Mx) <= c. The default value is c=0, i.e. the default is a
+            x'Mx <= c. The default value is c=0, i.e. the default is a
             regularisation formulation.
 
     M : Array. The given positive definite matrix
@@ -681,33 +760,32 @@ class QuadraticConstraint(AtomicFunction, Gradient, Constraint):
     def f(self, beta):
         """Function value.
         """
-        return self.l * (np.sqrt(np.dot(beta.T, np.dot(self.M, beta)))
-                         - self.c)
+        return self.l * (np.dot(beta.T, np.dot(self.M, beta)) - self.c)
 
     def grad(self, beta):
         """Gradient of the function.
 
         From the interface "Gradient".
         """
-        return self.l * np.dot(self.M, beta)
+        return self.l * 2.0 * np.dot(self.M, beta)
 
     def feasible(self, beta):
         """Feasibility of the constraint.
 
         From the interface "Constraint".
         """
-        return np.sqrt(np.dot(beta.T, np.dot(self.M, beta))) <= self.c
+        return np.dot(beta.T, np.dot(self.M, beta)) <= self.c
 
 
-class RGCCAConstraint(QuadraticConstraint):
+class RGCCAConstraint(QuadraticConstraint, ProjectionOperator):
     """The proximal operator of the quadratic function
 
-        f(x) = l * (sqrt(x'(\tau * I + ((1 - \tau) / n) * X'X)x) - c),
+        f(x) = l * (x'(\tau * I + ((1 - \tau) / n) * X'X)x - c),
 
     where \tau is a given regularisation constant. The constrained version has
     the form
 
-        sqrt(x'(\tau * I + ((1 - \tau) / n) * X'X)x) <= c.
+        x'(\tau * I + ((1 - \tau) / n) * X'X)x <= c.
 
     Parameters:
     ----------
@@ -715,8 +793,8 @@ class RGCCAConstraint(QuadraticConstraint):
             function.
 
     c : Float. The limit of the constraint. The function is feasible if
-            sqrt(x'(\tau * I + ((1 - \tau) / n) * X'X)x) <= c. The default
-            value is c=0, i.e. the default is a regularisation formulation.
+            x'(\tau * I + ((1 - \tau) / n) * X'X)x <= c. The default value is
+            c=0, i.e. the default is a regularisation formulation.
 
     tau : Float. Given regularisation constant
 
@@ -734,7 +812,7 @@ class RGCCAConstraint(QuadraticConstraint):
         """Function value.
         """
         xtMx = self._compute_value(beta)
-        return self.l * (np.sqrt(xtMx) - self.c)
+        return self.l * (xtMx - self.c)
 
     def grad(self, beta):
         """Gradient of the function.
@@ -746,9 +824,14 @@ class RGCCAConstraint(QuadraticConstraint):
         else:
             n = self.X.shape[0]
 
-        XtXbeta = np.dot(self.X.T, np.dot(self.X, beta))
-        grad = self.tau * beta \
-             + ((1.0 - self.tau) / float(n)) * XtXbeta
+        if self.tau < 1.0:
+            XtXbeta = np.dot(self.X.T, np.dot(self.X, beta))
+            grad = self.tau * beta + ((1.0 - self.tau) / float(n)) * XtXbeta
+        else:
+            grad = self.tau * beta
+
+#        approx_grad = utils.approx_grad(self.f, beta, eps=1e-4)
+#        print maths.norm(grad - approx_grad)
 
         return grad
 
@@ -758,7 +841,18 @@ class RGCCAConstraint(QuadraticConstraint):
         From the interface "Constraint".
         """
         xtMx = self._compute_value(beta)
-        return np.sqrt(xtMx) <= self.c
+        return xtMx <= self.c
+
+    def proj(self, x):
+        """The projection operator corresponding to the function.
+
+        From the interface "ProjectionOperator".
+        """
+        xtMx = self._compute_value(x)
+        if xtMx <= self.c:
+            return x
+        else:
+            return (self.c / np.sqrt(xtMx)) * x
 
     def _compute_value(self, beta):
 
@@ -766,14 +860,16 @@ class RGCCAConstraint(QuadraticConstraint):
             n = self.X.shape[0] - 1.0
         else:
             n = self.X.shape[0]
+
         Xbeta = np.dot(self.X, beta)
         val = self.tau * np.dot(beta.T, beta) \
             + ((1.0 - self.tau) / float(n)) * np.dot(Xbeta.T, Xbeta)
-        return val
+
+        return val[0, 0]
 
 
-class L1(AtomicFunction, Constraint, ProximalOperator):
-    """The proximal operator of the L1 function
+class L1(AtomicFunction, Constraint, ProximalOperator, ProjectionOperator):
+    """The proximal operator of the L1 function with regularisation formulation
 
         f(\beta) = l * (||\beta||_1 - c),
 
@@ -806,6 +902,32 @@ class L1(AtomicFunction, Constraint, ProximalOperator):
         From the interface "ProximalOperator".
         """
         l = self.l * factor
+        return (np.abs(beta) > l) * (beta - l * np.sign(beta - l))
+
+    def proj(self, beta):
+        """The corresponding projection operator.
+
+        From the interface "ProjectionOperator".
+        """
+        if self.feasible(beta):
+            return beta
+
+        from algorithms import Bisection
+        bisection = Bisection(force_negative=True, eps=1e-10)
+
+        class F(Function):
+            def __init__(self, beta, c):
+                self.beta = beta
+                self.c = c
+
+            def f(self, l):
+                beta = (np.abs(self.beta) > l) \
+                    * (self.beta - l * np.sign(self.beta - l))
+
+                return maths.norm1(beta) - self.c
+
+        func = F(beta, self.c)
+        l = bisection(func, [0.0, np.max(np.abs(beta))])
 
         return (np.abs(beta) > l) * (beta - l * np.sign(beta - l))
 
@@ -932,7 +1054,7 @@ class SmoothedL1(AtomicFunction, Constraint, NesterovFunction, Gradient,
 
 class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
                      LipschitzContinuousGradient):
-    """The proximal operator of the smoothed Total variation (TV) function
+    """The smoothed Total variation (TV) function
 
         f(\beta) = l * (TV(\beta) - c),
 
@@ -1106,6 +1228,156 @@ class TotalVariation(AtomicFunction, NesterovFunction, Gradient,
         From the interface "NesterovFunction".
         """
         return self._A[0].shape[0] / 2.0
+
+    """ Computes a "good" value of \mu with respect to the given \beta.
+
+    From the interface "NesterovFunction".
+    """
+    def estimate_mu(self, beta):
+
+        SS = 0
+        A = self.A()
+        for i in xrange(len(A)):
+            SS += A[i].dot(beta) ** 2.0
+
+        return np.max(np.sqrt(SS))
+
+
+class GroupLassoOverlap(AtomicFunction, NesterovFunction, Gradient,
+                        LipschitzContinuousGradient):
+
+    def __init__(self, l, c=0.0, A=None, mu=0.0):
+        """Group L1-L2 function, with overlapping groups. Represents the
+        function
+
+            GL(x) = l * (\sum_{g=1}^G \|x_g\|_2 - c),
+
+        where \|.\|_2 is the L2-norm. The coinstrained version has the form
+
+            GL(x) <= c.
+
+        Parameters:
+        ----------
+        l : The Lagrange multiplier, or regularisation constant, of the
+                function.
+
+        c : The limit of the constraint. The function is feasible if
+                GL(\beta) <= c. The default value is c=0, i.e. the default is a
+                regularised formulation.
+
+        A : A (usually sparse) matrix. The linear operator for the Nesterov
+                formulation. May not be None!
+
+        mu : The Nesterov function regularisation constant for the smoothing.
+        """
+        super(GroupLassoOverlap, self).__init__(l, c, A, mu)
+
+        self.reset()
+
+    def reset(self):
+
+        self._lambda_max = None
+
+    def f(self, beta):
+        """ Function value.
+        """
+        if self.l < consts.TOLERANCE:
+            return 0.0
+
+#        alpha = self.alpha(beta)
+#        return self.phi(alpha, beta)
+
+        A = self.A()
+        normsum = 0.0
+        for Ag in A:
+            normsum += maths.norm(Ag.dot(beta))
+
+        return self.l * (normsum - self.c)
+
+    def phi(self, alpha, beta):
+        """Function value with known alpha.
+
+        From the interface "NesterovFunction".
+        """
+        if self.l < consts.TOLERANCE:
+            return 0.0
+
+        Aa = self.Aa(alpha)
+
+        alpha_sqsum = 0.0
+        for a in alpha:
+            alpha_sqsum += np.sum(a ** 2.0)
+
+        return self.l * ((np.dot(beta.T, Aa)[0, 0]
+                          - (self.mu / 2.0) * alpha_sqsum) - self.c)
+
+    def feasible(self, beta):
+        """Feasibility of the constraint.
+
+        From the interface "Constraint".
+        """
+        A = self.A()
+        normsum = 0.0
+        for Ag in A:
+            normsum += maths.norm(Ag.dot(beta))
+
+        return normsum <= self.c
+
+    def L(self):
+        """ Lipschitz constant of the gradient.
+
+        From the interface "LipschitzContinuousGradient".
+        """
+        if self.l < consts.TOLERANCE:
+            return 0.0
+
+        lmaxA = self.lambda_max()
+
+        return self.l * lmaxA / self.mu
+
+    def lambda_max(self):
+        """ Largest eigenvalue of the corresponding covariance matrix.
+
+        From the interface "Eigenvalues".
+        """
+        # Note that we can save the state here since lambda_max(A) is not
+        # allowed to change.
+        if self._lambda_max is None:
+            A = self.A()
+            colsum = 0.0
+            for Ag in A:
+                B = Ag.copy()
+                B.data **= 2.0
+                colsum += B.sum(axis=0)
+
+            self._lambda_max = np.max(colsum)
+
+        return self._lambda_max
+
+    def project(self, a):
+
+        for i in xrange(len(a)):
+            astar = a[i]
+            normas = np.sqrt(np.sum(astar ** 2.0))
+            if normas > 1.0:
+                astar /= normas
+            a[i] = astar
+
+        return a
+
+    def M(self):
+        """ The maximum value of the regularisation of the dual variable. We
+        have
+
+            M = max_{\alpha \in K} 0.5*|\alpha|²_2.
+
+        Since each group may have at most L2-norm 1, M may not exceed the
+        number of groups, i.e. the number of groups divided by two is the
+        maximum.
+
+        From the interface "NesterovFunction".
+        """
+        return float(len(self.A())) / 2.0
 
     """ Computes a "good" value of \mu with respect to the given \beta.
 
@@ -1422,6 +1694,264 @@ class RLR_L1_TV(RR_L1_TV):
         self.tv = TotalVariation(g, A=A, mu=0.0)
 
         self.reset()
+
+
+class RR_L1_GL(RR_L1_TV):
+    """Combination (sum) of RidgeRegression, L1 and Overlapping Group Lasso.
+
+    Parameters
+    ----------
+    X : Matrix. Ridge Regression parameter.
+
+    y : Vector. Ridge Regression parameter.
+
+    k : Float. The Ridge Regression parameter.
+
+    l : Float. The Lagrange multiplier, or regularisation constant, of the L1
+            function.
+
+    g : Float. The Lagrange multiplier, or regularisation constant, of the GL
+            function.
+
+    A : A (usually sparse) matrix. The linear operator for the Nesterov
+            formulation for GL. May not be None!
+
+    mu : Float. mu > 0. The regularisation constant for the smoothing of the
+            GL function.
+    """
+
+    def __init__(self, X, y, k, l, g, A=None, mu=0.0):
+
+        self.X = X
+        self.y = y
+
+        self.rr = RidgeRegression(X, y, k)
+        self.l1 = L1(l)
+        self.gl = GroupLassoOverlap(g, A=A, mu=mu)
+
+        self.reset()
+
+    def reset(self):
+
+        self.rr.reset()
+        self.l1.reset()
+        self.gl.reset()
+
+        self._Xty = None
+        self._invXXkI = None
+        self._XtinvXXtkI = None
+
+    def set_params(self, **kwargs):
+
+        mu = kwargs.pop("mu", self.get_mu())
+        self.set_mu(mu)
+
+        super(RR_L1_TV, self).set_params(**kwargs)
+
+    def get_mu(self):
+        """Returns the regularisation constant for the smoothing.
+
+        From the interface "NesterovFunction".
+        """
+        return self.gl.get_mu()
+
+    def set_mu(self, mu):
+        """Sets the regularisation constant for the smoothing.
+
+        From the interface "NesterovFunction".
+
+        Parameters
+        ----------
+        mu: The regularisation constant for the smoothing to use from now on.
+
+        Returns
+        -------
+        old_mu: The old regularisation constant for the smoothing that was
+                overwritten and is no longer used.
+        """
+        return self.gl.set_mu(mu)
+
+    def f(self, beta):
+        """Function value.
+        """
+        return self.rr.f(beta) \
+             + self.l1.f(beta) \
+             + self.gl.f(beta)
+
+    def phi(self, alpha, beta):
+        """ Function value with known alpha.
+        """
+        return self.rr.f(beta) \
+             + self.l1.f(beta) \
+             + self.gl.phi(alpha, beta)
+
+    def grad(self, beta):
+        """Gradient of the differentiable part of the function.
+
+        From the interface "Gradient".
+        """
+        return self.rr.grad(beta) \
+             + self.gl.grad(beta)
+
+    def L(self):
+        """Lipschitz constant of the gradient.
+
+        From the interface "LipschitzContinuousGradient".
+        """
+        return self.rr.L() \
+             + self.gl.L()
+
+    def prox(self, beta, factor=1.0):
+        """The proximal operator of the non-differentiable part of the
+        function.
+
+        From the interface "ProximalOperator".
+        """
+        return self.l1.prox(beta, factor)
+
+    def estimate_mu(self, beta):
+        """Computes a "good" value of \mu with respect to the given \beta.
+
+        From the interface "NesterovFunction".
+        """
+        return self.gl.estimate_mu(beta)
+
+    def M(self):
+        """The maximum value of the regularisation of the dual variable. We
+        have
+
+            M = max_{\alpha \in K} 0.5*|\alpha|²_2.
+
+        From the interface "NesterovFunction".
+        """
+        return self.gl.M()
+
+    def mu_opt(self, eps):
+        """The optimal value of \mu given \epsilon.
+
+        From the interface "Continuation".
+        """
+        gM = self.gl.l * self.gl.M()
+
+        # Mu is set to 1.0, because it is in fact not here "anymore". It is
+        # factored out in this solution.
+        old_mu = self.gl.set_mu(1.0)
+        gA2 = self.gl.L()  # Gamma is in here!
+        self.gl.set_mu(old_mu)
+
+        Lg = self.rr.L()
+
+        return (-gM * gA2 + np.sqrt((gM * gA2) ** 2.0
+             + gM * Lg * gA2 * eps)) \
+             / (gM * Lg)
+
+    def eps_opt(self, mu):
+        """The optimal value of \epsilon given \mu.
+
+        From the interface "Continuation".
+        """
+        gM = self.gl.l * self.gl.M()
+
+        # Mu is set to 1.0, because it is in fact not here "anymore". It is
+        # factored out in this solution.
+        old_mu = self.gl.set_mu(1.0)
+        gA2 = self.gl.L()  # Gamma is in here!
+        self.gl.set_mu(old_mu)
+
+        Lg = self.rr.L()
+
+        return (2.0 * gM * gA2 * mu
+             + gM * Lg * mu ** 2.0) \
+             / gA2
+
+    def eps_max(self, mu):
+        """The maximum value of \epsilon.
+
+        From the interface "Continuation".
+        """
+        gM = self.gl.l * self.gl.M()
+
+        return mu * gM
+
+    def betahat(self, alphak, betak):
+        """ Returns the beta that minimises the dual function. Used when we
+        compute the gap.
+
+        From the interface "DualFunction".
+        """
+        if self._Xty is None:
+            self._Xty = np.dot(self.X.T, self.y)
+
+        Ata_tv = self.gl.l * self.gl.Aa(alphak)
+        Ata_l1 = self.l1.l * SmoothedL1.project([betak / consts.TOLERANCE])[0]
+        v = (self._Xty - Ata_tv - Ata_l1)
+
+        shape = self.X.shape
+
+        if shape[0] > shape[1]:  # If n > p
+
+            # Ridge solution
+            if self._invXXkI is None:
+                XtXkI = np.dot(self.X.T, self.X)
+                index = np.arange(min(XtXkI.shape))
+                XtXkI[index, index] += self.rr.k
+                self._invXXkI = np.linalg.inv(XtXkI)
+
+            beta_hat = np.dot(self._invXXkI, v)
+
+        else:  # If p > n
+            # Ridge solution using the Woodbury matrix identity:
+            if self._XtinvXXtkI is None:
+                XXtkI = np.dot(self.X, self.X.T)
+                index = np.arange(min(XXtkI.shape))
+                XXtkI[index, index] += self.rr.k
+                invXXtkI = np.linalg.inv(XXtkI)
+                self._XtinvXXtkI = np.dot(self.X.T, invXXtkI)
+
+            beta_hat = (v - np.dot(self._XtinvXXtkI, np.dot(self.X, v))) \
+                       / self.rr.k
+
+        return beta_hat
+
+    def gap(self, beta, beta_hat=None):
+        """Compute the duality gap.
+
+        From the interface "DualFunction".
+        """
+        alpha = self.gl.alpha(beta)
+
+        P = self.rr.f(beta) \
+          + self.l1.f(beta) \
+          + self.gl.phi(alpha, beta)
+
+        beta_hat = self.betahat(alpha, beta)
+
+        D = self.rr.f(beta_hat) \
+          + self.l1.f(beta_hat) \
+          + self.gl.phi(alpha, beta_hat)
+
+        return P - D
+
+    def A(self):
+        """Linear operator of the Nesterov function.
+
+        From the interface "NesterovFunction".
+        """
+        return self.gl.A()
+
+    def Aa(self, alpha):
+        """Computes A^\T\alpha.
+
+        From the interface "NesterovFunction".
+        """
+        return self.gl.Aa()
+
+    def project(self, a):
+        """ Projection onto the compact space of the Nesterov function.
+
+        From the interface "NesterovFunction".
+        """
+        return self.gl.project(a)
 
 
 class SmoothedL1TV(AtomicFunction, Regularisation, NesterovFunction,
@@ -1800,7 +2330,9 @@ class RR_SmoothedL1TV(CompositeFunction, LipschitzContinuousGradient,
         return self.h.project(a)
 
 
-class LatentVariableCovariance(MultiblockFunction, MultiblockGradient):
+class LatentVariableCovariance(MultiblockFunction, MultiblockGradient,
+                               MultiblockLipschitzContinuousGradient,
+                               Eigenvalues):
 
     def __init__(self, X, unbiased=True):
 
@@ -1810,10 +2342,11 @@ class LatentVariableCovariance(MultiblockFunction, MultiblockGradient):
         else:
             self.n = X[0].shape[0]
 
-#        self.reset()
-#
-#    def reset(self):
-#        pass
+        self.reset()
+
+    def reset(self):
+
+        self._lambda_max = None
 
     def f(self, w):
         """Function value.
@@ -1822,7 +2355,8 @@ class LatentVariableCovariance(MultiblockFunction, MultiblockGradient):
         """
         wX = np.dot(self.X[0], w[0]).T
         Yc = np.dot(self.X[1], w[1])
-        return np.dot(wX, Yc) / float(self.n)
+        wXYc = np.dot(wX, Yc)
+        return -wXYc[0, 0] / float(self.n)
 
     def grad(self, w, index):
         """Gradient of the function.
@@ -1830,13 +2364,50 @@ class LatentVariableCovariance(MultiblockFunction, MultiblockGradient):
         From the interface "MultiblockGradient".
         """
         index = int(index)
-        return np.dot(self.X[index].T,
-                      np.dot(self.X[1 - index], w[1 - index])) \
-             / float(self.n)
+        grad = -np.dot(self.X[index].T,
+                       np.dot(self.X[1 - index], w[1 - index])) / float(self.n)
+
+#        def fun(x):
+#            w_ = [0, 0]
+#            w_[index] = x
+#            w_[1 - index] = w[1 - index]
+#            return self.f(w_)
+#
+#        approx_grad = utils.approx_grad(fun, w[index], eps=1e-4)
+#        print maths.norm(grad - approx_grad)
+
+        return grad
+
+    def L(self, w, index):
+        """Lipschitz constant of the gradient with given index.
+
+        From the interface "MultiblockLipschitzContinuousGradient".
+        """
+#        return maths.norm(self.grad(w, index))
+
+#        if self._lambda_max is None:
+#            self._lambda_max = self.lambda_max()
+
+        return 0  # self._lambda_max
+
+    def lambda_max(self):
+        """ Largest eigenvalue of the corresponding covariance matrix.
+
+        From the interface "Eigenvalues".
+        """
+        # Note that we can save the state here since lmax(A) does not
+
+        from algorithms import FastSVDProduct
+        svd = FastSVDProduct()
+        v = svd(self.X[0].T, self.X[1], max_iter=100)
+        s = np.dot(self.X[0].T, np.dot(self.X[1], v))
+
+        return np.sum(s ** 2.0) / (self.n ** 2.0)
 
 
 class GeneralisedMultiblock(MultiblockFunction, MultiblockGradient,
-                            MultiblockProximalOperator, GradientStep,
+                            MultiblockProximalOperator,
+                            MultiblockProjectionOperator, GradientStep,
 #                            LipschitzContinuousGradient,
 #                            NesterovFunction, Continuation, DualFunction
                             ):
@@ -1856,7 +2427,8 @@ class GeneralisedMultiblock(MultiblockFunction, MultiblockGradient,
                     for k in xrange(len(self.functions[i][j])):
                         self.functions[i][j][k].reset()
                 else:
-                    self.functions[i][j].reset()
+                    if not self.functions[i][j] is None:
+                        self.functions[i][j].reset()
 
     def f(self, w):
         """Function value.
@@ -1872,7 +2444,8 @@ class GeneralisedMultiblock(MultiblockFunction, MultiblockGradient,
                         val += fij[k].f(w[i])
                 else:
 #                    print "f(w[%d], w[%d])" % (i, j)
-                    val += fij.f([w[i], w[j]])
+                    if not fij is None:
+                        val += fij.f([w[i], w[j]])
 
         # TODO: Check instead if it is a numpy array.
         if not isinstance(val, numbers.Number):
@@ -1918,17 +2491,254 @@ class GeneralisedMultiblock(MultiblockFunction, MultiblockGradient,
 
         From the interface "MultiblockProximalOperator".
         """
-        # Find a proximal operator.
-        fii = self.functions[index][index]
-        for k in xrange(len(fii)):
-            if isinstance(fii[k], ProximalOperator):
-                w[index] = fii[k].prox(w[index], factor)
-                break
-        # If no proximal operator was found, we will just return the same
-        # vectors again. The proximal operator of the zero function returns the
-        # vector itself.
+#        # Find a proximal operator.
+#        fii = self.functions[index][index]
+#        for k in xrange(len(fii)):
+#            if isinstance(fii[k], ProximalOperator):
+#                w[index] = fii[k].prox(w[index], factor)
+#                break
+#        # If no proximal operator was found, we will just return the same
+#        # vectors again. The proximal operator of the zero function returns the
+#        # vector itself.
 
         return w
 
+    def proj(self, w, index):
+        """The projection operator corresponding to the function with the
+        index.
+
+        From the interface "MultiblockProjectionOperator".
+        """
+        # Find a projection operators.
+#        fii = self.functions[index][index]
+        f = self.get_constraints(index)
+        for k in xrange(len(f)):
+            if isinstance(f[k], ProjectionOperator):
+                w[index] = f[k].proj(w[index])
+                break
+
+        # If no projection operator was found, we will just return the same
+        # vectors again.
+        return w
+
     def step(self, w, index):
-        return 0.01  # TODO: Fix this!! Add backtracking?
+
+#        return 0.0001
+
+        all_lipschitz = True
+
+        # Add the Lipschitz constants.
+        L = 0.0
+        fi = self.functions[index]
+        for j in xrange(len(fi)):
+            if j != index and fi[j] is not None:
+                fij = fi[j]
+                if isinstance(fij, LipschitzContinuousGradient):
+                    L += fij.L()
+                elif isinstance(fij, MultiblockLipschitzContinuousGradient):
+                    L += fij.L(w, index)
+                else:
+                    all_lipschitz = False
+                    break
+
+        if all_lipschitz:
+            fii = self.functions[index][index]
+            for k in xrange(len(fii)):
+                if fi[j] is None:
+                    continue
+                if isinstance(fii[k], LipschitzContinuousGradient):
+                    L += fii[k].L()
+                elif isinstance(fii[k], MultiblockLipschitzContinuousGradient):
+                    L += fii[k].L(w, index)
+                else:
+                    all_lipschitz = False
+                    break
+
+        if all_lipschitz and L > 0.0:
+            t = 1.0 / L
+        else:
+            # If all functions did not have Lipschitz continuous gradients,
+            # try to find the step size through backtracking line search.
+            class F(Function, Gradient):
+                def __init__(self, func, w, index):
+                    self.func = func
+                    self.w = w
+                    self.index = index
+
+                def f(self, x):
+
+                    # Temporarily replace the index:th variable with x.
+                    w_old = self.w[self.index]
+                    self.w[self.index] = x
+                    f = self.func.f(w)
+                    self.w[self.index] = w_old
+
+                    return f
+
+                def grad(self, x):
+
+                    # Temporarily replace the index:th variable with x.
+                    w_old = self.w[self.index]
+                    self.w[self.index] = x
+                    g = self.func.grad(w, index)
+                    self.w[self.index] = w_old
+
+                    return g
+
+            func = F(self, w, index)
+            p = -self.grad(w, index)
+
+            from algorithms import BacktrackingLineSearch
+            line_search = BacktrackingLineSearch(
+                condition=SufficientDescentCondition, max_iter=30)
+            a = np.sqrt(1.0 / self.X[index].shape[1])  # Arbitrarily "small".
+            t = line_search(func, w[index], p, rho=0.5, a=a, c=1e-4)
+
+        return t
+
+
+class CombinedProjectionOperator(Function, ProjectionOperator):
+
+    def __init__(self, functions):
+        """Functions must currently be a tuple or list with two projection
+        operators.
+        """
+        self.functions = functions
+
+#        from algorithms import ProjectionADMM
+#        self.proj_op = ProjectionADMM()
+        from algorithms import DykstrasProjectionAlgorithm
+        self.proj_op = DykstrasProjectionAlgorithm()
+
+    def f(self, x):
+
+        val = 0
+        for func in self.functions:
+            val += func.f(x)
+
+        return val
+
+    def proj(self, x):
+        """The projection operator corresponding to the function.
+
+        From the interface "ProjectionOperator".
+        """
+#        proj1 = self.proj_op(self.functions, x)
+        proj = self.proj_op(self.functions, x)
+
+#        print "diff:", np.linalg.norm(proj1 - proj2)
+
+        return proj
+
+
+class SufficientDescentCondition(Function, Constraint):
+
+    def __init__(self, function, p, c):
+        """The sufficient condition
+
+            f(x + a * p) <= f(x) + c * a * grad(f(x))'p
+
+        for descent. This condition is sometimes called the Armijo condition.
+
+        Parameters:
+        ----------
+        c : Float. 0 < c < 1. A constant for the condition. Should be small.
+        """
+        self.function = function
+        self.p = p
+        self.c = c
+
+    def f(self, x, a):
+
+        return self.function.f(x + a * self.p)
+
+    """Feasibility of the constraint at point x.
+
+    From the interface "Constraint".
+    """
+    def feasible(self, x, a):
+
+        f_x_ap = self.function.f(x + a * self.p)
+        f_x = self.function.f(x)
+        grad_p = np.dot(self.function.grad(x).T, self.p)[0, 0]
+        print "f_x_ap = %.10f, f_x = %.10f, grad_p = %.10f, feas = %.10f" % (f_x_ap, f_x, grad_p, f_x + self.c * a * grad_p)
+        if grad_p >= 0.0:
+            pass
+        feasible = f_x_ap <= f_x + self.c * a * grad_p
+
+        return feasible
+
+
+#class WolfeCondition(Function, Constraint):
+#
+#    def __init__(self, function, p, c1=1e-4, c2=0.9):
+#        """
+#        Parameters:
+#        ----------
+#        c1 : Float. 0 < c1 < c2 < 1. A constant for the condition. Should be
+#                small.
+#        c2 : Float. 0 < c1 < c2 < 1. A constant for the condition. Depends on
+#                the minimisation algorithms. For Newton or quasi-Newton
+#                descent directions, 0.9 is a good choice. 0.1 is appropriate
+#                for nonlinear conjugate gradient.
+#        """
+#        self.function = function
+#        self.p = p
+#        self.c1 = c1
+#        self.c2 = c2
+#
+#    def f(self, x, a):
+#
+#        return self.function.f(x + a * self.p)
+#
+#    """Feasibility of the constraint at point x.
+#
+#    From the interface "Constraint".
+#    """
+#    def feasible(self, x, a):
+#
+#        grad_p = np.dot(self.function.grad(x).T, self.p)[0, 0]
+#        cond1 = self.function.f(x + a * self.p) \
+#            <= self.function.f(x) + self.c1 * a * grad_p
+#        cond2 = np.dot(self.function.grad(x + a * self.p).T, self.p)[0, 0] \
+#            >= self.c2 * grad_p
+#
+#        return cond1 and cond2
+#
+#
+#class StrongWolfeCondition(Function, Constraint):
+#
+#    def __init__(self, function, p, c1=1e-4, c2=0.9):
+#        """
+#        Parameters:
+#        ----------
+#        c1 : Float. 0 < c1 < c2 < 1. A constant for the condition. Should be
+#                small.
+#        c2 : Float. 0 < c1 < c2 < 1. A constant for the condition. Depends on
+#                the minimisation algorithms. For Newton or quasi-Newton
+#                descent directions, 0.9 is a good choice. 0.1 is appropriate
+#                for nonlinear conjugate gradient.
+#        """
+#        self.function = function
+#        self.p = p
+#        self.c1 = c1
+#        self.c2 = c2
+#
+#    def f(self, x, a):
+#
+#        return self.function.f(x + a * self.p)
+#
+#    """Feasibility of the constraint at point x.
+#
+#    From the interface "Constraint".
+#    """
+#    def feasible(self, x, a):
+#
+#        grad_p = np.dot(self.function.grad(x).T, self.p)[0, 0]
+#        cond1 = self.function.f(x + a * self.p) \
+#            <= self.function.f(x) + self.c1 * a * grad_p
+#        grad_x_ap = self.function.grad(x + a * self.p)
+#        cond2 = abs(np.dot(grad_x_ap.T, self.p)[0, 0]) \
+#            <= self.c2 * abs(grad_p)
+#
+#        return cond1 and cond2

@@ -5,16 +5,17 @@ learning models for one, two or more blocks of data.
 
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
-@license: TBD.
+@license: BSD 3-clause.
 """
 
 import algorithms
 #import datasets
 import estimators
 import functions
+import funcs
 #import utils
 import start_vectors
 
-__version__ = '0.1.1'
+__version__ = "0.1.1"
 
-__all__ = ['algorithms', 'estimators', 'functions', 'start_vectors']
+__all__ = ["algorithms", "estimators", "funcs", "functions", "start_vectors"]
