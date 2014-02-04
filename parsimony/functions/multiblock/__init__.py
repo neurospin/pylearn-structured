@@ -6,7 +6,8 @@ Created on Tue Jan 21 14:54:28 2014
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
-import parsimony.functions.interfaces as interfaces
+import interfaces
+import losses
 
 
-__all__ = ["interfaces"]
+__all__ = ["interfaces", "losses"]

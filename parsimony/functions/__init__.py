@@ -7,7 +7,7 @@ Created on Tue Jan 21 14:54:28 2014
 @license: BSD 3-clause.
 """
 import interfaces
-import objectives
+import losses
 import penalties
 
-__all__ = ["interfaces", "objectives", "penalties"]
+__all__ = ["interfaces", "losses", "penalties"]

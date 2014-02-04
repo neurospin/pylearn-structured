@@ -13,9 +13,8 @@ import numbers
 
 import numpy as np
 
-import parsimony.functions.penalties as penalties
 import parsimony.functions.interfaces as interfaces
-import parsimony.functions.multiblock.interfaces as mb_interfaces
+import interfaces as mb_interfaces
 
 __all__ = ["LatentVariableCovariance"]
 
@@ -284,6 +283,7 @@ class GeneralisedMultiblock(mb_interfaces.MultiblockFunction,
             p = -self.grad(w, index)
 
             from algorithms import BacktrackingLineSearch
+            import parsimony.functions.penalties as penalties
             line_search = BacktrackingLineSearch(
                 condition=penalties.SufficientDescentCondition, max_iter=30)
             a = np.sqrt(1.0 / self.X[index].shape[1])  # Arbitrarily "small".

@@ -12,9 +12,8 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plot
 
-import parsimony.functions.objectives as objectives
 import parsimony.functions.penalties as penalties
-import parsimony.functions.multiblock.objectives as mb_objectives
+import parsimony.functions.multiblock.losses as mb_losses
 import parsimony.algorithms as algorithms
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
@@ -90,13 +89,13 @@ start_vector_y = start_vectors.RandomStartVector()
 errs = [-0.1, -0.08, -0.06, -0.04, -0.02, 0.0, 0.02, 0.04, 0.06, 0.08, 0.1]
 for er in errs:
 
-    funcX = mb_objectives.LatentVariableCovariance([X, Y], unbiased=True)
-    funcY = mb_objectives.LatentVariableCovariance([Y, X], unbiased=True)
+    funcX = mb_losses.LatentVariableCovariance([X, Y], unbiased=True)
+    funcY = mb_losses.LatentVariableCovariance([Y, X], unbiased=True)
 
     gl = gl.GroupLassoOverlap(l=g + er, A=Agl, mu=mu)
 
-    function = mb_objectives.GeneralisedMultiblock([X, Y], [[[gl], funcX],
-                                                            [funcY, []]])
+    function = mb_losses.GeneralisedMultiblock([X, Y], [[[gl], funcX],
+                                                        [funcY, []]])
 
     function.add_constraint(constraintX, 0)
     function.add_constraint(constraintY, 1)
