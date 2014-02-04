@@ -4,7 +4,7 @@ Created on Wed Oct 23 09:45:35 2013
 
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
-@license: TBD.
+@license: BSD 3-clause.
 """
 
 import numpy as np

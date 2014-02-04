@@ -60,6 +60,7 @@ def A_from_mask(mask):
     Ax = sparse.csr_matrix((Ax_v, (Ax_i, Ax_j)), shape=(p, p))
     Ay = sparse.csr_matrix((Ay_v, (Ay_i, Ay_j)), shape=(p, p))
     Az = sparse.csr_matrix((Az_v, (Az_i, Az_j)), shape=(p, p))
+
     return [Ax, Ay, Az], n_compacts
 
 
@@ -104,4 +105,5 @@ def A_from_shape(shape):
         Az.eliminate_zeros()
     else:
         Az = sparse.csc_matrix((p, p), dtype=float)
-    return [Ax, Ay, Az], (nx * ny * nz - 1)
+
+    return [Az, Ay, Ax], (nx * ny * nz - 1)

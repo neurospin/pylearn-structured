@@ -27,8 +27,13 @@ from time import time, clock
 
 import numpy as np
 
+import parsimony.functions.penalties as penalties
+import parsimony.functions.interfaces as interfaces
+from parsimony.functions.nesterov.interfaces import NesterovFunction
+from parsimony.functions.multiblock.interfaces import MultiblockFunction
+from parsimony.functions.multiblock.interfaces import MultiblockGradient
+from parsimony.functions.multiblock.interfaces import MultiblockProjectionOperator
 import parsimony.start_vectors as start_vectors
-import parsimony.functions as functions
 import parsimony.utils.consts as consts
 import parsimony.utils.maths as maths
 
@@ -337,13 +342,13 @@ class ISTA(ExplicitAlgorithm):
 
     min_iter : Minimum allowed number of iterations.
     """
-    INTERFACES = [functions.Gradient,
+    INTERFACES = [interfaces.Gradient,
                   # TODO: We should use a step size here instead of the
                   # Lipschitz constant. All functions don't have L, but will
                   # still run in FISTA with a small enough step size.
-                  # Updated: Use GradientStep instead!!
-                  functions.LipschitzContinuousGradient,
-                  functions.ProximalOperator,
+                  # Updated: Use StepSise instead!!
+                  interfaces.LipschitzContinuousGradient,
+                  interfaces.ProximalOperator,
                  ]
 
     def __init__(self, step=None, output=False,
@@ -380,7 +385,8 @@ class ISTA(ExplicitAlgorithm):
                 tm = time_func()
 
             betaold = betanew
-            betanew = function.prox(betaold - self.step * function.grad(betaold),
+            betanew = function.prox(betaold -
+                                    self.step * function.grad(betaold),
                                     self.step)
 
             if self.output:
@@ -482,13 +488,13 @@ class FISTA(ExplicitAlgorithm):
 #    fista(X, y, olsl2_L1_TV, start_beta_vector)
 
     """
-    INTERFACES = [functions.Gradient,
+    INTERFACES = [interfaces.Gradient,
                   # TODO: We should use a step size here instead of the
                   # Lipschitz constant. All functions don't have L, but will
                   # still run in FISTA with a small enough step size.
-                  # Updated: Use GradientStep instead!!
-                  functions.LipschitzContinuousGradient,
-                  functions.ProximalOperator,
+                  # Updated: Use StepSize instead!!
+                  interfaces.LipschitzContinuousGradient,
+                  interfaces.ProximalOperator,
                  ]
 
     def __init__(self, step=None, output=False,
@@ -561,12 +567,12 @@ class CONESTA(ExplicitAlgorithm):
     continuations : maximum iteration
 
     """
-    INTERFACES = [functions.NesterovFunction,
-                  functions.Continuation,
-                  functions.LipschitzContinuousGradient,
-                  functions.ProximalOperator,
-                  functions.Gradient,
-                  functions.DualFunction
+    INTERFACES = [NesterovFunction,
+                  interfaces.Continuation,
+                  interfaces.LipschitzContinuousGradient,
+                  interfaces.ProximalOperator,
+                  interfaces.Gradient,
+                  interfaces.DualFunction
                  ]
 
     def __init__(self, mu_start=None, mu_min=consts.TOLERANCE, tau=0.5,
@@ -725,10 +731,10 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
 
     min_iter : Minimum allowed number of iterations.
     """
-    INTERFACES = [functions.NesterovFunction,
-                  functions.LipschitzContinuousGradient,
-                  functions.GradientMap,
-                  functions.DualFunction
+    INTERFACES = [NesterovFunction,
+                  interfaces.LipschitzContinuousGradient,
+                  interfaces.GradientMap,
+                  interfaces.DualFunction
                  ]
 
     def __init__(self, output=False,
@@ -832,7 +838,7 @@ class Bisection(ExplicitAlgorithm):
 
     min_iter : The minimum number of iterations.
     """
-    INTERFACES = [functions.Function,
+    INTERFACES = [interfaces.Function,
                  ]
 
     def __init__(self, force_negative=False,
@@ -912,7 +918,7 @@ class Bisection(ExplicitAlgorithm):
 #    INTERFACES = [functions.MultiblockFunction,
 #                  functions.MultiblockGradient,
 #                  functions.MultiblockProximalOperator,
-#                  functions.GradientStep,
+#                  functions.StepSize,
 #                 ]
 #
 #    def __init__(self, step=None, output=False,
@@ -954,10 +960,10 @@ class MultiblockProjectedGradientMethod(ExplicitAlgorithm):
     """ The projected gradient algorithm with alternating minimisations in a
     multiblock setting.
     """
-    INTERFACES = [functions.MultiblockFunction,
-                  functions.MultiblockGradient,
-                  functions.MultiblockProjectionOperator,
-                  functions.GradientStep]
+    INTERFACES = [MultiblockFunction,
+                  MultiblockGradient,
+                  MultiblockProjectionOperator,
+                  interfaces.StepSize]
 
     def __init__(self, step=None, output=False,
                  eps=consts.TOLERANCE,
@@ -978,7 +984,7 @@ class MultiblockProjectedGradientMethod(ExplicitAlgorithm):
         print "len(w):", len(w)
         print "max_iter:", self.max_iter
 
-        z = w_old = w
+#        z = w_old = w
 
         if self.output:
             f = [function.f(w)]
@@ -986,24 +992,37 @@ class MultiblockProjectedGradientMethod(ExplicitAlgorithm):
         t = [1.0] * len(w)
 
         for it in xrange(self.outer_iter):  # TODO: Get number of iterations!
-#            all_converged = True
+            all_converged = True
             for i in xrange(len(w)):
-#                step_dec = 1.0
-#                for k in xrange(int(self.max_iter / np.sqrt(it + 1))):
+                converged = False
+                print "it: %d, i: %d" % (it, i)
                 for k in xrange(self.max_iter):
-                    print "it: %d, i: %d, k: %d" % (it, i, k)
+#                    print "it: %d, i: %d, k: %d" % (it, i, k)
 
 #                    z = w[i] + ((k - 2.0) / (k + 1.0)) * (w[i] - w_old[i])
 
                     w_old = copy.deepcopy(w)
 
 #                    _t = time()
-                    t[i] = function.step(w_old, i)  # / step_dec
-                    print "t:", t[i]
+                    t[i] = function.step(w_old, i)
+#                    print "t:", t[i]
 #                    print "step:", time() - _t
 
 #                    _t = time()
-                    w[i] = w_old[i] - t[i] * function.grad(w_old, i)
+                    grad = function.grad(w_old, i)
+                    w[i] = w_old[i] - t[i] * grad
+
+#                    def fun(x):
+#                        w_ = [0, 0]
+#                        w_[i] = x
+#                        w_[1 - i] = w[1 - i]
+#                        return function.f(w_)
+#                    approx_grad = utils.approx_grad(fun, w[i], eps=1e-6)
+#                    diff = float(maths.norm(grad - approx_grad))
+#                    print "grad err: %e, lim: %e" % (diff, 5e-5)
+#                    if diff > 5e-4:
+#                        pass
+
 #                    w[i] = z[i] - t[i] * function.grad(w_old[:i] +
 #                                                       [z] +
 #                                                       w_old[i + 1:], i)
@@ -1013,35 +1032,55 @@ class MultiblockProjectedGradientMethod(ExplicitAlgorithm):
                     w = function.proj(w, i)
 #                    print "proj:", time() - _t
 
-                    print "l0:", maths.norm0(w[i]), \
-                        ", l1:", maths.norm1(w[i]), \
-                        ", l2:", maths.norm(w[i])
+#                    print "l0 :", maths.norm0(w[i]), \
+#                        ", l1 :", maths.norm1(w[i]), \
+#                        ", l2²:", maths.norm(w[i]) ** 2.0
 
                     if self.output:
                         f_ = function.f(w)
-                        print "f:", f_
-                        if f_ > f[-1]:
-                            print "ERROR! Function increased!"
-#                            step_dec *= 1.1
+#                        print "f:", f_
+                        improvement = f_ - f[-1]
+                        if improvement > 0.0:
+                            # If this happens there are two possible reasons:
+                            if abs(improvement) <= consts.TOLERANCE:
+                                # 1. The function is actually converged, and
+                                #         the "increase" is because of
+                                #         precision errors. This happens
+                                #         sometimes.
+                                pass
+                            else:
+                                # 2. There is an error and the function
+                                #         actually increased. Does this
+                                #         happen? If so, we need to
+                                #         investigate! Possible errors are:
+                                #          * The gradient is wrong.
+                                #          * The step size is too large.
+                                #          * Other reasons?
+                                print "ERROR! Function increased!"
+
+                            # Either way, we stop and regroup if it happens.
                             break
-#                        else:
-#                            step_dec = 1.0
+
                         f.append(f_)
 
                     err = maths.norm(w_old[i] - w[i])
 #                    print "err: %.10f < %.10f * %.10f = %.10f" \
 #                        % (err, t[i], self.eps, t[i] * self.eps)
-                    if err <= t[i] * self.eps:
-                        print "Converged!"
+                    if err <= t[i] * self.eps and k + 1 >= self.min_iter:
+                        converged = True
                         break
 
-#            import cPickle as pickle
-#            filename = "result_%d.p" % (it)
-#            pickle.dump((w, f) open("", "wb"))
+                print "l0 :", maths.norm0(w[i]), \
+                    ", l1 :", maths.norm1(w[i]), \
+                    ", l2²:", maths.norm(w[i]) ** 2.
+                print "f:", f[-1]
 
-#            if all_converged:
-#                print "All converged!"
-#                break
+                if not converged:
+                    all_converged = False
+
+            if all_converged:
+                print "All converged!"
+                break
 
         if self.output:
 #            output = {"t": t, "f": f}
@@ -1055,8 +1094,8 @@ class ProjectionADMM(ExplicitAlgorithm):
     """ The Alternating direction method of multipliers, where the functions
     have projection operators onto the corresponding convex sets.
     """
-    INTERFACES = [functions.Function,
-                  functions.ProjectionOperator]
+    INTERFACES = [interfaces.Function,
+                  interfaces.ProjectionOperator]
 
     def __init__(self, output=False,
                  eps=consts.TOLERANCE,
@@ -1099,8 +1138,8 @@ class DykstrasProjectionAlgorithm(ExplicitAlgorithm):
 
     The functions have projection operators onto the corresponding convex sets.
     """
-    INTERFACES = [functions.Function,
-                  functions.ProjectionOperator]
+    INTERFACES = [interfaces.Function,
+                  interfaces.ProjectionOperator]
 
     def __init__(self, output=False,
                  eps=consts.TOLERANCE,
@@ -1145,8 +1184,8 @@ class DykstrasProjectionAlgorithm(ExplicitAlgorithm):
 
 
 class BacktrackingLineSearch(ExplicitAlgorithm):
-    INTERFACES = [functions.Function,
-                  functions.Gradient]
+    INTERFACES = [interfaces.Function,
+                  interfaces.Gradient]
 
     def __init__(self, condition=None,
                  output=False,
@@ -1167,7 +1206,7 @@ class BacktrackingLineSearch(ExplicitAlgorithm):
         """
         self.condition = condition
         if self.condition is None:
-            self.condition = functions.StrongWolfeCondition
+            self.condition = penalties.SufficientDescentCondition
         self.output = output
         self.max_iter = max_iter
         self.min_iter = min_iter

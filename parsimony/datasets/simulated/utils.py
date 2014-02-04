@@ -4,12 +4,13 @@ Created on Thu Sep 26 10:50:17 2013
 
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
-@license: TBD.
+@license: BSD 3-clause.
 """
 
 import numpy as np
 
-__all__ = ['TOLERANCE', 'RandomUniform', 'U', 'norm2', 'bisection_method', 'ConstantValue']
+__all__ = ['TOLERANCE', 'norm2', 'bisection_method',
+           'RandomUniform', 'ConstantValue']
 
 TOLERANCE = 5e-8
 
@@ -29,6 +30,7 @@ class RandomUniform(object):
         return R
 
     def __call__(self, *d):
+
         return self.rand(*d)
 
 
@@ -45,10 +47,12 @@ class ConstantValue(object):
            [ 5.,  5.]])
     """
     def __init__(self, val):
-        self.val = val
-    def __call__(self, *shape):
-        return np.repeat(self.val, np.prod(shape)).reshape(shape)
 
+        self.val = val
+
+    def __call__(self, *shape):
+
+        return np.repeat(self.val, np.prod(shape)).reshape(shape)
 
 
 #def U(a, b):

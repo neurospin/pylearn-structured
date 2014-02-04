@@ -10,9 +10,9 @@ is called.
 
 Created on Mon Apr 22 10:54:29 2013
 
-@author:  Tommy Löfstedt, Vincent Guillemot, Edouard Duchesnay and \
-Fouad Hadj Selem
-@email:   tommy.loefstedt@cea.fr, edouard.duchesnay@cea.fr
+@author:  Tommy Löfstedt, Vincent Guillemot, Edouard Duchesnay and
+          Fouad Hadj-Selem
+@email:   lofstedt.tommy@gmail.com, edouard.duchesnay@cea.fr
 @license: BSD 3-clause.
 """
 import abc
@@ -26,8 +26,11 @@ import parsimony.utils as utils
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
 
-__all__ = ['RidgeRegression', 'RidgeLogisticRegression', 'L1', 'SmoothedL1', 'TotalVariation',
+__all__ = ['RidgeRegression', 'RidgeLogisticRegression', 'L1', 'SmoothedL1',
+           'TotalVariation',
+
            'SmoothedL1TV',
+
            'RR_L1_TV', 'RLR_L1_TV',
            'RR_SmoothedL1TV',
            'AnonymousFunction']
@@ -244,8 +247,8 @@ class NesterovFunction(object):
 
         grad = self.l * self.Aa(alpha)
 
-#        approx_grad = utils.approx_grad(self.f, beta, eps=1e-4)
-#        print maths.norm(grad - approx_grad)
+#        approx_grad = utils.approx_grad(self.f, beta, eps=1e-6)
+#        print "NesterovFunction:", maths.norm(grad - approx_grad)
 
         return grad
 
@@ -735,8 +738,8 @@ class QuadraticConstraint(AtomicFunction, Gradient, Constraint):
 
         f(x) = l * (x'Mx - c),
 
-    where M is a given positive definite matrix. The constrained version has
-    the form
+    where M is a given symmatric positive definite matrix. The constrained
+    version has the form
 
         x'Mx <= c.
 
@@ -767,7 +770,7 @@ class QuadraticConstraint(AtomicFunction, Gradient, Constraint):
 
         From the interface "Gradient".
         """
-        return self.l * 2.0 * np.dot(self.M, beta)
+        return (self.l * 2.0) * np.dot(self.M, beta)
 
     def feasible(self, beta):
         """Feasibility of the constraint.
@@ -808,6 +811,13 @@ class RGCCAConstraint(QuadraticConstraint, ProjectionOperator):
         self.X = X
         self.unbiased = unbiased
 
+        self.reset()
+
+    def reset(self):
+
+        self._U = None
+        self._S = None
+
     def f(self, beta):
         """Function value.
         """
@@ -826,9 +836,10 @@ class RGCCAConstraint(QuadraticConstraint, ProjectionOperator):
 
         if self.tau < 1.0:
             XtXbeta = np.dot(self.X.T, np.dot(self.X, beta))
-            grad = self.tau * beta + ((1.0 - self.tau) / float(n)) * XtXbeta
+            grad = (self.tau * 2.0) * beta \
+                 + ((1.0 - self.tau) * 2.0 / float(n)) * XtXbeta
         else:
-            grad = self.tau * beta
+            grad = (self.tau * 2.0) * beta
 
 #        approx_grad = utils.approx_grad(self.f, beta, eps=1e-4)
 #        print maths.norm(grad - approx_grad)
@@ -848,11 +859,127 @@ class RGCCAConstraint(QuadraticConstraint, ProjectionOperator):
 
         From the interface "ProjectionOperator".
         """
+
         xtMx = self._compute_value(x)
         if xtMx <= self.c:
             return x
-        else:
-            return (self.c / np.sqrt(xtMx)) * x
+
+        if self._U is None:
+            if self.unbiased:
+                n = self.X.shape[0] - 1.0
+            else:
+                n = self.X.shape[0]
+            const = ((1.0 - self.tau) / float(n))
+
+            num_comp = self.X.shape[1]
+            self._U = np.zeros((self.X.shape[1], num_comp))
+            self._S = np.diag([0] * num_comp)
+            first = True
+#            self._U = None
+#            self._S = None
+            X_ = self.X
+            for i in xrange(num_comp):
+                u = np.random.rand(X_.shape[1], 1)
+                u /= maths.norm(u)
+                for k in xrange(10000):
+                    u2 = np.dot(X_.T, np.dot(X_, u))
+                    u2 *= const
+                    u2 += self.tau * u
+                    if first:
+                        first = False
+                    else:  # self._U is not None:
+                        u2 -= np.dot(self._U, np.dot(self._S,
+                                                     np.dot(self._U.T, u)))
+                    norm_u = maths.norm(u2)
+                    if norm_u < consts.TOLERANCE:
+                        print i
+                    u2 /= norm_u
+#                    print norm_u
+
+                    if maths.norm(u - u2) < consts.TOLERANCE:
+                        u = u2
+                        break
+                    u = u2
+
+#                t = np.dot(X_, u)
+#                p = np.dot(X_.T, t) / np.dot(t.T, t)
+#                X_ = X_ - np.dot(t, p.T)
+#                X_ = X_ - np.dot(np.dot(X_, np.sqrt(const) * u), u.T)
+
+#                if first:#self._U is None:
+#                    self._U = u
+#                    self._S = [norm_u]
+#                    first = False
+#                else:
+#                    self._U = np.hstack((self._U, u))
+#                    self._S.append(norm_u)
+                self._U[:, [i]] = u
+                self._S[i, i] = norm_u
+
+#            self._U = np.hstack(self._U)
+#            self._S = np.diag(self._S)
+#            self._L = np.dot(np.hstack(self._L), np.diag(self._S))
+            del X_
+
+#        # The case: n > p
+#        L = np.linalg.cholesky(np.dot(A.T, A))
+
+#        L = self._L
+        XtX = np.dot(self.X.T, self.X)
+        M = self.tau * np.eye(*XtX.shape) \
+            + ((1.0 - self.tau) / float(self.X.shape[0] - 1)) * XtX
+#        D, U = np.linalg.eig(M)
+        U, S, V = np.linalg.svd(M)
+#        D = D.real
+#        U = U.real
+#        L_ = np.dot(U, np.sqrt(np.diag(D)))
+        L_ = np.dot(U, np.sqrt(np.diag(S)))
+        L__ = np.dot(self._U, np.sqrt(self._S))
+        L = np.linalg.cholesky(M)
+
+#        print np.linalg.norm(L_[:, [0]] + L__[:, [0]])
+#        print np.linalg.norm(L_[:, [1]] - L__[:, [1]])
+#        print np.linalg.norm(L_[:, [2]] + L__[:, [2]])
+#        print np.linalg.norm(L_[:, [3]] - L__[:, [3]])
+#        print np.dot(L_, L_.T)[1:5,1:5]
+#        print np.dot(L__, L__.T)[1:5,1:5]
+#        print np.linalg.norm(self._S - np.diag(S))
+        print np.dot(self._U, self._U.T)[:10, :10]
+        print np.dot(U, U.T)[:10, :10]
+#        print np.dot(U, self._U.T)[:10,:10]
+#        for i in xrange(10):
+#            for j in xrange(10):
+#                print np.dot(L__[:, [i]].T, L__[:, [j]]), np.dot(L_[:, [i]].T, L_[:, [j]])
+
+        print L.shape
+        print L_.shape
+        print L__.shape
+        print maths.norm(M - np.dot(L, L.T))
+        print maths.norm(M - np.dot(L_, L_.T))
+        print maths.norm(M - np.dot(L__, L__.T))
+
+        invL = np.linalg.pinv(L)
+        t = 0.99 / (np.max(S) ** 2.0)
+#        t = 0.99 / self._S[0]
+        y = x
+        for i in xrange(1000):
+            y = y - t * (np.dot(invL, np.dot(invL.T, y)) - x)
+            y /= maths.norm(y)
+#        y = np.dot(np.linalg.inv(np.dot(invL, invL.T)), x)
+#        y /= maths.norm(y)
+
+        proj_x2 = np.dot(invL.T, y)
+#        proj_x2 = (np.sqrt(self.c / self._compute_value(proj_x2))) * proj_x2
+
+        proj_x = (np.sqrt(self.c / xtMx)) * x
+
+        print "norm:", self._compute_value(proj_x2)
+        print "norm:", self._compute_value(proj_x)
+        print "dist:", maths.norm(proj_x2 - x)
+        print "dist:", maths.norm(proj_x - x)
+        print
+
+        return proj_x
 
     def _compute_value(self, beta):
 
@@ -1428,7 +1555,7 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
         self.rr = RidgeRegression(X, y, k)
         self.l1 = L1(l)
-        self.tv = TotalVariation(g, A=A, mu=0.0)
+        self.tv = TotalVariation(g, A=A, mu=mu)
 
         self.reset()
 
@@ -1478,6 +1605,13 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
         return self.rr.f(beta) \
              + self.l1.f(beta) \
              + self.tv.f(beta)
+
+    def fmu(self, beta, mu=None):
+        """Function value.
+        """
+        return self.rr.f(beta) \
+             + self.l1.f(beta) \
+             + self.tv.fmu(beta, mu)
 
     def phi(self, alpha, beta):
         """ Function value with known alpha.
@@ -1645,7 +1779,7 @@ class RR_L1_TV(CompositeFunction, Gradient, LipschitzContinuousGradient,
 
         From the interface "NesterovFunction".
         """
-        return self.tv.Aa()
+        return self.tv.Aa(alpha)
 
     def project(self, a):
         """ Projection onto the compact space of the Nesterov function.
@@ -1777,6 +1911,13 @@ class RR_L1_GL(RR_L1_TV):
         return self.rr.f(beta) \
              + self.l1.f(beta) \
              + self.gl.f(beta)
+
+    def fmu(self, beta, mu=None):
+        """Function value.
+        """
+        return self.rr.f(beta) \
+             + self.l1.f(beta) \
+             + self.gl.fmu(beta, mu)
 
     def phi(self, alpha, beta):
         """ Function value with known alpha.
@@ -2372,9 +2513,8 @@ class LatentVariableCovariance(MultiblockFunction, MultiblockGradient,
 #            w_[index] = x
 #            w_[1 - index] = w[1 - index]
 #            return self.f(w_)
-#
-#        approx_grad = utils.approx_grad(fun, w[index], eps=1e-4)
-#        print maths.norm(grad - approx_grad)
+#        approx_grad = utils.approx_grad(fun, w[index], eps=1e-6)
+#        print "LatentVariableCovariance:", maths.norm(grad - approx_grad)
 
         return grad
 

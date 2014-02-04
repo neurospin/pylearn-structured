@@ -10,11 +10,15 @@ Created on Mon Jun 18 09:26:14 2013
 import beta
 import correlation_matrices
 import grad
+import l1_l2_gl
+import l1_l2_glmu
 import l1_l2_tv
 import l1_l2_tvmu
 import l1mu_l2_tvmu
 import regression
 import utils
 
-__all__ = ['beta', 'correlation_matrices', 'grad', 'l1_l2_tv', 'l1_l2_tvmu',
+__all__ = ['beta', 'correlation_matrices', 'grad',
+           "l1_l2_gl", "l1_l2_glmu",
+           'l1_l2_tv', 'l1_l2_tvmu',
            'l1mu_l2_tvmu', 'regression', 'utils']

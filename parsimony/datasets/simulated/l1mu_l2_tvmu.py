@@ -9,7 +9,7 @@ Created on Fri Sep 27 14:47:48 2013
 
 import numpy as np
 from grad import grad_l1mu
-from grad import grad_l2
+from grad import grad_l2_squared
 from grad import grad_tvmu
 from utils import bisection_method
 
@@ -99,7 +99,7 @@ def _generate(l, k, g, beta, M, e, mu, shape):
     p = np.prod(shape)
 
     gradL1mu = grad_l1mu(beta, mu)
-    gradL2 = grad_l2(beta)
+    gradL2 = grad_l2_squared(beta)
     gradTVmu = grad_tvmu(beta, shape, mu)
 
     alpha = -(l * gradL1mu + k * gradL2 + g * gradTVmu)
