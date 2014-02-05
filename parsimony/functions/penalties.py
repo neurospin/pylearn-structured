@@ -22,9 +22,83 @@ import parsimony.utils.consts as consts
 import parsimony.utils.maths as maths
 import interfaces
 
-__all__ = ["QuadraticConstraint", "RGCCAConstraint",
-           "L1",
+__all__ = ["L1",
+           "QuadraticConstraint", "RGCCAConstraint",
            "SufficientDescentCondition"]
+
+
+class L1(interfaces.AtomicFunction,
+         interfaces.Constraint,
+         interfaces.ProximalOperator,
+         interfaces.ProjectionOperator):
+    """The proximal operator of the L1 function with regularisation formulation
+
+        f(\beta) = l * (||\beta||_1 - c),
+
+    where ||\beta||_1 is the L1 loss function. The constrained version has the
+    form
+
+        ||\beta||_1 <= c.
+
+    Parameters:
+    ----------
+    l : The Lagrange multiplier, or regularisation constant, of the function.
+
+    c : The limit of the constraint. The function is feasible if
+            ||\beta||_1 <= c. The default value is c=0, i.e. the default is a
+            regularisation formulation.
+    """
+    def __init__(self, l=1.0, c=0.0):
+
+        self.l = float(l)
+        self.c = float(c)
+
+    def f(self, beta):
+        """Function value.
+        """
+        return self.l * (maths.norm1(beta) - self.c)
+
+    def prox(self, beta, factor=1.0):
+        """The corresponding proximal operator.
+
+        From the interface "ProximalOperator".
+        """
+        l = self.l * factor
+        return (np.abs(beta) > l) * (beta - l * np.sign(beta - l))
+
+    def proj(self, beta):
+        """The corresponding projection operator.
+
+        From the interface "ProjectionOperator".
+        """
+        if self.feasible(beta):
+            return beta
+
+        from algorithms import Bisection
+        bisection = Bisection(force_negative=True, eps=1e-10)
+
+        class F(interfaces.Function):
+            def __init__(self, beta, c):
+                self.beta = beta
+                self.c = c
+
+            def f(self, l):
+                beta = (np.abs(self.beta) > l) \
+                    * (self.beta - l * np.sign(self.beta - l))
+
+                return maths.norm1(beta) - self.c
+
+        func = F(beta, self.c)
+        l = bisection(func, [0.0, np.max(np.abs(beta))])
+
+        return (np.abs(beta) > l) * (beta - l * np.sign(beta - l))
+
+    def feasible(self, beta):
+        """Feasibility of the constraint.
+
+        From the interface "Constraint".
+        """
+        return maths.norm1(beta) <= self.c
 
 
 class QuadraticConstraint(interfaces.AtomicFunction,
@@ -156,127 +230,111 @@ class RGCCAConstraint(QuadraticConstraint,
 
         From the interface "ProjectionOperator".
         """
-
         xtMx = self._compute_value(x)
         if xtMx <= self.c:
-            return x
+            return x#, x, x
+#
+##        if True:  # self._U is None:
+##            if self.unbiased:
+##                n = self.X.shape[0] - 1.0
+##            else:
+##                n = self.X.shape[0]
+##            const = ((1.0 - self.tau) / float(n))
+##
+##            num_comp = 100  # self.X.shape[1]
+##            self._U = np.zeros((self.X.shape[1], num_comp))
+##            self._S = np.diag([0.0] * num_comp)
+##            first = True
+###            self._U = None
+###            self._S = None
+##            X_ = self.X
+##            for i in xrange(num_comp):
+##                u = np.random.rand(X_.shape[1], 1)
+##                u /= maths.norm(u)
+##                for k in xrange(10000):
+##                    u2 = np.dot(X_.T, np.dot(X_, u))
+##                    u2 *= const
+##                    u2 += self.tau * u
+##                    if first:
+##                        first = False
+##                    else:  # self._U is not None:
+##                        u2 -= np.dot(self._U, np.dot(self._S,
+##                                                     np.dot(self._U.T, u)))
+##                    norm_u = maths.norm(u2)
+###                    print norm_u
+###                    if norm_u < consts.TOLERANCE:
+###                        print i
+##                    u2 /= norm_u
+###                    print norm_u
+##
+##                    if maths.norm(u - u2) < consts.TOLERANCE:
+##                        u = u2
+##                        break
+##                    u = u2
+##
+##                self._U[:, [i]] = u
+##                self._S[i, i] = norm_u
+##
+##            del X_
+#
+#        XtX = np.dot(self.X.T, self.X)
+#        M = self.tau * np.eye(*XtX.shape) \
+#            + ((1.0 - self.tau) / float(self.X.shape[0] - 1)) * XtX
+#        U, S, V = np.linalg.svd(M)
+#
+##        L = np.linalg.cholesky(M)
+#        L = np.dot(U, np.sqrt(np.diag(S)))
+#        L_ = np.dot(U[:, 1:], np.sqrt(np.diag(S)[1:, :]))
+##        Q, R = np.linalg.qr(B_.T)
+##        L_ = R.T
+##        print L[:4, :4]
+##        print L_[:4, :4]
+##        L__ = np.dot(self._U, np.sqrt(self._S))
+#
+#        print "err:", maths.norm(M - np.dot(L, L.T))
+#        print "err:", maths.norm(M - np.dot(L_, L_.T))
+##        print maths.norm(M - np.dot(L__, L__.T))
+##        for i in xrange(num_comp+1):
+##            print maths.norm(M - np.dot(L__[:, 0:i], L__[:, 0:i].T))
+#
+#        invL = np.linalg.pinv(L)
+#        invL_ = np.linalg.pinv(L_)
+#        print invL[:4, :4]
+#        print invL_[:4, :4]
+#        t = 0.99 / (np.max(S) ** 1.0)
+#        y = x
+#        y_ = x
+#        invLx = np.dot(invL, x)
+#        invLx_ = np.dot(invL_, x)
+#        for i in xrange(100000):
+#            y = y - t * (np.dot(invL, np.dot(invL.T, y)) - invLx)
+#            y_ = y_ - t * (np.dot(invL_, np.dot(invL_.T, y_)) - invLx_)
+#            y /= maths.norm(y)
+#            y_ /= maths.norm(y_)
+#
+#        print y
+#        print y_
+#
+#        Lty = np.dot(invL.T, y)
+#        Lty_ = np.dot(invL_.T, y)
+#        val = 0.5 * np.dot(Lty.T, Lty) - np.dot(invLx.T, y)
+#        val_ = 0.5 * np.dot(Lty_.T, Lty_) - np.dot(invLx_.T, y_)
+#        print "val:", val
+#        print "val:", val_
+#        proj_x = np.dot(invL.T, y)
+#        proj_x_ = np.dot(invL_.T, y_)
 
-        if self._U is None:
-            if self.unbiased:
-                n = self.X.shape[0] - 1.0
-            else:
-                n = self.X.shape[0]
-            const = ((1.0 - self.tau) / float(n))
+        proj = (np.sqrt(self.c / xtMx)) * x
 
-            num_comp = self.X.shape[1]
-            self._U = np.zeros((self.X.shape[1], num_comp))
-            self._S = np.diag([0] * num_comp)
-            first = True
-#            self._U = None
-#            self._S = None
-            X_ = self.X
-            for i in xrange(num_comp):
-                u = np.random.rand(X_.shape[1], 1)
-                u /= maths.norm(u)
-                for k in xrange(10000):
-                    u2 = np.dot(X_.T, np.dot(X_, u))
-                    u2 *= const
-                    u2 += self.tau * u
-                    if first:
-                        first = False
-                    else:  # self._U is not None:
-                        u2 -= np.dot(self._U, np.dot(self._S,
-                                                     np.dot(self._U.T, u)))
-                    norm_u = maths.norm(u2)
-                    if norm_u < consts.TOLERANCE:
-                        print i
-                    u2 /= norm_u
-#                    print norm_u
+#        print "norm:", self._compute_value(proj)
+#        print "norm:", self._compute_value(proj_x)
+#        print "norm:", self._compute_value(proj_x_)
+#        print "dist:", maths.norm(proj - x)
+#        print "dist:", maths.norm(proj_x - x)
+#        print "dist:", maths.norm(proj_x_ - x)
+#        print
 
-                    if maths.norm(u - u2) < consts.TOLERANCE:
-                        u = u2
-                        break
-                    u = u2
-
-#                t = np.dot(X_, u)
-#                p = np.dot(X_.T, t) / np.dot(t.T, t)
-#                X_ = X_ - np.dot(t, p.T)
-#                X_ = X_ - np.dot(np.dot(X_, np.sqrt(const) * u), u.T)
-
-#                if first:#self._U is None:
-#                    self._U = u
-#                    self._S = [norm_u]
-#                    first = False
-#                else:
-#                    self._U = np.hstack((self._U, u))
-#                    self._S.append(norm_u)
-                self._U[:, [i]] = u
-                self._S[i, i] = norm_u
-
-#            self._U = np.hstack(self._U)
-#            self._S = np.diag(self._S)
-#            self._L = np.dot(np.hstack(self._L), np.diag(self._S))
-            del X_
-
-#        # The case: n > p
-#        L = np.linalg.cholesky(np.dot(A.T, A))
-
-#        L = self._L
-        XtX = np.dot(self.X.T, self.X)
-        M = self.tau * np.eye(*XtX.shape) \
-            + ((1.0 - self.tau) / float(self.X.shape[0] - 1)) * XtX
-#        D, U = np.linalg.eig(M)
-        U, S, V = np.linalg.svd(M)
-#        D = D.real
-#        U = U.real
-#        L_ = np.dot(U, np.sqrt(np.diag(D)))
-        L_ = np.dot(U, np.sqrt(np.diag(S)))
-        L__ = np.dot(self._U, np.sqrt(self._S))
-        L = np.linalg.cholesky(M)
-
-#        print np.linalg.norm(L_[:, [0]] + L__[:, [0]])
-#        print np.linalg.norm(L_[:, [1]] - L__[:, [1]])
-#        print np.linalg.norm(L_[:, [2]] + L__[:, [2]])
-#        print np.linalg.norm(L_[:, [3]] - L__[:, [3]])
-#        print np.dot(L_, L_.T)[1:5,1:5]
-#        print np.dot(L__, L__.T)[1:5,1:5]
-#        print np.linalg.norm(self._S - np.diag(S))
-        print np.dot(self._U, self._U.T)[:10, :10]
-        print np.dot(U, U.T)[:10, :10]
-#        print np.dot(U, self._U.T)[:10,:10]
-#        for i in xrange(10):
-#            for j in xrange(10):
-#                print np.dot(L__[:, [i]].T, L__[:, [j]]), np.dot(L_[:, [i]].T, L_[:, [j]])
-
-        print L.shape
-        print L_.shape
-        print L__.shape
-        print maths.norm(M - np.dot(L, L.T))
-        print maths.norm(M - np.dot(L_, L_.T))
-        print maths.norm(M - np.dot(L__, L__.T))
-
-        invL = np.linalg.pinv(L)
-        t = 0.99 / (np.max(S) ** 2.0)
-#        t = 0.99 / self._S[0]
-        y = x
-        for i in xrange(1000):
-            y = y - t * (np.dot(invL, np.dot(invL.T, y)) - x)
-            y /= maths.norm(y)
-#        y = np.dot(np.linalg.inv(np.dot(invL, invL.T)), x)
-#        y /= maths.norm(y)
-
-        proj_x2 = np.dot(invL.T, y)
-#        proj_x2 = (np.sqrt(self.c / self._compute_value(proj_x2))) * proj_x2
-
-        proj_x = (np.sqrt(self.c / xtMx)) * x
-
-        print "norm:", self._compute_value(proj_x2)
-        print "norm:", self._compute_value(proj_x)
-        print "dist:", maths.norm(proj_x2 - x)
-        print "dist:", maths.norm(proj_x - x)
-        print
-
-        return proj_x
+        return proj#, proj_x, proj_x_
 
     def _compute_value(self, beta):
 
@@ -290,80 +348,6 @@ class RGCCAConstraint(QuadraticConstraint,
             + ((1.0 - self.tau) / float(n)) * np.dot(Xbeta.T, Xbeta)
 
         return val[0, 0]
-
-
-class L1(interfaces.AtomicFunction,
-         interfaces.Constraint,
-         interfaces.ProximalOperator,
-         interfaces.ProjectionOperator):
-    """The proximal operator of the L1 function with regularisation formulation
-
-        f(\beta) = l * (||\beta||_1 - c),
-
-    where ||\beta||_1 is the L1 loss function. The constrained version has the
-    form
-
-        ||\beta||_1 <= c.
-
-    Parameters:
-    ----------
-    l : The Lagrange multiplier, or regularisation constant, of the function.
-
-    c : The limit of the constraint. The function is feasible if
-            ||\beta||_1 <= c. The default value is c=0, i.e. the default is a
-            regularisation formulation.
-    """
-    def __init__(self, l=1.0, c=0.0):
-
-        self.l = float(l)
-        self.c = float(c)
-
-    def f(self, beta):
-        """Function value.
-        """
-        return self.l * (maths.norm1(beta) - self.c)
-
-    def prox(self, beta, factor=1.0):
-        """The corresponding proximal operator.
-
-        From the interface "ProximalOperator".
-        """
-        l = self.l * factor
-        return (np.abs(beta) > l) * (beta - l * np.sign(beta - l))
-
-    def proj(self, beta):
-        """The corresponding projection operator.
-
-        From the interface "ProjectionOperator".
-        """
-        if self.feasible(beta):
-            return beta
-
-        from algorithms import Bisection
-        bisection = Bisection(force_negative=True, eps=1e-10)
-
-        class F(interfaces.Function):
-            def __init__(self, beta, c):
-                self.beta = beta
-                self.c = c
-
-            def f(self, l):
-                beta = (np.abs(self.beta) > l) \
-                    * (self.beta - l * np.sign(self.beta - l))
-
-                return maths.norm1(beta) - self.c
-
-        func = F(beta, self.c)
-        l = bisection(func, [0.0, np.max(np.abs(beta))])
-
-        return (np.abs(beta) > l) * (beta - l * np.sign(beta - l))
-
-    def feasible(self, beta):
-        """Feasibility of the constraint.
-
-        From the interface "Constraint".
-        """
-        return maths.norm1(beta) <= self.c
 
 
 class SufficientDescentCondition(interfaces.Function,
