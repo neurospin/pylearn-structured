@@ -28,6 +28,7 @@ __all__ = ["L1",
 
 
 class L1(interfaces.AtomicFunction,
+         interfaces.Regularisation,
          interfaces.Constraint,
          interfaces.ProximalOperator,
          interfaces.ProjectionOperator):
@@ -103,6 +104,7 @@ class L1(interfaces.AtomicFunction,
 
 class QuadraticConstraint(interfaces.AtomicFunction,
                           interfaces.Gradient,
+                          interfaces.Regularisation,
                           interfaces.Constraint):
     """The proximal operator of the quadratic function
 
@@ -186,8 +188,10 @@ class RGCCAConstraint(QuadraticConstraint,
 
     def reset(self):
 
-        self._U = None
-        self._S = None
+        self._VU = None
+
+        self._Ip = None
+        self._M = None
 
     def f(self, beta):
         """Function value.
@@ -232,109 +236,164 @@ class RGCCAConstraint(QuadraticConstraint,
         """
         xtMx = self._compute_value(x)
         if xtMx <= self.c:
-            return x#, x, x
-#
-##        if True:  # self._U is None:
-##            if self.unbiased:
-##                n = self.X.shape[0] - 1.0
-##            else:
-##                n = self.X.shape[0]
-##            const = ((1.0 - self.tau) / float(n))
-##
-##            num_comp = 100  # self.X.shape[1]
-##            self._U = np.zeros((self.X.shape[1], num_comp))
-##            self._S = np.diag([0.0] * num_comp)
-##            first = True
-###            self._U = None
-###            self._S = None
-##            X_ = self.X
-##            for i in xrange(num_comp):
-##                u = np.random.rand(X_.shape[1], 1)
-##                u /= maths.norm(u)
-##                for k in xrange(10000):
-##                    u2 = np.dot(X_.T, np.dot(X_, u))
-##                    u2 *= const
-##                    u2 += self.tau * u
-##                    if first:
-##                        first = False
-##                    else:  # self._U is not None:
-##                        u2 -= np.dot(self._U, np.dot(self._S,
-##                                                     np.dot(self._U.T, u)))
-##                    norm_u = maths.norm(u2)
-###                    print norm_u
-###                    if norm_u < consts.TOLERANCE:
-###                        print i
-##                    u2 /= norm_u
-###                    print norm_u
-##
-##                    if maths.norm(u - u2) < consts.TOLERANCE:
-##                        u = u2
-##                        break
-##                    u = u2
-##
-##                self._U[:, [i]] = u
-##                self._S[i, i] = norm_u
-##
-##            del X_
-#
-#        XtX = np.dot(self.X.T, self.X)
-#        M = self.tau * np.eye(*XtX.shape) \
-#            + ((1.0 - self.tau) / float(self.X.shape[0] - 1)) * XtX
-#        U, S, V = np.linalg.svd(M)
-#
-##        L = np.linalg.cholesky(M)
-#        L = np.dot(U, np.sqrt(np.diag(S)))
-#        L_ = np.dot(U[:, 1:], np.sqrt(np.diag(S)[1:, :]))
-##        Q, R = np.linalg.qr(B_.T)
-##        L_ = R.T
-##        print L[:4, :4]
-##        print L_[:4, :4]
-##        L__ = np.dot(self._U, np.sqrt(self._S))
-#
-#        print "err:", maths.norm(M - np.dot(L, L.T))
-#        print "err:", maths.norm(M - np.dot(L_, L_.T))
-##        print maths.norm(M - np.dot(L__, L__.T))
-##        for i in xrange(num_comp+1):
-##            print maths.norm(M - np.dot(L__[:, 0:i], L__[:, 0:i].T))
-#
-#        invL = np.linalg.pinv(L)
-#        invL_ = np.linalg.pinv(L_)
-#        print invL[:4, :4]
-#        print invL_[:4, :4]
-#        t = 0.99 / (np.max(S) ** 1.0)
-#        y = x
-#        y_ = x
-#        invLx = np.dot(invL, x)
-#        invLx_ = np.dot(invL_, x)
-#        for i in xrange(100000):
-#            y = y - t * (np.dot(invL, np.dot(invL.T, y)) - invLx)
-#            y_ = y_ - t * (np.dot(invL_, np.dot(invL_.T, y_)) - invLx_)
-#            y /= maths.norm(y)
-#            y_ /= maths.norm(y_)
-#
-#        print y
-#        print y_
-#
-#        Lty = np.dot(invL.T, y)
-#        Lty_ = np.dot(invL_.T, y)
-#        val = 0.5 * np.dot(Lty.T, Lty) - np.dot(invLx.T, y)
-#        val_ = 0.5 * np.dot(Lty_.T, Lty_) - np.dot(invLx_.T, y_)
-#        print "val:", val
-#        print "val:", val_
-#        proj_x = np.dot(invL.T, y)
-#        proj_x_ = np.dot(invL_.T, y_)
+            return x
 
-        proj = (np.sqrt(self.c / xtMx)) * x
+        n, p = self.X.shape
+        if p > n:
+            In = np.eye(n)     # n-by-n
+            U = self.X.T       # p-by-n
+#            V = self.X         # n-by-p
+            Vx = np.dot(self.X, x)  # n-by-1
+            if self._VU is None:
+                self._VU = np.dot(self.X, U)  # n-by-n
 
-#        print "norm:", self._compute_value(proj)
-#        print "norm:", self._compute_value(proj_x)
-#        print "norm:", self._compute_value(proj_x_)
-#        print "dist:", maths.norm(proj - x)
-#        print "dist:", maths.norm(proj_x - x)
-#        print "dist:", maths.norm(proj_x_ - x)
-#        print
+            def prox(x, l):
+                k = 0.5 * l * self.tau + 1.0
+                m = 0.5 * l * ((1.0 - self.tau) / float(n - 1))
 
-        return proj#, proj_x, proj_x_
+                invIMx = (x - np.dot(U, np.dot(np.linalg.inv((k / m) * In +
+                        self._VU), Vx))) / k
+
+                return invIMx
+
+            from parsimony.algorithms import Bisection
+            bisection = Bisection(force_negative=True,
+                                  parameter_positive=True,
+                                  parameter_negative=False,
+                                  parameter_zero=False,
+                                  eps=1e-3)
+
+            class F(interfaces.Function):
+                def __init__(self, x, c, val):
+                    self.x = x
+                    self.c = c
+                    self.val = val
+                    self.y = None
+
+                def f(self, l):
+
+                    # We avoid one evaluation of prox by saving it here.
+                    self.y = prox(x, l)
+
+                    return self.val(self.y) - self.c
+
+            func = F(x, self.c, self._compute_value)
+            # TODO: Tweak these magic numbers on real data. Or even better,
+            # find theoretical bounds. Convergence is faster if these bounds
+            # are close to accurate when we start the bisection algorithm.
+            if p >= 400000:
+                low = p / 90.0
+                high = p / 71.0
+            elif p >= 200000:
+                low = p / 70.0
+                high = p / 54.0
+            elif p >= 100000:
+                low = p / 45.0
+                high = p / 40.0
+            elif p >= 50000:
+                low = p / 37.0
+                high = p / 27.0
+            elif p >= 10000:
+                low = p / 20.0
+                high = p / 15.0
+            elif p >= 5000:
+                low = p / 11.0
+                high = p / 9.0
+            elif p >= 1000:
+                low = p / 8.0
+                high = p / 5.0
+            else:
+                low = p / 4.0
+                high = p / 3.0
+
+            print low, ", ", high
+            l = bisection(func, [low, high])
+            print l
+
+            y = func.y
+
+        else:  # The case when: p <= n
+
+            if self._Ip is None:
+                self._Ip = np.eye(p)  # p-by-p
+
+            if self._M is None:
+                XtX = np.dot(self.X.T, self.X)
+                self._M = self.tau * self._Ip + \
+                          ((1.0 - self.tau) / float(n - 1)) * XtX
+
+            def prox2(x, l):
+
+                y = np.dot(np.linalg.inv(self._Ip + (0.5 * l) * self._M), x)
+
+                return y
+
+            from parsimony.algorithms import Bisection
+            bisection = Bisection(force_negative=True,
+                                  parameter_positive=True,
+                                  parameter_negative=False,
+                                  parameter_zero=False,
+                                  eps=1e-3)
+
+            class F(interfaces.Function):
+                def __init__(self, x, c, val):
+                    self.x = x
+                    self.c = c
+                    self.val = val
+                    self.y = None
+
+                def f(self, l):
+
+                    # We avoid one evaluation of prox by saving it here.
+                    self.y = prox2(x, l)
+
+                    return self.val(self.y) - self.c
+
+            func = F(x, self.c, self._compute_value)
+            # TODO: Tweak these magic numbers on real data. Or even better,
+            # find theoretical bounds. Convergence is faster if these bounds
+            # are close to accurate when we start the bisection algorithm.
+            if p >= 950:
+                low = p / 5.5555555
+                high = (p / 4.56) - np.log10(n)
+            elif p >= 850:
+                low = p / 5.294
+                high = (p / 4.29) - np.log10(n)
+            elif p >= 750:
+                low = p / 5.0
+                high = (p / 4.17) - np.log10(n)
+            elif p >= 650:
+                low = p / 4.66
+                high = (p / 3.85) - np.log10(n)
+            elif p >= 550:
+                low = p / 4.28
+                high = (p / 3.52) - np.log10(n)
+            elif p >= 450:
+                low = p / 4.0
+                high = (p / 3.33) - np.log10(n)
+            elif p >= 350:
+                low = p / 3.7
+                high = (p / 2.96) - np.log10(n)
+            elif p >= 250:
+                low = p / 3.16
+                high = (p / 2.55) - np.log10(n)
+            elif p >= 150:
+                low = p / 2.667
+                high = (p / 2.1) - np.log10(n)
+            elif p >= 50:
+                low = p / 2.0
+                high = (p / 1.5) - np.log10(n)
+            else:
+                low = p / 1.0
+                high = (p / 0.71) - np.log10(n)
+
+            print low, ", ", high
+            l = bisection(func, [low, high])
+            print l
+
+            y = func.y
+
+        return y
 
     def _compute_value(self, beta):
 

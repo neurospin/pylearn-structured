@@ -842,10 +842,16 @@ class Bisection(ExplicitAlgorithm):
                  ]
 
     def __init__(self, force_negative=False,
+                 parameter_positive=True,
+                 parameter_negative=True,
+                 parameter_zero=True,
                  eps=consts.TOLERANCE,
-                 max_iter=50, min_iter=1):
+                 max_iter=30, min_iter=1):
 
         self.force_negative = force_negative
+        self.parameter_positive = parameter_positive
+        self.parameter_negative = parameter_negative
+        self.parameter_zero = parameter_zero
         self.eps = eps
         self.max_iter = max_iter
         self.min_iter = min_iter
@@ -868,20 +874,100 @@ class Bisection(ExplicitAlgorithm):
             low = x[0]
             high = x[1]
         else:
-            low = 0
-            high = 1
+            if self.parameter_negative:
+                low = -1.0
+            elif self.parameter_zero:
+                low = 0.0
+            else:
+                low = consts.TOLERANCE
+
+            if self.parameter_positive:
+                high = 1.0
+            elif self.parameter_zero:
+                high = 0.0
+            else:
+                high = -consts.TOLERANCE
 
         # Find start values. If the low and high
         # values are feasible this will just break
         for i in xrange(self.max_iter):
             f_low = function.f(low)
             f_high = function.f(high)
+#            print "low :", low, ", f:", f_low
+#            print "high:", high, ", f:", f_high
 
             if np.sign(f_low) != np.sign(f_high):
                 break
             else:
-                low -= abs(low) * 2.0 ** i
-                high += abs(high) * 2.0 ** i
+                if self.parameter_positive \
+                        and self.parameter_negative \
+                        and self.parameter_zero:
+
+                    low -= abs(low) * 2.0 ** i
+                    high += abs(high) * 2.0 ** i
+
+                elif self.parameter_positive \
+                        and self.parameter_negative \
+                        and not self.parameter_zero:
+
+                    low -= abs(low) * 2.0 ** i
+                    high += abs(high) * 2.0 ** i
+
+                    if abs(low) < consts.TOLERANCE:
+                        low -= consts.TOLERANCE
+                    if abs(high) < consts.TOLERANCE:
+                        high += consts.TOLERANCE
+
+                elif self.parameter_positive \
+                        and not self.parameter_negative \
+                        and self.parameter_zero:
+
+                    low /= 2.0
+                    high *= 2.0
+
+                elif self.parameter_positive \
+                        and not self.parameter_negative \
+                        and not self.parameter_zero:
+
+                    low /= 2.0
+                    high *= 2.0
+
+                    if abs(low) < consts.TOLERANCE:
+                        low = consts.TOLERANCE
+                    if abs(high) < consts.TOLERANCE:
+                        high = consts.TOLERANCE
+
+                elif not self.parameter_positive \
+                        and self.parameter_negative \
+                        and self.parameter_zero:
+
+                    low *= 2.0
+                    high /= 2.0
+
+                elif not self.parameter_positive \
+                        and self.parameter_negative \
+                        and not self.parameter_zero:
+
+                    low *= 2.0
+                    high /= 2.0
+
+                    if abs(low) < consts.TOLERANCE:
+                        low = -consts.TOLERANCE
+                    if abs(high) < consts.TOLERANCE:
+                        high = -consts.TOLERANCE
+
+                elif not self.parameter_positive \
+                        and not self.parameter_negative \
+                        and self.parameter_zero:
+
+                    low = 0.0
+                    high = 0.0
+
+                elif not self.parameter_positive \
+                        and not self.parameter_negative \
+                        and not self.parameter_zero:
+
+                    raise ValueError("Parameter must be allowed to be real!")
 
         # Use the bisection method to find where |f(x)|_2 <= eps.
         neg_count = 0
@@ -898,9 +984,10 @@ class Bisection(ExplicitAlgorithm):
 
             mid = (low + high) / 2.0
             f_mid = function.f(mid)
+#            print "i:", (i + 1), ", mid: ", mid, ", f_mid:", f_mid
 
-            # TODO: Include min_iter!
-            if np.sqrt(np.sum((high - low) ** 2.0)) <= self.eps:
+#            if np.sqrt(np.sum((high - low) ** 2.0)) <= self.eps:
+            if abs(f_high - f_low) <= self.eps and i + 1 >= self.min_iter:
                 if self.force_negative and f_mid > 0.0:
                     if neg_count < self.max_iter:
                         neg_count += 1
