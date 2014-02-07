@@ -278,37 +278,54 @@ class RGCCAConstraint(QuadraticConstraint,
                     return self.val(self.y) - self.c
 
             func = F(x, self.c, self._compute_value)
+
             # TODO: Tweak these magic numbers on real data. Or even better,
             # find theoretical bounds. Convergence is faster if these bounds
             # are close to accurate when we start the bisection algorithm.
-            if p >= 400000:
-                low = p / 90.0
-                high = p / 71.0
+            if p >= 600000:
+                low = (p / 100.0) - np.log10(n) * 5.0
+                high = (p / 80.0) - np.log10(n) * 5.0
+            elif p >= 500000:
+                low = p / 85.71
+                high = (p / 76.9) - np.log10(n) * 5.0
+            elif p >= 400000:
+                low = p / 78.125
+                high = (p / 68.97) - np.log10(n) * 5.0
+            elif p >= 300000:
+                low = p / 70.17
+                high = (p / 59.4) - np.log10(n) * 5.0
             elif p >= 200000:
-                low = p / 70.0
-                high = p / 54.0
+                low = p / 61.22
+                high = (p / 48.78) - np.log10(n) * 5.0
+            elif p >= 150000:
+                low = p / 50.0
+                high = (p / 41.66) - np.log10(n) * 5.0  # ^^
             elif p >= 100000:
-                low = p / 45.0
-                high = p / 40.0
+                low = p / 42.86
+                high = (p / 34.5) - np.log10(n) * 6.0  # !
+            elif p >= 75000:
+                low = p / 35.71
+                high = (p / 29.9) - np.log10(n) * 6.0  # !
             elif p >= 50000:
-                low = p / 37.0
-                high = p / 27.0
+                low = p / 31.25
+                high = (p / 23.81) - np.log10(n) * 6.0  # !
+            elif p >= 25000:
+                low = p / 25.0
+                high = (p / 16.67) - np.log10(n) * 7.0  # !
             elif p >= 10000:
-                low = p / 20.0
-                high = p / 15.0
+                low = p / 17.86
+                high = (p / 10.87) - np.log10(n) * 7.0  # !
             elif p >= 5000:
-                low = p / 11.0
-                high = p / 9.0
+                low = p / 11.63
+                high = (p / 7.69) - np.log10(n) * 7.0  # !
             elif p >= 1000:
-                low = p / 8.0
-                high = p / 5.0
+                low = p / 8.62
+                high = (p / 3.45) - np.log10(n) * 8.0  # !
             else:
-                low = p / 4.0
-                high = p / 3.0
+                low = p / 4.75
+                high = p / 2.25
 
-            print low, ", ", high
             l = bisection(func, [low, high])
-            print l
 
             y = func.y
 
@@ -350,48 +367,50 @@ class RGCCAConstraint(QuadraticConstraint,
                     return self.val(self.y) - self.c
 
             func = F(x, self.c, self._compute_value)
+
             # TODO: Tweak these magic numbers on real data. Or even better,
             # find theoretical bounds. Convergence is faster if these bounds
             # are close to accurate when we start the bisection algorithm.
             if p >= 950:
-                low = p / 5.5555555
-                high = (p / 4.56) - np.log10(n)
+                low = p / 5.25
+                high = (p / 4.50) - np.log10(n)  # !
             elif p >= 850:
-                low = p / 5.294
-                high = (p / 4.29) - np.log10(n)
+                low = p / 4.65
+                high = (p / 4.25) - np.log10(n)  # !
             elif p >= 750:
-                low = p / 5.0
-                high = (p / 4.17) - np.log10(n)
+                low = p / 4.45
+                high = (p / 4.00) - np.log10(n)  # !
             elif p >= 650:
-                low = p / 4.66
-                high = (p / 3.85) - np.log10(n)
-            elif p >= 550:
                 low = p / 4.28
-                high = (p / 3.52) - np.log10(n)
+                high = (p / 3.70) - np.log10(n)  # !
+            elif p >= 550:
+                low = p / 4.10
+                high = (p / 3.40) - np.log10(n)  # !
             elif p >= 450:
-                low = p / 4.0
-                high = (p / 3.33) - np.log10(n)
+                low = p / 3.85
+                high = (p / 3.05) - np.log10(n)  # !
             elif p >= 350:
-                low = p / 3.7
-                high = (p / 2.96) - np.log10(n)
+                low = p / 3.59
+                high = (p / 2.82) - np.log10(n)  # !
             elif p >= 250:
                 low = p / 3.16
-                high = (p / 2.55) - np.log10(n)
+                high = (p / 2.42) - np.log10(n)  # !
             elif p >= 150:
-                low = p / 2.667
-                high = (p / 2.1) - np.log10(n)
+                low = p / 2.7
+                high = (p / 1.85) - np.log10(n)  # !
             elif p >= 50:
-                low = p / 2.0
-                high = (p / 1.5) - np.log10(n)
+                low = p / 2.23
+                high = (p / 1.23) - np.log10(n)  # !
             else:
-                low = p / 1.0
-                high = (p / 0.71) - np.log10(n)
+                low = p / 1.1
+                high = p / 0.8  # !
 
-            print low, ", ", high
             l = bisection(func, [low, high])
-            print l
 
             y = func.y
+
+#        print low, ", ", high
+#        print l
 
         return y
 
