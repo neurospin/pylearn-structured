@@ -98,9 +98,14 @@ class NesterovFunction(object):
         if self.l < consts.TOLERANCE:
             return 0.0
 
+        # \beta need not be sliced here.
         alpha = self.alpha(beta)
 
-        grad = self.l * self.Aa(alpha)
+        if self.penalty_start > 0:
+            grad = self.l * np.vstack((np.zeros((self.penalty_start, 1)),
+                                       self.Aa(alpha)))
+        else:
+            grad = self.l * self.Aa(alpha)
 
 #        approx_grad = utils.approx_grad(self.f, beta, eps=1e-6)
 #        print "NesterovFunction:", maths.norm(grad - approx_grad)

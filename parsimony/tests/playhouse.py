@@ -11,6 +11,7 @@ import sys
 
 import numpy as np
 import matplotlib.pyplot as plot
+import scipy.sparse as sparse
 
 import parsimony.functions.penalties as penalties
 import parsimony.functions.multiblock.losses as mb_losses
@@ -35,23 +36,100 @@ np.random.seed(42)
 
 eps = 0.01
 maxit = 10000
+mu = 1e-6
+k = 0.5
+l = 0.5
+g = 0.0
 
 px = 100
 py = 1
 pz = 1
-p = px * py * pz  # Must be even!
+shape = (pz, py, px)
+p = 1 + px * py * pz  # Must be even!
 n = 60
 alpha = 1.0
 Sigma = alpha * np.eye(p, p) + (1.0 - alpha) * np.random.randn(p, p)
-mean = np.zeros(px)
+mean = np.zeros(p)
 M = np.random.multivariate_normal(mean, Sigma, n)
-X = np.random.randn(n, p)
+X = np.hstack((np.ones((n, 1)), np.random.randn(n, p - 1)))
 betastar = np.concatenate((np.zeros((p / 2, 1)),
                            np.random.randn(p / 2, 1)))
 betastar = np.sort(np.abs(betastar), axis=0)
+betastar = np.concatenate((np.random.rand(1, 1), betastar))
+
 y = np.dot(X, betastar)
 
-rr = RR_L1_TV(X, y, k, l, g, A=None, mu=0.0)
+A, n_compacts = tv.A_from_shape(shape)
+#A = gl.A_from_groups(px, [range(0, int(px / 2.0)),
+#                          range(int(px / 2.0), px)])
+Al1 = sparse.eye(p - 1, p - 1)
+
+beta_start = start_vectors.RandomStartVector(normalise=False)
+beta_start = beta_start.get_vector((p, 1))
+
+
+
+##rr = RR_L1_GL(X, y, k, l, g, A=A, mu=mu, penalty_start=0)
+#rr = RR_SmoothedL1TV(X, y, k, l, g, Atv=A, Al1=Al1, mu=mu,
+#                     penalty_start=0)
+
+#print maths.norm(betastar - beta_start)
+#
+#ista = algorithms.ISTA(output=True, max_iter=maxit)
+#t = time.time()
+#beta, output = ista(rr, beta_start)
+##print time.time() - t
+#
+#print maths.norm(betastar - beta)
+
+
+
+#rr = RR_L1_GL(X, y, k, l, g, A=A, mu=mu, penalty_start=1)
+rr = RR_SmoothedL1TV(X, y, k, l, g, Atv=A, Al1=Al1, mu=mu,
+                     penalty_start=1)
+
+print maths.norm(betastar - beta_start)
+
+ista = algorithms.ISTA(output=True, max_iter=maxit)
+t = time.time()
+beta, output = ista(rr, beta_start)
+#print time.time() - t
+
+print maths.norm(betastar - beta)
+
+
+
+#rr = RR_L1_GL(X, y, k, l, g=0.9, A=A, mu=mu, penalty_start=1)
+rr = RR_SmoothedL1TV(X, y, k, l, g=0.9, Atv=A, Al1=Al1,
+                     mu=mu, penalty_start=1)
+
+print maths.norm(betastar - beta_start)
+
+ista = algorithms.ISTA(output=True, max_iter=maxit)
+t = time.time()
+beta, output = ista(rr, beta_start)
+#print time.time() - t
+
+print maths.norm(betastar - beta)
+
+
+
+#mx = np.mean(X)
+#my = np.mean(y)
+#X -= mx
+#y -= my
+##rr = RR_L1_GL(X, y, k, l, g, A=A, mu=mu, penalty_start=0)
+#rr = RR_SmoothedL1TV(X, y, k, l, g, Atv=A, Al1=Al1, mu=mu,
+#                     penalty_start=0)
+#
+#print maths.norm(betastar - beta_start)
+#
+#ista = algorithms.ISTA(output=True, max_iter=maxit)
+#t = time.time()
+#beta, output = ista(rr, beta_start)
+##print time.time() - t
+#
+#print maths.norm(betastar - beta)
 
 
 

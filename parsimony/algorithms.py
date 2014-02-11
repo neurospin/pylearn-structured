@@ -18,7 +18,7 @@ starting from the point of the start vector.
 Created on Fri Feb  8 17:24:11 2013
 
 @author:  Tommy Löfstedt
-@email:   tommy.loefstedt@cea.fr
+@email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
 import abc
@@ -329,24 +329,12 @@ class FastSVDProduct(ImplicitAlgorithm):
 
 class ISTA(ExplicitAlgorithm):
     """ The iterative shrinkage threshold algorithm.
-
-    Parameters
-    ----------
-    step : Step for each iteration.
-
-    output : Boolean. Get output information.
-
-    eps : Float. Tolerance.
-
-    max_iter : Maximum allowed number of iterations.
-
-    min_iter : Minimum allowed number of iterations.
     """
     INTERFACES = [interfaces.Gradient,
                   # TODO: We should use a step size here instead of the
                   # Lipschitz constant. All functions don't have L, but will
                   # still run in FISTA with a small enough step size.
-                  # Updated: Use StepSise instead!!
+                  # Updated: Use StepSize instead!!
                   interfaces.LipschitzContinuousGradient,
                   interfaces.ProximalOperator,
                  ]
@@ -354,7 +342,19 @@ class ISTA(ExplicitAlgorithm):
     def __init__(self, step=None, output=False,
                  eps=consts.TOLERANCE,
                  max_iter=consts.MAX_ITER, min_iter=1):
+        """
+        Parameters
+        ----------
+        step : Step for each iteration.
 
+        output : Boolean. Get output information.
+
+        eps : Float. Tolerance.
+
+        max_iter : Integer. Maximum allowed number of iterations.
+
+        min_iter : Integer. Minimum allowed number of iterations.
+        """
         self.step = step
         self.output = output
         self.eps = eps
@@ -374,6 +374,7 @@ class ISTA(ExplicitAlgorithm):
 
         betanew = betaold = beta
 
+        # TODO: Change the functions so that we can use the StepSize API here.
         if self.step is None:
             self.step = 1.0 / function.L()
 
@@ -520,6 +521,7 @@ class FISTA(ExplicitAlgorithm):
 
         z = betanew = betaold = beta
 
+        # TODO: Change the functions so that we can use the StepSize API here.
         if self.step is None:
             self.step = 1.0 / function.L()
 

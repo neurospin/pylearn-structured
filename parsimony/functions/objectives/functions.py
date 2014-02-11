@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`parsimony.functions.functions` module contains rady-made commong
-combinations of loss functions and penalties that can be used right away to
-analyse real data.
+The :mod:`parsimony.functions.objectives.functions` module contains rady-made
+common combinations of loss functions and penalties that can be used right
+away to analyse real data.
 
 Created on Mon Apr 22 10:54:29 2013
 
@@ -13,15 +13,16 @@ Created on Mon Apr 22 10:54:29 2013
 """
 import numpy as np
 
-from parsimony.functions.objectives import RidgeRegression
-from parsimony.functions.objectives import RidgeLogisticRegression
+import parsimony.functions.interfaces as interfaces
+from parsimony.functions.losses import RidgeRegression
+from parsimony.functions.losses import RidgeLogisticRegression
 from parsimony.functions.penalties import L1
+import parsimony.functions.nesterov.interfaces as nesterov_interfaces
 from parsimony.functions.nesterov.L1 import L1 as SmoothedL1
 from parsimony.functions.nesterov.L1TV import L1TV
 from parsimony.functions.nesterov.tv import TotalVariation
 from parsimony.functions.nesterov.gl import GroupLassoOverlap
 import parsimony.utils.consts as consts
-import interfaces
 
 __all__ = ["RR_L1_TV", "RLR_L1_TV", "RR_L1_GL", "RR_SmoothedL1TV"]
 
@@ -30,41 +31,44 @@ class RR_L1_TV(interfaces.CompositeFunction,
                interfaces.Gradient,
                interfaces.LipschitzContinuousGradient,
                interfaces.ProximalOperator,
-               interfaces.NesterovFunction,
+               nesterov_interfaces.NesterovFunction,
                interfaces.Continuation,
                interfaces.DualFunction):
     """Combination (sum) of RidgeRegression, L1 and TotalVariation
 
     Parameters
     ----------
-    X : Ridge Regression parameter.
+    X : Numpy array. The X matrix for the ridge regression.
 
-    y : Ridge Regression parameter.
+    y : Numpy array. The y vector for the ridge regression.
 
-    k : Ridge Regression parameter.
+    k : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, for the ridge penalty.
 
-    l : L1 parameter.
-            The Lagrange multiplier, or regularisation constant, of the
-            function.
+    l : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, for the L1 penalty.
 
-    g : Total Variation parameter
-            The Lagrange multiplier, or regularisation constant, of the
-            function.
+    g : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the smoothed TV function.
 
-    A : Total Variation parameter.
-            The linear operator for the Nesterov formulation. May not be None!
+    A : A (usually sparse) matrix. The linear operator for the Nesterov
+            formulation of TV. May not be None!
 
-    mu : Total Variation parameter.
-            The regularisation constant for the smoothing.
+    mu : Non-negative float. The regularisation constant for the smoothing of
+            the TV function.
+
+    penalty_start : The number of columns, variables etc., to except from
+            penalisation. Equivalently, the first index to be penalised.
+            Default is 0, all columns are included.
     """
-    def __init__(self, X, y, k, l, g, A=None, mu=0.0):
+    def __init__(self, X, y, k, l, g, A=None, mu=0.0, penalty_start=0):
 
         self.X = X
         self.y = y
 
         self.rr = RidgeRegression(X, y, k)
-        self.l1 = L1(l)
-        self.tv = TotalVariation(g, A=A, mu=mu)
+        self.l1 = L1(l, penalty_start=penalty_start)
+        self.tv = TotalVariation(g, A=A, mu=mu, penalty_start=penalty_start)
 
         self.reset()
 
@@ -303,38 +307,36 @@ class RLR_L1_TV(RR_L1_TV):
 
     Parameters
     ----------
-    X : Ridge Regression parameter.
+    X : Numpy array. The X matrix for the ridge regression.
 
-    y : Ridge Regression parameter.
+    y : Numpy array. The y vector for the ridge regression.
 
-    k : Ridge Regression parameter.
+    k : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, for the ridge penalty.
 
-    l : L1 parameter.
-            The Lagrange multiplier, or regularisation constant, of the
-            function.
+    l : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, for the L1 penalty.
 
-    g : Total Variation parameter
-            The Lagrange multiplier, or regularisation constant, of the
-            function.
+    g : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the smoothed TV function.
 
-    A : Total Variation parameter.
-            The linear operator for the Nesterov formulation. May not be None!
+    A : A (usually sparse) matrix. The linear operator for the Nesterov
+            formulation for TV. May not be None!
 
-    mu : Total Variation parameter.
-            The regularisation constant for the smoothing.
+    mu : Non-negative float. The regularisation constant for the smoothing of
+            the TV function.
 
-    weights: array, shape = [n_samples]
-        samples weights
+    weights: List with n elements (X is n-by-p). The sample's weights.
     """
-
-    def __init__(self, X, y, k, l, g, A=None, mu=0.0, weights=None):
+    def __init__(self, X, y, k, l, g, A=None, mu=0.0, weights=None,
+                 penalty_start=0):
 
         self.X = X
         self.y = y
 
         self.rr = RidgeLogisticRegression(X, y, k, weights=weights)
-        self.l1 = L1(l)
-        self.tv = TotalVariation(g, A=A, mu=0.0)
+        self.l1 = L1(l, penalty_start=penalty_start)
+        self.tv = TotalVariation(g, A=A, mu=mu, penalty_start=penalty_start)
 
         self.reset()
 
@@ -344,33 +346,33 @@ class RR_L1_GL(RR_L1_TV):
 
     Parameters
     ----------
-    X : Matrix. Ridge Regression parameter.
+    X : Numpy array. The X matrix for the ridge regression.
 
-    y : Vector. Ridge Regression parameter.
+    y : Numpy array. The y vector for the ridge regression.
 
-    k : Float. The Ridge Regression parameter.
+    k : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, for the ridge penalty.
 
-    l : Float. The Lagrange multiplier, or regularisation constant, of the L1
-            function.
+    l : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, for the L1 penalty.
 
-    g : Float. The Lagrange multiplier, or regularisation constant, of the GL
-            function.
+    g : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the overlapping group L1-L2 function.
 
     A : A (usually sparse) matrix. The linear operator for the Nesterov
-            formulation for GL. May not be None!
+            formulation for group L1-L2. May not be None!
 
-    mu : Float. mu > 0. The regularisation constant for the smoothing of the
-            GL function.
+    mu : Non-negative float. The regularisation constant for the smoothing of
+            the overlapping group L1-L2 function.
     """
-
-    def __init__(self, X, y, k, l, g, A=None, mu=0.0):
+    def __init__(self, X, y, k, l, g, A=None, mu=0.0, penalty_start=0):
 
         self.X = X
         self.y = y
 
         self.rr = RidgeRegression(X, y, k)
-        self.l1 = L1(l)
-        self.gl = GroupLassoOverlap(g, A=A, mu=mu)
+        self.l1 = L1(l, penalty_start=penalty_start)
+        self.gl = GroupLassoOverlap(g, A=A, mu=mu, penalty_start=penalty_start)
 
         self.reset()
 
@@ -386,6 +388,7 @@ class RR_L1_GL(RR_L1_TV):
 
     def set_params(self, **kwargs):
 
+        # TODO: This is not good. Solve this better!
         mu = kwargs.pop("mu", self.get_mu())
         self.set_mu(mu)
 
@@ -605,40 +608,46 @@ class RR_L1_GL(RR_L1_TV):
 
 
 class RR_SmoothedL1TV(interfaces.CompositeFunction,
+                      nesterov_interfaces.NesterovFunction,
+                      interfaces.Gradient,
                       interfaces.LipschitzContinuousGradient,
                       interfaces.GradientMap,
                       interfaces.DualFunction,
-                      interfaces.NesterovFunction):
+                      interfaces.ProximalOperator):
     """
     Parameters
     ----------
-    X : Ridge Regression parameter.
+    X : Numpy array. The X matrix for the ridge regression.
 
-    y : Ridge Regression parameter.
+    y : Numpy array. The y vector for the ridge regression.
 
-    k : Ridge Regression parameter.
+    k : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, for the ridge penalty.
 
-    l : L1 parameter.
-            The Lagrange multiplier, or regularisation constant, of the
-            function.
+    l : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, for the L1 penalty.
 
-    g : Total Variation parameter.
-            The Lagrange multiplier, or regularisation constant, of the
-            function.
+    g : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the TV function.
 
-    Atv : The linear operator for the total variation Nesterov function.
+    Atv : A (usually sparse) matrix. The linear operator for the Nesterov
+            formulation of the smoothed TV function. May not be None!
 
-    Al1 : Matrix allocation for regression.
+    Al1 : A (usually sparse) matrix. The linear operator for the Nesterov
+            formulation of the smoothed L1 function. May not be None!
 
-    mu: The regularisation constant for the smoothing.
+    mu : Non-negative float. The regularisation constant for the smoothing of
+            the TV function.
     """
-    def __init__(self, X, y, k, l, g, Atv=None, Al1=None, mu=0.0):
+    def __init__(self, X, y, k, l, g, Atv=None, Al1=None, mu=0.0,
+                 penalty_start=0):
 
         self.X = X
         self.y = y
 
         self.g = RidgeRegression(X, y, k)
-        self.h = L1TV(l, g, Atv=Atv, Al1=Al1, mu=mu)
+        self.h = L1TV(l, g, Atv=Atv, Al1=Al1, mu=mu,
+                      penalty_start=penalty_start)
 
         self.mu = mu
 
@@ -654,6 +663,7 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
 
     def set_params(self, **kwargs):
 
+        # TODO: This is not good. Solve this better!
         mu = kwargs.pop("mu", self.get_mu())
         self.set_mu(mu)
 
@@ -694,6 +704,13 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
         return self.g.f(beta) \
              + self.h.phi(alpha, beta)
 
+    def grad(self, beta):
+        """Gradient of the differentiable part of the function.
+
+        From the interface "Gradient".
+        """
+        return self.h.grad(beta)
+
     def L(self):
         """Lipschitz constant of the gradient.
 
@@ -704,6 +721,14 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
         a = self.h.lambda_max()  # max_iter=max_iter)
 
         return a / b
+
+    def prox(self, beta, factor=1.0):
+        """The proximal operator of the non-differentiable part of the
+        function.
+
+        From the interface "ProximalOperator".
+        """
+        return beta
 
     def V(self, u, beta, L):
         """The gradient map associated to the function.
@@ -767,7 +792,7 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
 
         From the interface "DualFunction".
         """
-        # TODO: Add this function!
+        # TODO: Add this function or refactor API!
         raise NotImplementedError("We cannot currently do this!")
 
     def estimate_mu(self, beta):

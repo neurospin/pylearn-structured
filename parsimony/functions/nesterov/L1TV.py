@@ -128,6 +128,30 @@ class L1TV(interfaces.AtomicFunction,
 
         return np.dot(beta_.T, Aa)[0, 0] - (self.mu / 2.0) * alpha_sqsum
 
+    def grad(self, beta):
+        """ Gradient of the function at beta.
+
+        Parameters
+        ----------
+        beta : Numpy array. The point at which to evaluate the gradient.
+        """
+        if self.l < consts.TOLERANCE and self.g < consts.TOLERANCE:
+            return 0.0
+
+        # Note that \beta need not be sliced here.
+        alpha = self.alpha(beta)
+
+        if self.penalty_start > 0:
+            grad = np.vstack((np.zeros((self.penalty_start, 1)),
+                              self.Aa(alpha)))
+        else:
+            grad = self.Aa(alpha)
+
+#        approx_grad = utils.approx_grad(self.f, beta, eps=1e-6)
+#        print "NesterovFunction:", maths.norm(grad - approx_grad)
+
+        return grad
+
     def lambda_max(self):
         """ Largest eigenvalue of the corresponding covariance matrix.
 
