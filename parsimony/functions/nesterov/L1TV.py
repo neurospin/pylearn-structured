@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`parsimony.functions.nesterov.L1` module contains the loss function
-for the L1 penalty, smoothed using Nesterov's technique.
+The :mod:`parsimony.functions.nesterov.L1TV` module contains the loss function
+for the L1 + TV penalty, smoothed together using Nesterov's technique.
 
 Created on Mon Feb  3 17:04:14 2014
 
@@ -24,8 +24,8 @@ __all__ = ["L1TV"]
 
 
 class L1TV(interfaces.AtomicFunction,
-           interfaces.Regularisation,
            NesterovFunction,
+           interfaces.Penalty,
            interfaces.Eigenvalues):
     """
     Parameters
@@ -38,28 +38,31 @@ class L1TV(interfaces.AtomicFunction,
             The Lagrange multiplier, or regularisation constant, of the
             function.
 
-    Atv : The linear operator for the total variation Nesterov function
+    Atv : The linear operator for the total variation Nesterov function. May
+            not be None.
 
-    Al1 : Matrix allocation for regression
+    Al1 : The linear operator for the L1 Nesterov function. May not be None.
 
-    mu: The regularisation constant for the smoothing
+    mu: The regularisation constant for the smoothing.
+
+    penalty_start : The number of columns, variables etc., to except from
+            penalisation. Equivalently, the first index to be penalised.
+            Default is 0, all columns are included.
     """
-    def __init__(self, l, g, Atv=None, Al1=None, mu=0.0):
+    def __init__(self, l, g, Atv=None, Al1=None, mu=0.0, penalty_start=0):
 
-        self.l = float(l)
         self.g = float(g)
 
         self._p = Atv[0].shape[1]  # WARNING: Number of rows may differ from p.
         if Al1 is None:
             Al1 = sparse.eye(self._p, self._p)
-        self._A = [l * Al1,
-                   g * Atv[0],
-                   g * Atv[1],
-                   g * Atv[2]]
+        A = [l * Al1,
+             g * Atv[0],
+             g * Atv[1],
+             g * Atv[2]]
 
-        self.mu = float(mu)
+        super(L1TV, self).__init__(l, A=A, mu=mu, penalty_start=penalty_start)
 
-        # TODO: Is reset still necessary?
         self.reset()
 
     def reset(self):
@@ -72,11 +75,37 @@ class L1TV(interfaces.AtomicFunction,
         if self.l < consts.TOLERANCE and self.g < consts.TOLERANCE:
             return 0.0
 
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
         A = self.A()
-        return maths.norm1(A[0].dot(beta)) + \
-               np.sum(np.sqrt(A[1].dot(beta) ** 2.0 +
-                              A[2].dot(beta) ** 2.0 +
-                              A[3].dot(beta) ** 2.0))
+        return maths.norm1(A[0].dot(beta_)) + \
+               np.sum(np.sqrt(A[1].dot(beta_) ** 2.0 +
+                              A[2].dot(beta_) ** 2.0 +
+                              A[3].dot(beta_) ** 2.0))
+
+    def fmu(self, beta, mu=None):
+        """Returns the smoothed function value.
+
+        Parameters
+        ----------
+        beta : A weight vector.
+
+        mu : The regularisation constant for the smoothing.
+        """
+        if mu is None:
+            mu = self.get_mu()
+
+        alpha = self.alpha(beta)
+        alpha_sqsum = 0.0
+        for a in alpha:
+            alpha_sqsum += np.sum(a ** 2.0)
+
+        Aa = self.Aa(alpha)
+
+        return np.dot(beta.T, Aa)[0, 0] - (mu / 2.0) * alpha_sqsum
 
     def phi(self, alpha, beta):
         """ Function value with known alpha.
@@ -92,7 +121,12 @@ class L1TV(interfaces.AtomicFunction,
         for a in alpha:
             alpha_sqsum += np.sum(a ** 2.0)
 
-        return np.dot(beta.T, Aa)[0, 0] - (self.mu / 2.0) * alpha_sqsum
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        return np.dot(beta_.T, Aa)[0, 0] - (self.mu / 2.0) * alpha_sqsum
 
     def lambda_max(self):
         """ Largest eigenvalue of the corresponding covariance matrix.
@@ -157,11 +191,16 @@ class L1TV(interfaces.AtomicFunction,
         """
         A = self.A()
 
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
         a = [0] * len(A)
-        a[0] = (1.0 / self.mu) * A[0].dot(beta)
-        a[1] = (1.0 / self.mu) * A[1].dot(beta)
-        a[2] = (1.0 / self.mu) * A[2].dot(beta)
-        a[3] = (1.0 / self.mu) * A[3].dot(beta)
+        a[0] = (1.0 / self.mu) * A[0].dot(beta_)
+        a[1] = (1.0 / self.mu) * A[1].dot(beta_)
+        a[2] = (1.0 / self.mu) * A[2].dot(beta_)
+        a[3] = (1.0 / self.mu) * A[3].dot(beta_)
         # Remember: lambda and gamma are already in the A matrices.
 
         return self.project(a)

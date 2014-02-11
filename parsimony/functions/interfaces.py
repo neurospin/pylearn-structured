@@ -15,7 +15,7 @@ Created on Mon Apr 22 10:54:29 2013
 import abc
 
 __all__ = ["Function", "AtomicFunction", "CompositeFunction",
-           "Regularisation", "Constraint",
+           "Penalty", "Constraint",
            "ProximalOperator", "ProjectionOperator",
            "CombinedProjectionOperator",
            "Continuation",
@@ -65,19 +65,41 @@ class CompositeFunction(Function):
 #        self.constraints.append(function)
 #
 #    def get_constraints(self):
-#        """Returns the constraint functions for this function. Returns an empty
-#        list if no constraint functions exist.
+#        """Returns the constraint functions for this function. Returns an
+#        empty list if no constraint functions exist.
 #        """
 #        return self.constraints
 
 
-class Regularisation(object):
+class Penalty(object):
+    """Represents the penalisation of a function.
 
+    Penalties must take a parameter penalty_start, with default value 0.
+    Columns, variables or corresponding entities with indices smaller than
+    penalty_start must not be penalised.
+
+    Parameters:
+    ----------
+    penalty_start : The number of columns, variables etc., to except from
+            penalisation. Equivalently, the first index to be penalised.
+            Default is 0, all columns are included.
+    """
     __metaclass__ = abc.ABCMeta
 
 
 class Constraint(object):
+    """Represents a constraint of a function.
 
+    Constraints must take a parameter penalty_start, with default value 0.
+    Columns, variables or corresponding entities with indices smaller than
+    penalty_start must not be penalised.
+
+    Parameters:
+    ----------
+    penalty_start : The number of columns, variables etc., to except from
+            penalisation. Equivalently, the first index to be penalised.
+            Default is 0, all columns are included.
+    """
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod

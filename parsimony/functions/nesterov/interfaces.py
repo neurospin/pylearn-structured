@@ -18,38 +18,40 @@ import parsimony.utils.consts as consts
 __all__ = ["NesterovFunction"]
 
 
-# TODO: We need a superclass for NesterovFunction wrappers.
 class NesterovFunction(object):
-    """
+    """Abstract superclass of Nesterov functions.
+
     Parameters
     ----------
     l : The Lagrange multiplier, or regularisation constant, of the function.
 
-    c : Float. The limit of the constraint. The function is feasible if
-            sqrt(x'Mx) <= c. The default value is c=0, i.e. the default is a
-            regularisation formulation.
-
     A : The linear operator for the Nesterov formulation. May not be None!
 
-    mu: The regularisation constant for the smoothing
+    mu: The regularisation constant for the smoothing.
+
+    penalty_start : The number of columns, variables etc., to except from
+            penalisation. Equivalently, the first index to be penalised.
+            Default is 0, all columns are included.
     """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, l, c=0.0, A=None, mu=consts.TOLERANCE):
+    def __init__(self, l, A=None, mu=consts.TOLERANCE, penalty_start=0):
 
         self.l = float(l)
-        self.c = float(c)
+        if A is None:
+            raise ValueError("The linear operator A must not be None.")
         self._A = A
         self.mu = float(mu)
+        self.penalty_start = int(penalty_start)
 
     def fmu(self, beta, mu=None):
         """Returns the smoothed function value.
 
         Parameters
         ----------
-        beta : A weight vector
+        beta : A weight vector.
 
-        mu : The regularisation constant for the smoothing
+        mu : The regularisation constant for the smoothing.
         """
         if mu is None:
             mu = self.get_mu()
@@ -61,8 +63,12 @@ class NesterovFunction(object):
 
         Aa = self.Aa(alpha)
 
-        return self.l * ((np.dot(beta.T, Aa)[0, 0]
-                          - (mu / 2.0) * alpha_sqsum) - self.c)
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        return self.l * (np.dot(beta_.T, Aa)[0, 0] - (mu / 2.0) * alpha_sqsum)
 
     @abc.abstractmethod
     def phi(self, alpha, beta):
@@ -116,11 +122,16 @@ class NesterovFunction(object):
     def alpha(self, beta):
         """ Dual variable of the Nesterov function.
         """
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
         A = self.A()
         mu = self.get_mu()
         alpha = [0] * len(A)
         for i in xrange(len(A)):
-            alpha[i] = A[i].dot(beta) / mu
+            alpha[i] = A[i].dot(beta_) / mu
 
         # Apply projection
         alpha = self.project(alpha)
