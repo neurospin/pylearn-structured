@@ -24,6 +24,8 @@ __all__ = ["TotalVariation", "A_from_mask", "A_from_shape"]
 
 class TotalVariation(interfaces.AtomicFunction,
                      NesterovFunction,
+                     interfaces.Penalty,
+                     interfaces.Constraint,
                      interfaces.Gradient,
                      interfaces.LipschitzContinuousGradient):
     """The smoothed Total variation (TV) function
@@ -46,11 +48,18 @@ class TotalVariation(interfaces.AtomicFunction,
     A : The linear operator for the Nesterov formulation. May not be None!
 
     mu : The regularisation constant for the smoothing.
-    """
-    def __init__(self, l, c=0.0, A=None, mu=0.0):
 
-        super(TotalVariation, self).__init__(l, c, A, mu)
+    penalty_start : The number of columns, variables etc., to except from
+            penalisation. Equivalently, the first index to be penalised.
+            Default is 0, all columns are included.
+    """
+    def __init__(self, l, c=0.0, A=None, mu=0.0, penalty_start=0):
+
+        super(TotalVariation, self).__init__(l, A=A, mu=mu,
+                                             penalty_start=penalty_start)
         self._p = A[0].shape[1]
+
+        self.c = float(c)
 
         self.reset()
 
@@ -64,10 +73,15 @@ class TotalVariation(interfaces.AtomicFunction,
         if self.l < consts.TOLERANCE:
             return 0.0
 
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
         A = self.A()
-        return self.l * (np.sum(np.sqrt(A[0].dot(beta) ** 2.0 +
-                                        A[1].dot(beta) ** 2.0 +
-                                        A[2].dot(beta) ** 2.0)) - self.c)
+        return self.l * (np.sum(np.sqrt(A[0].dot(beta_) ** 2.0 +
+                                        A[1].dot(beta_) ** 2.0 +
+                                        A[2].dot(beta_) ** 2.0)) - self.c)
 
     def phi(self, alpha, beta):
         """Function value with known alpha.
@@ -83,7 +97,12 @@ class TotalVariation(interfaces.AtomicFunction,
         for a in alpha:
             alpha_sqsum += np.sum(a ** 2.0)
 
-        return self.l * ((np.dot(beta.T, Aa)[0, 0]
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        return self.l * ((np.dot(beta_.T, Aa)[0, 0]
                           - (self.mu / 2.0) * alpha_sqsum) - self.c)
 
     def feasible(self, beta):
@@ -91,10 +110,16 @@ class TotalVariation(interfaces.AtomicFunction,
 
         From the interface "Constraint".
         """
+
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
         A = self.A()
-        val = np.sum(np.sqrt(A[0].dot(beta) ** 2.0 +
-                             A[1].dot(beta) ** 2.0 +
-                             A[2].dot(beta) ** 2.0))
+        val = np.sum(np.sqrt(A[0].dot(beta_) ** 2.0 +
+                             A[1].dot(beta_) ** 2.0 +
+                             A[2].dot(beta_) ** 2.0))
         return val <= self.c
 
     def L(self):
@@ -207,10 +232,15 @@ class TotalVariation(interfaces.AtomicFunction,
     """
     def estimate_mu(self, beta):
 
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
         SS = 0
         A = self.A()
         for i in xrange(len(A)):
-            SS += A[i].dot(beta) ** 2.0
+            SS += A[i].dot(beta_) ** 2.0
 
         return np.max(np.sqrt(SS))
 

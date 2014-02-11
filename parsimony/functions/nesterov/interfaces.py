@@ -21,22 +21,33 @@ __all__ = ["NesterovFunction"]
 class NesterovFunction(object):
     """Abstract superclass of Nesterov functions.
 
-    Parameters
+    Attributes:
     ----------
-    l : The Lagrange multiplier, or regularisation constant, of the function.
+    l : Float. The Lagrange multiplier, or regularisation constant, of the
+            function.
 
-    A : The linear operator for the Nesterov formulation. May not be None!
+    mu : Float. The Nesterov function regularisation constant for the
+            smoothing.
 
-    mu: The regularisation constant for the smoothing.
-
-    penalty_start : The number of columns, variables etc., to except from
-            penalisation. Equivalently, the first index to be penalised.
-            Default is 0, all columns are included.
+    penalty_start : Integer. The first column to penalise.
     """
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, l, A=None, mu=consts.TOLERANCE, penalty_start=0):
+        """
+        Parameters
+        ----------
+        l : The Lagrange multiplier, or regularisation constant, of the
+                function.
 
+        A : The linear operator for the Nesterov formulation. May not be None!
+
+        mu: The regularisation constant for the smoothing.
+
+        penalty_start : The number of columns, variables etc., to except from
+                penalisation. Equivalently, the first index to be penalised.
+                Default is 0, all columns are included.
+        """
         self.l = float(l)
         if A is None:
             raise ValueError("The linear operator A must not be None.")

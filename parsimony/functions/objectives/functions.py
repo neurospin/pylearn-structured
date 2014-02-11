@@ -57,7 +57,6 @@ class RR_L1_TV(interfaces.CompositeFunction,
     mu : Total Variation parameter.
             The regularisation constant for the smoothing.
     """
-
     def __init__(self, X, y, k, l, g, A=None, mu=0.0):
 
         self.X = X

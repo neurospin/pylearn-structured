@@ -23,27 +23,39 @@ import parsimony.start_vectors as start_vectors
 
 import parsimony.datasets.simulated as simulated
 
+from parsimony.functions.objectives import *
+
 #seed = 1
 #np.random.seed(seed)
 
 import parsimony.datasets.simulated.grad as grad
 
 
-n = 5
-p = 100
-from parsimony.functions.penalties import RGCCAConstraint
-import numpy as np
-import matplotlib.pyplot as plot
-np.random.seed(0)
-tau = 0.4
-x = np.random.rand(p, 1) * 8.0 - 4.0
-X = np.random.rand(n, p)
-XtX = np.dot(X.T, X)
-M = tau * np.eye(*XtX.shape) + ((1.0 - tau) / float(X.shape[0] - 1)) * XtX
-c = RGCCAConstraint(c=1.0, tau=tau, X=X, unbiased=True)
-y = c.proj(x)
+np.random.seed(42)
 
-##beta_star = np.random.rand(p, 1)
+eps = 0.01
+maxit = 10000
+
+px = 100
+py = 1
+pz = 1
+p = px * py * pz  # Must be even!
+n = 60
+alpha = 1.0
+Sigma = alpha * np.eye(p, p) + (1.0 - alpha) * np.random.randn(p, p)
+mean = np.zeros(px)
+M = np.random.multivariate_normal(mean, Sigma, n)
+X = np.random.randn(n, p)
+betastar = np.concatenate((np.zeros((p / 2, 1)),
+                           np.random.randn(p / 2, 1)))
+betastar = np.sort(np.abs(betastar), axis=0)
+y = np.dot(X, betastar)
+
+rr = RR_L1_TV(X, y, k, l, g, A=None, mu=0.0)
+
+
+
+#beta_star = np.random.rand(p, 1)
 #px = 30
 #py = 20
 #w_star = np.vstack((np.zeros((int(px / 3.0), 1)),

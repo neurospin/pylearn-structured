@@ -23,19 +23,35 @@ __all__ = ["GroupLassoOverlap", "A_from_groups"]
 
 class GroupLassoOverlap(interfaces.AtomicFunction,
                         NesterovFunction,
+                        interfaces.Penalty,
+                        interfaces.Constraint,
                         interfaces.Gradient,
                         interfaces.LipschitzContinuousGradient):
+    """Group L1-L2 function, with overlapping groups. Represents the
+    function
 
-    def __init__(self, l, c=0.0, A=None, mu=0.0):
-        """Group L1-L2 function, with overlapping groups. Represents the
-        function
+        GL(x) = l * (\sum_{g=1}^G \|x_g\|_2 - c),
 
-            GL(x) = l * (\sum_{g=1}^G \|x_g\|_2 - c),
+    where \|.\|_2 is the L2-norm. The coinstrained version has the form
 
-        where \|.\|_2 is the L2-norm. The coinstrained version has the form
+        GL(x) <= c.
 
-            GL(x) <= c.
+    Attributes:
+    ----------
+    l : Float. The Lagrange multiplier, or regularisation constant, of the
+            function.
 
+    c : The limit of the constraint. The function is feasible if
+            GL(\beta) <= c. The default value is c=0, i.e. the default is a
+            regularised formulation.
+
+    mu : Float. The Nesterov function regularisation constant for the
+            smoothing.
+
+    penalty_start : Integer. The first column to penalise.
+    """
+    def __init__(self, l, c=0.0, A=None, mu=0.0, penalty_start=0):
+        """
         Parameters:
         ----------
         l : The Lagrange multiplier, or regularisation constant, of the
@@ -49,8 +65,15 @@ class GroupLassoOverlap(interfaces.AtomicFunction,
                 formulation. May not be None!
 
         mu : The Nesterov function regularisation constant for the smoothing.
+
+        penalty_start : The number of columns, variables etc., to except from
+                penalisation. Equivalently, the first index to be penalised.
+                Default is 0, all columns are included.
         """
-        super(GroupLassoOverlap, self).__init__(l, c, A, mu)
+        super(GroupLassoOverlap, self).__init__(l, A=A, mu=mu,
+                                                penalty_start=penalty_start)
+
+        self.c = float(c)
 
         self.reset()
 
@@ -67,10 +90,15 @@ class GroupLassoOverlap(interfaces.AtomicFunction,
 #        alpha = self.alpha(beta)
 #        return self.phi(alpha, beta)
 
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
         A = self.A()
         normsum = 0.0
         for Ag in A:
-            normsum += maths.norm(Ag.dot(beta))
+            normsum += maths.norm(Ag.dot(beta_))
 
         return self.l * (normsum - self.c)
 
@@ -88,7 +116,12 @@ class GroupLassoOverlap(interfaces.AtomicFunction,
         for a in alpha:
             alpha_sqsum += np.sum(a ** 2.0)
 
-        return self.l * ((np.dot(beta.T, Aa)[0, 0]
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        return self.l * ((np.dot(beta_.T, Aa)[0, 0]
                           - (self.mu / 2.0) * alpha_sqsum) - self.c)
 
     def feasible(self, beta):
@@ -96,10 +129,15 @@ class GroupLassoOverlap(interfaces.AtomicFunction,
 
         From the interface "Constraint".
         """
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
         A = self.A()
         normsum = 0.0
         for Ag in A:
-            normsum += maths.norm(Ag.dot(beta))
+            normsum += maths.norm(Ag.dot(beta_))
 
         return normsum <= self.c
 
@@ -165,10 +203,15 @@ class GroupLassoOverlap(interfaces.AtomicFunction,
     """
     def estimate_mu(self, beta):
 
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
         SS = 0
         A = self.A()
         for i in xrange(len(A)):
-            SS += A[i].dot(beta) ** 2.0
+            SS += A[i].dot(beta_) ** 2.0
 
         return np.max(np.sqrt(SS))
 
@@ -179,7 +222,8 @@ def A_from_groups(num_variables, groups, weights=None):
 
     Parameters:
     ----------
-    num_variables : Integer. The total number of variables.
+    num_variables : Integer. The total number of variables, not including the
+            intercept variable(s).
 
     groups : A list of lists. The outer list represents the groups and the
             inner lists represent the variables in the groups. E.g. [[1, 2],
