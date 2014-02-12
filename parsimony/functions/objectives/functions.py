@@ -35,34 +35,34 @@ class RR_L1_TV(interfaces.CompositeFunction,
                interfaces.Continuation,
                interfaces.DualFunction):
     """Combination (sum) of RidgeRegression, L1 and TotalVariation
-
-    Parameters
-    ----------
-    X : Numpy array. The X matrix for the ridge regression.
-
-    y : Numpy array. The y vector for the ridge regression.
-
-    k : Non-negative float. The Lagrange multiplier, or regularisation
-            constant, for the ridge penalty.
-
-    l : Non-negative float. The Lagrange multiplier, or regularisation
-            constant, for the L1 penalty.
-
-    g : Non-negative float. The Lagrange multiplier, or regularisation
-            constant, of the smoothed TV function.
-
-    A : A (usually sparse) matrix. The linear operator for the Nesterov
-            formulation of TV. May not be None!
-
-    mu : Non-negative float. The regularisation constant for the smoothing of
-            the TV function.
-
-    penalty_start : The number of columns, variables etc., to except from
-            penalisation. Equivalently, the first index to be penalised.
-            Default is 0, all columns are included.
     """
     def __init__(self, X, y, k, l, g, A=None, mu=0.0, penalty_start=0):
+        """
+        Parameters:
+        ----------
+        X : Numpy array. The X matrix for the ridge regression.
 
+        y : Numpy array. The y vector for the ridge regression.
+
+        k : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, for the ridge penalty.
+
+        l : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, for the L1 penalty.
+
+        g : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, of the smoothed TV function.
+
+        A : Numpy array (usually sparse). The linear operator for the Nesterov
+                formulation of TV. May not be None!
+
+        mu : Non-negative float. The regularisation constant for the smoothing
+                of the TV function.
+
+        penalty_start : Non-negative integer. The number of columns, variables
+                etc., to except from penalisation. Equivalently, the first
+                index to be penalised. Default is 0, all columns are included.
+        """
         self.X = X
         self.y = y
 
@@ -101,14 +101,15 @@ class RR_L1_TV(interfaces.CompositeFunction,
 
         From the interface "NesterovFunction".
 
-        Parameters
+        Parameters:
         ----------
-        mu: The regularisation constant for the smoothing to use from now on.
+        mu : Non-negative float. The regularisation constant for the smoothing
+                to use from now on.
 
-        Returns
+        Returns:
         -------
-        old_mu: The old regularisation constant for the smoothing that was
-                overwritten and is no longer used.
+        old_mu : Non-negative float. The old regularisation constant for the
+                smoothing that was overwritten and is no longer used.
         """
         return self.tv.set_mu(mu)
 
@@ -303,34 +304,38 @@ class RR_L1_TV(interfaces.CompositeFunction,
 
 
 class RLR_L1_TV(RR_L1_TV):
-    """Combination (sum) of RidgeLogisticRegression, L1 and TotalVariation
-
-    Parameters
-    ----------
-    X : Numpy array. The X matrix for the ridge regression.
-
-    y : Numpy array. The y vector for the ridge regression.
-
-    k : Non-negative float. The Lagrange multiplier, or regularisation
-            constant, for the ridge penalty.
-
-    l : Non-negative float. The Lagrange multiplier, or regularisation
-            constant, for the L1 penalty.
-
-    g : Non-negative float. The Lagrange multiplier, or regularisation
-            constant, of the smoothed TV function.
-
-    A : A (usually sparse) matrix. The linear operator for the Nesterov
-            formulation for TV. May not be None!
-
-    mu : Non-negative float. The regularisation constant for the smoothing of
-            the TV function.
-
-    weights: List with n elements (X is n-by-p). The sample's weights.
+    """Combination (sum) of RidgeLogisticRegression, L1 and TotalVariation.
     """
     def __init__(self, X, y, k, l, g, A=None, mu=0.0, weights=None,
                  penalty_start=0):
+        """
+        Parameters
+        ----------
+        X : Numpy array. The X matrix (n-by-p) for the logistic regression.
 
+        y : Numpy array. The y vector for the logistic regression.
+
+        k : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, for the ridge penalty.
+
+        l : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, for the L1 penalty.
+
+        g : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, of the smoothed TV function.
+
+        A : Numpy array (usually sparse). The linear operator for the Nesterov
+                formulation for TV. May not be None!
+
+        mu : Non-negative float. The regularisation constant for the smoothing
+                of the TV function.
+
+        weights: List with n elements. The sample's weights.
+
+        penalty_start : Non-negative integer. The number of columns, variables
+                etc., to except from penalisation. Equivalently, the first
+                index to be penalised. Default is 0, all columns are included.
+        """
         self.X = X
         self.y = y
 
@@ -343,30 +348,34 @@ class RLR_L1_TV(RR_L1_TV):
 
 class RR_L1_GL(RR_L1_TV):
     """Combination (sum) of RidgeRegression, L1 and Overlapping Group Lasso.
-
-    Parameters
-    ----------
-    X : Numpy array. The X matrix for the ridge regression.
-
-    y : Numpy array. The y vector for the ridge regression.
-
-    k : Non-negative float. The Lagrange multiplier, or regularisation
-            constant, for the ridge penalty.
-
-    l : Non-negative float. The Lagrange multiplier, or regularisation
-            constant, for the L1 penalty.
-
-    g : Non-negative float. The Lagrange multiplier, or regularisation
-            constant, of the overlapping group L1-L2 function.
-
-    A : A (usually sparse) matrix. The linear operator for the Nesterov
-            formulation for group L1-L2. May not be None!
-
-    mu : Non-negative float. The regularisation constant for the smoothing of
-            the overlapping group L1-L2 function.
     """
     def __init__(self, X, y, k, l, g, A=None, mu=0.0, penalty_start=0):
+        """
+        Parameters:
+        ----------
+        X : Numpy array (n-by-p). The X matrix for the ridge regression.
 
+        y : Numpy array (n-by-1). The y vector for the ridge regression.
+
+        k : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, for the ridge penalty.
+
+        l : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, for the L1 penalty.
+
+        g : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, of the overlapping group L1-L2 function.
+
+        A : Numpy array (usually sparse). The linear operator for the Nesterov
+                formulation for group L1-L2. May not be None!
+
+        mu : Non-negative float. The regularisation constant for the smoothing
+                of the overlapping group L1-L2 function.
+
+        penalty_start : Non-negative integer. The number of columns, variables
+                etc., to except from penalisation. Equivalently, the first
+                index to be penalised. Default is 0, all columns are included.
+        """
         self.X = X
         self.y = y
 
@@ -406,14 +415,15 @@ class RR_L1_GL(RR_L1_TV):
 
         From the interface "NesterovFunction".
 
-        Parameters
+        Parameters:
         ----------
-        mu: The regularisation constant for the smoothing to use from now on.
+        mu : Non-negative float. The regularisation constant for the smoothing
+                to use from now on.
 
-        Returns
+        Returns:
         -------
-        old_mu: The old regularisation constant for the smoothing that was
-                overwritten and is no longer used.
+        old_mu : Non-negative float. The old regularisation constant for the
+                smoothing that was overwritten and is no longer used.
         """
         return self.gl.set_mu(mu)
 
@@ -608,12 +618,10 @@ class RR_L1_GL(RR_L1_TV):
 
 
 class RR_SmoothedL1TV(interfaces.CompositeFunction,
-                      nesterov_interfaces.NesterovFunction,
-                      interfaces.Gradient,
                       interfaces.LipschitzContinuousGradient,
                       interfaces.GradientMap,
                       interfaces.DualFunction,
-                      interfaces.ProximalOperator):
+                      nesterov_interfaces.NesterovFunction):
     """
     Parameters
     ----------
@@ -630,14 +638,18 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
     g : Non-negative float. The Lagrange multiplier, or regularisation
             constant, of the TV function.
 
-    Atv : A (usually sparse) matrix. The linear operator for the Nesterov
+    Atv : Numpy array (usually sparse). The linear operator for the Nesterov
             formulation of the smoothed TV function. May not be None!
 
-    Al1 : A (usually sparse) matrix. The linear operator for the Nesterov
+    Al1 : Numpy array (usually sparse). The linear operator for the Nesterov
             formulation of the smoothed L1 function. May not be None!
 
     mu : Non-negative float. The regularisation constant for the smoothing of
             the TV function.
+
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to except from penalisation. Equivalently, the first index
+            to be penalised. Default is 0, all columns are included.
     """
     def __init__(self, X, y, k, l, g, Atv=None, Al1=None, mu=0.0,
                  penalty_start=0):
@@ -649,7 +661,9 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
         self.h = L1TV(l, g, Atv=Atv, Al1=Al1, mu=mu,
                       penalty_start=penalty_start)
 
-        self.mu = mu
+        self.penalty_start = int(penalty_start)
+
+        self.mu = float(mu)
 
         self.reset()
 
@@ -681,14 +695,15 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
 
         From the interface "NesterovFunction".
 
-        Parameters
+        Parameters:
         ----------
-        mu: The regularisation constant for the smoothing to use from now on.
+        mu : Non-negative float. The regularisation constant for the smoothing
+                to use from now on.
 
-        Returns
+        Returns:
         -------
-        old_mu: The old regularisation constant for the smoothing that was
-                overwritten and is no longer used.
+        old_mu : Non-negative float. The old regularisation constant for the
+                smoothing that was overwritten and is no longer used.
         """
         return self.h.set_mu(mu)
 
@@ -704,13 +719,6 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
         return self.g.f(beta) \
              + self.h.phi(alpha, beta)
 
-    def grad(self, beta):
-        """Gradient of the differentiable part of the function.
-
-        From the interface "Gradient".
-        """
-        return self.h.grad(beta)
-
     def L(self):
         """Lipschitz constant of the gradient.
 
@@ -722,25 +730,22 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
 
         return a / b
 
-    def prox(self, beta, factor=1.0):
-        """The proximal operator of the non-differentiable part of the
-        function.
-
-        From the interface "ProximalOperator".
-        """
-        return beta
-
     def V(self, u, beta, L):
         """The gradient map associated to the function.
 
         From the interface "GradientMap".
         """
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
         A = self.h.A()
         a = [0] * len(A)
-        a[0] = (1.0 / L) * A[0].dot(beta)
-        a[1] = (1.0 / L) * A[1].dot(beta)
-        a[2] = (1.0 / L) * A[2].dot(beta)
-        a[3] = (1.0 / L) * A[3].dot(beta)
+        a[0] = (1.0 / L) * A[0].dot(beta_)
+        a[1] = (1.0 / L) * A[1].dot(beta_)
+        a[2] = (1.0 / L) * A[2].dot(beta_)
+        a[3] = (1.0 / L) * A[3].dot(beta_)
 
         u_new = [0] * len(u)
         for i in xrange(len(u)):
@@ -760,6 +765,9 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
         grad += A[1].T.dot(alpha[1])
         grad += A[2].T.dot(alpha[2])
         grad += A[3].T.dot(alpha[3])
+
+        if self.penalty_start > 0:
+            grad = np.vstack((np.zeros((self.penalty_start, 1)), grad))
 
 #        XXkI = np.dot(X.T, X) + self.g.k * np.eye(X.shape[1])
 

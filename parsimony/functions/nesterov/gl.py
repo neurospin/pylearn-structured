@@ -38,37 +38,40 @@ class GroupLassoOverlap(interfaces.AtomicFunction,
 
     Attributes:
     ----------
-    l : Float. The Lagrange multiplier, or regularisation constant, of the
-            function.
+    l : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the function.
 
-    c : The limit of the constraint. The function is feasible if
+    c : Float. The limit of the constraint. The function is feasible if
             GL(\beta) <= c. The default value is c=0, i.e. the default is a
             regularised formulation.
 
     mu : Float. The Nesterov function regularisation constant for the
             smoothing.
 
-    penalty_start : Integer. The first column to penalise.
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to except from penalisation. Equivalently, the first index
+            to be penalised. Default is 0, all columns are included.
     """
     def __init__(self, l, c=0.0, A=None, mu=0.0, penalty_start=0):
         """
         Parameters:
         ----------
-        l : The Lagrange multiplier, or regularisation constant, of the
-                function.
+        l : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, of the function.
 
-        c : The limit of the constraint. The function is feasible if
-                GL(\beta) <= c. The default value is c=0, i.e. the default is a
-                regularised formulation.
+        c : Float. The limit of the constraint. The function is feasible if
+                GL(\beta) <= c. The default value is c=0, i.e. the default is
+                a regularised formulation.
 
-        A : A (usually sparse) matrix. The linear operator for the Nesterov
-                formulation. May not be None!
+        A : Numpy array. A (usually sparse) matrix. The linear operator for
+                the Nesterov formulation. May not be None!
 
-        mu : The Nesterov function regularisation constant for the smoothing.
+        mu : Float. The Nesterov function regularisation constant for the
+                smoothing.
 
-        penalty_start : The number of columns, variables etc., to except from
-                penalisation. Equivalently, the first index to be penalised.
-                Default is 0, all columns are included.
+        penalty_start : Non-negative integer. The number of columns, variables
+                etc., to except from penalisation. Equivalently, the first
+                index to be penalised. Default is 0, all columns are included.
         """
         super(GroupLassoOverlap, self).__init__(l, A=A, mu=mu,
                                                 penalty_start=penalty_start)
@@ -230,7 +233,7 @@ def A_from_groups(num_variables, groups, weights=None):
             [2, 3]] contains two groups ([1, 2] and [2, 3]) with variable 1 and
             2 in the first group and variables 2 and 3 in the second group.
 
-    weights : A list. Weights put on the groups. Default is weight 1 for each
+    weights : List. Weights put on the groups. Default is weight 1 for each
             group.
     """
     if weights is None:

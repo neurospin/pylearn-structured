@@ -23,13 +23,15 @@ class NesterovFunction(object):
 
     Attributes:
     ----------
-    l : Float. The Lagrange multiplier, or regularisation constant, of the
-            function.
+    l : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the function.
 
-    mu : Float. The Nesterov function regularisation constant for the
-            smoothing.
+    mu : Non-negative float. The Nesterov function regularisation constant for
+            the smoothing.
 
-    penalty_start : Integer. The first column to penalise.
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to except from penalisation. Equivalently, the first index
+            to be penalised. Default is 0, all columns are included.
     """
     __metaclass__ = abc.ABCMeta
 
@@ -37,16 +39,17 @@ class NesterovFunction(object):
         """
         Parameters
         ----------
-        l : The Lagrange multiplier, or regularisation constant, of the
-                function.
+        l : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, of the function.
 
-        A : The linear operator for the Nesterov formulation. May not be None!
+        A : A (usually sparse) array. The linear operator for the Nesterov
+                formulation. May not be None!
 
-        mu: The regularisation constant for the smoothing.
+        mu: Non-negative float. The regularisation constant for the smoothing.
 
-        penalty_start : The number of columns, variables etc., to except from
-                penalisation. Equivalently, the first index to be penalised.
-                Default is 0, all columns are included.
+        penalty_start : Non-negative integer. The number of columns, variables
+                etc., to except from penalisation. Equivalently, the first
+                index to be penalised. Default is 0, all columns are included.
         """
         self.l = float(l)
         if A is None:
@@ -60,9 +63,9 @@ class NesterovFunction(object):
 
         Parameters
         ----------
-        beta : A weight vector.
+        beta : Numpy array. A weight vector.
 
-        mu : The regularisation constant for the smoothing.
+        mu : Non-negative float. The regularisation constant for the smoothing.
         """
         if mu is None:
             mu = self.get_mu()
@@ -93,7 +96,7 @@ class NesterovFunction(object):
 
         Parameters
         ----------
-        beta : The point at which to evaluate the gradient.
+        beta : Numpy array. The point at which to evaluate the gradient.
         """
         if self.l < consts.TOLERANCE:
             return 0.0
@@ -122,12 +125,13 @@ class NesterovFunction(object):
 
         Parameters
         ----------
-        mu: The regularisation constant for the smoothing to use from now on.
+        mu : Non-negative float. The regularisation constant for the smoothing
+                to use from now on.
 
         Returns
         -------
-        old_mu: The old regularisation constant for the smoothing that was
-                overwritten and is no longer used.
+        old_mu : Non-negative float. The old regularisation constant for the
+                smoothing that was overwritten and is no longer used.
         """
         old_mu = self.get_mu()
 

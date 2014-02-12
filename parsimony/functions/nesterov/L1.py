@@ -10,7 +10,6 @@ Created on Mon Feb  3 17:00:56 2014
 @email:   lofstedt.tommy@gmail.com, edouard.duchesnay@cea.fr
 @license: BSD 3-clause.
 """
-import scipy.sparse as sparse
 import numpy as np
 
 import parsimony.functions.interfaces as interfaces
@@ -36,21 +35,23 @@ class L1(interfaces.AtomicFunction,
 
         L1mu(\beta) <= c.
 
-    Parameters
+    Parameters:
     ----------
-    l : The Lagrange multiplier, or regularisation constant, of the function.
+    l : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the function.
 
-    c : The limit of the constraint. The function is feasible if
+    c : Float. The limit of the constraint. The function is feasible if
             ||\beta||_1 <= c. The default value is c=0, i.e. the default is a
             regularisation formulation.
 
-    A : The linear operator for the Nesterov formulation. May not be None.
+    A : A (usually sparse) matrix. The linear operator for the Nesterov
+            formulation. May not be None.
 
-    mu : The regularisation constant for the smoothing.
+    mu : Non-negative float. The regularisation constant for the smoothing.
 
-    penalty_start : The number of columns, variables etc., to except from
-            penalisation. Equivalently, the first index to be penalised.
-            Default is 0, all columns are included.
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to except from penalisation. Equivalently, the first index
+            to be penalised. Default is 0, all columns are included.
     """
     def __init__(self, l, c=0.0, A=None, mu=0.0, penalty_start=0):
 
@@ -74,7 +75,7 @@ class L1(interfaces.AtomicFunction,
     def fmu(self, beta, mu=None):
         """Returns the smoothed function value.
 
-        Parameters
+        Parameters:
         ----------
         beta : A weight vector.
 

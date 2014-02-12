@@ -42,15 +42,16 @@ class L1(interfaces.AtomicFunction,
 
     Parameters:
     ----------
-    l : The Lagrange multiplier, or regularisation constant, of the function.
+    l : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the function.
 
-    c : The limit of the constraint. The function is feasible if
+    c : Float. The limit of the constraint. The function is feasible if
             ||\beta||_1 <= c. The default value is c=0, i.e. the default is a
             regularisation formulation.
 
-    penalty_start : The number of columns, variables etc., to except from
-            penalisation. Equivalently, the first index to be penalised.
-            Default is 0, all columns are included.
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to except from penalisation. Equivalently, the first index
+            to be penalised. Default is 0, all columns are included.
     """
     def __init__(self, l=1.0, c=0.0, penalty_start=0):
 
@@ -147,22 +148,22 @@ class QuadraticConstraint(interfaces.AtomicFunction,
 
     Parameters:
     ----------
-    l : Float. The Lagrange multiplier, or regularisation constant, of the
-            function.
+    l : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the function.
 
     c : Float. The limit of the constraint. The function is feasible if
             x'Mx <= c. The default value is c=0, i.e. the default is a
             regularisation formulation.
 
-    M : Array. The given positive definite matrix. It is assumed that the
-            first penalty_start columns must be excluded.
-
-    N : Array. The second matrix if two factors are given. It is assumed that
+    M : Numpy array. The given positive definite matrix. It is assumed that
             the first penalty_start columns must be excluded.
 
-    penalty_start : The number of columns, variables etc., to except from
-            penalisation. Equivalently, the first index to be penalised.
-            Default is 0, all columns are included.
+    N : Numpy array. The second matrix if two factors are given. It is assumed
+            that the first penalty_start columns must be excluded.
+
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to except from penalisation. Equivalently, the first index
+            to be penalised. Default is 0, all columns are included.
     """
     def __init__(self, l=1.0, c=0.0, M=None, N=None, penalty_start=0):
 
@@ -243,20 +244,21 @@ class RGCCAConstraint(QuadraticConstraint,
 
     Parameters:
     ----------
-    l : Float. The Lagrange multiplier, or regularisation constant, of the
-            function.
+    l : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the function.
 
     c : Float. The limit of the constraint. The function is feasible if
             x'(\tau * I + ((1 - \tau) / n) * X'X)x <= c. The default value is
             c=0, i.e. the default is a regularisation formulation.
 
-    tau : Float. Given regularisation constant
+    tau : Non-negative float. The regularisation constant.
 
-    unbiased : Boolean.
+    unbiased : Boolean. Whether the sample variance should be unbiased or not.
+            Default is unbiased.
 
-    penalty_start : The number of columns, variables etc., to except from
-            penalisation. Equivalently, the first index to be penalised.
-            Default is 0, all columns are included.
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to except from penalisation. Equivalently, the first index
+            to be penalised. Default is 0, all columns are included.
     """
     def __init__(self, l=1.0, c=0.0, tau=1.0, X=None, unbiased=True,
                  penalty_start=0):
@@ -267,7 +269,7 @@ class RGCCAConstraint(QuadraticConstraint,
         if penalty_start > 0:
             self.X = X[:, penalty_start:]  # NOTE! We slice X here!
         else:
-            self.X = X  # NOTE! We slice X here!
+            self.X = X
         self.unbiased = unbiased
         self.penalty_start = penalty_start
 
@@ -551,7 +553,7 @@ class SufficientDescentCondition(interfaces.Function,
 
         Parameters:
         ----------
-        c : Float. 0 < c < 1. A constant for the condition. Should be small.
+        c : Float, 0 < c < 1. A constant for the condition. Should be small.
         """
         self.function = function
         self.p = p

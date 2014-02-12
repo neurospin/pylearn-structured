@@ -28,26 +28,25 @@ class L1TV(interfaces.AtomicFunction,
            interfaces.Penalty,
            interfaces.Eigenvalues):
     """
-    Parameters
+    Parameters:
     ----------
-    l : L1 parameter.
-            The Lagrange multiplier, or regularisation constant, of the
-            function.
+    l : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the smoothed L1 part of the function.
 
-    g : Total Variation parameter
-            The Lagrange multiplier, or regularisation constant, of the
-            function.
+    g : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the smoothed total variation part of the function.
 
-    Atv : The linear operator for the total variation Nesterov function. May
-            not be None.
+    Atv : A (usually sparse) matrix. The linear operator for the smoothed total
+            variation part. May not be None.
 
-    Al1 : The linear operator for the L1 Nesterov function. May not be None.
+    Al1 : A (usually sparse) matrix. The linear operator for the smoothed L1
+            part. May not be None.
 
-    mu: The regularisation constant for the smoothing.
+    mu : Non-negative float. The regularisation constant for the smoothing.
 
-    penalty_start : The number of columns, variables etc., to except from
-            penalisation. Equivalently, the first index to be penalised.
-            Default is 0, all columns are included.
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to except from penalisation. Equivalently, the first index
+            to be penalised. Default is 0, all columns are included.
     """
     def __init__(self, l, g, Atv=None, Al1=None, mu=0.0, penalty_start=0):
 
@@ -89,11 +88,11 @@ class L1TV(interfaces.AtomicFunction,
     def fmu(self, beta, mu=None):
         """Returns the smoothed function value.
 
-        Parameters
+        Parameters:
         ----------
-        beta : A weight vector.
+        beta : Numpy array. The weight vector.
 
-        mu : The regularisation constant for the smoothing.
+        mu : Non-negative float. The regularisation constant for the smoothing.
         """
         if mu is None:
             mu = self.get_mu()
@@ -127,30 +126,6 @@ class L1TV(interfaces.AtomicFunction,
             beta_ = beta
 
         return np.dot(beta_.T, Aa)[0, 0] - (self.mu / 2.0) * alpha_sqsum
-
-    def grad(self, beta):
-        """ Gradient of the function at beta.
-
-        Parameters
-        ----------
-        beta : Numpy array. The point at which to evaluate the gradient.
-        """
-        if self.l < consts.TOLERANCE and self.g < consts.TOLERANCE:
-            return 0.0
-
-        # Note that \beta need not be sliced here.
-        alpha = self.alpha(beta)
-
-        if self.penalty_start > 0:
-            grad = np.vstack((np.zeros((self.penalty_start, 1)),
-                              self.Aa(alpha)))
-        else:
-            grad = self.Aa(alpha)
-
-#        approx_grad = utils.approx_grad(self.f, beta, eps=1e-6)
-#        print "NesterovFunction:", maths.norm(grad - approx_grad)
-
-        return grad
 
     def lambda_max(self):
         """ Largest eigenvalue of the corresponding covariance matrix.

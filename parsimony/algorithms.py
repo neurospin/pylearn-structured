@@ -368,7 +368,7 @@ class ISTA(ExplicitAlgorithm):
         ----------
         function : The function to minimise.
 
-        beta : A start vector.
+        beta : The start vector.
         """
         self.check_compatibility(function, self.INTERFACES)
 
@@ -722,16 +722,6 @@ class DynamicCONESTA(CONESTA):
 
 class ExcessiveGapMethod(ExplicitAlgorithm):
     """Nesterov's excessive gap method for strongly convex functions.
-
-    Parameters
-    ----------
-    output : Boolean. Get output information
-
-    eps : Float. Tolerance
-
-    max_iter : Maximum allowed number of iterations.
-
-    min_iter : Minimum allowed number of iterations.
     """
     INTERFACES = [NesterovFunction,
                   interfaces.LipschitzContinuousGradient,
@@ -742,7 +732,17 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
     def __init__(self, output=False,
                  eps=consts.TOLERANCE,
                  max_iter=consts.MAX_ITER, min_iter=1):
+        """
+        Parameters
+        ----------
+        output : Boolean. Get output information
 
+        eps : Float. Tolerance
+
+        max_iter : Maximum allowed number of iterations.
+
+        min_iter : Minimum allowed number of iterations.
+        """
         self.output = output
         self.eps = eps
         self.max_iter = max_iter
@@ -757,7 +757,8 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
                 is the strongly convex part and function.h is the smoothed part
                 of the function.
 
-        beta : Regression coefficient vector
+        beta : The start vector. This is normally not given, but left None.
+                The start vector is computed by the algorithm.
         """
         A = function.h.A()
 
@@ -770,7 +771,10 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
 
         mu = [2.0 * L]
         function.h.set_mu(mu)
-        beta0 = function.betahat(u)  # u is zero here
+        if beta is not None:
+            beta0 = beta
+        else:
+            beta0 = function.betahat(u)  # u is zero here
         beta = beta0
         alpha = function.V(u, beta, L)  # u is zero here
 

@@ -36,25 +36,27 @@ class TotalVariation(interfaces.AtomicFunction,
     form
 
         TV(\beta) <= c.
-
-    Parameters
-    ----------
-    l : The Lagrange multiplier, or regularisation constant, of the function.
-
-    c : The limit of the constraint. The function is feasible if
-            TV(\beta) <= c. The default value is c=0, i.e. the default is a
-            regularisation formulation.
-
-    A : The linear operator for the Nesterov formulation. May not be None!
-
-    mu : The regularisation constant for the smoothing.
-
-    penalty_start : The number of columns, variables etc., to except from
-            penalisation. Equivalently, the first index to be penalised.
-            Default is 0, all columns are included.
     """
     def __init__(self, l, c=0.0, A=None, mu=0.0, penalty_start=0):
+        """
+        Parameters:
+        ----------
+        l : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, of the function.
 
+        c : Float. The limit of the constraint. The function is feasible if
+                TV(\beta) <= c. The default value is c=0, i.e. the default is a
+                regularisation formulation.
+
+        A : Numpy array (usually sparse). The linear operator for the Nesterov
+                formulation. May not be None!
+
+        mu : Non-negative float. The regularisation constant for the smoothing.
+
+        penalty_start : Non-negative integer. The number of columns, variables
+                etc., to except from penalisation. Equivalently, the first
+                index to be penalised. Default is 0, all columns are included.
+        """
         super(TotalVariation, self).__init__(l, A=A, mu=mu,
                                              penalty_start=penalty_start)
         self._p = A[0].shape[1]
@@ -226,12 +228,11 @@ class TotalVariation(interfaces.AtomicFunction,
         """
         return self._A[0].shape[0] / 2.0
 
-    """ Computes a "good" value of \mu with respect to the given \beta.
-
-    From the interface "NesterovFunction".
-    """
     def estimate_mu(self, beta):
+        """ Computes a "good" value of \mu with respect to the given \beta.
 
+        From the interface "NesterovFunction".
+        """
         if self.penalty_start > 0:
             beta_ = beta[self.penalty_start:, :]
         else:

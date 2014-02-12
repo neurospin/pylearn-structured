@@ -58,6 +58,10 @@ betastar = np.sort(np.abs(betastar), axis=0)
 betastar = np.concatenate((np.random.rand(1, 1), betastar))
 
 y = np.dot(X, betastar)
+m = np.mean(y)
+y[y < m] = 0.0
+y[y >= m] = 1.0
+print y
 
 A, n_compacts = tv.A_from_shape(shape)
 #A = gl.A_from_groups(px, [range(0, int(px / 2.0)),
@@ -85,12 +89,14 @@ beta_start = beta_start.get_vector((p, 1))
 
 
 #rr = RR_L1_GL(X, y, k, l, g, A=A, mu=mu, penalty_start=1)
-rr = RR_SmoothedL1TV(X, y, k, l, g, Atv=A, Al1=Al1, mu=mu,
-                     penalty_start=1)
+#rr = RR_SmoothedL1TV(X, y, k, l, g, Atv=A, Al1=Al1, mu=mu,
+#                     penalty_start=1)
+rr = RLR_L1_TV(X, y, k, l, g, A=A, mu=mu, weights=None, penalty_start=1)
 
 print maths.norm(betastar - beta_start)
 
 ista = algorithms.ISTA(output=True, max_iter=maxit)
+#ista = algorithms.ExcessiveGapMethod(output=True, max_iter=maxit)
 t = time.time()
 beta, output = ista(rr, beta_start)
 #print time.time() - t
@@ -100,12 +106,14 @@ print maths.norm(betastar - beta)
 
 
 #rr = RR_L1_GL(X, y, k, l, g=0.9, A=A, mu=mu, penalty_start=1)
-rr = RR_SmoothedL1TV(X, y, k, l, g=0.9, Atv=A, Al1=Al1,
-                     mu=mu, penalty_start=1)
+#rr = RR_SmoothedL1TV(X, y, k, l, g=0.9, Atv=A, Al1=Al1,
+#                     mu=mu, penalty_start=1)
+rr = RLR_L1_TV(X, y, k, l, g=0.9, A=A, mu=mu, weights=None, penalty_start=1)
 
 print maths.norm(betastar - beta_start)
 
 ista = algorithms.ISTA(output=True, max_iter=maxit)
+#ista = algorithms.ExcessiveGapMethod(output=True, max_iter=maxit)
 t = time.time()
 beta, output = ista(rr, beta_start)
 #print time.time() - t
