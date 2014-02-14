@@ -21,21 +21,31 @@
 
 250: # TODO: Use module for this!
 
-346: # TODO: We should use a step size here instead of the
-347: # Lipschitz constant. All functions don't have L, but will
-348: # still run in FISTA with a small enough step size.
-349: # Updated: Use StepSise instead!!
+335: # TODO: We should use a step size here instead of the
+336: # Lipschitz constant. All functions don't have L, but will
+337: # still run in FISTA with a small enough step size.
+338: # Updated: Use StepSize instead!!
 
-492: # TODO: We should use a step size here instead of the
-493: # Lipschitz constant. All functions don't have L, but will
-494: # still run in FISTA with a small enough step size.
-495: # Updated: Use StepSize instead!!
+382: # TODO: Change the functions so that we can use the StepSize API here.
 
-657: # TODO: Warn if G_new < 0.
+509: # TODO: We should use a step size here instead of the
+510: # Lipschitz constant. All functions don't have L, but will
+511: # still run in FISTA with a small enough step size.
+512: # Updated: Use StepSize instead!!
 
-902: # TODO: Include min_iter!
+540: # TODO: Change the functions so that we can use the StepSize API here.
 
-994: for it in xrange(self.outer_iter):  # TODO: Get number of iterations!
+652: # TODO: Use StepSize instead.
+
+670: # TODO: Use StepSize instead.
+
+700: # TODO: Warn if G_new < 0.
+
+1132: for it in xrange(self.outer_iter):  # TODO: Get number of iterations!
+
+./parsimony/utils/utils.py:
+--------------------------
+77: # TODO: Should this one be in functions.interfaces.Gradient instead?
 
 ./parsimony/utils/consts.py:
 ---------------------------
@@ -46,61 +56,68 @@
 ------------------------------------------------
 9: # TODO: Remove dependence on scikit learn.
 
-./parsimony/functions/objectives.py:
+./parsimony/functions/interfaces.py:
 -----------------------------------
-149: # TODO: Make the weights sparse.
-150: #weights = np.eye(self.X.shape[0])
+172: # TODO: This should be in the NesterovFunction interface, right?
 
-206: PWX = 0.5 * np.sqrt(self.weights) * self.X  # TODO: CHECK WITH FOUAD
-207: # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
-208: #PW = 0.5 * np.sqrt(self.W)
-209: #PWX = np.dot(PW, self.X)
-210: # TODO: Use FastSVD for speedup!
+./parsimony/functions/losses.py:
+-------------------------------
+167: # TODO: Make the weights sparse.
+168: #weights = np.eye(self.X.shape[0])
 
-212: self.lipschitz = np.max(s) ** 2.0 + self.k  # TODO: CHECK
+170: # TODO: Allow the weight vector to be a list.
 
-./parsimony/functions/multiblock/objectives.py:
-----------------------------------------------
-142: # TODO: Check instead if it is a numpy array.
+225: PWX = 0.5 * np.sqrt(self.weights) * self.X  # TODO: CHECK WITH FOUAD
+226: # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
+227: #PW = 0.5 * np.sqrt(self.W)
+228: #PWX = np.dot(PW, self.X)
+229: # TODO: Use FastSVD for speedup!
 
-./parsimony/functions/nesterov/interfaces.py:
---------------------------------------------
-21: # TODO: We need a superclass for NesterovFunction wrappers.
+231: self.lipschitz = np.max(s) ** 2.0 + self.k  # TODO: CHECK
 
-./parsimony/functions/nesterov/L1.py:
-------------------------------------
-163: self._p = Atv[0].shape[1]  # WARNING: Number of rows may differ from p.
+./parsimony/functions/penalties.py:
+----------------------------------
+448: # TODO: Tweak these magic numbers on real data. Or even better,
+449: # find theoretical bounds. Convergence is faster if these bounds
+450: # are close to accurate when we start the bisection algorithm.
 
-173: # TODO: Is reset still necessary?
+537: # TODO: Tweak these magic numbers on real data. Or even better,
+538: # find theoretical bounds. Convergence is faster if these bounds
+539: # are close to accurate when we start the bisection algorithm.
 
-218: # TODO: Instead of p, this should really be the number of non-zero
-219: # rows of A.
+./parsimony/functions/objectives/functions.py:
+---------------------------------------------
+548: # TODO: This is not good. Solve this better!
 
-235: # TODO: Add max_iter here!!
+833: # TODO: This is not good. Solve this better!
+
+882: # TODO: Use max_iter here!!
+
+922: # TODO: Kernelise this function! See how I did in RR_L1_TV._beta_hat.
+
+964: # TODO: Add this function or refactor API!
+
+./parsimony/functions/multiblock/losses.py:
+------------------------------------------
+141: # TODO: Check instead if it is a numpy array.
 
 ./parsimony/functions/nesterov/L1TV.py:
 --------------------------------------
-52: self._p = Atv[0].shape[1]  # WARNING: Number of rows may differ from p.
+55: # WARNING: Number of non-zero rows may differ from p.
 
-62: # TODO: Is reset still necessary?
+140: # TODO: Instead of p, this should really be the number of non-zero
+141: # rows of A.
 
-107: # TODO: Instead of p, this should really be the number of non-zero
-108: # rows of A.
-
-124: # TODO: Add max_iter here!!
+152: # TODO: Add max_iter here!!
 
 ./parsimony/functions/nesterov/tv.py:
 ------------------------------------
-120: # TODO: Instead of p, this should really be the number of non-zero
-121: # rows of A.
+147: # TODO: Instead of p, this should really be the number of non-zero
+148: # rows of A.
 
-131: # TODO: Add max_iter here!
+158: # TODO: Add max_iter here!
 
-./parsimony/functions/functions/functions.py:
---------------------------------------------
-704: # TODO: Use max_iter here!!
-
-732: # TODO: Kernelise this function! See how I did in LRL2_L1_TV._beta_hat.
-
-771: # TODO: Add this function!
+./parsimony/tests/spamsdata.py:
+------------------------------
+68: # TODO: Don't use print directly.
 

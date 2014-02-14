@@ -11,11 +11,11 @@ Created on Thu Feb 8 09:22:00 2013
 import maths
 import consts
 
-from .utils import AnonymousClass, optimal_shrinkage, approx_grad
+from .utils import deprecated, approx_grad, AnonymousClass, optimal_shrinkage
 from .plot import plot_map2d
 
 __all__ = ["maths", "consts",
-           "AnonymousClass", "optimal_shrinkage", "approx_grad",
+           "deprecated", "approx_grad", "AnonymousClass", "optimal_shrinkage",
            "plot_map2d"]
 
 #from .utils import norm

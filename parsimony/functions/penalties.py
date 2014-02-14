@@ -21,9 +21,66 @@ import numpy as np
 import parsimony.utils.maths as maths
 import interfaces
 
-__all__ = ["L1",
+__all__ = ["ZeroFunction", "L1",
            "QuadraticConstraint", "RGCCAConstraint",
            "SufficientDescentCondition"]
+
+
+class ZeroFunction(interfaces.AtomicFunction,
+                   interfaces.Gradient,
+                   interfaces.Penalty,
+                   interfaces.Constraint,
+                   interfaces.ProximalOperator,
+                   interfaces.ProjectionOperator):
+
+    def __init__(self, l=1.0, c=0.0, penalty_start=0):
+
+        self.l = float(l)
+        self.c = float(c)
+        self.penalty_start = int(penalty_start)
+
+        self.reset()
+
+    def reset(self):
+
+        self._zero = None
+
+    def f(self, x):
+        """Function value.
+        """
+        return 0.0
+
+    def grad(self, x):
+        """Gradient of the function.
+
+        From the interface "Gradient".
+        """
+        if self._zero is None:
+            self._zero = np.zeros(x.shape)
+
+        return self._zero
+
+    def prox(self, x, factor=1.0):
+        """The corresponding proximal operator.
+
+        From the interface "ProximalOperator".
+        """
+        return x
+
+    def proj(self, x):
+        """The corresponding projection operator.
+
+        From the interface "ProjectionOperator".
+        """
+        return x
+
+    def feasible(self, x):
+        """Feasibility of the constraint.
+
+        From the interface "Constraint".
+        """
+        # When c is non-negative, the function is always feasible.
+        return self.c >= 0.0
 
 
 class L1(interfaces.AtomicFunction,
@@ -57,7 +114,7 @@ class L1(interfaces.AtomicFunction,
 
         self.l = float(l)
         self.c = float(c)
-        self.penalty_start = penalty_start
+        self.penalty_start = int(penalty_start)
 
     def f(self, beta):
         """Function value.
@@ -551,7 +608,7 @@ class SufficientDescentCondition(interfaces.Function,
 
         for descent. This condition is sometimes called the Armijo condition.
 
-        Parameters:
+        Parameters
         ----------
         c : Float, 0 < c < 1. A constant for the condition. Should be small.
         """
@@ -563,11 +620,14 @@ class SufficientDescentCondition(interfaces.Function,
 
         return self.function.f(x + a * self.p)
 
-    """Feasibility of the constraint at point x.
+    """Feasibility of the constraint at point x with step a.
 
     From the interface "Constraint".
     """
-    def feasible(self, x, a):
+    def feasible(self, xa):
+
+        x = xa[0]
+        a = xa[1]
 
         f_x_ap = self.function.f(x + a * self.p)
         f_x = self.function.f(x)

@@ -16,7 +16,9 @@ import numpy as np
 import parsimony.functions.interfaces as interfaces
 from parsimony.functions.losses import RidgeRegression
 from parsimony.functions.losses import RidgeLogisticRegression
-from parsimony.functions.penalties import L1
+import parsimony.functions.penalties as penalties
+#from parsimony.functions.penalties import ZeroFunction
+#from parsimony.functions.penalties import L1
 import parsimony.functions.nesterov.interfaces as nesterov_interfaces
 from parsimony.functions.nesterov.L1 import L1 as SmoothedL1
 from parsimony.functions.nesterov.L1TV import L1TV
@@ -24,16 +26,162 @@ from parsimony.functions.nesterov.tv import TotalVariation
 from parsimony.functions.nesterov.gl import GroupLassoOverlap
 import parsimony.utils.consts as consts
 
-__all__ = ["RR_L1_TV", "RLR_L1_TV", "RR_L1_GL", "RR_SmoothedL1TV"]
+__all__ = ["CombinedFunction",
+           "RR_L1_TV", "RLR_L1_TV", "RR_L1_GL", "RR_SmoothedL1TV"]
+
+
+class CombinedFunction(interfaces.CompositeFunction,
+                       interfaces.Gradient,
+                       interfaces.ProximalOperator,
+                       interfaces.StepSize):
+    """Combines one or more loss functions, any number of penalties and zero
+    or one proximal operator.
+
+    This function thus represents
+
+        f(x) = f_1(x) [ + f_2(x) ... ] [ + p_1(x) ... ] [ + P(x)],
+
+    where f_i are differentiable Functions, p_j are differentiable penalties
+    and P is a ProximalOperator. All functions and penalties must thus be
+    Gradient, unless it is a ProximalOperator.
+
+    If ProximalOperator is not given, then prox is the identity.
+    """
+    def __init__(self):
+
+        self._f = []
+        self._p = []
+        self._prox = penalties.ZeroFunction()
+#        self._c = []  # Not yet used.
+
+    def reset(self):
+
+        for f in self._f:
+            f.reset()
+
+        for p in self._p:
+            p.reset()
+
+#        for c in self._c:
+#            c.reset()
+
+        self._prox.reset()
+
+    def add_function(self, function):
+
+        if not isinstance(function, interfaces.Gradient):
+            raise ValueError("Functions must have gradients.")
+
+        self._f.append(function)
+
+    def add_penalty(self, penalty, proximal_operator=False):
+
+        if proximal_operator:
+            if not isinstance(penalty, interfaces.ProximalOperator):
+                raise ValueError("Not a proximal operator.")
+            else:
+                self._prox = penalty
+        else:
+            if not isinstance(penalty, interfaces.Gradient):
+                raise ValueError("Penalties must have gradients.")
+            else:
+                self._p.append(penalty)
+
+#    def add_constraint(self, constraint):
+#
+#        self._c.append(constraint)
+
+    def f(self, x):
+        """Function value.
+        """
+        val = 0.0
+        for f in self._f:
+            val += f.f(x)
+
+        for p in self._p:
+            val += p.f(x)
+
+        val += self._prox.f(x)
+
+        return val
+
+    def grad(self, x):
+        """Gradient of the differentiable part of the function.
+
+        From the interface "Gradient".
+        """
+        grad = 0.0
+
+        # Add gradients from the loss functions.
+        for f in self._f:
+            grad += f.grad(x)
+
+        # Add gradients from the penalties.
+        for p in self._p:
+            grad += p.grad(x)
+
+        return grad
+
+    def prox(self, x, factor=1.0):
+        """The proximal operator of the non-differentiable part of the
+        function.
+
+        From the interface "ProximalOperator".
+        """
+        return self._prox.prox(x, factor=factor)
+
+    def step(self, x):
+        """The step size to use in descent methods.
+
+        From the interface "StepSize".
+
+        Parameters
+        ----------
+        x : Numpy array. The point at which to evaluate the step size.
+        """
+        all_lipschitz = True
+        for f in self._f:
+            if not isinstance(f, interfaces.LipschitzContinuousGradient):
+                all_lipschitz = False
+                break
+
+        for p in self._p:
+            if not isinstance(p, interfaces.LipschitzContinuousGradient):
+                all_lipschitz = False
+                break
+
+        step = 1.0
+        if all_lipschitz:
+            L = 0.0
+            for f in self._f:
+                L += f.L()
+            for p in self._p:
+                L += p.L()
+
+        if all_lipschitz and L > 0.0:
+            step = 1.0 / L
+        else:
+            # If not all functions have Lipschitz continuous gradients, try
+            # to find the step size through backtracking line search.
+            from algorithms import BacktrackingLineSearch
+            import parsimony.functions.penalties as penalties
+
+            p = -self.grad(x)
+            line_search = BacktrackingLineSearch(
+                condition=penalties.SufficientDescentCondition, max_iter=30)
+            step = line_search(self, x, p, rho=0.5, a=0.1, c=1e-4)
+
+        return step
 
 
 class RR_L1_TV(interfaces.CompositeFunction,
                interfaces.Gradient,
                interfaces.LipschitzContinuousGradient,
-               interfaces.ProximalOperator,
                nesterov_interfaces.NesterovFunction,
+               interfaces.ProximalOperator,
                interfaces.Continuation,
-               interfaces.DualFunction):
+               interfaces.DualFunction,
+               interfaces.StronglyConvex):
     """Combination (sum) of RidgeRegression, L1 and TotalVariation
     """
     def __init__(self, X, y, k, l, g, A=None, mu=0.0, penalty_start=0):
@@ -67,7 +215,7 @@ class RR_L1_TV(interfaces.CompositeFunction,
         self.y = y
 
         self.rr = RidgeRegression(X, y, k)
-        self.l1 = L1(l, penalty_start=penalty_start)
+        self.l1 = penalties.L1(l, penalty_start=penalty_start)
         self.tv = TotalVariation(g, A=A, mu=mu, penalty_start=penalty_start)
 
         self.reset()
@@ -340,7 +488,7 @@ class RLR_L1_TV(RR_L1_TV):
         self.y = y
 
         self.rr = RidgeLogisticRegression(X, y, k, weights=weights)
-        self.l1 = L1(l, penalty_start=penalty_start)
+        self.l1 = penalties.L1(l, penalty_start=penalty_start)
         self.tv = TotalVariation(g, A=A, mu=mu, penalty_start=penalty_start)
 
         self.reset()
@@ -380,7 +528,7 @@ class RR_L1_GL(RR_L1_TV):
         self.y = y
 
         self.rr = RidgeRegression(X, y, k)
-        self.l1 = L1(l, penalty_start=penalty_start)
+        self.l1 = penalties.L1(l, penalty_start=penalty_start)
         self.gl = GroupLassoOverlap(g, A=A, mu=mu, penalty_start=penalty_start)
 
         self.reset()
@@ -619,9 +767,10 @@ class RR_L1_GL(RR_L1_TV):
 
 class RR_SmoothedL1TV(interfaces.CompositeFunction,
                       interfaces.LipschitzContinuousGradient,
+                      nesterov_interfaces.NesterovFunction,
                       interfaces.GradientMap,
                       interfaces.DualFunction,
-                      nesterov_interfaces.NesterovFunction):
+                      interfaces.StronglyConvex):
     """
     Parameters
     ----------
@@ -653,6 +802,10 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
     """
     def __init__(self, X, y, k, l, g, Atv=None, Al1=None, mu=0.0,
                  penalty_start=0):
+
+        if k <= consts.TOLERANCE:
+            raise ValueError("The L2 regularisation constant must be " + \
+                             "non-zero.")
 
         self.X = X
         self.y = y
@@ -724,11 +877,19 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
 
         From the interface "LipschitzContinuousGradient".
         """
-        b = self.g.lambda_min()
+#        b = self.g.lambda_min()
+        b = self.parameter()
         # TODO: Use max_iter here!!
         a = self.h.lambda_max()  # max_iter=max_iter)
 
         return a / b
+
+    def parameter(self):
+        """Returns the strongly convex parameter for the function.
+
+        From the interface "StronglyConvex".
+        """
+        return self.g.parameter()
 
     def V(self, u, beta, L):
         """The gradient map associated to the function.
@@ -758,7 +919,7 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
 
         From the interface "DualFunction".
         """
-        # TODO: Kernelise this function! See how I did in LRL2_L1_TV._beta_hat.
+        # TODO: Kernelise this function! See how I did in RR_L1_TV._beta_hat.
 
         A = self.h.A()
         grad = A[0].T.dot(alpha[0])

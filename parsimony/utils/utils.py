@@ -2,17 +2,18 @@
 """
 The :mod:`parsimony.utils` module includes common functions and constants.
 
-Please add anything you need throughout the whole package to this module.
-(As opposed to having several commong definitions scattered all over the
-source).
+Please add anything useful or that you need throughout the whole package to
+this module.
 
 Created on Thu Feb 8 09:22:00 2013
 
 @author:  Tommy Löfstedt
-@email:   tommy.loefstedt@cea.fr
+@email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
 import numpy as np
+import warnings
+from functools import wraps
 
 #import scipy
 #from numpy.linalg import norm
@@ -21,16 +22,59 @@ import numpy as np
 #from copy import copy
 #import traceback
 
-__all__ = ["optimal_shrinkage", "AnonymousClass", "approx_grad"]
+__all__ = ["deprecated", "approx_grad", "optimal_shrinkage", "AnonymousClass"]
 
-#__all__ = ['norm', 'norm1', 'norm0', 'normI', 'make_list', 'sign',
-#           'cov', 'corr', 'TOLERANCE', 'MAX_ITER', 'copy', 'sstot', 'ssvar',
+#__all__ = ['make_list', 'sign',
+#           'cov', 'corr', 'copy', 'sstot', 'ssvar',
 #           'sqrt', 'rand', 'zeros', 'direct', '_DEBUG', 'debug', 'warning',
 #           'optimal_shrinkage', 'delete_sparse_csr_row', 'AnonymousClass']
 
 #_DEBUG = True
 
 
+def deprecated(*replaced_by):
+    """This decorator can be used to mark functions as deprecated.
+
+    Useful when phasing out old API functions.
+
+    Parameters
+    ----------
+    replaced_by : String. The name of the function that should be used instead.
+    """
+    arg = True
+    if len(replaced_by) == 1 and callable(replaced_by[0]):
+        func = replaced_by[0]
+        replaced_by = None
+        arg = False
+    else:
+        replaced_by = replaced_by[0]
+
+    def outer(func):
+        @wraps(func)
+        def with_warning(*args, **kwargs):
+            string = ""
+            if replaced_by is not None:
+                string = " Use %s instead." % replaced_by
+
+            warnings.warn("Function " + str(func.__name__) + \
+                          " is deprecated." + string,
+                    category=DeprecationWarning,
+                    stacklevel=2)
+            return func(*args, **kwargs)
+
+        with_warning.__name__ = func.__name__
+        with_warning.__doc__ = func.__doc__
+        with_warning.__dict__.update(func.__dict__)
+
+        return with_warning
+
+    if not arg:
+        return outer(func)
+    else:
+        return outer
+
+
+# TODO: Should this one be in functions.interfaces.Gradient instead?
 def approx_grad(f, x, eps=1e-4):
     p = x.shape[0]
     grad = np.zeros(x.shape)

@@ -52,7 +52,8 @@ class L1TV(interfaces.AtomicFunction,
 
         self.g = float(g)
 
-        self._p = Atv[0].shape[1]  # WARNING: Number of rows may differ from p.
+        # WARNING: Number of non-zero rows may differ from p.
+        self._p = Atv[0].shape[1]
         if Al1 is None:
             Al1 = sparse.eye(self._p, self._p)
         A = [l * Al1,
@@ -133,8 +134,7 @@ class L1TV(interfaces.AtomicFunction,
         From the interface "Eigenvalues".
         """
         # Note that we can save the state here since lmax(A) does not change.
-        if len(self._A) == 4 \
-                and self._A[2].nnz == 0 and self._A[3].nnz == 0:
+        if len(self._A) == 4 and self._A[2].nnz == 0 and self._A[3].nnz == 0:
 #        if len(self._shape) == 3 \
 #            and self._shape[0] == 1 and self._shape[1] == 1:
             # TODO: Instead of p, this should really be the number of non-zero
@@ -147,11 +147,6 @@ class L1TV(interfaces.AtomicFunction,
         elif self._lambda_max is None:
 
             from parsimony.algorithms import FastSparseSVD
-
-#            A = sparse.vstack(self.A())
-#            v = algorithms.FastSparseSVD(A, max_iter=max_iter)
-#            us = A.dot(v)
-#            self._lambda_max = np.sum(us ** 2.0)
 
             A = sparse.vstack(self.A()[1:])
             # TODO: Add max_iter here!!

@@ -19,6 +19,7 @@ Created on Mon Apr 22 10:54:29 2013
 import numpy as np
 
 import interfaces
+import parsimony.utils as utils
 
 __all__ = ["RidgeRegression", "RidgeLogisticRegression", "AnonymousFunction"]
 
@@ -26,7 +27,8 @@ __all__ = ["RidgeRegression", "RidgeLogisticRegression", "AnonymousFunction"]
 class RidgeRegression(interfaces.CompositeFunction,
                       interfaces.Gradient,
                       interfaces.LipschitzContinuousGradient,
-                      interfaces.Eigenvalues):
+                      interfaces.Eigenvalues,
+                      interfaces.StronglyConvex):
     """ The Ridge Regression function
 
     Parameters
@@ -98,6 +100,7 @@ class RidgeRegression(interfaces.CompositeFunction,
 
         return self._lambda_max + self.k
 
+    @utils.deprecated("StronglyConvex.parameter")
     def lambda_min(self):
         """Smallest eigenvalue of the corresponding covariance matrix.
 
@@ -115,12 +118,28 @@ class RidgeRegression(interfaces.CompositeFunction,
 
         return self._lambda_min + self.k
 
+    def parameter(self):
+        """Returns the strongly convex parameter for the function.
+
+        From the interface "StronglyConvex".
+        """
+        if self._lambda_min is None:
+            s = np.linalg.svd(self.X, full_matrices=False, compute_uv=False)
+
+            self._lambda_max = np.max(s) ** 2.0
+
+            if len(s) < self.X.shape[1]:
+                self._lambda_min = 0.0
+            else:
+                self._lambda_min = np.min(s) ** 2.0
+
+        return self._lambda_min + self.k
+
 
 class RidgeLogisticRegression(interfaces.CompositeFunction,
                               interfaces.Gradient,
                               interfaces.LipschitzContinuousGradient):
-                              # , Eigenvalues):
-    """ The Logistic Regression function
+    """ The Logistic Regression function.
 
     Ridge (re-weighted) log-likelihood (cross-entropy):
     * f(beta) = -Sum wi (yi log(pi) + (1 − yi) log(1 − pi)) + k/2 ||beta||^2_2
@@ -134,12 +153,11 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
 
     Parameters
     ----------
-    X : Regressor
+    X : Numpy array (n-by-p). The regressor matrix.
 
-    y : Regressand
+    y : Numpy array (n-by-1). The regressand vector.
 
-    weights: array, shape = [n_samples]
-        samples weights
+    weights: Numpy array (n-by-1). The sample's weights.
     """
     def __init__(self, X, y, k=0, weights=None):
         self.X = X
@@ -149,6 +167,7 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
             # TODO: Make the weights sparse.
             #weights = np.eye(self.X.shape[0])
             weights = np.ones(y.shape).reshape(y.shape)
+        # TODO: Allow the weight vector to be a list.
         self.weights = weights
 
         self.reset()

@@ -20,7 +20,7 @@ __all__ = ["Function", "AtomicFunction", "CompositeFunction",
            "CombinedProjectionOperator",
            "Continuation",
            "Gradient", "Hessian", "LipschitzContinuousGradient", "StepSize",
-           "GradientMap", "DualFunction", "Eigenvalues"]
+           "GradientMap", "DualFunction", "Eigenvalues", "StronglyConvex"]
 
 
 class Function(object):
@@ -35,6 +35,7 @@ class Function(object):
                                   'specialised!')
 
     def reset(self):
+
         pass
 
     def set_params(self, **kwargs):
@@ -78,11 +79,11 @@ class Penalty(object):
     Columns, variables or corresponding entities with indices smaller than
     penalty_start must not be penalised.
 
-    Parameters:
+    Parameters
     ----------
-    penalty_start : The number of columns, variables etc., to except from
-            penalisation. Equivalently, the first index to be penalised.
-            Default is 0, all columns are included.
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to except from penalisation. Equivalently, the first index
+            to be penalised. Default is 0, all columns are included.
     """
     __metaclass__ = abc.ABCMeta
 
@@ -94,7 +95,7 @@ class Constraint(object):
     Columns, variables or corresponding entities with indices smaller than
     penalty_start must not be penalised.
 
-    Parameters:
+    Parameters
     ----------
     penalty_start : The number of columns, variables etc., to except from
             penalisation. Equivalently, the first index to be penalised.
@@ -168,6 +169,7 @@ class CombinedProjectionOperator(Function, ProjectionOperator):
         return proj
 
 
+# TODO: This should be in the NesterovFunction interface, right?
 class Continuation(object):
 
     __metaclass__ = abc.ABCMeta
@@ -218,8 +220,8 @@ class Hessian(object):
     def hessian(self, beta, vector=None):
         """The Hessian of the function.
 
-        Arguments:
-        ---------
+        Parameters
+        ----------
         beta : The point at which to evaluate the Hessian.
 
         vector : If not None, it is multiplied with the Hessian from the right.
@@ -235,8 +237,8 @@ class Hessian(object):
         Hessian. Also, if we multiply the Hessian by a vector, it is often
         possible to do efficiently.
 
-        Arguments:
-        ---------
+        Parameters
+        ----------
         beta : The point at which to evaluate the Hessian.
 
         vector : If not None, it is multiplied with the inverse of the Hessian
@@ -263,16 +265,15 @@ class StepSize(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def step(self, beta=None, index=0):
+    def step(self, beta, index=0):
         """The step size to use in descent methods.
 
-        Arguments
-        ---------
-        beta : A weight vector. Optional, since some functions may determine
-                the step without knowing beta.
+        Parameters
+        ----------
+        beta : Numpy array. The point at which to determine the step size.
 
-        index : For multiblock functions, to know which variable the gradient
-                is for.
+        index : Non-negative integer. For multiblock functions, to know which
+                variable the step is for.
         """
         raise NotImplementedError('Abstract method "step" must be '
                                   'specialised!')
@@ -324,4 +325,28 @@ class Eigenvalues(object):
         """Smallest eigenvalue of the corresponding covariance matrix.
         """
         raise NotImplementedError('Abstract method "lambda_min" is not '
+                                  'implemented!')
+
+
+class StronglyConvex(object):
+    """Represents strongly convex functions.
+
+    A function is strongly convex with parameter m if
+
+        (grad(f(x) - grad(f(y))'(x - y) >= m.||x - y||²_2,
+
+    or equivalently if
+
+        H(f(x)) >= mI,
+
+    where H is the Hessian, I is the identity matrix. The second ">=" means
+    that H(f(x)) - mI is positive semi-definite.
+    """
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def parameter(self):
+        """Returns the strongly convex parameter for the function.
+        """
+        raise NotImplementedError('Abstract method "parameter" is not '
                                   'implemented!')

@@ -11,7 +11,7 @@ import numpy as np
 class SpamsGenerator:
     def get_x_y_estimated_beta(self):
         '''
-        Reference
+        Reference:
         ---------
         http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
         '''
@@ -65,6 +65,7 @@ class SpamsGenerator:
 #            print "weight_ridge =", repr(weight_ridge)
 #            print "weight_l1 =", repr(weight_l1)
         except ImportError:
+            # TODO: Don't use print directly.
             print "Cannot import spams. Default values will be used."
             X = np.asarray([
            [ 0.26856766,  0.30620391,  0.26995615,  0.3806023 ,  0.41311465,

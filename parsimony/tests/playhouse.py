@@ -34,12 +34,12 @@ import parsimony.datasets.simulated.grad as grad
 
 np.random.seed(42)
 
-eps = 0.01
-maxit = 10000
+eps = 0.001
+maxit = 20000
 mu = 1e-6
-k = 0.5
-l = 0.5
-g = 0.0
+k = 0.6
+l = 0.4
+g = 0.9
 
 px = 100
 py = 1
@@ -52,16 +52,20 @@ Sigma = alpha * np.eye(p, p) + (1.0 - alpha) * np.random.randn(p, p)
 mean = np.zeros(p)
 M = np.random.multivariate_normal(mean, Sigma, n)
 X = np.hstack((np.ones((n, 1)), np.random.randn(n, p - 1)))
-betastar = np.concatenate((np.zeros((p / 2, 1)),
-                           np.random.randn(p / 2, 1)))
+betastar = np.concatenate((np.zeros(((p - 1) / 2, 1)),
+                           np.random.randn(round((p - 1) / 2.0), 1)))
 betastar = np.sort(np.abs(betastar), axis=0)
 betastar = np.concatenate((np.random.rand(1, 1), betastar))
+#betastar = np.array([[2.0],[0.5]])
+
+print X.shape
+print betastar.shape
 
 y = np.dot(X, betastar)
-m = np.mean(y)
-y[y < m] = 0.0
-y[y >= m] = 1.0
-print y
+#m = np.mean(y)
+#y[y < m] = 0.0
+#y[y >= m] = 1.0
+#print y
 
 A, n_compacts = tv.A_from_shape(shape)
 #A = gl.A_from_groups(px, [range(0, int(px / 2.0)),
@@ -76,7 +80,7 @@ beta_start = beta_start.get_vector((p, 1))
 ##rr = RR_L1_GL(X, y, k, l, g, A=A, mu=mu, penalty_start=0)
 #rr = RR_SmoothedL1TV(X, y, k, l, g, Atv=A, Al1=Al1, mu=mu,
 #                     penalty_start=0)
-
+#
 #print maths.norm(betastar - beta_start)
 #
 #ista = algorithms.ISTA(output=True, max_iter=maxit)
@@ -87,38 +91,66 @@ beta_start = beta_start.get_vector((p, 1))
 #print maths.norm(betastar - beta)
 
 
-
+#rr = RR_L1_TV(X, y, k, l, g, A=A, mu=mu, penalty_start=0)
 #rr = RR_L1_GL(X, y, k, l, g, A=A, mu=mu, penalty_start=1)
-#rr = RR_SmoothedL1TV(X, y, k, l, g, Atv=A, Al1=Al1, mu=mu,
-#                     penalty_start=1)
-rr = RLR_L1_TV(X, y, k, l, g, A=A, mu=mu, weights=None, penalty_start=1)
+rr = RR_SmoothedL1TV(X, y, k=0.01, l=l, g=g, Atv=A, Al1=Al1, mu=mu,
+                     penalty_start=1)
+#rr = RLR_L1_TV(X, y, k, l, g, A=A, mu=mu, weights=None, penalty_start=1)
 
 print maths.norm(betastar - beta_start)
+print maths.norm(np.dot(X, betastar) - np.dot(X, beta_start))
 
-ista = algorithms.ISTA(output=True, max_iter=maxit)
-#ista = algorithms.ExcessiveGapMethod(output=True, max_iter=maxit)
+#ista = algorithms.ISTA(output=True, max_iter=maxit)
+ista = algorithms.ExcessiveGapMethod(output=True, max_iter=maxit)
 t = time.time()
 beta, output = ista(rr, beta_start)
 #print time.time() - t
+print beta
 
 print maths.norm(betastar - beta)
+print maths.norm(np.dot(X, betastar) - np.dot(X, beta))
 
 
 
+#rr = RR_L1_TV(X, y, k, l, g, A=A, mu=mu, penalty_start=1)
 #rr = RR_L1_GL(X, y, k, l, g=0.9, A=A, mu=mu, penalty_start=1)
-#rr = RR_SmoothedL1TV(X, y, k, l, g=0.9, Atv=A, Al1=Al1,
-#                     mu=mu, penalty_start=1)
-rr = RLR_L1_TV(X, y, k, l, g=0.9, A=A, mu=mu, weights=None, penalty_start=1)
+rr = RR_SmoothedL1TV(X, y, k, l=0.0, g=g, Atv=A, Al1=Al1,
+                     mu=mu, penalty_start=1)
+#rr = RLR_L1_TV(X, y, k, l, g=0.9, A=A, mu=mu, weights=None, penalty_start=1)
 
 print maths.norm(betastar - beta_start)
+print maths.norm(np.dot(X, betastar) - np.dot(X, beta_start))
 
-ista = algorithms.ISTA(output=True, max_iter=maxit)
-#ista = algorithms.ExcessiveGapMethod(output=True, max_iter=maxit)
+#ista = algorithms.ISTA(output=True, max_iter=maxit)
+ista = algorithms.ExcessiveGapMethod(output=True, max_iter=maxit)
 t = time.time()
 beta, output = ista(rr, beta_start)
 #print time.time() - t
+print beta
 
 print maths.norm(betastar - beta)
+print maths.norm(np.dot(X, betastar) - np.dot(X, beta))
+
+
+
+#rr = RR_L1_TV(X, y, k, l, g, A=A, mu=mu, penalty_start=1)
+#rr = RR_L1_GL(X, y, k, l, g=0.9, A=A, mu=mu, penalty_start=1)
+rr = RR_SmoothedL1TV(X, y, k, l, g=0.0, Atv=A, Al1=Al1,
+                     mu=mu, penalty_start=1)
+#rr = RLR_L1_TV(X, y, k, l, g=0.9, A=A, mu=mu, weights=None, penalty_start=1)
+
+print maths.norm(betastar - beta_start)
+print maths.norm(np.dot(X, betastar) - np.dot(X, beta_start))
+
+#ista = algorithms.ISTA(output=True, max_iter=maxit)
+ista = algorithms.ExcessiveGapMethod(output=True, max_iter=maxit)
+t = time.time()
+beta, output = ista(rr, beta_start)
+#print time.time() - t
+print beta
+
+print maths.norm(betastar - beta)
+print maths.norm(np.dot(X, betastar) - np.dot(X, beta))
 
 
 
@@ -868,7 +900,8 @@ print maths.norm(betastar - beta)
 ####    means = np.random.rand(1, 2)
 ####    for i in xrange(1, n_points):
 #####        p = np.random.rand(1, 2)
-#####        while np.any(np.sqrt(np.sum((means - p) ** 2.0, axis=1)) < max(0.2, (1.0 / n_points))):
+#####        while np.any(np.sqrt(np.sum((means - p) ** 2.0, axis=1))
+#                    < max(0.2, (1.0 / n_points))):
 #####            p = np.random.rand(1, 2)
 #####        print np.sqrt(np.sum((means - p) ** 2.0, axis=1))
 #####        means = np.vstack((means, p))
@@ -970,7 +1003,8 @@ print maths.norm(betastar - beta)
 ###
 ###
 ###def create_data(
-###        grp_desc =[range(100), range(100,200), range(200,300), range(300,400),range(400,1000)],
+###        grp_desc =[range(100), range(100,200), range(200,300), range(300,400),
+#                      range(400,1000)],
 ###        grp_cors = [0.8, 0, 0.8, 0, 0],
 ###        grp_assoc = [0.5, 0.5, 0.3, 0.3, 0],
 ###        grp_firstonly = [True, False, True, False, False],
@@ -995,7 +1029,8 @@ print maths.norm(betastar - beta)
 ###       sigma[b[0]:(b[-1]+1), b[0]:(b[-1]+1)] += (1.0 - c) * np.eye(len(b),len(b))
 ###       #print sigma
 ###       center = np.zeros(len(b))
-###       X[:,b] = np.random.multivariate_normal(center, sigma[b[0]:(b[-1]+1), b[0]:(b[-1]+1)], n)
+###       X[:,b] = np.random.multivariate_normal(center, sigma[b[0]:(b[-1]+1),
+#                                                 b[0]:(b[-1]+1)], n)
 ###       if o:
 ###           betas[b[0]] = a
 ###       else:
@@ -1224,17 +1259,22 @@ print maths.norm(betastar - beta)
 ####    print "l:", l
 ####
 ####    def mu_plus(eps):
-####        return (-2.0 * D * A + np.sqrt((2.0 * D * A) ** 2.0 + 4.0 * D * l * eps * A)) / (2.0 * D * l)
+####        return (-2.0 * D * A + np.sqrt((2.0 * D * A) ** 2.0 + 4.0 * D * l *
+#                    eps * A)) / (2.0 * D * l)
 ####
 ####    def eps_plus(mu):
-####        return ((2.0 * mu * D * l + 2.0 * D * A) ** 2.0 - (2.0 * D * A) ** 2.0) / (4.0 * D * l * A)
+####        return ((2.0 * mu * D * l + 2.0 * D * A) ** 2.0 - 
+#                    (2.0 * D * A) ** 2.0) / (4.0 * D * l * A)
 ####
 ####    m.algorithm._set_tolerance(m.compute_tolerance(mu))
 ####    beta = m.algorithm.run(X, y)
 ####
-####    for eps in [1000000.0, 100000.0, 10000.0, 1000.0, 100.0, 10.0, 1.0, 0.1, 0.01, 0.001]:
-####        print "eps: %.7f -> mu: %.7f -> eps: %.7f" % (eps, mu_plus(eps), eps_plus(mu_plus(eps)))
-####        print "eps: %.7f -> mu: %.7f -> eps: %.7f" % (eps, m.compute_mu(eps), m.compute_tolerance(m.compute_mu(eps)))
+####    for eps in [1000000.0, 100000.0, 10000.0, 1000.0, 100.0, 10.0, 1.0, 0.1,
+#                    0.01, 0.001]:
+####        print "eps: %.7f -> mu: %.7f -> eps: %.7f" % (eps, mu_plus(eps),
+#                                                          eps_plus(mu_plus(eps)))
+####        print "eps: %.7f -> mu: %.7f -> eps: %.7f" % (eps, m.compute_mu(eps),
+#                                          m.compute_tolerance(m.compute_mu(eps)))
 ####        print "D * mu = %.7f" % (D * mu)
 ###
 ####    mu1 = []

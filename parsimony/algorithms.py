@@ -328,9 +328,10 @@ class FastSVDProduct(ImplicitAlgorithm):
 
 
 class ISTA(ExplicitAlgorithm):
-    """ The iterative shrinkage threshold algorithm.
+    """The iterative shrinkage-thresholding algorithm.
     """
-    INTERFACES = [interfaces.Gradient,
+    INTERFACES = [interfaces.Function,
+                  interfaces.Gradient,
                   # TODO: We should use a step size here instead of the
                   # Lipschitz constant. All functions don't have L, but will
                   # still run in FISTA with a small enough step size.
@@ -345,15 +346,19 @@ class ISTA(ExplicitAlgorithm):
         """
         Parameters
         ----------
-        step : Step for each iteration.
+        step : Non-negative float. The step-size to use in each iteration.
+                This is usually not provided.
 
-        output : Boolean. Get output information.
+        output : Boolean. Whether or not to return output information. If
+                output is True, running the algorithm will return a tuple with
+                two elements. The first element is the found regression vector,
+                and the second is the extra output information.
 
-        eps : Float. Tolerance.
+        eps : Positive float. Tolerance for the stopping criterion.
 
-        max_iter : Integer. Maximum allowed number of iterations.
+        max_iter : Positive integer. Maximum allowed number of iterations.
 
-        min_iter : Integer. Minimum allowed number of iterations.
+        min_iter : Positive integer. Minimum number of iterations.
         """
         self.step = step
         self.output = output
@@ -375,8 +380,13 @@ class ISTA(ExplicitAlgorithm):
         betanew = betaold = beta
 
         # TODO: Change the functions so that we can use the StepSize API here.
+        has_step = False
         if self.step is None:
-            self.step = 1.0 / function.L()
+            if isinstance(function, interfaces.StepSize):
+                self.step = function.step(beta)
+                has_step = True
+            else:
+                self.step = 1.0 / function.L()
 
         if self.output:
             t = []
@@ -384,6 +394,9 @@ class ISTA(ExplicitAlgorithm):
         for i in xrange(1, self.max_iter + 1):
             if self.output:
                 tm = time_func()
+
+            if has_step:
+                self.step = function.step(betanew)
 
             betaold = betanew
             betanew = function.prox(betaold -
@@ -410,15 +423,19 @@ class FISTA(ExplicitAlgorithm):
 
     Parameters
     ----------
-    step : Step for each iteration
+    step : Non-negative float. The step-size to use in each iteration. This is
+            usually not provided.
 
-    output : Boolean. Get output information
+    output : Boolean. Whether or not to return output information. If output
+            is True, running the algorithm will return a tuple with two
+            elements. The first element is the found regression vector, and
+            the second is the extra output information.
 
-    eps : Float. Tolerance
+    eps : Positive float. Tolerance for the stopping criterion.
 
-    max_iter : Maximum allowed number of iterations
+    max_iter : Positive integer. Maximum allowed number of iterations.
 
-    min_iter : Minimum allowed number of iterations
+    min_iter : Positive integer. Minimum number of iterations.
 
     Example
     -------
@@ -487,7 +504,6 @@ class FISTA(ExplicitAlgorithm):
 #    tvl1l2.fit(X, y)
 #    start_beta_vector = random_start_vector.get_vector([X.shape[1], 1])
 #    fista(X, y, olsl2_L1_TV, start_beta_vector)
-
     """
     INTERFACES = [interfaces.Gradient,
                   # TODO: We should use a step size here instead of the
@@ -515,15 +531,20 @@ class FISTA(ExplicitAlgorithm):
         ----------
         function : The function to minimise.
 
-        beta : A start vector.
+        beta : Numpy array. A start vector.
         """
         self.check_compatibility(function, self.INTERFACES)
 
         z = betanew = betaold = beta
 
         # TODO: Change the functions so that we can use the StepSize API here.
+        has_step = False
         if self.step is None:
-            self.step = 1.0 / function.L()
+            if isinstance(function, interfaces.StepSize):
+                self.step = function.step(beta)
+                has_step = True
+            else:
+                self.step = 1.0 / function.L()
 
         if self.output:
             t = []
@@ -533,6 +554,10 @@ class FISTA(ExplicitAlgorithm):
                 tm = time_func()
 
             z = betanew + ((i - 2.0) / (i + 1.0)) * (betanew - betaold)
+
+            if has_step:
+                self.step = function.step(z)
+
             betaold = betanew
             betanew = function.prox(z - self.step * function.grad(z),
                                     self.step)
@@ -558,16 +583,30 @@ class CONESTA(ExplicitAlgorithm):
 
     Parameters
     ----------
-    mu_start :
+    mu_start : Non-negative float. An optional initial value of \mu.
 
-    mu_min :
+    mu_min : Non-negative float. A "very small" mu to use when computing the
+            stopping criterion.
 
-    tau :
+    tau : Float, 0 < tau < 1. The rate at which \eps is decreasing. Default
+            is 0.5.
 
-    dynamic : Boolean. Switch for dynamically or statically decreasing \mu
+    dynamic : Boolean. Whether to dynamically decrease \eps (through the
+            duality gap) or not.
 
-    continuations : maximum iteration
+    continuations : Positive integer. Maximum number of outer loop iterations.
 
+    output : Boolean. Whether or not to return extra output information. If
+            output is True, running the algorithm will return a tuple with two
+            elements. The first element is the found regression vector, and
+            the second is the extra output information.
+
+    eps : Positive float. Tolerance for the stopping criterion.
+
+    max_iter : Positive integer. Maximum allowed number of inner loop
+            iterations.
+
+    min_iter : Positive integer. Minimum number of inner loop iterations.
     """
     INTERFACES = [NesterovFunction,
                   interfaces.Continuation,
@@ -610,6 +649,7 @@ class CONESTA(ExplicitAlgorithm):
 
 #        old_mu = function.get_mu()
         function.set_mu(self.mu_min)
+        # TODO: Use StepSize instead.
         tmin = 1.0 / function.L()
         function.set_mu(mu[0])
 
@@ -627,6 +667,7 @@ class CONESTA(ExplicitAlgorithm):
         while True:
             stop = False
 
+            # TODO: Use StepSize instead.
             tnew = 1.0 / function.L()
             eps_plus = min(max_eps, function.eps_opt(mu[-1]))
             self.FISTA.set_params(step=tnew, eps=eps_plus)
@@ -726,22 +767,26 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
     INTERFACES = [NesterovFunction,
                   interfaces.LipschitzContinuousGradient,
                   interfaces.GradientMap,
-                  interfaces.DualFunction
+                  interfaces.DualFunction,
+                  interfaces.StronglyConvex,
                  ]
 
     def __init__(self, output=False,
                  eps=consts.TOLERANCE,
                  max_iter=consts.MAX_ITER, min_iter=1):
         """
-        Parameters
+        Parameters:
         ----------
-        output : Boolean. Get output information
+        output : Boolean. Whether or not to return extra output information.
+                If output is True, running the algorithm will return a tuple
+                with two elements. The first element is the found regression
+                vector, and the second is the extra output information.
 
-        eps : Float. Tolerance
+        eps : Positive float. Tolerance for the stopping criterion.
 
-        max_iter : Maximum allowed number of iterations.
+        max_iter : Positive integer. Maximum allowed number of iterations.
 
-        min_iter : Minimum allowed number of iterations.
+        min_iter : Positive integer. Minimum allowed number of iterations.
         """
         self.output = output
         self.eps = eps
@@ -751,14 +796,14 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
     def __call__(self, function, beta=None):
         """The excessive gap method for strongly convex functions.
 
-        Parameters
+        Parameters:
         ----------
         function : The function to minimise. It contains two parts, function.g
                 is the strongly convex part and function.h is the smoothed part
                 of the function.
 
-        beta : The start vector. This is normally not given, but left None.
-                The start vector is computed by the algorithm.
+        beta : Numpy array. The start vector. This is normally not given, but
+                left None. The start vector is computed by the algorithm.
         """
         A = function.h.A()
 
@@ -833,16 +878,16 @@ class Bisection(ExplicitAlgorithm):
 
     Parameters
     ----------
-    force_negative : Boolean, default is False. Will try, by running more
-            iterations, to make the result negative. It may fail, but it is
+    force_negative : Boolean. Default is False. Will try, by running more
+            iterations, to make the result negative. It may fail, but that is
             unlikely.
 
-    eps : A positive value such that |f(x)|_2 <= eps. Only guaranteed if
-            |f(x)|_2 <= eps in less than maxiter iterations.
+    eps : Positive float. A value such that |f(x)|_2 <= eps. Only guaranteed
+            if |f(x)|_2 <= eps in less than max_iter iterations.
 
-    max_iter : The maximum number of iterations.
+    max_iter : Positive integer. Maximum allowed number of iterations.
 
-    min_iter : The minimum number of iterations.
+    min_iter : Positive integer. Minimum number of iterations.
     """
     INTERFACES = [interfaces.Function,
                  ]
@@ -1202,11 +1247,11 @@ class ProjectionADMM(ExplicitAlgorithm):
     def __call__(self, function, x):
         """Finds the projection onto the intersection of two sets.
 
-        Parameters:
+        Parameters
         ----------
         function: List or tuple with two elements. The two functions.
 
-        x: The point that we wish to project.
+        x: Numpy array. The point that we wish to project.
         """
         self.check_compatibility(function[0], self.INTERFACES)
         self.check_compatibility(function[1], self.INTERFACES)
@@ -1246,11 +1291,11 @@ class DykstrasProjectionAlgorithm(ExplicitAlgorithm):
     def __call__(self, function, r):
         """Finds the projection onto the intersection of two sets.
 
-        Parameters:
+        Parameters
         ----------
         function: List or tuple with two elements. The two functions.
 
-        r: The point that we wish to project.
+        r: Numpy array. The point that we wish to project.
         """
         self.check_compatibility(function[0], self.INTERFACES)
         self.check_compatibility(function[1], self.INTERFACES)
@@ -1277,6 +1322,8 @@ class DykstrasProjectionAlgorithm(ExplicitAlgorithm):
 
 
 class BacktrackingLineSearch(ExplicitAlgorithm):
+    """Finds a step length a that fulfills a given descent criterion.
+    """
     INTERFACES = [interfaces.Function,
                   interfaces.Gradient]
 
@@ -1284,18 +1331,19 @@ class BacktrackingLineSearch(ExplicitAlgorithm):
                  output=False,
                  max_iter=30, min_iter=1,
                  eps=consts.TOLERANCE):  # Note that tolerance is never used!
-        """Finds a step length a that fulfills a given descent criterion.
-
-        Parameters:
+        """
+        Parameters
         ----------
         condition : The class of the descent condition. If not given, defaults
-                to the StrongWolfeCondition.
+                to the SufficientDescentCondition.
 
         output : Boolean. Whether or not to return additional output.
 
-        max_iter : The maximum allowed number of iterations.
+        max_iter : Non-negative integer. The maximum allowed number of
+                iterations.
 
-        max_iter : The minimum number of iterations that must be made.
+        min_iter : Non-negative integer, min_iter <= max_iter. The minimum
+                number of iterations that must be made.
         """
         self.condition = condition
         if self.condition is None:
@@ -1304,32 +1352,32 @@ class BacktrackingLineSearch(ExplicitAlgorithm):
         self.max_iter = max_iter
         self.min_iter = min_iter
 
-    def __call__(self, function, x, p, rho=0.5, a=1.0, **kwargs):
+    def __call__(self, function, x, p, rho=0.5, a=1.0, **params):
         """Finds the step length for a descent algorithm.
 
-        Parameters:
+        Parameters
         ----------
         function : A Loss function. The function to minimise.
 
-        x : Vector. The current point.
+        x : Numpy array. The current point.
 
-        p : Vector. The descent direction.
+        p : Numpy array. The descent direction.
 
-        rho : Float. 0 < rho < 1. The rate at which to decrease a in each
+        rho : Float, 0 < rho < 1. The rate at which to decrease a in each
                 iteration. Smaller will finish faster, but may yield a lesser
                 descent.
 
-        a : Float. The upper bound on the step length. Defaults to 1, which is
-                suitable for e.g. Newton's method.
+        a : Float. The upper bound on the step length. Defaults to 1.0, which
+                is suitable for e.g. Newton's method.
 
-        kwargs : Parameters for the descent condition.
+        params : Dictionary. Parameters for the descent condition.
         """
         self.check_compatibility(function, self.INTERFACES)
 
-        line_search = self.condition(function, p, **kwargs)
+        line_search = self.condition(function, p, **params)
         it = 0
         while True:
-            if line_search.feasible(x, a):
+            if line_search.feasible((x, a)):
                 print "Broke after %d iterations of %d iterations." \
                     % (it, self.max_iter)
                 return a

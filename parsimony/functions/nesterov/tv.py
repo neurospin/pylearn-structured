@@ -301,26 +301,32 @@ def A_from_mask(mask):
 def A_from_shape(shape):
     """Generates the linear operator for the total variation Nesterov function
     from the shape of a 3D image.
+
+    Parameters
+    ----------
+    shape : List or tuple with 1, 2 or 3 elements. The shape of the 1D, 2D or
+            3D image. shape has the form (Z, Y, X), where Z is the number of
+            "layers", Y is the number of rows and X is the number of columns.
     """
     while len(shape) < 3:
         shape = tuple(list(shape) + [1])
-    nx = shape[0]
+    nz = shape[0]
     ny = shape[1]
-    nz = shape[2]
-    p = nz * ny * nx
-    ind = np.arange(p).reshape((nx, ny, nz))
+    nx = shape[2]
+    p = nx * ny * nz
+    ind = np.arange(p).reshape((nz, ny, nx))
     if nx > 1:
-        Ax = (sparse.eye(p, p, ny * nz, format='csr') -\
-              sparse.eye(p, p))
-        xind = ind[-1, :, :].ravel()
-        for i in xind:
+        Ax = sparse.eye(p, p, 1, format='csr') -\
+             sparse.eye(p, p)
+        zind = ind[:, :, -1].ravel()
+        for i in zind:
             Ax.data[Ax.indptr[i]: \
                     Ax.indptr[i + 1]] = 0
         Ax.eliminate_zeros()
     else:
         Ax = sparse.csc_matrix((p, p), dtype=float)
     if ny > 1:
-        Ay = sparse.eye(p, p, nz, format='csr') -\
+        Ay = sparse.eye(p, p, nx, format='csr') -\
              sparse.eye(p, p)
         yind = ind[:, -1, :].ravel()
         for i in yind:
@@ -330,14 +336,14 @@ def A_from_shape(shape):
     else:
         Ay = sparse.csc_matrix((p, p), dtype=float)
     if nz > 1:
-        Az = sparse.eye(p, p, 1, format='csr') -\
-             sparse.eye(p, p)
-        zind = ind[:, :, -1].ravel()
-        for i in zind:
+        Az = (sparse.eye(p, p, ny * nx, format='csr') -\
+              sparse.eye(p, p))
+        xind = ind[-1, :, :].ravel()
+        for i in xind:
             Az.data[Az.indptr[i]: \
                     Az.indptr[i + 1]] = 0
         Az.eliminate_zeros()
     else:
         Az = sparse.csc_matrix((p, p), dtype=float)
 
-    return [Az, Ay, Ax], (nx * ny * nz - 1)
+    return [Ax, Ay, Az], (nz * ny * nx - 1)
