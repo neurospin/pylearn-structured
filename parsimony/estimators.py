@@ -12,6 +12,7 @@ import warnings
 
 import numpy as np
 
+import parsimony.utils.consts as consts
 import parsimony.functions as functions
 import parsimony.algorithms as algorithms
 import parsimony.start_vectors as start_vectors
@@ -330,8 +331,8 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
             self.mu = float(mu)
         else:
             self.mu = None
-        super(RidgeLogisticRegression_L1_TV, self).__init__(algorithm=algorithm,
-                                                    output=output)
+        super(RidgeLogisticRegression_L1_TV,
+              self).__init__(algorithm=algorithm, output=output)
 
     def get_params(self):
         """Return a dictionary containing all the estimator's parameters
@@ -418,13 +419,8 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
         self.k = float(k)
         self.l = float(l)
         self.g = float(g)
-        warn_msg = 'zero %s will result in nan regression coefficient'
-        if self.k == 0:
-            warnings.warn(warn_msg % 'k')
-        if self.l == 0:
-            warnings.warn(warn_msg % 'l')
-        if self.g == 0:
-            warnings.warn(warn_msg % 'g')
+        if self.k < consts.TOLERANCE:
+            warnings.warn("The ridge parameter should be non-zero.")
         self.Atv = Atv
         self.Al1 = Al1
         if isinstance(mu, numbers.Number):

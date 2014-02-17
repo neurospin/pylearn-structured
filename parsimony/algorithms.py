@@ -813,7 +813,8 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
 
         # L = lambda_max(A'A) / (lambda_min(X'X) + k)
         L = function.L()
-
+        if L < consts.TOLERANCE:
+            L = consts.TOLERANCE
         mu = [2.0 * L]
         function.h.set_mu(mu)
         if beta is not None:

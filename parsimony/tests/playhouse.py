@@ -154,6 +154,27 @@ print maths.norm(np.dot(X, betastar) - np.dot(X, beta))
 
 
 
+#rr = RR_L1_TV(X, y, k, l, g, A=A, mu=mu, penalty_start=1)
+#rr = RR_L1_GL(X, y, k, l, g=0.9, A=A, mu=mu, penalty_start=1)
+rr = RR_SmoothedL1TV(X, y, k, l=0.0, g=0.0, Atv=A, Al1=Al1,
+                     mu=mu, penalty_start=1)
+#rr = RLR_L1_TV(X, y, k, l, g=0.9, A=A, mu=mu, weights=None, penalty_start=1)
+
+print maths.norm(betastar - beta_start)
+print maths.norm(np.dot(X, betastar) - np.dot(X, beta_start))
+
+#ista = algorithms.ISTA(output=True, max_iter=maxit)
+ista = algorithms.ExcessiveGapMethod(output=True, max_iter=maxit)
+t = time.time()
+beta, output = ista(rr, beta_start)
+#print time.time() - t
+print beta
+
+print maths.norm(betastar - beta)
+print maths.norm(np.dot(X, betastar) - np.dot(X, beta))
+
+
+
 #mx = np.mean(X)
 #my = np.mean(y)
 #X -= mx

@@ -901,6 +901,9 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
         else:
             beta_ = beta
 
+        if L < consts.TOLERANCE:
+            L = consts.TOLERANCE
+
         A = self.h.A()
         a = [0] * len(A)
         a[0] = (1.0 / L) * A[0].dot(beta_)
