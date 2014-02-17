@@ -335,9 +335,14 @@ class RGCCAConstraint(QuadraticConstraint,
     def reset(self):
 
         self._VU = None
+        self._Vt = None
+        self._UV = None
 
-        self._Ip = None
+#        self._Ip = None
         self._M = None
+
+        self._D = None
+        self._V = None
 
     def f(self, beta):
         """Function value.
@@ -400,25 +405,36 @@ class RGCCAConstraint(QuadraticConstraint,
             beta_ = beta[self.penalty_start:, :]
         else:
             beta_ = beta
+
         xtMx = self._compute_value(beta_)
         if xtMx <= self.c:
-            return beta
+            return beta_, beta_
 
         n, p = self.X.shape
         if p > n:
-            In = np.eye(n)                    # n-by-n
+#            In = np.eye(n)                    # n-by-n
             U = self.X.T                      # p-by-n
 #            V = self.X                        # n-by-p
-            Vx = np.dot(self.X, beta_)         # n-by-1
+            Vx = np.dot(self.X, beta_)        # n-by-1
             if self._VU is None:
-                self._VU = np.dot(self.X, U)  # n-by-n
+                self._VU = np.dot(self.X, U)  # XX', n-by-n
+
+#                self._V, self._D, self._Vt = np.linalg.svd(self._VU)
+                self._D, self._V = np.linalg.eig(self._VU)
+#                self._Vt = np.linalg.pinv(self._V)
+                self._Vt = self._V.T
+                self._UV = np.dot(U, self._V)
 
             def prox(x, l):
                 k = 0.5 * l * self.tau + 1.0
                 m = 0.5 * l * ((1.0 - self.tau) / float(n - 1))
 
-                invIMx = (x - np.dot(U, np.dot(np.linalg.inv((k / m) * In +
-                        self._VU), Vx))) / k
+#                invIVU = np.linalg.inv((k / m) * In + self._VU)
+#                invIVU = np.dot(self._V * np.reciprocal(self._D + (k / m)), self._Vt)
+                VtinvIVU = (np.reciprocal(self._D + (k / m)) * self._Vt.T).T
+
+#                invIMx = (x - np.dot(U, np.dot(invIVU, Vx))) / k
+                invIMx = (x - np.dot(self._UV, np.dot(VtinvIVU, Vx))) / k
 
                 return invIMx
 
@@ -497,17 +513,37 @@ class RGCCAConstraint(QuadraticConstraint,
 
         else:  # The case when: p <= n
 
-            if self._Ip is None:
-                self._Ip = np.eye(p)  # p-by-p
+#            if self._Ip is None:
+#                self._Ip = np.eye(p)  # p-by-p
 
             if self._M is None:
                 XtX = np.dot(self.X.T, self.X)
                 self._M = self.tau * self._Ip + \
                           ((1.0 - self.tau) / float(n - 1)) * XtX
 
+                self._D, self._V = np.linalg.eig(self._M)
+
             def prox2(x, l):
 
-                y = np.dot(np.linalg.inv(self._Ip + (0.5 * l) * self._M), x)
+#                y = np.dot(np.linalg.inv(self._Ip + (0.5 * l) * self._M), x)
+
+#                invIM = np.linalg.inv(self._Ip + (0.5 * l) * self._M)
+#                print maths.norm(np.linalg.inv(self._Ip + (0.5 * l) * self._M) - \
+#                                  np.dot(self._V * np.reciprocal(0.5 * l * self._D + 1.0),
+#                                         self._V.T))
+#                print maths.norm(self._M - np.dot(self._V, np.dot(np.diag(self._D), self._V.T)))
+#                print maths.norm((self._Ip + (0.5 * l) * self._M) - \
+#                                  np.dot(self._V,
+#                                         np.dot(np.diag(self._D + 1.0 + 0.5 * l),
+#                                                self._V.T)))
+
+#                invIM = np.linalg.inv(self._Ip + (0.5 * l) * self._M)
+                invIM = np.dot(self._V * \
+                                   np.reciprocal(0.5 * l * self._D + 1.0),
+                               self._V.T)
+                y = np.dot(invIM, x)
+
+#                print "err:", maths.norm(y - yd)
 
                 return y
 
@@ -516,7 +552,8 @@ class RGCCAConstraint(QuadraticConstraint,
                                   parameter_positive=True,
                                   parameter_negative=False,
                                   parameter_zero=False,
-                                  eps=1e-3)
+                                  eps=1e-6,
+                                  max_iter=100)
 
             class F(interfaces.Function):
                 def __init__(self, x, c, val):
@@ -578,7 +615,22 @@ class RGCCAConstraint(QuadraticConstraint,
 #        print low, ", ", high
 #        print l
 
-        return y
+#        _Ip = np.eye(p)  # p-by-p
+#
+#        XtX = np.dot(self.X.T, self.X)
+#        _M = self.tau * _Ip + ((1.0 - self.tau) / float(n - 1)) * XtX
+#
+#        l = max(0.0, xtMx - self.c)
+#        y_ = np.dot(np.linalg.inv(_Ip + (0.5 * l) * _M), beta_)
+#
+#        print self._compute_value(y)
+#        print self._compute_value(y_)
+
+#        if maths.norm(beta_ - (beta_ / np.sqrt(xtMx))) < maths.norm(beta_ - y):
+#            print maths.norm(beta_ - (beta_ / np.sqrt(xtMx)))
+#            print maths.norm(beta_ - y)
+
+        return y, y #y_
 
     def _compute_value(self, beta):
         """Helper function to compute the function value.
