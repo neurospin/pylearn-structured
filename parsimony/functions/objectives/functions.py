@@ -13,14 +13,15 @@ Created on Mon Apr 22 10:54:29 2013
 """
 import numpy as np
 
-import parsimony.functions.interfaces as interfaces
-from parsimony.functions.losses import RidgeRegression
-from parsimony.functions.losses import RidgeLogisticRegression
-import parsimony.functions.penalties as penalties
+from .. import interfaces
+from ..losses import RidgeRegression
+from ..losses import RidgeLogisticRegression
+from .. import penalties
 #from parsimony.functions.penalties import ZeroFunction
 #from parsimony.functions.penalties import L1
-import parsimony.functions.nesterov.interfaces as nesterov_interfaces
-from parsimony.functions.nesterov.L1 import L1 as SmoothedL1
+from ..nesterov import interfaces as nesterov_interfaces
+#from .. import interfaces as nesterov_interfaces
+from ..nesterov.L1 import L1 as SmoothedL1
 from parsimony.functions.nesterov.L1TV import L1TV
 from parsimony.functions.nesterov.tv import TotalVariation
 from parsimony.functions.nesterov.gl import GroupLassoOverlap

@@ -8,9 +8,13 @@ learning models for one, two or more blocks of data.
 @license: BSD 3-clause.
 """
 
-import parsimony.algorithms as algorithms
-import parsimony.estimators as estimators
-import parsimony.start_vectors as start_vectors
+#import parsimony.algorithms as algorithms
+#import parsimony.estimators as estimators
+#import parsimony.start_vectors as start_vectors
+
+import algorithms
+import estimators
+import start_vectors
 
 __version__ = "0.1.2"
 
