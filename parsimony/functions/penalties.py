@@ -21,7 +21,7 @@ import numpy as np
 import parsimony.utils.maths as maths
 import interfaces
 
-__all__ = ["ZeroFunction", "L1",
+__all__ = ["ZeroFunction", "L1", "L2",
            "QuadraticConstraint", "RGCCAConstraint",
            "SufficientDescentCondition"]
 
@@ -97,7 +97,7 @@ class L1(interfaces.AtomicFunction,
 
         ||\beta||_1 <= c.
 
-    Parameters:
+    Parameters
     ----------
     l : Non-negative float. The Lagrange multiplier, or regularisation
             constant, of the function.
@@ -167,6 +167,7 @@ class L1(interfaces.AtomicFunction,
             beta_ = beta[self.penalty_start:, :]
         else:
             beta_ = beta
+
         func = F(beta_, self.c)
         l = bisection(func, [0.0, np.max(np.abs(beta_))])
 
@@ -181,7 +182,143 @@ class L1(interfaces.AtomicFunction,
             beta_ = beta[self.penalty_start:, :]
         else:
             beta_ = beta
+
         return maths.norm1(beta_) <= self.c
+
+
+class L2(interfaces.AtomicFunction,
+         interfaces.Gradient,
+         interfaces.Penalty,
+         interfaces.Constraint,
+         interfaces.ProximalOperator,
+         interfaces.ProjectionOperator):
+    """The proximal operator of the L2 function with a penalty formulation
+
+        f(\beta) = l * (||\beta||²_2 - c),
+
+    where ||\beta||²_2 is the squared L2 loss function. The constrained
+    version has the form
+
+        ||\beta||²_2 <= c.
+
+    Parameters
+    ----------
+    l : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the function.
+
+    c : Float. The limit of the constraint. The function is feasible if
+            ||\beta||²_2 <= c. The default value is c=0, i.e. the default is a
+            regularisation formulation.
+
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to except from penalisation. Equivalently, the first index
+            to be penalised. Default is 0, all columns are included.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from parsimony.functions.penalties import L2
+
+    >>> np.random.seed(42)
+    >>> beta = np.random.rand(100,1)
+    >>> l2 = L2(l=3.14159, c=2.71828)
+    >>> np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
+    5.8179830878866391e-10
+
+    >>> l2 = L2(l=3.14159, c=2.71828, penalty_start=5)
+    >>> np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
+    5.0187970725495645e-10
+    """
+    def __init__(self, l=1.0, c=0.0, penalty_start=0):
+
+        self.l = float(l)
+        self.c = float(c)
+        self.penalty_start = int(penalty_start)
+
+    def f(self, beta):
+        """Function value.
+
+        From the interface "Function".
+        """
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        return self.l * (np.dot(beta_.T, beta_)[0, 0] - self.c)
+
+    def grad(self, beta):
+        """Gradient of the function.
+
+        From the interface "Gradient".
+        """
+#        if self.unbiased:
+#            n = self.X.shape[0] - 1.0
+#        else:
+#            n = self.X.shape[0]
+
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        grad = np.vstack((np.zeros((self.penalty_start, 1)),
+                          (2.0 * self.l) * beta_))
+
+#        approx_grad = utils.approx_grad(self.f, beta, eps=1e-4)
+#        print maths.norm(grad - approx_grad)
+
+        return grad
+
+    def prox(self, beta, factor=1.0):
+        """The corresponding proximal operator.
+
+        From the interface "ProximalOperator".
+        """
+        l = self.l * factor
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        prox = np.vstack((beta[:self.penalty_start, :],
+                          beta_ / (1.0 + 2.0 * l)))
+
+        return prox
+
+    def proj(self, beta):
+        """The corresponding projection operator.
+
+        From the interface "ProjectionOperator".
+        """
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        sqnorm = np.dot(beta_.T, beta_)[0, 0]
+
+        if sqnorm <= self.c:
+            return beta
+
+        proj = np.vstack((beta[:self.penalty_start, :],
+                          beta_ * np.sqrt(self.c / sqnorm)))
+
+        return proj
+
+    def feasible(self, beta):
+        """Feasibility of the constraint.
+
+        From the interface "Constraint".
+        """
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        sqnorm = np.dot(beta_.T, beta_)[0, 0]
+
+        return sqnorm <= self.c
 
 
 class QuadraticConstraint(interfaces.AtomicFunction,
@@ -192,8 +329,12 @@ class QuadraticConstraint(interfaces.AtomicFunction,
 
         f(x) = l * (x'Mx - c),
 
-    where M is a given symmatric positive-definite matrix. The constrained
-    version has the form
+    or
+
+        f(x) = l * (x'M'Nx - c),
+
+    where M or M'N is a given symmatric positive-definite matrix. The
+    constrained version has the form
 
         x'Mx <= c,
 
@@ -203,7 +344,7 @@ class QuadraticConstraint(interfaces.AtomicFunction,
 
     if two matrices are given.
 
-    Parameters:
+    Parameters
     ----------
     l : Non-negative float. The Lagrange multiplier, or regularisation
             constant, of the function.
@@ -215,11 +356,12 @@ class QuadraticConstraint(interfaces.AtomicFunction,
     M : Numpy array. The given positive definite matrix. It is assumed that
             the first penalty_start columns must be excluded.
 
-    N : Numpy array. The second matrix if two factors are given. It is assumed
-            that the first penalty_start columns must be excluded.
+    N : Numpy array. The second matrix if the factors of the positive-definite
+            matrix are given. It is assumed that the first penalty_start
+            columns must be excluded.
 
     penalty_start : Non-negative integer. The number of columns, variables
-            etc., to except from penalisation. Equivalently, the first index
+            etc., to be exempt from penalisation. Equivalently, the first index
             to be penalised. Default is 0, all columns are included.
     """
     def __init__(self, l=1.0, c=0.0, M=None, N=None, penalty_start=0):
@@ -262,9 +404,9 @@ class QuadraticConstraint(interfaces.AtomicFunction,
             beta_ = beta
 
         if self.N is None:
-            grad = (self.l * 2.0) * np.dot(self.M, beta_)
+            grad = (2.0 * self.l) * np.dot(self.M, beta_)
         else:
-            grad = (self.l * 2.0) * np.dot(self.M.T, np.dot(self.N, beta_))
+            grad = (2.0 * self.l) * np.dot(self.M.T, np.dot(self.N, beta_))
 
         grad = np.vstack(np.zeros((self.penalty_start, 1)), grad)
 
@@ -299,7 +441,7 @@ class RGCCAConstraint(QuadraticConstraint,
 
         x'(\tau * I + ((1 - \tau) / n) * X'X)x <= c.
 
-    Parameters:
+    Parameters
     ----------
     l : Non-negative float. The Lagrange multiplier, or regularisation
             constant, of the function.
@@ -314,7 +456,7 @@ class RGCCAConstraint(QuadraticConstraint,
             Default is unbiased.
 
     penalty_start : Non-negative integer. The number of columns, variables
-            etc., to except from penalisation. Equivalently, the first index
+            etc., to be exepmt from penalisation. Equivalently, the first index
             to be penalised. Default is 0, all columns are included.
     """
     def __init__(self, l=1.0, c=0.0, tau=1.0, X=None, unbiased=True,
@@ -351,6 +493,7 @@ class RGCCAConstraint(QuadraticConstraint,
             beta_ = beta[self.penalty_start:, :]
         else:
             beta_ = beta
+
         xtMx = self._compute_value(beta_)
 
         return self.l * (xtMx - self.c)
@@ -360,15 +503,16 @@ class RGCCAConstraint(QuadraticConstraint,
 
         From the interface "Gradient".
         """
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
         if self.unbiased:
             n = self.X.shape[0] - 1.0
         else:
             n = self.X.shape[0]
 
-        if self.penalty_start > 0:
-            beta_ = beta[self.penalty_start:, :]
-        else:
-            beta_ = beta
         if self.tau < 1.0:
             XtXbeta = np.dot(self.X.T, np.dot(self.X, beta_))
             grad = (self.tau * 2.0) * beta_ \
@@ -392,6 +536,7 @@ class RGCCAConstraint(QuadraticConstraint,
             beta_ = beta[self.penalty_start:, :]
         else:
             beta_ = beta
+
         xtMx = self._compute_value(beta_)
 
         return xtMx <= self.c
@@ -408,7 +553,7 @@ class RGCCAConstraint(QuadraticConstraint,
 
         xtMx = self._compute_value(beta_)
         if xtMx <= self.c:
-            return beta_, beta_
+            return beta
 
         n, p = self.X.shape
         if p > n:
@@ -425,9 +570,14 @@ class RGCCAConstraint(QuadraticConstraint,
                 self._Vt = self._V.T
                 self._UV = np.dot(U, self._V)
 
+            if self.unbiased:
+                n_ = float(n - 1.0)
+            else:
+                n_ = float(n)
+
             def prox(x, l):
                 k = 0.5 * l * self.tau + 1.0
-                m = 0.5 * l * ((1.0 - self.tau) / float(n - 1))
+                m = 0.5 * l * ((1.0 - self.tau) / n_)
 
 #                invIVU = np.linalg.inv((k / m) * In + self._VU)
 #                invIVU = np.dot(self._V * np.reciprocal(self._D + (k / m)), self._Vt)
@@ -518,8 +668,14 @@ class RGCCAConstraint(QuadraticConstraint,
 
             if self._M is None:
                 XtX = np.dot(self.X.T, self.X)
+
+                if self.unbiased:
+                    n_ = float(n - 1.0)
+                else:
+                    n_ = float(n)
+
                 self._M = self.tau * self._Ip + \
-                          ((1.0 - self.tau) / float(n - 1)) * XtX
+                          ((1.0 - self.tau) / n_) * XtX
 
                 self._D, self._V = np.linalg.eig(self._M)
 
@@ -630,7 +786,7 @@ class RGCCAConstraint(QuadraticConstraint,
 #            print maths.norm(beta_ - (beta_ / np.sqrt(xtMx)))
 #            print maths.norm(beta_ - y)
 
-        return y, y #y_
+        return y
 
     def _compute_value(self, beta):
         """Helper function to compute the function value.

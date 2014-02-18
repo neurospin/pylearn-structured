@@ -14,7 +14,7 @@ __all__ = ['norm', 'norm1', 'norm0', 'norm_inf', 'corr']
 
 
 def norm(x):
-    '''Return the 2-norm for vectors, the Frobenius norm for matrices
+    '''Returns the L2-norm for a matrix (the Frobenius norm) or vectors.
 
     Examples
     --------
@@ -26,14 +26,20 @@ def norm(x):
     >>> norm(vector)
     1.0954451150103324
     '''
-    return np.linalg.norm(x)
+    n, p = x.shape
+    if p == 1:
+        return np.sqrt(np.dot(x.T, x))[0, 0]
+    elif n == 1:
+        return np.sqrt(np.dot(x, x.T))[0, 0]
+    else:
+        return np.linalg.norm(x)
 
 
 def norm1(x):
-    '''Return the 1-norm
+    '''Returns the L1-norm or a matrix or vector.
 
-    For vectors : sum(abs(x)**2)**(1./2)
-    For matrices : max(sum(abs(x), axis=0))
+    For vectors: sum(abs(x)**2)**(1./2)
+    For matrices: max(sum(abs(x), axis=0))
 
     Examples
     --------
@@ -45,27 +51,40 @@ def norm1(x):
     >>> norm1(vector)
     1.6000000000000001
     '''
-    return np.linalg.norm(x, ord=1)
+    n, p = x.shape
+    if p == 1 or n == 1:
+        return np.sum(np.abs(x))
+    else:
+        return np.max(np.sum(np.abs(x), axis=0))
+#    return np.linalg.norm(x, ord=1)
 
 
 def norm0(x):
-    '''Return the number of non-zero elements
+    '''Returns the L0-norm of a vector.
 
     Examples
     --------
     >>> from parsimony.utils.maths import norm0
     >>> matrix = np.array([[0.2, 1.0, 0.4], [2.0, 1.5, 0.1]])
     >>> norm0(matrix)
-    6
+    Traceback (most recent call last):
+        ...
+    ValueError: The L0 norm is not defined for matrices.
     >>> vector = np.array([[0.2], [1.0], [0.4]])
     >>> norm0(vector)
     3
     '''
-    return np.count_nonzero(np.absolute(x))
+    n, p = x.shape
+    if n > 1 and p > 1:
+        raise ValueError("The L0 norm is not defined for matrices.")
+
+    return np.sum(x != 0)
+#    return np.count_nonzero(np.absolute(x))
+#    return np.linalg.norm(x, ord=0)
 
 
 def norm_inf(x):
-    '''Return the max of the absolute sum for each column of the matrix
+    '''Return the infinity norm of a matrix or vector.
 
     For vectors : max(abs(x))
     For matrices : max(sum(abs(x), axis=1))
@@ -80,7 +99,12 @@ def norm_inf(x):
     >>> norm_inf(vector)
     1.0
     '''
-    return np.linalg.norm(x, ord=float('inf'))
+    n, p = x.shape
+    if p == 1 or n == 1:
+        return np.max(np.abs(x))
+    else:
+        return np.max(np.sum(np.abs(x), axis=1))
+#    return np.linalg.norm(x, ord=float('inf'))
 
 
 def corr(a, b):
@@ -128,10 +152,9 @@ def cov(a, b):
     >>> v1 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
     >>> v2 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
     >>> print cov(v1, v2)
-    [[ 1.  1.  1.  1.]
-     [ 1.  1.  1.  1.]
-     [ 1.  1.  1.  1.]
-     [ 1.  1.  1.  1.]]
+    [[ 2.  0. -2.]
+     [ 0.  0.  0.]
+     [-2.  0.  2.]]
     """
     ma = np.mean(a)
     mb = np.mean(b)

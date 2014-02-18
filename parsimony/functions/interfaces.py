@@ -14,6 +14,8 @@ Created on Mon Apr 22 10:54:29 2013
 """
 import abc
 
+import numpy as np
+
 __all__ = ["Function", "AtomicFunction", "CompositeFunction",
            "Penalty", "Constraint",
            "ProximalOperator", "ProjectionOperator",
@@ -210,6 +212,28 @@ class Gradient(object):
         """
         raise NotImplementedError('Abstract method "grad" must be '
                                   'specialised!')
+
+    def approx_grad(self, x, eps=1e-4):
+        """Numerical approximation of the gradient.
+
+        Parameters
+        ----------
+        beta : The point at which to evaluate the gradient.
+
+        eps : The precision of the numerical solution. Smaller is better, but
+                too small may result in floating point precision errors.
+        """
+        p = x.shape[0]
+        grad = np.zeros(x.shape)
+        for i in xrange(self.penalty_start, p):
+            x[i, 0] -= eps
+            loss1 = self.f(x)
+            x[i, 0] += 2.0 * eps
+            loss2 = self.f(x)
+            x[i, 0] -= eps
+            grad[i, 0] = (loss2 - loss1) / (2.0 * eps)
+
+        return grad
 
 
 class Hessian(object):

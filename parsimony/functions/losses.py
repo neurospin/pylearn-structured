@@ -33,11 +33,11 @@ class RidgeRegression(interfaces.CompositeFunction,
 
     Parameters
     ----------
-    X : Regressor
+    X : Numpy array (n-by-p). The regressor matrix.
 
-    y : Regressand
+    y : Numpy array (n-by-1). The regressand vector.
 
-    k : Float. Ridge Regression weight coefficient
+    k : Non-negative float. The ridge parameter.
     """
     def __init__(self, X, y, k):
 
