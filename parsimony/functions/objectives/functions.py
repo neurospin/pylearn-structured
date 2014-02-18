@@ -451,6 +451,11 @@ class RR_L1_TV(interfaces.CompositeFunction,
         """
         return self.tv.project(a)
 
+    def parameter(self):
+        """Returns the strongly convex parameter for the function.
+        """
+        raise NotImplementedError('Abstract method "parameter" must be '
+                                  'specialised!')
 
 class RLR_L1_TV(RR_L1_TV):
     """Combination (sum) of RidgeLogisticRegression, L1 and TotalVariation.
