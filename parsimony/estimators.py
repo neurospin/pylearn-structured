@@ -4,7 +4,7 @@ Created on Sat Nov  2 15:19:17 2013
 
 @author:  Tommy Löfstedt, Edouard Duchesnay
 @email:   tommy.loefstedt@cea.fr, edouard.duchesnay@cea.fr
-@license: TBD.
+@license: BSD 3-clause.
 """
 import abc
 import numbers

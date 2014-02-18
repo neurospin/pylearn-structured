@@ -18,8 +18,8 @@ Created on Mon Apr 22 10:54:29 2013
 """
 import numpy as np
 
+from . import interfaces
 import parsimony.utils.maths as maths
-import interfaces
 
 __all__ = ["ZeroFunction", "L1", "L2",
            "QuadraticConstraint", "RGCCAConstraint",

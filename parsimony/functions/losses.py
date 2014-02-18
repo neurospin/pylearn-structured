@@ -18,7 +18,7 @@ Created on Mon Apr 22 10:54:29 2013
 """
 import numpy as np
 
-import interfaces
+from . import interfaces
 import parsimony.utils as utils
 
 __all__ = ["RidgeRegression", "RidgeLogisticRegression", "AnonymousFunction"]

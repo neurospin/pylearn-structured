@@ -12,8 +12,9 @@ Created on Mon Feb  3 17:00:56 2014
 """
 import numpy as np
 
-import parsimony.functions.interfaces as interfaces
-from interfaces import NesterovFunction
+
+from .interfaces import NesterovFunction
+from .. import interfaces
 import parsimony.utils.consts as consts
 import parsimony.utils.maths as maths
 

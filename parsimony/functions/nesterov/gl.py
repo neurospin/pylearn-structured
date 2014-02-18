@@ -13,8 +13,8 @@ Created on Mon Feb  3 10:46:47 2014
 import scipy.sparse as sparse
 import numpy as np
 
-from interfaces import NesterovFunction
-import parsimony.functions.interfaces as interfaces
+from .interfaces import NesterovFunction
+from .. import interfaces
 import parsimony.utils.consts as consts
 import parsimony.utils.maths as maths
 

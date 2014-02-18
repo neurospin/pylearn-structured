@@ -15,8 +15,8 @@ import math
 import scipy.sparse as sparse
 import numpy as np
 
-import parsimony.functions.interfaces as interfaces
-from interfaces import NesterovFunction
+from .interfaces import NesterovFunction
+from .. import interfaces
 import parsimony.utils.consts as consts
 import parsimony.utils.maths as maths
 

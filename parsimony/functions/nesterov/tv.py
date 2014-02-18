@@ -15,8 +15,8 @@ import math
 import scipy.sparse as sparse
 import numpy as np
 
-from interfaces import NesterovFunction
-import parsimony.functions.interfaces as interfaces
+from .interfaces import NesterovFunction
+from .. import interfaces
 import parsimony.utils.consts as consts
 
 __all__ = ["TotalVariation", "A_from_mask", "A_from_shape"]

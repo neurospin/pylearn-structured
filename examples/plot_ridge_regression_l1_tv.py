@@ -2,17 +2,18 @@
 """
 Created on Mon Dec 23 15:00:10 2013
 
-@author: edouard.duchesnay@cea.fr
-@license: BSD-3-Clause
+@author:  Edouard Duchesnay
+@email:   edouard.duchesnay@cea.fr
+@license: BSD 3-clause.
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import r2_score
 import parsimony.datasets
-import parsimony.tv as tv
+import parsimony.functions.nesterov.tv as tv
 from parsimony.estimators import RidgeRegression_L1_TV
-from sklearn.linear_model import ElasticNet
 from parsimony.utils import plot_map2d
+from sklearn.linear_model import ElasticNet
+from sklearn.metrics import r2_score
 
 ###########################################################################
 ## Dataset
@@ -48,12 +49,17 @@ yte_pred_ridgel1tv = ridgel1tv.fit(X, y).predict(Xte)
 
 ###########################################################################
 ## Plot
+
+# TODO: Remove dependence on scikit-learn. Add required functionality to
+# parsimony instead.
+
 plot = plt.subplot(131)
 plot_map2d(beta3d.reshape(shape), plot, title="beta star")
 plot = plt.subplot(132)
 plot_map2d(enet.coef_.reshape(shape), plot, title="beta enet (R2=%.2f)" %
     r2_score(yte, yte_pred_enet))
 plot = plt.subplot(133)
-plot_map2d(ridgel1tv.beta.reshape(shape), plot, title="beta ridgel1tv (R2=%.2f)" %
-    r2_score(yte, yte_pred_ridgel1tv))
+plot_map2d(ridgel1tv.beta.reshape(shape), plot,
+           title="beta ridgel1tv (R2=%.2f)" \
+                 % r2_score(yte, yte_pred_ridgel1tv))
 plt.show()
