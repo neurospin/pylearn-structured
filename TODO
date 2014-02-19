@@ -5,9 +5,9 @@
 -------------------------
 65: # TODO: Is this a good name?
 
-265: # TODO: Should we use a seed here so that we get deterministic results?
+267: # TODO: Should we use a seed here so that we get deterministic results?
 
-351: # TODO: Should we use a seed here so that we get deterministic results?
+354: # TODO: Should we use a seed here so that we get deterministic results?
 
 ./parsimony/algorithms.py:
 -------------------------
@@ -43,10 +43,6 @@
 
 1133: for it in xrange(self.outer_iter):  # TODO: Get number of iterations!
 
-./parsimony/utils/utils.py:
---------------------------
-77: # TODO: Should this one be in functions.interfaces.Gradient instead?
-
 ./parsimony/utils/consts.py:
 ---------------------------
 14: # TODO: MAX_ITER is heavily algorithm-dependent, so we have to think about if
@@ -56,9 +52,11 @@
 ------------------------------------------------
 9: # TODO: Remove dependence on scikit learn.
 
+112: # TODO: This is wrong. Shape should be Z, Y, X.
+
 ./parsimony/functions/interfaces.py:
 -----------------------------------
-172: # TODO: This should be in the NesterovFunction interface, right?
+174: # TODO: This should be in the NesterovFunction interface, right?
 
 ./parsimony/functions/losses.py:
 -------------------------------
@@ -77,16 +75,28 @@
 
 ./parsimony/functions/penalties.py:
 ----------------------------------
-464: # TODO: Tweak these magic numbers on real data. Or even better,
-465: # find theoretical bounds. Convergence is faster if these bounds
-466: # are close to accurate when we start the bisection algorithm.
+614: # TODO: Tweak these magic numbers on real data. Or even better,
+615: # find theoretical bounds. Convergence is faster if these bounds
+616: # are close to accurate when we start the bisection algorithm.
 
-574: # TODO: Tweak these magic numbers on real data. Or even better,
-575: # find theoretical bounds. Convergence is faster if these bounds
-576: # are close to accurate when we start the bisection algorithm.
+731: # TODO: Tweak these magic numbers on real data. Or even better,
+732: # find theoretical bounds. Convergence is faster if these bounds
+733: # are close to accurate when we start the bisection algorithm.
 
-./parsimony/functions/objectives/functions.py:
----------------------------------------------
+./parsimony/functions/functions.py:
+----------------------------------
+555: # TODO: This is not good. Solve this better!
+
+840: # TODO: This is not good. Solve this better!
+
+889: # TODO: Use max_iter here!!
+
+932: # TODO: Kernelise this function! See how I did in RR_L1_TV._beta_hat.
+
+974: # TODO: Add this function or refactor API!
+
+./parsimony/functions/_objectives/functions.py:
+----------------------------------------------
 548: # TODO: This is not good. Solve this better!
 
 833: # TODO: This is not good. Solve this better!
@@ -116,6 +126,12 @@
 148: # rows of A.
 
 158: # TODO: Add max_iter here!
+
+./parsimony/tests/test_algorithms.py:
+------------------------------------
+31: # WARNING: We must have a non-zero ridge parameter!
+
+34: # WARNING: We must have a non-zero TV parameter!
 
 ./parsimony/tests/spamsdata.py:
 ------------------------------

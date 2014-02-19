@@ -24,15 +24,15 @@ import parsimony.start_vectors as start_vectors
 
 import parsimony.datasets.simulated as simulated
 
-from parsimony.functions.objectives import *
-
-#seed = 1
-#np.random.seed(seed)
+from parsimony.functions import *
 
 import parsimony.datasets.simulated.grad as grad
 
+#__all__ = ["__test__"]
+#__test__ = False
 
-np.random.seed(42)
+seed = 42
+np.random.seed(seed)
 
 eps = 0.001
 maxit = 20000

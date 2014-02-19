@@ -553,7 +553,7 @@ class RGCCAConstraint(QuadraticConstraint,
 
         xtMx = self._compute_value(beta_)
         if xtMx <= self.c:
-            return beta
+            return beta, beta
 
         n, p = self.X.shape
         if p > n:
@@ -593,7 +593,7 @@ class RGCCAConstraint(QuadraticConstraint,
                                   parameter_positive=True,
                                   parameter_negative=False,
                                   parameter_zero=False,
-                                  eps=1e-3)
+                                  eps=1e-6)
 
             class F(interfaces.Function):
                 def __init__(self, x, c, val):
@@ -674,7 +674,8 @@ class RGCCAConstraint(QuadraticConstraint,
                 else:
                     n_ = float(n)
 
-                self._M = self.tau * self._Ip + \
+                Ip = np.eye(p)
+                self._M = self.tau * Ip + \
                           ((1.0 - self.tau) / n_) * XtX
 
                 self._D, self._V = np.linalg.eig(self._M)
@@ -771,22 +772,22 @@ class RGCCAConstraint(QuadraticConstraint,
 #        print low, ", ", high
 #        print l
 
-#        _Ip = np.eye(p)  # p-by-p
-#
-#        XtX = np.dot(self.X.T, self.X)
-#        _M = self.tau * _Ip + ((1.0 - self.tau) / float(n - 1)) * XtX
-#
-#        l = max(0.0, xtMx - self.c)
-#        y_ = np.dot(np.linalg.inv(_Ip + (0.5 * l) * _M), beta_)
-#
-#        print self._compute_value(y)
-#        print self._compute_value(y_)
+        _Ip = np.eye(p)  # p-by-p
+
+        XtX = np.dot(self.X.T, self.X)
+        _M = self.tau * _Ip + ((1.0 - self.tau) / float(n - 1)) * XtX
+
+        l = 2.0 * max(0.0, np.sqrt(xtMx) - self.c)
+        y_ = np.dot(np.linalg.inv(_Ip + (0.5 * l) * _M), beta_)
+
+        print self._compute_value(y)
+        print self._compute_value(y_)
 
 #        if maths.norm(beta_ - (beta_ / np.sqrt(xtMx))) < maths.norm(beta_ - y):
 #            print maths.norm(beta_ - (beta_ / np.sqrt(xtMx)))
 #            print maths.norm(beta_ - y)
 
-        return y
+        return y, y_
 
     def _compute_value(self, beta):
         """Helper function to compute the function value.
