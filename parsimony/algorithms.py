@@ -87,8 +87,8 @@ class ImplicitAlgorithm(BaseAlgorithm):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def __call__(X, **kwargs):
-        raise NotImplementedError('Abstract method "__call__" must be ' \
+    def run(X, **kwargs):
+        raise NotImplementedError('Abstract method "run" must be ' \
                                   'specialised!')
 
 
@@ -99,8 +99,9 @@ class ExplicitAlgorithm(BaseAlgorithm):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def __call__(function, beta, **kwargs):
-        """Call this object to obtain the variable that gives the minimum.
+    def run(function, beta, **kwargs):
+        """Run this algorithm to obtain the variable that gives the minimum of
+        the give function(s).
 
         Parameters
         ----------
@@ -108,13 +109,13 @@ class ExplicitAlgorithm(BaseAlgorithm):
 
         beta : A start vector.
         """
-        raise NotImplementedError('Abstract method "__call__" must be ' \
+        raise NotImplementedError('Abstract method "run" must be ' \
                                   'specialised!')
 
 
 class FastSVD(ImplicitAlgorithm):
 
-    def __call__(self, X, max_iter=100, start_vector=None):
+    def run(self, X, max_iter=100, start_vector=None):
         """A kernel SVD implementation.
 
         Performs SVD of given matrix. This is always faster than np.linalg.svd.
@@ -141,7 +142,7 @@ class FastSVD(ImplicitAlgorithm):
         >>> np.random.seed(0)
         >>> X = np.random.random((10,10))
         >>> fast_svd = FastSVD()
-        >>> fast_svd(X)
+        >>> fast_svd.run(X)
         array([[-0.3522974 ],
                [-0.35647707],
                [-0.35190104],
@@ -193,7 +194,7 @@ class FastSVD(ImplicitAlgorithm):
 
 class FastSparseSVD(ImplicitAlgorithm):
 
-    def __call__(self, X, max_iter=100, start_vector=None):
+    def run(self, X, max_iter=100, start_vector=None):
         """A kernel SVD implementation for sparse CSR matrices.
 
         This is usually faster than np.linalg.svd when density < 20% and when
@@ -205,15 +206,15 @@ class FastSparseSVD(ImplicitAlgorithm):
 
         Parameters
         ----------
-        X : The matrix to decompose
+        X : Numpy array. The matrix to decompose.
 
-        max_iter : maximum allowed number of iterations
+        max_iter : Integer. Maximum allowed number of iterations.
 
-        start_vector : a start vector
+        start_vector : Numpy array. The start vector.
 
         Returns
         -------
-        v : The right singular vector.
+        v : Numpy array. The right singular vector.
 
         Example
         -------
@@ -222,7 +223,7 @@ class FastSparseSVD(ImplicitAlgorithm):
         >>> np.random.seed(0)
         >>> X = np.random.random((10,10))
         >>> fast_sparse_svd = FastSparseSVD()
-        >>> fast_sparse_svd(X)
+        >>> fast_sparse_svd.run(X)
         array([[ 0.3522974 ],
                [ 0.35647707],
                [ 0.35190103],
@@ -233,8 +234,6 @@ class FastSparseSVD(ImplicitAlgorithm):
                [ 0.29501092],
                [ 0.42311297],
                [ 0.27656382]])
-
-
         """
         M, N = X.shape
         if M < N:
@@ -274,7 +273,7 @@ class FastSparseSVD(ImplicitAlgorithm):
 
 class FastSVDProduct(ImplicitAlgorithm):
 
-    def __call__(self, X, Y, start_vector=None,
+    def run(self, X, Y, start_vector=None,
                  eps=consts.TOLERANCE, max_iter=100, min_iter=1):
         """A kernel SVD implementation of a product of two matrices, X and Y.
         I.e. the SVD of np.dot(X, Y), but the SVD is computed without actually
@@ -285,22 +284,22 @@ class FastSVDProduct(ImplicitAlgorithm):
 
         Parameters
         ----------
-        X : The first matrix of the product.
+        X : Numpy array with shape (n, p). The first matrix of the product.
 
-        Y : The second matrix of the product.
+        Y : Numpy array with shape (p, m). The second matrix of the product.
 
-        start_vector : The start vector.
+        start_vector : Numpy array. The start vector.
 
         eps : Float. Tolerance.
 
-        max_iter : Maximum number of iterations.
+        max_iter : Integer. Maximum number of iterations.
 
-        min_iter : Minimum number of iterations.
+        min_iter : Integer. Minimum number of iterations.
 
         Returns
         -------
-        v : The right singular vector of np.dot(X, Y) that corresponds to the
-                largest singular value of np.dot(X, Y).
+        v : Numpy array. The right singular vector of np.dot(X, Y) that
+                corresponds to the largest singular value of np.dot(X, Y).
 
         Example
         -------
@@ -310,7 +309,7 @@ class FastSVDProduct(ImplicitAlgorithm):
         >>> X = np.random.random((15,10))
         >>> Y = np.random.random((10,5))
         >>> fast_svd = FastSVDProduct()
-        >>> fast_svd(X, Y)
+        >>> fast_svd.run(X, Y)
         array([[ 0.47169804],
                [ 0.38956366],
                [ 0.41397845],
@@ -375,14 +374,14 @@ class ISTA(ExplicitAlgorithm):
         self.max_iter = max_iter
         self.min_iter = min_iter
 
-    def __call__(self, function, beta):
+    def run(self, function, beta):
         """Call this object to obtain the variable that gives the minimum.
 
         Parameters
         ----------
-        function : The function to minimise.
+        function : Function. The function to minimise.
 
-        beta : The start vector.
+        beta : Numpy array. The start vector.
         """
         self.check_compatibility(function, self.INTERFACES)
 
@@ -453,7 +452,6 @@ class FISTA(ExplicitAlgorithm):
     import parsimony.algorithms as algorithms
     import parsimony.tv
     from parsimony.functions import OLSL2_L1_TV
-    from parsimony.algorithms import fista
     from parsimony.start_vectors import RandomStartVector
 
     shape = (100, 100, 1)
@@ -480,11 +478,11 @@ class FISTA(ExplicitAlgorithm):
     Ax, Ay, Az, n_compacts = parsimony.tv.tv_As_from_shape(shape)
 
     tvl1l2_conesta = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
-                                        algorithm=algorithms.conesta_static)
+                                        algorithm=algorithms.StaticCONESTA)
     tvl1l2_conesta.fit(X, y)
 
     tvl1l2_fista = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
-                                        algorithm=algorithms.fista)
+                                        algorithm=algorithms.FISTA)
     tvl1l2_fista.fit(X, y)
 
     residual = np.sum(tvl1l2_fista.beta - tvl1l2_conesta.beta)
@@ -509,7 +507,7 @@ class FISTA(ExplicitAlgorithm):
                                       **param)
 
 #    tvl1l2 = estimators.LinearRegressionL1L2TV(k, l, g, [Ax, Ay, Az],
-#                                algorithm=algorithms.conesta_static)
+#                                algorithm=algorithms.StaticCONESTA)
 #    tvl1l2.fit(X, y)
 #    start_beta_vector = random_start_vector.get_vector([X.shape[1], 1])
 #    fista(X, y, olsl2_L1_TV, start_beta_vector)
@@ -533,12 +531,12 @@ class FISTA(ExplicitAlgorithm):
         self.max_iter = max_iter
         self.min_iter = min_iter
 
-    def __call__(self, function, beta):
+    def run(self, function, beta):
         """Call this object to obtain the variable that gives the minimum.
 
         Parameters
         ----------
-        function : The function to minimise.
+        function : Function. The function to minimise.
 
         beta : Numpy array. A start vector.
         """
@@ -647,7 +645,7 @@ class CONESTA(ExplicitAlgorithm):
                            eps=self.eps,
                            max_iter=self.max_iter, min_iter=self.min_iter)
 
-    def __call__(self, function, beta):
+    def run(self, function, beta):
 
         self.check_compatibility(function, self.INTERFACES)
 
@@ -681,11 +679,11 @@ class CONESTA(ExplicitAlgorithm):
             eps_plus = min(max_eps, function.eps_opt(mu[-1]))
             self.FISTA.set_params(step=tnew, eps=eps_plus)
             if self.output:
-                (beta, info) = self.FISTA(function, beta)
+                (beta, info) = self.FISTA.run(function, beta)
                 fval = info["f"]
                 tval = info["t"]
             else:
-                beta = self.FISTA(function, beta)
+                beta = self.FISTA.run(function, beta)
 
             self.mu_min = min(self.mu_min, mu[-1])
             tmin = min(tmin, tnew)
@@ -802,7 +800,7 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
         self.max_iter = max_iter
         self.min_iter = min_iter
 
-    def __call__(self, function, beta=None):
+    def run(self, function, beta=None):
         """The excessive gap method for strongly convex functions.
 
         Parameters:
@@ -917,19 +915,18 @@ class Bisection(ExplicitAlgorithm):
         self.max_iter = max_iter
         self.min_iter = min_iter
 
-    def __call__(self, function, x=None):
+    def run(self, function, x=None):
         """
         Parameters
         ----------
-        function: The function for which a root is found. The function must be
-                increasing for increasing x, and decresing for decreasing x.
+        function : Function. The function for which a root is found.
 
-        x: A vector or tuple with two elements. The first element is the lower
+        x : A vector or tuple with two elements. The first element is the lower
                 end of the interval for which |f(x[0])|_2 < -eps. The second
                 element is the upper end of the interfal for which
-                |f(x[1])|_2 > eps. If x is None, these values are found.
-                Finding them may be slow, though, if the function is expensive
-                to evaluate.
+                |f(x[1])|_2 > eps. If x is None, these values are found
+                automatically. Finding them may be slow, though, if the
+                function is expensive to evaluate.
         """
         if x is not None:
             low = x[0]
@@ -1124,7 +1121,7 @@ class MultiblockProjectedGradientMethod(ExplicitAlgorithm):
         self.max_iter = max_iter
         self.min_iter = min_iter
 
-    def __call__(self, function, w):
+    def run(self, function, w):
 
         self.check_compatibility(function, self.INTERFACES)
 
@@ -1254,14 +1251,14 @@ class ProjectionADMM(ExplicitAlgorithm):
         self.max_iter = max_iter
         self.min_iter = min_iter
 
-    def __call__(self, function, x):
+    def run(self, function, x):
         """Finds the projection onto the intersection of two sets.
 
         Parameters
         ----------
-        function: List or tuple with two elements. The two functions.
+        function : List or tuple with two Functions. The two functions.
 
-        x: Numpy array. The point that we wish to project.
+        x : Numpy array. The point that we wish to project.
         """
         self.check_compatibility(function[0], self.INTERFACES)
         self.check_compatibility(function[1], self.INTERFACES)
@@ -1299,14 +1296,14 @@ class DykstrasProjectionAlgorithm(ExplicitAlgorithm):
         self.max_iter = max_iter
         self.min_iter = min_iter
 
-    def __call__(self, function, r):
+    def run(self, function, r):
         """Finds the projection onto the intersection of two sets.
 
         Parameters
         ----------
-        function: List or tuple with two elements. The two functions.
+        function : List or tuple with two Functions. The two functions.
 
-        r: Numpy array. The point that we wish to project.
+        r : Numpy array. The point that we wish to project.
         """
         self.check_compatibility(function[0], self.INTERFACES)
         self.check_compatibility(function[1], self.INTERFACES)
@@ -1351,7 +1348,7 @@ class ParallelDykstrasProjectionAlgorithm(ExplicitAlgorithm):
         self.max_iter = max_iter
         self.min_iter = min_iter
 
-    def __call__(self, functions, x, weights=None):
+    def run(self, functions, x, weights=None):
         """Finds the projection onto the intersection of two sets.
 
         Parameters
@@ -1431,7 +1428,7 @@ class BacktrackingLineSearch(ExplicitAlgorithm):
         self.max_iter = max_iter
         self.min_iter = min_iter
 
-    def __call__(self, function, x, p, rho=0.5, a=1.0, **params):
+    def run(self, function, x, p, rho=0.5, a=1.0, **params):
         """Finds the step length for a descent algorithm.
 
         Parameters

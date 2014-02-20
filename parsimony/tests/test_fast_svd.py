@@ -12,11 +12,10 @@ from parsimony.algorithms import FastSparseSVD
 import parsimony.utils as utils
 
 
-
 def generate_sparse_matrix(shape, density=0.10):
-    '''
-    Example
-    -------
+    """
+    Examples
+    --------
     >>> shape = (5, 5)
     >>> density = 0.2
     >>> print generate_sparse_matrix(shape, density)  # doctest: +SKIP
@@ -25,7 +24,7 @@ def generate_sparse_matrix(shape, density=0.10):
      [ 0.          0.          0.          0.12626569  0.        ]
      [ 0.          0.51318651  0.          0.          0.        ]
      [ 0.          0.          0.          0.          0.92133575]]
-    '''
+    """
     # shape = (5, 5)
     # density = 0.1
     num_elements = 1
@@ -46,7 +45,7 @@ class TestSVD(unittest.TestCase):
         # svd from numpy array
         U, s_np, V = np.linalg.svd(X)
         np_v = V[[0], :].T
-        
+
         sign = np.dot(computed_v.T, np_v)[0][0]
         np_v_new = np_v * sign
         err = np.linalg.norm(computed_v - np_v_new)
@@ -58,7 +57,7 @@ class TestSVD(unittest.TestCase):
         X = np.random.random((nrow, ncol))
         # svd from parsimony
         fast_svd = FastSVD()
-        parsimony_v = fast_svd(X, max_iter=1000)
+        parsimony_v = fast_svd.run(X, max_iter=1000)
         return self.get_err_by_np_linalg_svd(parsimony_v, X)
 
     def test_fast_svd(self):
@@ -82,7 +81,7 @@ class TestSVD(unittest.TestCase):
         np.save("/tmp/X_%d_%d.npy" % (nrow, ncol), X)
         # svd from parsimony
         fast_sparse_svd = FastSparseSVD()
-        parsimony_v = fast_sparse_svd(X, max_iter=1000)
+        parsimony_v = fast_sparse_svd.run(X, max_iter=1000)
         return self.get_err_by_np_linalg_svd(parsimony_v, X)
 
     def test_fast_sparse_svd(self):

@@ -150,7 +150,7 @@ class L1TV(interfaces.AtomicFunction,
 
             A = sparse.vstack(self.A()[1:])
             # TODO: Add max_iter here!!
-            v = FastSparseSVD()(A)  # , max_iter=max_iter)
+            v = FastSparseSVD().run(A)  # , max_iter=max_iter)
             us = A.dot(v)
             self._lambda_max = np.sum(us ** 2.0) + self.l ** 2.0
 

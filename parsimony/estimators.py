@@ -163,7 +163,7 @@ class LogisticRegressionEstimator(BaseEstimator):
         y[proba < .5] = 0
         return y
 
-    def predict_proba(self, X):
+    def predict_probability(self, X):
         logit = np.dot(X, self.beta)
         proba = 1. / (1. + np.exp(-logit))
         return proba
@@ -276,9 +276,9 @@ class RidgeRegression_L1_TV(RegressionEstimator):
         self.algorithm.set_params(output=self.output)
 
         if self.output:
-            (self.beta, self.info) = self.algorithm(self.function, beta)
+            (self.beta, self.info) = self.algorithm.run(self.function, beta)
         else:
-            self.beta = self.algorithm(self.function, beta)
+            self.beta = self.algorithm.run(self.function, beta)
 
         return self
 
@@ -334,6 +334,7 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
             self.mu = float(mu)
         else:
             self.mu = None
+
         super(RidgeLogisticRegression_L1_TV,
               self).__init__(algorithm=algorithm, output=output)
 
@@ -363,9 +364,9 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
         self.algorithm.set_params(output=self.output)
 
         if self.output:
-            (self.beta, self.info) = self.algorithm(self.function, beta)
+            (self.beta, self.info) = self.algorithm.run(self.function, beta)
         else:
-            self.beta = self.algorithm(self.function, beta)
+            self.beta = self.algorithm.run(self.function, beta)
 
         return self
 
@@ -454,9 +455,9 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
 
         self.algorithm.set_params(output=self.output)
         if self.output:
-            (self.beta, self.info) = self.algorithm(self.function)
+            (self.beta, self.info) = self.algorithm.run(self.function)
         else:
-            self.beta = self.algorithm(self.function)
+            self.beta = self.algorithm.run(self.function)
 
         return self
 
