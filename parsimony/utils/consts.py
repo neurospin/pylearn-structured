@@ -6,8 +6,9 @@ Created on Mon Nov 25 11:26:45 2013
 @email:   tommy.loefstedt@cea.fr
 @license: TBD.
 """
+import numpy as np
 
-__all__ = ['TOLERANCE', 'MAX_ITER']
+__all__ = ["TOLERANCE", "MAX_ITER", "FLOAT_EPSILON"]
 
 # Settings
 TOLERANCE = 5e-8
@@ -15,3 +16,5 @@ TOLERANCE = 5e-8
 # we should include a package-wide maximum at all.
 MAX_ITER = 10000
 #mu_zero = 5e-8
+
+FLOAT_EPSILON = np.finfo(float).eps

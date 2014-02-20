@@ -47,7 +47,16 @@ __all__ = ["BaseAlgorithm",
 
            "ExplicitAlgorithm",
            "ISTA", "FISTA", "CONESTA", "StaticCONESTA", "DynamicCONESTA",
-           "ExcessiveGapMethod"]
+           "ExcessiveGapMethod",
+
+           "Bisection",
+
+           "MultiblockProjectedGradientMethod",
+
+           "ProjectionADMM", "DykstrasProjectionAlgorithm",
+           "ParallelDykstrasProjectionAlgorithm",
+
+           "BacktrackingLineSearch"]
 
 
 class BaseAlgorithm(object):
@@ -1275,7 +1284,8 @@ class DykstrasProjectionAlgorithm(ExplicitAlgorithm):
     """Dykstra's projection algorithm. Computes the projection onto the
     intersection of two convex sets.
 
-    The functions have projection operators onto the corresponding convex sets.
+    The functions have projection operators (ProjectionOperator.proj) onto the
+    corresponding convex sets.
     """
     INTERFACES = [interfaces.Function,
                   interfaces.ProjectionOperator]
@@ -1314,6 +1324,74 @@ class DykstrasProjectionAlgorithm(ExplicitAlgorithm):
             p_new = x_old + p_old - y_old
             x_new = function[1].proj(y_old + q_old)
             q_new = y_old + q_old - x_new
+
+            if maths.norm(x_new - x_old) / maths.norm(x_old) < self.eps \
+                    and i >= self.min_iter:
+                break
+
+        return x_new
+
+
+class ParallelDykstrasProjectionAlgorithm(ExplicitAlgorithm):
+    """Dykstra's projection algorithm for two or more functions. Computes the
+    projection onto the intersection of two or more convex sets.
+
+    The functions have projection operators (ProjectionOperator.proj) onto the
+    respective convex sets.
+    """
+    INTERFACES = [interfaces.Function,
+                  interfaces.ProjectionOperator]
+
+    def __init__(self, output=False,
+                 eps=consts.TOLERANCE,
+                 max_iter=consts.MAX_ITER, min_iter=1):
+
+        self.output = output
+        self.eps = eps
+        self.max_iter = max_iter
+        self.min_iter = min_iter
+
+    def __call__(self, functions, x, weights=None):
+        """Finds the projection onto the intersection of two sets.
+
+        Parameters
+        ----------
+        functions : List or tuple with two or more elements. The functions.
+
+        x : Numpy array. The point that we wish to project.
+
+        weights : List or tuple with floats. Weights for the functions.
+                Default is that they all have the same weight. The elements of
+                the list or tuple must sum to 1.
+        """
+        for f in functions:
+            self.check_compatibility(f, self.INTERFACES)
+
+        num = len(functions)
+
+        if weights is None:
+            weights = [1.0 / float(num)] * num
+
+        x_new = x_old = x
+        p = [0.0] * len(functions)
+        z = [0.0] * len(functions)
+        for i in xrange(num):
+            z[i] = np.copy(x)
+
+        for i in xrange(1, self.max_iter + 1):
+
+            for i in xrange(num):
+                p[i] = functions[i].proj(z[i])
+
+            # TODO: Does the weights really matter when the function is the
+            # indicator function?
+            x_old = x_new
+            x_new = np.zeros(x_old.shape)
+            for i in xrange(num):
+                x_new += weights[i] * p[i]
+
+            for i in xrange(num):
+                z[i] = x + z[i] - p[i]
 
             if maths.norm(x_new - x_old) / maths.norm(x_old) < self.eps \
                     and i >= self.min_iter:
