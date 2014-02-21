@@ -81,6 +81,10 @@
                                      |   |
              <a href="parsimony.functions.interfaces.StronglyConvex-class.html">interfaces.StronglyConvex</a> --+
                                          |
+                            object --+   |
+                                     |   |
+                   <a href="parsimony.functions.interfaces.StepSize-class.html">interfaces.StepSize</a> --+
+                                         |
                                         <strong class="uidshort">RidgeRegression</strong>
 </pre>
 
@@ -257,6 +261,25 @@ k : Non-negative float. The ridge parameter.
       
     </td>
   </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="parsimony.functions.losses.RidgeRegression-class.html#step" class="summary-sig-name">step</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">beta</span>,
+        <span class="summary-sig-arg">index</span>=<span class="summary-sig-default">0</span>)</span><br />
+      The step size to use in descent methods.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="parsimony.functions.losses-pysrc.html#RidgeRegression.step">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
   <tr>
     <td colspan="2" class="summary">
     <p class="indent-wrapped-lines"><b>Inherited from <code><a href="parsimony.functions.interfaces.Function-class.html">interfaces.Function</a></code></b>:
@@ -306,13 +329,6 @@ k : Non-negative float. The ridge parameter.
         <a name="__abstractmethods__"></a><span class="summary-name">__abstractmethods__</span> = <code title="frozenset([])"><code class="variable-group">frozenset([</code><code class="variable-group">])</code></code>
     </td>
   </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-        <a name="_abc_negative_cache_version"></a><span class="summary-name">_abc_negative_cache_version</span> = <code title="15">15</code>
-    </td>
-  </tr>
   <tr>
     <td colspan="2" class="summary">
     <p class="indent-wrapped-lines"><b>Inherited from <code><a href="parsimony.functions.interfaces.CompositeFunction-class.html">interfaces.CompositeFunction</a></code></b>:
@@ -321,6 +337,7 @@ k : Non-negative float. The ridge parameter.
     <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="parsimony.functions.interfaces.Function-class.html">interfaces.Function</a></code></b> (private):
       <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_cache" onclick="show_private();">_abc_cache</a></code>,
       <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_negative_cache" onclick="show_private();">_abc_negative_cache</a></code>,
+      <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_negative_cache_version" onclick="show_private();">_abc_negative_cache_version</a></code>,
       <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_registry" onclick="show_private();">_abc_registry</a></code>
       </p></div>
     </td>
@@ -470,7 +487,20 @@ From the interface &quot;Gradient&quot;.
 
 Parameters
 ----------
-beta : The point at which to evaluate the gradient.
+beta : Numpy array. The point at which to evaluate the gradient.
+
+Examples
+--------
+&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from parsimony.functions.losses import RidgeRegression
+&gt;&gt;&gt;
+&gt;&gt;&gt; np.random.seed(42)
+&gt;&gt;&gt; X = np.random.rand(100, 150)
+&gt;&gt;&gt; y = np.random.rand(100, 1)
+&gt;&gt;&gt; rr = RidgeRegression(X=X, y=y, k=3.14159265)
+&gt;&gt;&gt; beta = np.random.rand(150, 1)
+&gt;&gt;&gt; np.linalg.norm(rr.grad(beta) - rr.approx_grad(beta, eps=1e-4))
+1.2734924643975701e-06
 
 </pre>
   <dl class="fields">
@@ -577,6 +607,37 @@ beta : The point at which to evaluate the gradient.
   </dl>
 </td></tr></table>
 </div>
+<a name="step"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">step</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">beta</span>,
+        <span class="sig-arg">index</span>=<span class="sig-default">0</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="parsimony.functions.losses-pysrc.html#RidgeRegression.step">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+The step size to use in descent methods.
+
+Parameters
+----------
+beta : Numpy array. The point at which to determine the step size.
+
+</pre>
+  <dl class="fields">
+    <dt>Overrides:
+        <a href="parsimony.functions.interfaces.StepSize-class.html#step">interfaces.StepSize.step</a>
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
 <br />
 <!-- ==================== NAVIGATION BAR ==================== -->
 <table class="navbar" border="0" width="100%" cellpadding="0"
@@ -604,7 +665,7 @@ beta : The point at which to evaluate the gradient.
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Feb 21 17:38:25 2014
+    Generated by Epydoc 3.0.1 on Fri Feb 21 18:01:44 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

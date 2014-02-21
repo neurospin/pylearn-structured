@@ -78,7 +78,7 @@
 
 <hr />
 <pre class="literalblock">
-The Logistic Regression function.
+The Logistic Regression loss function.
 
 Ridge (re-weighted) log-likelihood (cross-entropy):
 * f(beta) = -Sum wi (yi log(pi) + (1 &#8722; yi) log(1 &#8722; pi)) + k/2 ||beta||^2_2
@@ -89,14 +89,6 @@ Ridge (re-weighted) log-likelihood (cross-entropy):
 pi = p(y=1|xi, beta) = 1 / (1 + exp(-xi' beta))
 wi: sample i weight
 [Hastie 2009, p.: 102, 119 and 161, Bishop 2006 p.: 206]
-
-Parameters
-----------
-X : Numpy array (n-by-p). The regressor matrix.
-
-y : Numpy array (n-by-1). The regressand vector.
-
-weights: Numpy array (n-by-1). The sample's weights.
 
 </pre>
 
@@ -126,9 +118,11 @@ weights: Numpy array (n-by-1). The sample's weights.
           <td><span class="summary-sig"><a href="parsimony.functions.losses.RidgeLogisticRegression-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">X</span>,
         <span class="summary-sig-arg">y</span>,
-        <span class="summary-sig-arg">k</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">k</span>=<span class="summary-sig-default">0.0</span>,
         <span class="summary-sig-arg">weights</span>=<span class="summary-sig-default">None</span>)</span><br />
-      x.__init__(...) initializes x; see help(type(x)) for signature</td>
+      Parameters
+----------
+X : Numpy array (n-by-p).</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.functions.losses-pysrc.html#RidgeLogisticRegression.__init__">source&nbsp;code</a></span>
             
@@ -257,13 +251,6 @@ weights: Numpy array (n-by-1). The sample's weights.
         <a name="__abstractmethods__"></a><span class="summary-name">__abstractmethods__</span> = <code title="frozenset([])"><code class="variable-group">frozenset([</code><code class="variable-group">])</code></code>
     </td>
   </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-        <a name="_abc_negative_cache_version"></a><span class="summary-name">_abc_negative_cache_version</span> = <code title="15">15</code>
-    </td>
-  </tr>
   <tr>
     <td colspan="2" class="summary">
     <p class="indent-wrapped-lines"><b>Inherited from <code><a href="parsimony.functions.interfaces.CompositeFunction-class.html">interfaces.CompositeFunction</a></code></b>:
@@ -272,6 +259,7 @@ weights: Numpy array (n-by-1). The sample's weights.
     <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="parsimony.functions.interfaces.Function-class.html">interfaces.Function</a></code></b> (private):
       <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_cache" onclick="show_private();">_abc_cache</a></code>,
       <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_negative_cache" onclick="show_private();">_abc_negative_cache</a></code>,
+      <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_negative_cache_version" onclick="show_private();">_abc_negative_cache_version</a></code>,
       <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_registry" onclick="show_private();">_abc_registry</a></code>
       </p></div>
     </td>
@@ -330,7 +318,7 @@ weights: Numpy array (n-by-1). The sample's weights.
   <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
         <span class="sig-arg">X</span>,
         <span class="sig-arg">y</span>,
-        <span class="sig-arg">k</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">k</span>=<span class="sig-default">0.0</span>,
         <span class="sig-arg">weights</span>=<span class="sig-default">None</span>)</span>
     <br /><em class="fname">(Constructor)</em>
   </h3>
@@ -339,11 +327,22 @@ weights: Numpy array (n-by-1). The sample's weights.
     </td>
   </tr></table>
   
-  <p>x.__init__(...) initializes x; see help(type(x)) for signature</p>
+  <pre class="literalblock">
+
+Parameters
+----------
+X : Numpy array (n-by-p). The regressor matrix.
+
+y : Numpy array (n-by-1). The regressand vector.
+
+k : Non-negative float. The ridge parameter.
+
+weights: Numpy array (n-by-1). The sample's weights.
+
+</pre>
   <dl class="fields">
     <dt>Overrides:
         object.__init__
-        <dd><em class="note">(inherited documentation)</em></dd>
     </dt>
   </dl>
 </td></tr></table>
@@ -390,7 +389,8 @@ Function value of Logistic regression at beta.
 
 Parameters
 ----------
-beta : Regression coefficient vector
+beta : Numpy array. Regression coefficient vector. The point at which
+        to evaluate the function.
 
 </pre>
   <dl class="fields">
@@ -422,7 +422,22 @@ From the interface &quot;Gradient&quot;.
 
 Parameters
 ----------
-beta : The point at which to evaluate the gradient.
+beta : Numpy array. The point at which to evaluate the gradient.
+
+Examples
+--------
+&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from parsimony.functions.losses import RidgeLogisticRegression
+&gt;&gt;&gt;
+&gt;&gt;&gt; np.random.seed(42)
+&gt;&gt;&gt; X = np.random.rand(100, 150)
+&gt;&gt;&gt; y = np.random.rand(100, 1)
+&gt;&gt;&gt; y[y &lt; 0.5] = 0.0
+&gt;&gt;&gt; y[y &gt;= 0.5] = 1.0
+&gt;&gt;&gt; rr = RidgeLogisticRegression(X=X, y=y, k=2.71828182)
+&gt;&gt;&gt; beta = np.random.rand(150, 1)
+&gt;&gt;&gt; np.linalg.norm(rr.grad(beta) - rr.approx_grad(beta, eps=1e-4))
+3.3344262548517587e-08
 
 </pre>
   <dl class="fields">
@@ -447,8 +462,8 @@ beta : The point at which to evaluate the gradient.
   </tr></table>
   
   <p>Lipschitz constant of the gradient.</p>
-  <p>From the interface &quot;LipschitzContinuousGradient&quot;. max eigen 
-  value of (1/4 Xt W X)</p>
+  <p>Returns the maximum eigenvalue of (1 / 4) * X'WX.</p>
+  <p>From the interface &quot;LipschitzContinuousGradient&quot;.</p>
   <dl class="fields">
     <dt>Overrides:
         <a href="parsimony.functions.interfaces.LipschitzContinuousGradient-class.html#L">interfaces.LipschitzContinuousGradient.L</a>
@@ -483,7 +498,7 @@ beta : The point at which to evaluate the gradient.
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Feb 21 17:38:25 2014
+    Generated by Epydoc 3.0.1 on Fri Feb 21 18:01:44 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

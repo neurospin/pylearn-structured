@@ -90,7 +90,7 @@
         <a href="parsimony.datasets.samples_generator_struct.ObjImage-class.html" class="summary-name">ObjImage</a><br />
       Parameters:
 -----------
-c_x, c_y: Center of object
+mask: ???
     </td>
   </tr>
 <tr>
@@ -167,7 +167,7 @@ c_x, c_y: Center of object
         <span class="summary-sig-arg">object_pixel_ratio</span>=<span class="summary-sig-default">0.5</span>,
         <span class="summary-sig-arg">objects</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">random_seed</span>=<span class="summary-sig-default">None</span>)</span><br />
-      Generate regression samples (images + target variable) and beta.</td>
+      Generates regression samples (images + target variable) and beta.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#make_regression_struct">source&nbsp;code</a></span>
             
@@ -325,42 +325,35 @@ y = 1 if proba &gt;= 0.5 else 0
 
 Parameters
 ----------
+See make_regression_struct, exept for r2 which is replaced by snr.
 
-See make_regression_struct, exept for r2 which is replaced by snr
+snr: Float. Default 2. Signal to noise ratio: std(X * beta) / std(noise)
+        in 1. / (1 + exp(-(X * beta + noise))
 
-snr: float (default 2.)
-    Signal to noise ratio: std(X * beta) / std(noise) in
-    1. / (1 + exp(-(X * beta + noise))
+sigma_logit: Float. Default is 5. The standard deviation of
+    logit = X * beta + noise. Large sigma_logit promotes sharp shape of
+    logistic function, ie: probabilities are close to 0 or 1, which
+    increases likekihood.
 
-sigma_logit: float (default 5.)
-    standard deviation of logit = X * beta + noise
-    large sigma_logit promotes sharp shape of logistic function, ie:
-    probabilities are close to 0 or 1, which increases likekihood.
+Returns
+-------
+X3d: Numpy array of shape [n_sample, shape]. The input features.
 
-Return
-------
+y: Numpy array of shape [n_sample, 1]. The target variable.
 
-X3d: array of shape [n_sample, shape]
-    The input features.
+beta3d: Float array of shape [shape]. It is the beta such that
+y = 1. / (1 + exp(-(X * beta + noise)).
 
-y: array of shape [n_sample, 1]
-    The target variable.
-
-beta3d: float array of shape [shape]
-   It is the beta such that y = 1. / (1 + exp(-(X * beta + noise))
-
-proba: array of shape [n_sample, 1]
-    Samples posterior probabilities
+proba: Numpy array of shape [n_sample, 1]. Samples posterior probabilities.
 
 See also
 --------
-
 make_regression_struct
 
 Examples
 --------
 &gt;&gt;&gt; import numpy as np
-&gt;&gt;&gt; import matplotlib.pyplot as plt
+&gt;&gt;&gt; import matplotlib.pyplot as plot
 &gt;&gt;&gt; from parsimony.datasets import make_classification_struct
 &gt;&gt;&gt; n_samples = 100
 &gt;&gt;&gt; shape = (11, 11, 1)
@@ -368,14 +361,14 @@ Examples
 ...     shape=shape, sigma_logit=1., random_seed=1)
 &gt;&gt;&gt; print &quot;Likelihood=&quot;, np.prod(proba[y.ravel()==1]) * np.prod(1-proba[y.ravel()==0])
 Likelihood= 1.98405647549e-18
-&gt;&gt;&gt; plt.plot(proba[y.ravel()==1], &quot;ro&quot;, proba[y.ravel()==0], &quot;bo&quot;)
-&gt;&gt;&gt; plt.show()
+&gt;&gt;&gt; # plot.plot(proba[y.ravel()==1], &quot;ro&quot;, proba[y.ravel()==0], &quot;bo&quot;)
+&gt;&gt;&gt; # plot.show()
 &gt;&gt;&gt; X3d, y, beta3d, proba = make_classification_struct(n_samples=n_samples,
 ...     shape=shape, sigma_logit=5., random_seed=1)
 &gt;&gt;&gt; print &quot;Likelihood=&quot;, np.prod(proba[y.ravel()==1]) * np.prod(1-proba[y.ravel()==0])
 Likelihood= 2.19102268035e-06
-&gt;&gt;&gt; plt.plot(proba[y.ravel()==1], &quot;ro&quot;, proba[y.ravel()==0], &quot;bo&quot;)
-&gt;&gt;&gt; plt.show()
+&gt;&gt;&gt; # plot.plot(proba[y.ravel()==1], &quot;ro&quot;, proba[y.ravel()==0], &quot;bo&quot;)
+&gt;&gt;&gt; # plot.show()
 
 </pre>
   <dl class="fields">
@@ -403,7 +396,7 @@ Likelihood= 2.19102268035e-06
   </tr></table>
   
   <pre class="literalblock">
-Generate regression samples (images + target variable) and beta.
+Generates regression samples (images + target variable) and beta.
 
 Input features (X) covariance structure is controled both at a pixel
 level (spatial smoothing) and object level. Objects are component
@@ -414,57 +407,48 @@ that r_square(y, X * beta) = r2 and noise is sampled according to N(0, 1).
 
 Parameters
 ----------
+n_samples: Integer. Number of samples. Default is 100.
 
-n_samples: int
-    nb of samples, (default 100).
+# TODO: This is wrong. Shape should be Z, Y, X.
+shape: Tuple or list with three integers. Order x, y, z shape each samples
+        Default is (30, 30, 1).
 
-shape: (int, int, int)
-    x, y, z shape each samples (default (30, 30, 1)).
+r2: Float. The desire R-squared (explained variance) ie.:
+        r_square(y, X * beta) = r2 (Default is .75)
 
-r2: float
-    The desire R-squared (explained variance) ie.:
-    r_square(y, X * beta) = r2 (Default is .75)
+sigma_spatial_smoothing: Float. Standard deviation for Gaussian kernel
+        (default is 1). High value promotes spatial correlation pixels.
 
-sigma_spatial_smoothing: scalar
-    Standard deviation for Gaussian kernel (default 1). High value promotes
-    spatial correlation pixels.
+object_pixel_ratio: Float. Controls the ratio between object-level signal
+        and pixel-level signal for pixels within objects. If
+        object_pixel_ratio == 1 then 100% of the signal of pixels within
+        the same object is shared (ie.: no pixel level) signal. If
+        object_pixel_ratio == 0 then all the signal is pixel specific.
+        High object_pixel_ratio promotes spatial correlation between
+        pixels of the same object.
 
-object_pixel_ratio: float
-    Controls the ratio between object-level signal and pixel-level signal
-    for pixels within objects. If object_pixel_ratio == 1 then 100% of
-    the signal of pixels within the same object is shared (ie.: no pixel
-    level) signal. If object_pixel_ratio == 0 then all the signal is
-    pixel specific. High object_pixel_ratio promotes spatial
-    correlation between pixels of the same object.
+objects: List of objects. Objects carying information to be drawn in the
+        image. If not provide a dice with five points (object) will be
+        drawn. Point 1, 3, 4 are carying predictive information while
+        point 2 is a suppressor of point 1 and point 5 is a suppressor of
+        point 3. Object should implement &quot;get_mask()&quot; method, a have
+        &quot;is_suppressor&quot; (bool) and &quot;r&quot; (ref to suppressor object,
+        possibely None) attributes.
 
-objects: list of objects
-    Objects carying information to be drawn in the image. If not provide
-    a dice with five points (object) will be drawn. Point 1, 3, 4 are
-    carying predictive information while point 2 is a suppressor of point
-    1 and point 5 is a suppressor of point 3.
-    Object should implement &quot;get_mask()&quot; method, a have &quot;is_suppressor&quot;
-    (bool) and &quot;r&quot; (ref to suppressor object, possibely None)
-    attributes.
+random_seed: None or integer. See numpy.random.seed(). If not None, it can
+        be used to obtain reproducable samples.
 
-random_seed: None or int
-    See numpy.random.seed(). If not None, it can be used to obtain
-    reproducable samples.
+Returns
+-------
+X3d: Numpy array of shape [n_sample, shape]. The input features.
 
-Return
-------
+y: Numpy array of shape [n_sample, 1]. The target variable.
 
-X3d: array of shape [n_sample, shape]
-    The input features.
-
-y: array of shape [n_sample, 1]
-    The target variable.
-
-beta3d: float array of shape [shape]
-   It is the beta such that y = X * beta + noise
+beta3d: Numpy array of shape [shape,]. It is the beta such that
+        y = X * beta + noise.
 
 Details
 -------
-
 The general procedure is:
     1) For each pixel i, Generate independant variables Xi ~ N(0, 1)
     2) Add object level structure corresponding to the five dots:
@@ -502,21 +486,21 @@ The general procedure is:
 Examples
 --------
 &gt;&gt;&gt; import numpy as np
-&gt;&gt;&gt; import matplotlib.pyplot as plt
+&gt;&gt;&gt; import matplotlib.pyplot as plot
 &gt;&gt;&gt; from parsimony.datasets import make_regression_struct
 &gt;&gt;&gt; n_samples = 100
 &gt;&gt;&gt; shape = (11, 11, 1)
-&gt;&gt;&gt; X3d, y, beta3d = make_regression_struct(n_samples=n_samples, shape=shape,
-...                            r2=.5, random_seed=1)
+&gt;&gt;&gt; X3d, y, beta3d = make_regression_struct(n_samples=n_samples,
+...         shape=shape, r2=.5, random_seed=1)
 &gt;&gt;&gt; X = X3d.reshape(n_samples, np.prod(shape))
 &gt;&gt;&gt; beta = beta3d.ravel()
-&gt;&gt;&gt; from sklearn.metrics import r2_score
-&gt;&gt;&gt; print np.round(r2_score(y, np.dot(X, beta)), 2)
-0.47
-&gt;&gt;&gt; cax = plt.matshow(beta3d.squeeze())
-&gt;&gt;&gt; plt.colorbar(cax)
-&gt;&gt;&gt; plt.title(&quot;Beta&quot;)
-&gt;&gt;&gt; plt.show()
+&gt;&gt;&gt; # from sklearn.metrics import r2_score
+&gt;&gt;&gt; # print np.round(r2_score(y, np.dot(X, beta)), 2)
+&gt;&gt;&gt; # 0.47
+&gt;&gt;&gt; # cax = plot.matshow(beta3d.squeeze())
+&gt;&gt;&gt; # plot.colorbar(cax)
+&gt;&gt;&gt; # plot.title(&quot;Beta&quot;)
+&gt;&gt;&gt; # plot.show()
 
 </pre>
   <dl class="fields">
@@ -542,23 +526,21 @@ Examples
   
   <pre class="literalblock">
 In a linear model y = bx + e. Calculate b such cor(bx + e, x) = cor.
+
 Parameters
 ----------
-v_x: float
-    var(x)
+v_x: Float. The variance of x, var(x).
 
-v_e: float
-    var(e)
+v_e: Float. The variance of e, var(e).
 
-cov_xe: float
-    cov(x, e)
+cov_xe: Float. The covariance between x and e, cov(x, e).
 
-cor: float
-    The desire correlation
+cor: Float. The desired correlation.
 
-Example
--------
-b = corr_to_coef(1, 1, 0, .5)
+Examples
+--------
+&gt;&gt;&gt; corr_to_coef(1, 1, 0, .5)
+0.57735026918962573
 
 </pre>
   <dl class="fields">
@@ -587,17 +569,17 @@ Seven objects, five dot + union1 = dots 1 + 2 and union2 = dots 4 + 5
 2, 5  have coef_info = -coef_info/2
 union1 and union2 have coef_info = 0
 
-Example
--------
+Examples
+--------
 #shape = (5, 5, 1)
 coef_info = 1
 coef_noise = 1
 noise = np.zeros(shape)
 info = np.zeros(shape)
 for o in dice_five_with_union_of_pairs(shape, coef_info, coef_noise):
-    noise[o.get_mask()] += o.coef_noise
-    info[o.get_mask()] += o.coef_info
-    print o.coef_noise, o.coef_info
+   noise[o.get_mask()] += o.coef_noise
+   info[o.get_mask()] += o.coef_info
+   print o.coef_noise, o.coef_info
 plot = plt.subplot(121)
 import matplotlib.pyplot as plt
 cax = plot.matshow(noise.squeeze())
@@ -641,7 +623,7 @@ plt.show()
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Feb 21 17:38:24 2014
+    Generated by Epydoc 3.0.1 on Fri Feb 21 18:01:43 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

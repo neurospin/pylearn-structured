@@ -1,0 +1,850 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>parsimony.algorithms.multiblock</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="parsimony-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="parsimony-module.html">Package&nbsp;parsimony</a> ::
+        <a href="parsimony.algorithms-module.html">Package&nbsp;algorithms</a> ::
+        Module&nbsp;multiblock
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="parsimony.algorithms.multiblock-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="parsimony.algorithms.multiblock-module.html">Module parsimony.algorithms.multiblock</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno">  1</tt>  <tt class="py-line"><tt class="py-comment"># -*- coding: utf-8 -*-</tt> </tt>
+<a name="L2"></a><tt class="py-lineno">  2</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L3"></a><tt class="py-lineno">  3</tt>  <tt class="py-line"><tt class="py-docstring">The :mod:`parsimony.algorithms` module includes several algorithms used</tt> </tt>
+<a name="L4"></a><tt class="py-lineno">  4</tt>  <tt class="py-line"><tt class="py-docstring">throughout the package.</tt> </tt>
+<a name="L5"></a><tt class="py-lineno">  5</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L6"></a><tt class="py-lineno">  6</tt>  <tt class="py-line"><tt class="py-docstring">Algorithms may not store states. I.e., if they are classes, do not keep</tt> </tt>
+<a name="L7"></a><tt class="py-lineno">  7</tt>  <tt class="py-line"><tt class="py-docstring">references to objects with state in the algorithm objects. It should be</tt> </tt>
+<a name="L8"></a><tt class="py-lineno">  8</tt>  <tt class="py-line"><tt class="py-docstring">possible to copy and share algorithms between estimators, and thus they should</tt> </tt>
+<a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line"><tt class="py-docstring">not depend on any state.</tt> </tt>
+<a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"><tt class="py-docstring">There are currently two types of algorithms: implicit and explicit. The</tt> </tt>
+<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line"><tt class="py-docstring">difference is whether they run directly on the data (implicit) or if they have</tt> </tt>
+<a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"><tt class="py-docstring">an actual loss function than is minimised (explicit). Implicit algorithms take</tt> </tt>
+<a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"><tt class="py-docstring">the data as input, and then run on the data. Explicit algorithms take a loss</tt> </tt>
+<a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt class="py-docstring">function and a start vector as input, and then minimise the function value</tt> </tt>
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-docstring">starting from the point of the start vector.</tt> </tt>
+<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"><tt class="py-docstring">Created on Thu Feb 20 22:12:00 2014</tt> </tt>
+<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"><tt class="py-docstring">@author:  Tommy L&#246;fstedt</tt> </tt>
+<a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"><tt class="py-docstring">@email:   lofstedt.tommy@gmail.com</tt> </tt>
+<a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line"><tt class="py-docstring">@license: BSD 3-clause.</tt> </tt>
+<a name="L23"></a><tt class="py-lineno"> 23</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">copy</tt> </tt>
+<a name="L25"></a><tt class="py-lineno"> 25</tt>  <tt class="py-line"> </tt>
+<a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt class="py-op">.</tt> <tt class="py-keyword">import</tt> <tt id="link-0" class="py-name" targets="Module parsimony.algorithms.bases=parsimony.algorithms.bases-module.html"><a title="parsimony.algorithms.bases" class="py-name" href="#" onclick="return doclink('link-0', 'bases', 'link-0');">bases</a></tt> </tt>
+<a name="L27"></a><tt class="py-lineno"> 27</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt id="link-1" class="py-name" targets="Package parsimony=parsimony-module.html"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-1', 'parsimony', 'link-1');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-2" class="py-name" targets="Module parsimony.algorithms.utils=parsimony.algorithms.utils-module.html,Module parsimony.datasets.simulated.utils=parsimony.datasets.simulated.utils-module.html,Package parsimony.utils=parsimony.utils-module.html,Module parsimony.utils.utils=parsimony.utils.utils-module.html"><a title="parsimony.algorithms.utils
+parsimony.datasets.simulated.utils
+parsimony.utils
+parsimony.utils.utils" class="py-name" href="#" onclick="return doclink('link-2', 'utils', 'link-2');">utils</a></tt><tt class="py-op">.</tt><tt id="link-3" class="py-name" targets="Module parsimony.utils.maths=parsimony.utils.maths-module.html"><a title="parsimony.utils.maths" class="py-name" href="#" onclick="return doclink('link-3', 'maths', 'link-3');">maths</a></tt> <tt class="py-keyword">as</tt> <tt id="link-4" class="py-name"><a title="parsimony.utils.maths" class="py-name" href="#" onclick="return doclink('link-4', 'maths', 'link-3');">maths</a></tt> </tt>
+<a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt id="link-5" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-5', 'parsimony', 'link-1');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-6" class="py-name"><a title="parsimony.algorithms.utils
+parsimony.datasets.simulated.utils
+parsimony.utils
+parsimony.utils.utils" class="py-name" href="#" onclick="return doclink('link-6', 'utils', 'link-2');">utils</a></tt><tt class="py-op">.</tt><tt id="link-7" class="py-name" targets="Module parsimony.utils.consts=parsimony.utils.consts-module.html"><a title="parsimony.utils.consts" class="py-name" href="#" onclick="return doclink('link-7', 'consts', 'link-7');">consts</a></tt> <tt class="py-keyword">as</tt> <tt id="link-8" class="py-name"><a title="parsimony.utils.consts" class="py-name" href="#" onclick="return doclink('link-8', 'consts', 'link-7');">consts</a></tt> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt id="link-9" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-9', 'parsimony', 'link-1');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-10" class="py-name" targets="Package parsimony.functions=parsimony.functions-module.html,Module parsimony.functions._objectives.functions=parsimony.functions._objectives.functions-module.html,Module parsimony.functions.functions=parsimony.functions.functions-module.html,Module parsimony.functions.objectives.functions=parsimony.functions.objectives.functions-module.html"><a title="parsimony.functions
+parsimony.functions._objectives.functions
+parsimony.functions.functions
+parsimony.functions.objectives.functions" class="py-name" href="#" onclick="return doclink('link-10', 'functions', 'link-10');">functions</a></tt><tt class="py-op">.</tt><tt id="link-11" class="py-name" targets="Module parsimony.functions.interfaces=parsimony.functions.interfaces-module.html,Module parsimony.functions.multiblock.interfaces=parsimony.functions.multiblock.interfaces-module.html,Module parsimony.functions.nesterov.interfaces=parsimony.functions.nesterov.interfaces-module.html"><a title="parsimony.functions.interfaces
+parsimony.functions.multiblock.interfaces
+parsimony.functions.nesterov.interfaces" class="py-name" href="#" onclick="return doclink('link-11', 'interfaces', 'link-11');">interfaces</a></tt> <tt class="py-keyword">as</tt> <tt id="link-12" class="py-name"><a title="parsimony.functions.interfaces
+parsimony.functions.multiblock.interfaces
+parsimony.functions.nesterov.interfaces" class="py-name" href="#" onclick="return doclink('link-12', 'interfaces', 'link-11');">interfaces</a></tt> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt id="link-13" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-13', 'parsimony', 'link-1');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-14" class="py-name"><a title="parsimony.functions
+parsimony.functions._objectives.functions
+parsimony.functions.functions
+parsimony.functions.objectives.functions" class="py-name" href="#" onclick="return doclink('link-14', 'functions', 'link-10');">functions</a></tt><tt class="py-op">.</tt><tt id="link-15" class="py-name" targets="Module parsimony.algorithms.multiblock=parsimony.algorithms.multiblock-module.html,Package parsimony.functions.multiblock=parsimony.functions.multiblock-module.html"><a title="parsimony.algorithms.multiblock
+parsimony.functions.multiblock" class="py-name" href="#" onclick="return doclink('link-15', 'multiblock', 'link-15');">multiblock</a></tt><tt class="py-op">.</tt><tt id="link-16" class="py-name"><a title="parsimony.functions.interfaces
+parsimony.functions.multiblock.interfaces
+parsimony.functions.nesterov.interfaces" class="py-name" href="#" onclick="return doclink('link-16', 'interfaces', 'link-11');">interfaces</a></tt> <tt class="py-keyword">as</tt> <tt class="py-name">multiblock_interfaces</tt> </tt>
+<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line"> </tt>
+<a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line"><tt class="py-name">__all__</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-string">"MultiblockProjectedGradientMethod"</tt><tt class="py-op">]</tt> </tt>
+<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line"> </tt>
+<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line"> </tt>
+<a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line"><tt class="py-comment">#class GeneralisedMultiblockISTA(ExplicitAlgorithm):</tt> </tt>
+<a name="L36"></a><tt class="py-lineno"> 36</tt>  <tt class="py-line"><tt class="py-comment">#    """ The iterative shrinkage threshold algorithm in a multiblock setting.</tt> </tt>
+<a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line"><tt class="py-comment">#    """</tt> </tt>
+<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line"><tt class="py-comment">#    INTERFACES = [functions.MultiblockFunction,</tt> </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line"><tt class="py-comment">#                  functions.MultiblockGradient,</tt> </tt>
+<a name="L40"></a><tt class="py-lineno"> 40</tt>  <tt class="py-line"><tt class="py-comment">#                  functions.MultiblockProximalOperator,</tt> </tt>
+<a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line"><tt class="py-comment">#                  functions.StepSize,</tt> </tt>
+<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line"><tt class="py-comment">#                 ]</tt> </tt>
+<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line"><tt class="py-comment">#</tt> </tt>
+<a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line"><tt class="py-comment">#    def __init__(self, step=None, output=False,</tt> </tt>
+<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line"><tt class="py-comment">#                 eps=consts.TOLERANCE,</tt> </tt>
+<a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line"><tt class="py-comment">#                 max_iter=consts.MAX_ITER, min_iter=1):</tt> </tt>
+<a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line"><tt class="py-comment">#</tt> </tt>
+<a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line"><tt class="py-comment">#        self.step = step</tt> </tt>
+<a name="L49"></a><tt class="py-lineno"> 49</tt>  <tt class="py-line"><tt class="py-comment">#        self.output = output</tt> </tt>
+<a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line"><tt class="py-comment">#        self.eps = eps</tt> </tt>
+<a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line"><tt class="py-comment">#        self.max_iter = max_iter</tt> </tt>
+<a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line"><tt class="py-comment">#        self.min_iter = min_iter</tt> </tt>
+<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line"><tt class="py-comment">#</tt> </tt>
+<a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line"><tt class="py-comment">#    def __call__(self, function, w):</tt> </tt>
+<a name="L55"></a><tt class="py-lineno"> 55</tt>  <tt class="py-line"><tt class="py-comment">#</tt> </tt>
+<a name="L56"></a><tt class="py-lineno"> 56</tt>  <tt class="py-line"><tt class="py-comment">#        self.check_compatability(function, self.INTERFACES)</tt> </tt>
+<a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line"><tt class="py-comment">#</tt> </tt>
+<a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line"><tt class="py-comment">#        for it in xrange(10):  # TODO: Get number of iterations!</tt> </tt>
+<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line"><tt class="py-comment">#            print "it:", it</tt> </tt>
+<a name="L60"></a><tt class="py-lineno"> 60</tt>  <tt class="py-line"><tt class="py-comment">#</tt> </tt>
+<a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line"><tt class="py-comment">#            for i in xrange(len(w)):</tt> </tt>
+<a name="L62"></a><tt class="py-lineno"> 62</tt>  <tt class="py-line"><tt class="py-comment">#                print "  i:", i</tt> </tt>
+<a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line"><tt class="py-comment">#</tt> </tt>
+<a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line"><tt class="py-comment">#                for k in xrange(10000):</tt> </tt>
+<a name="L65"></a><tt class="py-lineno"> 65</tt>  <tt class="py-line"><tt class="py-comment">#                    print "    k:", k</tt> </tt>
+<a name="L66"></a><tt class="py-lineno"> 66</tt>  <tt class="py-line"><tt class="py-comment">#</tt> </tt>
+<a name="L67"></a><tt class="py-lineno"> 67</tt>  <tt class="py-line"><tt class="py-comment">#                    t = function.step(w, i)</tt> </tt>
+<a name="L68"></a><tt class="py-lineno"> 68</tt>  <tt class="py-line"><tt class="py-comment">#                    w[i] = w[i] - t * function.grad(w, i)</tt> </tt>
+<a name="L69"></a><tt class="py-lineno"> 69</tt>  <tt class="py-line"><tt class="py-comment">#                    w = function.prox(w, i, t)</tt> </tt>
+<a name="L70"></a><tt class="py-lineno"> 70</tt>  <tt class="py-line"><tt class="py-comment">##                    = w[:i] + [wi] + w[i+1:]</tt> </tt>
+<a name="L71"></a><tt class="py-lineno"> 71</tt>  <tt class="py-line"><tt class="py-comment">#</tt> </tt>
+<a name="L72"></a><tt class="py-lineno"> 72</tt>  <tt class="py-line"><tt class="py-comment">#                    print "    f:", function.f(w)</tt> </tt>
+<a name="L73"></a><tt class="py-lineno"> 73</tt>  <tt class="py-line"><tt class="py-comment">#</tt> </tt>
+<a name="L74"></a><tt class="py-lineno"> 74</tt>  <tt class="py-line"><tt class="py-comment">##                w[i] = wi</tt> </tt>
+<a name="L75"></a><tt class="py-lineno"> 75</tt>  <tt class="py-line"><tt class="py-comment">#</tt> </tt>
+<a name="L76"></a><tt class="py-lineno"> 76</tt>  <tt class="py-line"><tt class="py-comment">#        return w</tt> </tt>
+<a name="L77"></a><tt class="py-lineno"> 77</tt>  <tt class="py-line"> </tt>
+<a name="L78"></a><tt class="py-lineno"> 78</tt>  <tt class="py-line"> </tt>
+<a name="MultiblockProjectedGradientMethod"></a><div id="MultiblockProjectedGradientMethod-def"><a name="L79"></a><tt class="py-lineno"> 79</tt> <a class="py-toggle" href="#" id="MultiblockProjectedGradientMethod-toggle" onclick="return toggle('MultiblockProjectedGradientMethod');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="parsimony.algorithms.multiblock.MultiblockProjectedGradientMethod-class.html">MultiblockProjectedGradientMethod</a><tt class="py-op">(</tt><tt class="py-base-class">bases</tt><tt class="py-op">.</tt><tt class="py-base-class">ExplicitAlgorithm</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="MultiblockProjectedGradientMethod-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="MultiblockProjectedGradientMethod-expanded"><a name="L80"></a><tt class="py-lineno"> 80</tt>  <tt class="py-line">    <tt class="py-docstring">""" The projected gradient algorithm with alternating minimisations in a</tt> </tt>
+<a name="L81"></a><tt class="py-lineno"> 81</tt>  <tt class="py-line"><tt class="py-docstring">    multiblock setting.</tt> </tt>
+<a name="L82"></a><tt class="py-lineno"> 82</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L83"></a><tt class="py-lineno"> 83</tt>  <tt class="py-line">    <tt id="link-17" class="py-name" targets="Variable parsimony._algorithms.BacktrackingLineSearch.INTERFACES=parsimony._algorithms.BacktrackingLineSearch-class.html#INTERFACES,Variable parsimony._algorithms.Bisection.INTERFACES=parsimony._algorithms.Bisection-class.html#INTERFACES,Variable parsimony._algorithms.CONESTA.INTERFACES=parsimony._algorithms.CONESTA-class.html#INTERFACES,Variable parsimony._algorithms.DykstrasProjectionAlgorithm.INTERFACES=parsimony._algorithms.DykstrasProjectionAlgorithm-class.html#INTERFACES,Variable parsimony._algorithms.ExcessiveGapMethod.INTERFACES=parsimony._algorithms.ExcessiveGapMethod-class.html#INTERFACES,Variable parsimony._algorithms.FISTA.INTERFACES=parsimony._algorithms.FISTA-class.html#INTERFACES,Variable parsimony._algorithms.ISTA.INTERFACES=parsimony._algorithms.ISTA-class.html#INTERFACES,Variable parsimony._algorithms.MultiblockProjectedGradientMethod.INTERFACES=parsimony._algorithms.MultiblockProjectedGradientMethod-class.html#INTERFACES,Variable parsimony._algorithms.ParallelDykstrasProjectionAlgorithm.INTERFACES=parsimony._algorithms.ParallelDykstrasProjectionAlgorithm-class.html#INTERFACES,Variable parsimony._algorithms.ProjectionADMM.INTERFACES=parsimony._algorithms.ProjectionADMM-class.html#INTERFACES,Variable parsimony.algorithms.explicit.BacktrackingLineSearch.INTERFACES=parsimony.algorithms.explicit.BacktrackingLineSearch-class.html#INTERFACES,Variable parsimony.algorithms.explicit.Bisection.INTERFACES=parsimony.algorithms.explicit.Bisection-class.html#INTERFACES,Variable parsimony.algorithms.explicit.CONESTA.INTERFACES=parsimony.algorithms.explicit.CONESTA-class.html#INTERFACES,Variable parsimony.algorithms.explicit.DykstrasProjectionAlgorithm.INTERFACES=parsimony.algorithms.explicit.DykstrasProjectionAlgorithm-class.html#INTERFACES,Variable parsimony.algorithms.explicit.ExcessiveGapMethod.INTERFACES=parsimony.algorithms.explicit.ExcessiveGapMethod-class.html#INTERFACES,Variable parsimony.algorithms.explicit.FISTA.INTERFACES=parsimony.algorithms.explicit.FISTA-class.html#INTERFACES,Variable parsimony.algorithms.explicit.GradientDescent.INTERFACES=parsimony.algorithms.explicit.GradientDescent-class.html#INTERFACES,Variable parsimony.algorithms.explicit.ISTA.INTERFACES=parsimony.algorithms.explicit.ISTA-class.html#INTERFACES,Variable parsimony.algorithms.explicit.ParallelDykstrasProjectionAlgorithm.INTERFACES=parsimony.algorithms.explicit.ParallelDykstrasProjectionAlgorithm-class.html#INTERFACES,Variable parsimony.algorithms.explicit.ProjectionADMM.INTERFACES=parsimony.algorithms.explicit.ProjectionADMM-class.html#INTERFACES,Variable parsimony.algorithms.multiblock.MultiblockProjectedGradientMethod.INTERFACES=parsimony.algorithms.multiblock.MultiblockProjectedGradientMethod-class.html#INTERFACES"><a title="parsimony._algorithms.BacktrackingLineSearch.INTERFACES
+parsimony._algorithms.Bisection.INTERFACES
+parsimony._algorithms.CONESTA.INTERFACES
+parsimony._algorithms.DykstrasProjectionAlgorithm.INTERFACES
+parsimony._algorithms.ExcessiveGapMethod.INTERFACES
+parsimony._algorithms.FISTA.INTERFACES
+parsimony._algorithms.ISTA.INTERFACES
+parsimony._algorithms.MultiblockProjectedGradientMethod.INTERFACES
+parsimony._algorithms.ParallelDykstrasProjectionAlgorithm.INTERFACES
+parsimony._algorithms.ProjectionADMM.INTERFACES
+parsimony.algorithms.explicit.BacktrackingLineSearch.INTERFACES
+parsimony.algorithms.explicit.Bisection.INTERFACES
+parsimony.algorithms.explicit.CONESTA.INTERFACES
+parsimony.algorithms.explicit.DykstrasProjectionAlgorithm.INTERFACES
+parsimony.algorithms.explicit.ExcessiveGapMethod.INTERFACES
+parsimony.algorithms.explicit.FISTA.INTERFACES
+parsimony.algorithms.explicit.GradientDescent.INTERFACES
+parsimony.algorithms.explicit.ISTA.INTERFACES
+parsimony.algorithms.explicit.ParallelDykstrasProjectionAlgorithm.INTERFACES
+parsimony.algorithms.explicit.ProjectionADMM.INTERFACES
+parsimony.algorithms.multiblock.MultiblockProjectedGradientMethod.INTERFACES" class="py-name" href="#" onclick="return doclink('link-17', 'INTERFACES', 'link-17');">INTERFACES</a></tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-name">multiblock_interfaces</tt><tt class="py-op">.</tt><tt id="link-18" class="py-name" targets="Class parsimony._functions.MultiblockFunction=parsimony._functions.MultiblockFunction-class.html,Class parsimony.functions.multiblock.interfaces.MultiblockFunction=parsimony.functions.multiblock.interfaces.MultiblockFunction-class.html"><a title="parsimony._functions.MultiblockFunction
+parsimony.functions.multiblock.interfaces.MultiblockFunction" class="py-name" href="#" onclick="return doclink('link-18', 'MultiblockFunction', 'link-18');">MultiblockFunction</a></tt><tt class="py-op">,</tt> </tt>
+<a name="L84"></a><tt class="py-lineno"> 84</tt>  <tt class="py-line">                  <tt class="py-name">multiblock_interfaces</tt><tt class="py-op">.</tt><tt id="link-19" class="py-name" targets="Class parsimony._functions.MultiblockGradient=parsimony._functions.MultiblockGradient-class.html,Class parsimony.functions.multiblock.interfaces.MultiblockGradient=parsimony.functions.multiblock.interfaces.MultiblockGradient-class.html"><a title="parsimony._functions.MultiblockGradient
+parsimony.functions.multiblock.interfaces.MultiblockGradient" class="py-name" href="#" onclick="return doclink('link-19', 'MultiblockGradient', 'link-19');">MultiblockGradient</a></tt><tt class="py-op">,</tt> </tt>
+<a name="L85"></a><tt class="py-lineno"> 85</tt>  <tt class="py-line">                  <tt class="py-name">multiblock_interfaces</tt><tt class="py-op">.</tt><tt id="link-20" class="py-name" targets="Class parsimony._functions.MultiblockProjectionOperator=parsimony._functions.MultiblockProjectionOperator-class.html,Class parsimony.functions.multiblock.interfaces.MultiblockProjectionOperator=parsimony.functions.multiblock.interfaces.MultiblockProjectionOperator-class.html"><a title="parsimony._functions.MultiblockProjectionOperator
+parsimony.functions.multiblock.interfaces.MultiblockProjectionOperator" class="py-name" href="#" onclick="return doclink('link-20', 'MultiblockProjectionOperator', 'link-20');">MultiblockProjectionOperator</a></tt><tt class="py-op">,</tt> </tt>
+<a name="L86"></a><tt class="py-lineno"> 86</tt>  <tt class="py-line">                  <tt id="link-21" class="py-name"><a title="parsimony.functions.interfaces
+parsimony.functions.multiblock.interfaces
+parsimony.functions.nesterov.interfaces" class="py-name" href="#" onclick="return doclink('link-21', 'interfaces', 'link-11');">interfaces</a></tt><tt class="py-op">.</tt><tt id="link-22" class="py-name" targets="Class parsimony.functions.interfaces.StepSize=parsimony.functions.interfaces.StepSize-class.html"><a title="parsimony.functions.interfaces.StepSize" class="py-name" href="#" onclick="return doclink('link-22', 'StepSize', 'link-22');">StepSize</a></tt><tt class="py-op">]</tt> </tt>
+<a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line"> </tt>
+<a name="MultiblockProjectedGradientMethod.__init__"></a><div id="MultiblockProjectedGradientMethod.__init__-def"><a name="L88"></a><tt class="py-lineno"> 88</tt> <a class="py-toggle" href="#" id="MultiblockProjectedGradientMethod.__init__-toggle" onclick="return toggle('MultiblockProjectedGradientMethod.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.algorithms.multiblock.MultiblockProjectedGradientMethod-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">step</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt> <tt class="py-param">output</tt><tt class="py-op">=</tt><tt class="py-name">False</tt><tt class="py-op">,</tt> </tt>
+<a name="L89"></a><tt class="py-lineno"> 89</tt>  <tt class="py-line">                 <tt class="py-param">eps</tt><tt class="py-op">=</tt><tt id="link-23" class="py-name"><a title="parsimony.utils.consts" class="py-name" href="#" onclick="return doclink('link-23', 'consts', 'link-7');">consts</a></tt><tt class="py-op">.</tt><tt id="link-24" class="py-name" targets="Variable parsimony.datasets.simulated.utils.TOLERANCE=parsimony.datasets.simulated.utils-module.html#TOLERANCE,Variable parsimony.utils.consts.TOLERANCE=parsimony.utils.consts-module.html#TOLERANCE"><a title="parsimony.datasets.simulated.utils.TOLERANCE
+parsimony.utils.consts.TOLERANCE" class="py-name" href="#" onclick="return doclink('link-24', 'TOLERANCE', 'link-24');">TOLERANCE</a></tt><tt class="py-op">,</tt> </tt>
+<a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line">                 <tt class="py-param">outer_iter</tt><tt class="py-op">=</tt><tt class="py-number">25</tt><tt class="py-op">,</tt> <tt class="py-param">max_iter</tt><tt class="py-op">=</tt><tt id="link-25" class="py-name"><a title="parsimony.utils.consts" class="py-name" href="#" onclick="return doclink('link-25', 'consts', 'link-7');">consts</a></tt><tt class="py-op">.</tt><tt id="link-26" class="py-name" targets="Variable parsimony.utils.consts.MAX_ITER=parsimony.utils.consts-module.html#MAX_ITER"><a title="parsimony.utils.consts.MAX_ITER" class="py-name" href="#" onclick="return doclink('link-26', 'MAX_ITER', 'link-26');">MAX_ITER</a></tt><tt class="py-op">,</tt> <tt class="py-param">min_iter</tt><tt class="py-op">=</tt><tt class="py-number">1</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="MultiblockProjectedGradientMethod.__init__-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="MultiblockProjectedGradientMethod.__init__-expanded"><a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line"> </tt>
+<a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-27" class="py-name" targets="Method parsimony._functions.GeneralisedMultiblock.step()=parsimony._functions.GeneralisedMultiblock-class.html#step,Method parsimony._functions.GradientStep.step()=parsimony._functions.GradientStep-class.html#step,Method parsimony.functions._objectives.functions.CombinedFunction.step()=parsimony.functions._objectives.functions.CombinedFunction-class.html#step,Method parsimony.functions.functions.CombinedFunction.step()=parsimony.functions.functions.CombinedFunction-class.html#step,Method parsimony.functions.interfaces.StepSize.step()=parsimony.functions.interfaces.StepSize-class.html#step,Method parsimony.functions.losses.LinearRegression.step()=parsimony.functions.losses.LinearRegression-class.html#step,Method parsimony.functions.losses.RidgeRegression.step()=parsimony.functions.losses.RidgeRegression-class.html#step,Method parsimony.functions.multiblock.losses.GeneralisedMultiblock.step()=parsimony.functions.multiblock.losses.GeneralisedMultiblock-class.html#step,Method parsimony.functions.objectives.functions.CombinedFunction.step()=parsimony.functions.objectives.functions.CombinedFunction-class.html#step"><a title="parsimony._functions.GeneralisedMultiblock.step
+parsimony._functions.GradientStep.step
+parsimony.functions._objectives.functions.CombinedFunction.step
+parsimony.functions.functions.CombinedFunction.step
+parsimony.functions.interfaces.StepSize.step
+parsimony.functions.losses.LinearRegression.step
+parsimony.functions.losses.RidgeRegression.step
+parsimony.functions.multiblock.losses.GeneralisedMultiblock.step
+parsimony.functions.objectives.functions.CombinedFunction.step" class="py-name" href="#" onclick="return doclink('link-27', 'step', 'link-27');">step</a></tt> <tt class="py-op">=</tt> <tt id="link-28" class="py-name"><a title="parsimony._functions.GeneralisedMultiblock.step
+parsimony._functions.GradientStep.step
+parsimony.functions._objectives.functions.CombinedFunction.step
+parsimony.functions.functions.CombinedFunction.step
+parsimony.functions.interfaces.StepSize.step
+parsimony.functions.losses.LinearRegression.step
+parsimony.functions.losses.RidgeRegression.step
+parsimony.functions.multiblock.losses.GeneralisedMultiblock.step
+parsimony.functions.objectives.functions.CombinedFunction.step" class="py-name" href="#" onclick="return doclink('link-28', 'step', 'link-27');">step</a></tt> </tt>
+<a name="L93"></a><tt class="py-lineno"> 93</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">output</tt> <tt class="py-op">=</tt> <tt class="py-name">output</tt> </tt>
+<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-29" class="py-name" targets="Variable parsimony.tests._playhouse.eps=parsimony.tests._playhouse-module.html#eps"><a title="parsimony.tests._playhouse.eps" class="py-name" href="#" onclick="return doclink('link-29', 'eps', 'link-29');">eps</a></tt> <tt class="py-op">=</tt> <tt id="link-30" class="py-name"><a title="parsimony.tests._playhouse.eps" class="py-name" href="#" onclick="return doclink('link-30', 'eps', 'link-29');">eps</a></tt> </tt>
+<a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">outer_iter</tt> <tt class="py-op">=</tt> <tt class="py-name">outer_iter</tt> </tt>
+<a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">max_iter</tt> <tt class="py-op">=</tt> <tt class="py-name">max_iter</tt> </tt>
+<a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">min_iter</tt> <tt class="py-op">=</tt> <tt class="py-name">min_iter</tt> </tt>
+</div><a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line"> </tt>
+<a name="MultiblockProjectedGradientMethod.run"></a><div id="MultiblockProjectedGradientMethod.run-def"><a name="L99"></a><tt class="py-lineno"> 99</tt> <a class="py-toggle" href="#" id="MultiblockProjectedGradientMethod.run-toggle" onclick="return toggle('MultiblockProjectedGradientMethod.run');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.algorithms.multiblock.MultiblockProjectedGradientMethod-class.html#run">run</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">function</tt><tt class="py-op">,</tt> <tt class="py-param">w</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="MultiblockProjectedGradientMethod.run-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="MultiblockProjectedGradientMethod.run-expanded"><a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line"> </tt>
+<a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-31" class="py-name" targets="Method parsimony._algorithms.BaseAlgorithm.check_compatibility()=parsimony._algorithms.BaseAlgorithm-class.html#check_compatibility,Method parsimony.algorithms.bases.BaseAlgorithm.check_compatibility()=parsimony.algorithms.bases.BaseAlgorithm-class.html#check_compatibility"><a title="parsimony._algorithms.BaseAlgorithm.check_compatibility
+parsimony.algorithms.bases.BaseAlgorithm.check_compatibility" class="py-name" href="#" onclick="return doclink('link-31', 'check_compatibility', 'link-31');">check_compatibility</a></tt><tt class="py-op">(</tt><tt class="py-name">function</tt><tt class="py-op">,</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-32" class="py-name"><a title="parsimony._algorithms.BacktrackingLineSearch.INTERFACES
+parsimony._algorithms.Bisection.INTERFACES
+parsimony._algorithms.CONESTA.INTERFACES
+parsimony._algorithms.DykstrasProjectionAlgorithm.INTERFACES
+parsimony._algorithms.ExcessiveGapMethod.INTERFACES
+parsimony._algorithms.FISTA.INTERFACES
+parsimony._algorithms.ISTA.INTERFACES
+parsimony._algorithms.MultiblockProjectedGradientMethod.INTERFACES
+parsimony._algorithms.ParallelDykstrasProjectionAlgorithm.INTERFACES
+parsimony._algorithms.ProjectionADMM.INTERFACES
+parsimony.algorithms.explicit.BacktrackingLineSearch.INTERFACES
+parsimony.algorithms.explicit.Bisection.INTERFACES
+parsimony.algorithms.explicit.CONESTA.INTERFACES
+parsimony.algorithms.explicit.DykstrasProjectionAlgorithm.INTERFACES
+parsimony.algorithms.explicit.ExcessiveGapMethod.INTERFACES
+parsimony.algorithms.explicit.FISTA.INTERFACES
+parsimony.algorithms.explicit.GradientDescent.INTERFACES
+parsimony.algorithms.explicit.ISTA.INTERFACES
+parsimony.algorithms.explicit.ParallelDykstrasProjectionAlgorithm.INTERFACES
+parsimony.algorithms.explicit.ProjectionADMM.INTERFACES
+parsimony.algorithms.multiblock.MultiblockProjectedGradientMethod.INTERFACES" class="py-name" href="#" onclick="return doclink('link-32', 'INTERFACES', 'link-17');">INTERFACES</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line"> </tt>
+<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line">        <tt class="py-keyword">print</tt> <tt class="py-string">"outer_iter:"</tt><tt class="py-op">,</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">outer_iter</tt> </tt>
+<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line">        <tt class="py-keyword">print</tt> <tt class="py-string">"len(w):"</tt><tt class="py-op">,</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">w</tt><tt class="py-op">)</tt> </tt>
+<a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line">        <tt class="py-keyword">print</tt> <tt class="py-string">"max_iter:"</tt><tt class="py-op">,</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">max_iter</tt> </tt>
+<a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line"> </tt>
+<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line"><tt class="py-comment">#        z = w_old = w</tt> </tt>
+<a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line"> </tt>
+<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">output</tt><tt class="py-op">:</tt> </tt>
+<a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line">            <tt id="link-33" class="py-name" targets="Method parsimony._functions.AnonymousFunction.f()=parsimony._functions.AnonymousFunction-class.html#f,Method parsimony._functions.CombinedProjectionOperator.f()=parsimony._functions.CombinedProjectionOperator-class.html#f,Method parsimony._functions.Function.f()=parsimony._functions.Function-class.html#f,Method parsimony._functions.GeneralisedMultiblock.f()=parsimony._functions.GeneralisedMultiblock-class.html#f,Method parsimony._functions.GroupLassoOverlap.f()=parsimony._functions.GroupLassoOverlap-class.html#f,Method parsimony._functions.L1.f()=parsimony._functions.L1-class.html#f,Method parsimony._functions.LatentVariableCovariance.f()=parsimony._functions.LatentVariableCovariance-class.html#f,Method parsimony._functions.QuadraticConstraint.f()=parsimony._functions.QuadraticConstraint-class.html#f,Method parsimony._functions.RGCCAConstraint.f()=parsimony._functions.RGCCAConstraint-class.html#f,Method parsimony._functions.RR_L1_GL.f()=parsimony._functions.RR_L1_GL-class.html#f,Method parsimony._functions.RR_L1_TV.f()=parsimony._functions.RR_L1_TV-class.html#f,Method parsimony._functions.RR_SmoothedL1TV.f()=parsimony._functions.RR_SmoothedL1TV-class.html#f,Method parsimony._functions.RidgeLogisticRegression.f()=parsimony._functions.RidgeLogisticRegression-class.html#f,Method parsimony._functions.RidgeRegression.f()=parsimony._functions.RidgeRegression-class.html#f,Method parsimony._functions.SmoothedL1.f()=parsimony._functions.SmoothedL1-class.html#f,Method parsimony._functions.SmoothedL1TV.f()=parsimony._functions.SmoothedL1TV-class.html#f,Method parsimony._functions.SufficientDescentCondition.f()=parsimony._functions.SufficientDescentCondition-class.html#f,Method parsimony._functions.TotalVariation.f()=parsimony._functions.TotalVariation-class.html#f,Method parsimony.functions._objectives.functions.CombinedFunction.f()=parsimony.functions._objectives.functions.CombinedFunction-class.html#f,Method parsimony.functions._objectives.functions.RR_L1_GL.f()=parsimony.functions._objectives.functions.RR_L1_GL-class.html#f,Method parsimony.functions._objectives.functions.RR_L1_TV.f()=parsimony.functions._objectives.functions.RR_L1_TV-class.html#f,Method parsimony.functions._objectives.functions.RR_SmoothedL1TV.f()=parsimony.functions._objectives.functions.RR_SmoothedL1TV-class.html#f,Method parsimony.functions.functions.CombinedFunction.f()=parsimony.functions.functions.CombinedFunction-class.html#f,Method parsimony.functions.functions.RR_L1_GL.f()=parsimony.functions.functions.RR_L1_GL-class.html#f,Method parsimony.functions.functions.RR_L1_TV.f()=parsimony.functions.functions.RR_L1_TV-class.html#f,Method parsimony.functions.functions.RR_SmoothedL1TV.f()=parsimony.functions.functions.RR_SmoothedL1TV-class.html#f,Method parsimony.functions.interfaces.CombinedProjectionOperator.f()=parsimony.functions.interfaces.CombinedProjectionOperator-class.html#f,Method parsimony.functions.interfaces.Function.f()=parsimony.functions.interfaces.Function-class.html#f,Method parsimony.functions.losses.LinearRegression.f()=parsimony.functions.losses.LinearRegression-class.html#f,Method parsimony.functions.losses.RidgeLogisticRegression.f()=parsimony.functions.losses.RidgeLogisticRegression-class.html#f,Method parsimony.functions.losses.RidgeRegression.f()=parsimony.functions.losses.RidgeRegression-class.html#f,Method parsimony.functions.multiblock.losses.GeneralisedMultiblock.f()=parsimony.functions.multiblock.losses.GeneralisedMultiblock-class.html#f,Method parsimony.functions.multiblock.losses.LatentVariableCovariance.f()=parsimony.functions.multiblock.losses.LatentVariableCovariance-class.html#f,Method parsimony.functions.nesterov.L1.L1.f()=parsimony.functions.nesterov.L1.L1-class.html#f,Method parsimony.functions.nesterov.L1TV.L1TV.f()=parsimony.functions.nesterov.L1TV.L1TV-class.html#f,Method parsimony.functions.nesterov.gl.GroupLassoOverlap.f()=parsimony.functions.nesterov.gl.GroupLassoOverlap-class.html#f,Method parsimony.functions.nesterov.tv.TotalVariation.f()=parsimony.functions.nesterov.tv.TotalVariation-class.html#f,Method parsimony.functions.objectives.functions.CombinedFunction.f()=parsimony.functions.objectives.functions.CombinedFunction-class.html#f,Method parsimony.functions.objectives.functions.RR_L1_GL.f()=parsimony.functions.objectives.functions.RR_L1_GL-class.html#f,Method parsimony.functions.objectives.functions.RR_L1_TV.f()=parsimony.functions.objectives.functions.RR_L1_TV-class.html#f,Method parsimony.functions.objectives.functions.RR_SmoothedL1TV.f()=parsimony.functions.objectives.functions.RR_SmoothedL1TV-class.html#f,Method parsimony.functions.penalties.L1.f()=parsimony.functions.penalties.L1-class.html#f,Method parsimony.functions.penalties.L2.f()=parsimony.functions.penalties.L2-class.html#f,Method parsimony.functions.penalties.QuadraticConstraint.f()=parsimony.functions.penalties.QuadraticConstraint-class.html#f,Method parsimony.functions.penalties.RGCCAConstraint.f()=parsimony.functions.penalties.RGCCAConstraint-class.html#f,Method parsimony.functions.penalties.SufficientDescentCondition.f()=parsimony.functions.penalties.SufficientDescentCondition-class.html#f,Method parsimony.functions.penalties.ZeroFunction.f()=parsimony.functions.penalties.ZeroFunction-class.html#f"><a title="parsimony._functions.AnonymousFunction.f
+parsimony._functions.CombinedProjectionOperator.f
+parsimony._functions.Function.f
+parsimony._functions.GeneralisedMultiblock.f
+parsimony._functions.GroupLassoOverlap.f
+parsimony._functions.L1.f
+parsimony._functions.LatentVariableCovariance.f
+parsimony._functions.QuadraticConstraint.f
+parsimony._functions.RGCCAConstraint.f
+parsimony._functions.RR_L1_GL.f
+parsimony._functions.RR_L1_TV.f
+parsimony._functions.RR_SmoothedL1TV.f
+parsimony._functions.RidgeLogisticRegression.f
+parsimony._functions.RidgeRegression.f
+parsimony._functions.SmoothedL1.f
+parsimony._functions.SmoothedL1TV.f
+parsimony._functions.SufficientDescentCondition.f
+parsimony._functions.TotalVariation.f
+parsimony.functions._objectives.functions.CombinedFunction.f
+parsimony.functions._objectives.functions.RR_L1_GL.f
+parsimony.functions._objectives.functions.RR_L1_TV.f
+parsimony.functions._objectives.functions.RR_SmoothedL1TV.f
+parsimony.functions.functions.CombinedFunction.f
+parsimony.functions.functions.RR_L1_GL.f
+parsimony.functions.functions.RR_L1_TV.f
+parsimony.functions.functions.RR_SmoothedL1TV.f
+parsimony.functions.interfaces.CombinedProjectionOperator.f
+parsimony.functions.interfaces.Function.f
+parsimony.functions.losses.LinearRegression.f
+parsimony.functions.losses.RidgeLogisticRegression.f
+parsimony.functions.losses.RidgeRegression.f
+parsimony.functions.multiblock.losses.GeneralisedMultiblock.f
+parsimony.functions.multiblock.losses.LatentVariableCovariance.f
+parsimony.functions.nesterov.L1.L1.f
+parsimony.functions.nesterov.L1TV.L1TV.f
+parsimony.functions.nesterov.gl.GroupLassoOverlap.f
+parsimony.functions.nesterov.tv.TotalVariation.f
+parsimony.functions.objectives.functions.CombinedFunction.f
+parsimony.functions.objectives.functions.RR_L1_GL.f
+parsimony.functions.objectives.functions.RR_L1_TV.f
+parsimony.functions.objectives.functions.RR_SmoothedL1TV.f
+parsimony.functions.penalties.L1.f
+parsimony.functions.penalties.L2.f
+parsimony.functions.penalties.QuadraticConstraint.f
+parsimony.functions.penalties.RGCCAConstraint.f
+parsimony.functions.penalties.SufficientDescentCondition.f
+parsimony.functions.penalties.ZeroFunction.f" class="py-name" href="#" onclick="return doclink('link-33', 'f', 'link-33');">f</a></tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-name">function</tt><tt class="py-op">.</tt><tt id="link-34" class="py-name"><a title="parsimony._functions.AnonymousFunction.f
+parsimony._functions.CombinedProjectionOperator.f
+parsimony._functions.Function.f
+parsimony._functions.GeneralisedMultiblock.f
+parsimony._functions.GroupLassoOverlap.f
+parsimony._functions.L1.f
+parsimony._functions.LatentVariableCovariance.f
+parsimony._functions.QuadraticConstraint.f
+parsimony._functions.RGCCAConstraint.f
+parsimony._functions.RR_L1_GL.f
+parsimony._functions.RR_L1_TV.f
+parsimony._functions.RR_SmoothedL1TV.f
+parsimony._functions.RidgeLogisticRegression.f
+parsimony._functions.RidgeRegression.f
+parsimony._functions.SmoothedL1.f
+parsimony._functions.SmoothedL1TV.f
+parsimony._functions.SufficientDescentCondition.f
+parsimony._functions.TotalVariation.f
+parsimony.functions._objectives.functions.CombinedFunction.f
+parsimony.functions._objectives.functions.RR_L1_GL.f
+parsimony.functions._objectives.functions.RR_L1_TV.f
+parsimony.functions._objectives.functions.RR_SmoothedL1TV.f
+parsimony.functions.functions.CombinedFunction.f
+parsimony.functions.functions.RR_L1_GL.f
+parsimony.functions.functions.RR_L1_TV.f
+parsimony.functions.functions.RR_SmoothedL1TV.f
+parsimony.functions.interfaces.CombinedProjectionOperator.f
+parsimony.functions.interfaces.Function.f
+parsimony.functions.losses.LinearRegression.f
+parsimony.functions.losses.RidgeLogisticRegression.f
+parsimony.functions.losses.RidgeRegression.f
+parsimony.functions.multiblock.losses.GeneralisedMultiblock.f
+parsimony.functions.multiblock.losses.LatentVariableCovariance.f
+parsimony.functions.nesterov.L1.L1.f
+parsimony.functions.nesterov.L1TV.L1TV.f
+parsimony.functions.nesterov.gl.GroupLassoOverlap.f
+parsimony.functions.nesterov.tv.TotalVariation.f
+parsimony.functions.objectives.functions.CombinedFunction.f
+parsimony.functions.objectives.functions.RR_L1_GL.f
+parsimony.functions.objectives.functions.RR_L1_TV.f
+parsimony.functions.objectives.functions.RR_SmoothedL1TV.f
+parsimony.functions.penalties.L1.f
+parsimony.functions.penalties.L2.f
+parsimony.functions.penalties.QuadraticConstraint.f
+parsimony.functions.penalties.RGCCAConstraint.f
+parsimony.functions.penalties.SufficientDescentCondition.f
+parsimony.functions.penalties.ZeroFunction.f" class="py-name" href="#" onclick="return doclink('link-34', 'f', 'link-33');">f</a></tt><tt class="py-op">(</tt><tt class="py-name">w</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line"> </tt>
+<a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line">        <tt id="link-35" class="py-name" targets="Variable parsimony.tests._playhouse.t=parsimony.tests._playhouse-module.html#t"><a title="parsimony.tests._playhouse.t" class="py-name" href="#" onclick="return doclink('link-35', 't', 'link-35');">t</a></tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-number">1.0</tt><tt class="py-op">]</tt> <tt class="py-op">*</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">w</tt><tt class="py-op">)</tt> </tt>
+<a name="L113"></a><tt class="py-lineno">113</tt>  <tt class="py-line"> </tt>
+<a name="L114"></a><tt class="py-lineno">114</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">it</tt> <tt class="py-keyword">in</tt> <tt class="py-name">xrange</tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">outer_iter</tt><tt class="py-op">)</tt><tt class="py-op">:</tt>  <tt class="py-comment"># TODO: Get number of iterations!</tt> </tt>
+<a name="L115"></a><tt class="py-lineno">115</tt>  <tt class="py-line">            <tt class="py-name">all_converged</tt> <tt class="py-op">=</tt> <tt class="py-name">True</tt> </tt>
+<a name="L116"></a><tt class="py-lineno">116</tt>  <tt class="py-line">            <tt class="py-keyword">for</tt> <tt class="py-name">i</tt> <tt class="py-keyword">in</tt> <tt class="py-name">xrange</tt><tt class="py-op">(</tt><tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">w</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L117"></a><tt class="py-lineno">117</tt>  <tt class="py-line">                <tt class="py-name">converged</tt> <tt class="py-op">=</tt> <tt class="py-name">False</tt> </tt>
+<a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line">                <tt class="py-keyword">print</tt> <tt class="py-string">"it: %d, i: %d"</tt> <tt class="py-op">%</tt> <tt class="py-op">(</tt><tt class="py-name">it</tt><tt class="py-op">,</tt> <tt class="py-name">i</tt><tt class="py-op">)</tt> </tt>
+<a name="L119"></a><tt class="py-lineno">119</tt>  <tt class="py-line">                <tt class="py-keyword">for</tt> <tt id="link-36" class="py-name" targets="Variable parsimony.tests._playhouse.k=parsimony.tests._playhouse-module.html#k"><a title="parsimony.tests._playhouse.k" class="py-name" href="#" onclick="return doclink('link-36', 'k', 'link-36');">k</a></tt> <tt class="py-keyword">in</tt> <tt class="py-name">xrange</tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">max_iter</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line"><tt class="py-comment">#                    print "it: %d, i: %d, k: %d" % (it, i, k)</tt> </tt>
+<a name="L121"></a><tt class="py-lineno">121</tt>  <tt class="py-line"> </tt>
+<a name="L122"></a><tt class="py-lineno">122</tt>  <tt class="py-line"><tt class="py-comment">#                    z = w[i] + ((k - 2.0) / (k + 1.0)) * (w[i] - w_old[i])</tt> </tt>
+<a name="L123"></a><tt class="py-lineno">123</tt>  <tt class="py-line"> </tt>
+<a name="L124"></a><tt class="py-lineno">124</tt>  <tt class="py-line">                    <tt class="py-name">w_old</tt> <tt class="py-op">=</tt> <tt class="py-name">copy</tt><tt class="py-op">.</tt><tt class="py-name">deepcopy</tt><tt class="py-op">(</tt><tt class="py-name">w</tt><tt class="py-op">)</tt> </tt>
+<a name="L125"></a><tt class="py-lineno">125</tt>  <tt class="py-line"> </tt>
+<a name="L126"></a><tt class="py-lineno">126</tt>  <tt class="py-line"><tt class="py-comment">#                    _t = time()</tt> </tt>
+<a name="L127"></a><tt class="py-lineno">127</tt>  <tt class="py-line">                    <tt id="link-37" class="py-name"><a title="parsimony.tests._playhouse.t" class="py-name" href="#" onclick="return doclink('link-37', 't', 'link-35');">t</a></tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> <tt class="py-name">function</tt><tt class="py-op">.</tt><tt id="link-38" class="py-name"><a title="parsimony._functions.GeneralisedMultiblock.step
+parsimony._functions.GradientStep.step
+parsimony.functions._objectives.functions.CombinedFunction.step
+parsimony.functions.functions.CombinedFunction.step
+parsimony.functions.interfaces.StepSize.step
+parsimony.functions.losses.LinearRegression.step
+parsimony.functions.losses.RidgeRegression.step
+parsimony.functions.multiblock.losses.GeneralisedMultiblock.step
+parsimony.functions.objectives.functions.CombinedFunction.step" class="py-name" href="#" onclick="return doclink('link-38', 'step', 'link-27');">step</a></tt><tt class="py-op">(</tt><tt class="py-name">w_old</tt><tt class="py-op">,</tt> <tt class="py-name">i</tt><tt class="py-op">)</tt> </tt>
+<a name="L128"></a><tt class="py-lineno">128</tt>  <tt class="py-line"><tt class="py-comment">#                    print "t:", t[i]</tt> </tt>
+<a name="L129"></a><tt class="py-lineno">129</tt>  <tt class="py-line"><tt class="py-comment">#                    print "step:", time() - _t</tt> </tt>
+<a name="L130"></a><tt class="py-lineno">130</tt>  <tt class="py-line"> </tt>
+<a name="L131"></a><tt class="py-lineno">131</tt>  <tt class="py-line"><tt class="py-comment">#                    _t = time()</tt> </tt>
+<a name="L132"></a><tt class="py-lineno">132</tt>  <tt class="py-line">                    <tt id="link-39" class="py-name" targets="Method parsimony._functions.GeneralisedMultiblock.grad()=parsimony._functions.GeneralisedMultiblock-class.html#grad,Method parsimony._functions.Gradient.grad()=parsimony._functions.Gradient-class.html#grad,Method parsimony._functions.LatentVariableCovariance.grad()=parsimony._functions.LatentVariableCovariance-class.html#grad,Method parsimony._functions.MultiblockGradient.grad()=parsimony._functions.MultiblockGradient-class.html#grad,Method parsimony._functions.NesterovFunction.grad()=parsimony._functions.NesterovFunction-class.html#grad,Method parsimony._functions.QuadraticConstraint.grad()=parsimony._functions.QuadraticConstraint-class.html#grad,Method parsimony._functions.RGCCAConstraint.grad()=parsimony._functions.RGCCAConstraint-class.html#grad,Method parsimony._functions.RR_L1_GL.grad()=parsimony._functions.RR_L1_GL-class.html#grad,Method parsimony._functions.RR_L1_TV.grad()=parsimony._functions.RR_L1_TV-class.html#grad,Method parsimony._functions.RidgeLogisticRegression.grad()=parsimony._functions.RidgeLogisticRegression-class.html#grad,Method parsimony._functions.RidgeRegression.grad()=parsimony._functions.RidgeRegression-class.html#grad,Method parsimony._functions.SmoothedL1.grad()=parsimony._functions.SmoothedL1-class.html#grad,Module parsimony.datasets.simulated.grad=parsimony.datasets.simulated.grad-module.html,Method parsimony.functions._objectives.functions.CombinedFunction.grad()=parsimony.functions._objectives.functions.CombinedFunction-class.html#grad,Method parsimony.functions._objectives.functions.RR_L1_GL.grad()=parsimony.functions._objectives.functions.RR_L1_GL-class.html#grad,Method parsimony.functions._objectives.functions.RR_L1_TV.grad()=parsimony.functions._objectives.functions.RR_L1_TV-class.html#grad,Method parsimony.functions.functions.CombinedFunction.grad()=parsimony.functions.functions.CombinedFunction-class.html#grad,Method parsimony.functions.functions.RR_L1_GL.grad()=parsimony.functions.functions.RR_L1_GL-class.html#grad,Method parsimony.functions.functions.RR_L1_TV.grad()=parsimony.functions.functions.RR_L1_TV-class.html#grad,Method parsimony.functions.interfaces.Gradient.grad()=parsimony.functions.interfaces.Gradient-class.html#grad,Method parsimony.functions.losses.LinearRegression.grad()=parsimony.functions.losses.LinearRegression-class.html#grad,Method parsimony.functions.losses.RidgeLogisticRegression.grad()=parsimony.functions.losses.RidgeLogisticRegression-class.html#grad,Method parsimony.functions.losses.RidgeRegression.grad()=parsimony.functions.losses.RidgeRegression-class.html#grad,Method parsimony.functions.multiblock.interfaces.MultiblockGradient.grad()=parsimony.functions.multiblock.interfaces.MultiblockGradient-class.html#grad,Method parsimony.functions.multiblock.losses.GeneralisedMultiblock.grad()=parsimony.functions.multiblock.losses.GeneralisedMultiblock-class.html#grad,Method parsimony.functions.multiblock.losses.LatentVariableCovariance.grad()=parsimony.functions.multiblock.losses.LatentVariableCovariance-class.html#grad,Method parsimony.functions.nesterov.L1.L1.grad()=parsimony.functions.nesterov.L1.L1-class.html#grad,Method parsimony.functions.nesterov.interfaces.NesterovFunction.grad()=parsimony.functions.nesterov.interfaces.NesterovFunction-class.html#grad,Method parsimony.functions.objectives.functions.CombinedFunction.grad()=parsimony.functions.objectives.functions.CombinedFunction-class.html#grad,Method parsimony.functions.objectives.functions.RR_L1_GL.grad()=parsimony.functions.objectives.functions.RR_L1_GL-class.html#grad,Method parsimony.functions.objectives.functions.RR_L1_TV.grad()=parsimony.functions.objectives.functions.RR_L1_TV-class.html#grad,Method parsimony.functions.penalties.L2.grad()=parsimony.functions.penalties.L2-class.html#grad,Method parsimony.functions.penalties.QuadraticConstraint.grad()=parsimony.functions.penalties.QuadraticConstraint-class.html#grad,Method parsimony.functions.penalties.RGCCAConstraint.grad()=parsimony.functions.penalties.RGCCAConstraint-class.html#grad,Method parsimony.functions.penalties.ZeroFunction.grad()=parsimony.functions.penalties.ZeroFunction-class.html#grad"><a title="parsimony._functions.GeneralisedMultiblock.grad
+parsimony._functions.Gradient.grad
+parsimony._functions.LatentVariableCovariance.grad
+parsimony._functions.MultiblockGradient.grad
+parsimony._functions.NesterovFunction.grad
+parsimony._functions.QuadraticConstraint.grad
+parsimony._functions.RGCCAConstraint.grad
+parsimony._functions.RR_L1_GL.grad
+parsimony._functions.RR_L1_TV.grad
+parsimony._functions.RidgeLogisticRegression.grad
+parsimony._functions.RidgeRegression.grad
+parsimony._functions.SmoothedL1.grad
+parsimony.datasets.simulated.grad
+parsimony.functions._objectives.functions.CombinedFunction.grad
+parsimony.functions._objectives.functions.RR_L1_GL.grad
+parsimony.functions._objectives.functions.RR_L1_TV.grad
+parsimony.functions.functions.CombinedFunction.grad
+parsimony.functions.functions.RR_L1_GL.grad
+parsimony.functions.functions.RR_L1_TV.grad
+parsimony.functions.interfaces.Gradient.grad
+parsimony.functions.losses.LinearRegression.grad
+parsimony.functions.losses.RidgeLogisticRegression.grad
+parsimony.functions.losses.RidgeRegression.grad
+parsimony.functions.multiblock.interfaces.MultiblockGradient.grad
+parsimony.functions.multiblock.losses.GeneralisedMultiblock.grad
+parsimony.functions.multiblock.losses.LatentVariableCovariance.grad
+parsimony.functions.nesterov.L1.L1.grad
+parsimony.functions.nesterov.interfaces.NesterovFunction.grad
+parsimony.functions.objectives.functions.CombinedFunction.grad
+parsimony.functions.objectives.functions.RR_L1_GL.grad
+parsimony.functions.objectives.functions.RR_L1_TV.grad
+parsimony.functions.penalties.L2.grad
+parsimony.functions.penalties.QuadraticConstraint.grad
+parsimony.functions.penalties.RGCCAConstraint.grad
+parsimony.functions.penalties.ZeroFunction.grad" class="py-name" href="#" onclick="return doclink('link-39', 'grad', 'link-39');">grad</a></tt> <tt class="py-op">=</tt> <tt class="py-name">function</tt><tt class="py-op">.</tt><tt id="link-40" class="py-name"><a title="parsimony._functions.GeneralisedMultiblock.grad
+parsimony._functions.Gradient.grad
+parsimony._functions.LatentVariableCovariance.grad
+parsimony._functions.MultiblockGradient.grad
+parsimony._functions.NesterovFunction.grad
+parsimony._functions.QuadraticConstraint.grad
+parsimony._functions.RGCCAConstraint.grad
+parsimony._functions.RR_L1_GL.grad
+parsimony._functions.RR_L1_TV.grad
+parsimony._functions.RidgeLogisticRegression.grad
+parsimony._functions.RidgeRegression.grad
+parsimony._functions.SmoothedL1.grad
+parsimony.datasets.simulated.grad
+parsimony.functions._objectives.functions.CombinedFunction.grad
+parsimony.functions._objectives.functions.RR_L1_GL.grad
+parsimony.functions._objectives.functions.RR_L1_TV.grad
+parsimony.functions.functions.CombinedFunction.grad
+parsimony.functions.functions.RR_L1_GL.grad
+parsimony.functions.functions.RR_L1_TV.grad
+parsimony.functions.interfaces.Gradient.grad
+parsimony.functions.losses.LinearRegression.grad
+parsimony.functions.losses.RidgeLogisticRegression.grad
+parsimony.functions.losses.RidgeRegression.grad
+parsimony.functions.multiblock.interfaces.MultiblockGradient.grad
+parsimony.functions.multiblock.losses.GeneralisedMultiblock.grad
+parsimony.functions.multiblock.losses.LatentVariableCovariance.grad
+parsimony.functions.nesterov.L1.L1.grad
+parsimony.functions.nesterov.interfaces.NesterovFunction.grad
+parsimony.functions.objectives.functions.CombinedFunction.grad
+parsimony.functions.objectives.functions.RR_L1_GL.grad
+parsimony.functions.objectives.functions.RR_L1_TV.grad
+parsimony.functions.penalties.L2.grad
+parsimony.functions.penalties.QuadraticConstraint.grad
+parsimony.functions.penalties.RGCCAConstraint.grad
+parsimony.functions.penalties.ZeroFunction.grad" class="py-name" href="#" onclick="return doclink('link-40', 'grad', 'link-39');">grad</a></tt><tt class="py-op">(</tt><tt class="py-name">w_old</tt><tt class="py-op">,</tt> <tt class="py-name">i</tt><tt class="py-op">)</tt> </tt>
+<a name="L133"></a><tt class="py-lineno">133</tt>  <tt class="py-line">                    <tt class="py-name">w</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> <tt class="py-name">w_old</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt> <tt class="py-op">-</tt> <tt id="link-41" class="py-name"><a title="parsimony.tests._playhouse.t" class="py-name" href="#" onclick="return doclink('link-41', 't', 'link-35');">t</a></tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt> <tt class="py-op">*</tt> <tt id="link-42" class="py-name"><a title="parsimony._functions.GeneralisedMultiblock.grad
+parsimony._functions.Gradient.grad
+parsimony._functions.LatentVariableCovariance.grad
+parsimony._functions.MultiblockGradient.grad
+parsimony._functions.NesterovFunction.grad
+parsimony._functions.QuadraticConstraint.grad
+parsimony._functions.RGCCAConstraint.grad
+parsimony._functions.RR_L1_GL.grad
+parsimony._functions.RR_L1_TV.grad
+parsimony._functions.RidgeLogisticRegression.grad
+parsimony._functions.RidgeRegression.grad
+parsimony._functions.SmoothedL1.grad
+parsimony.datasets.simulated.grad
+parsimony.functions._objectives.functions.CombinedFunction.grad
+parsimony.functions._objectives.functions.RR_L1_GL.grad
+parsimony.functions._objectives.functions.RR_L1_TV.grad
+parsimony.functions.functions.CombinedFunction.grad
+parsimony.functions.functions.RR_L1_GL.grad
+parsimony.functions.functions.RR_L1_TV.grad
+parsimony.functions.interfaces.Gradient.grad
+parsimony.functions.losses.LinearRegression.grad
+parsimony.functions.losses.RidgeLogisticRegression.grad
+parsimony.functions.losses.RidgeRegression.grad
+parsimony.functions.multiblock.interfaces.MultiblockGradient.grad
+parsimony.functions.multiblock.losses.GeneralisedMultiblock.grad
+parsimony.functions.multiblock.losses.LatentVariableCovariance.grad
+parsimony.functions.nesterov.L1.L1.grad
+parsimony.functions.nesterov.interfaces.NesterovFunction.grad
+parsimony.functions.objectives.functions.CombinedFunction.grad
+parsimony.functions.objectives.functions.RR_L1_GL.grad
+parsimony.functions.objectives.functions.RR_L1_TV.grad
+parsimony.functions.penalties.L2.grad
+parsimony.functions.penalties.QuadraticConstraint.grad
+parsimony.functions.penalties.RGCCAConstraint.grad
+parsimony.functions.penalties.ZeroFunction.grad" class="py-name" href="#" onclick="return doclink('link-42', 'grad', 'link-39');">grad</a></tt> </tt>
+<a name="L134"></a><tt class="py-lineno">134</tt>  <tt class="py-line"> </tt>
+<a name="L135"></a><tt class="py-lineno">135</tt>  <tt class="py-line"><tt class="py-comment">#                    def fun(x):</tt> </tt>
+<a name="L136"></a><tt class="py-lineno">136</tt>  <tt class="py-line"><tt class="py-comment">#                        w_ = [0, 0]</tt> </tt>
+<a name="L137"></a><tt class="py-lineno">137</tt>  <tt class="py-line"><tt class="py-comment">#                        w_[i] = x</tt> </tt>
+<a name="L138"></a><tt class="py-lineno">138</tt>  <tt class="py-line"><tt class="py-comment">#                        w_[1 - i] = w[1 - i]</tt> </tt>
+<a name="L139"></a><tt class="py-lineno">139</tt>  <tt class="py-line"><tt class="py-comment">#                        return function.f(w_)</tt> </tt>
+<a name="L140"></a><tt class="py-lineno">140</tt>  <tt class="py-line"><tt class="py-comment">#                    approx_grad = utils.approx_grad(fun, w[i], eps=1e-6)</tt> </tt>
+<a name="L141"></a><tt class="py-lineno">141</tt>  <tt class="py-line"><tt class="py-comment">#                    diff = float(maths.norm(grad - approx_grad))</tt> </tt>
+<a name="L142"></a><tt class="py-lineno">142</tt>  <tt class="py-line"><tt class="py-comment">#                    print "grad err: %e, lim: %e" % (diff, 5e-5)</tt> </tt>
+<a name="L143"></a><tt class="py-lineno">143</tt>  <tt class="py-line"><tt class="py-comment">#                    if diff &gt; 5e-4:</tt> </tt>
+<a name="L144"></a><tt class="py-lineno">144</tt>  <tt class="py-line"><tt class="py-comment">#                        pass</tt> </tt>
+<a name="L145"></a><tt class="py-lineno">145</tt>  <tt class="py-line"> </tt>
+<a name="L146"></a><tt class="py-lineno">146</tt>  <tt class="py-line"><tt class="py-comment">#                    w[i] = z[i] - t[i] * function.grad(w_old[:i] +</tt> </tt>
+<a name="L147"></a><tt class="py-lineno">147</tt>  <tt class="py-line"><tt class="py-comment">#                                                       [z] +</tt> </tt>
+<a name="L148"></a><tt class="py-lineno">148</tt>  <tt class="py-line"><tt class="py-comment">#                                                       w_old[i + 1:], i)</tt> </tt>
+<a name="L149"></a><tt class="py-lineno">149</tt>  <tt class="py-line"><tt class="py-comment">#                    print "grad:", time() - _t</tt> </tt>
+<a name="L150"></a><tt class="py-lineno">150</tt>  <tt class="py-line"> </tt>
+<a name="L151"></a><tt class="py-lineno">151</tt>  <tt class="py-line"><tt class="py-comment">#                    _t = time()</tt> </tt>
+<a name="L152"></a><tt class="py-lineno">152</tt>  <tt class="py-line">                    <tt class="py-name">w</tt> <tt class="py-op">=</tt> <tt class="py-name">function</tt><tt class="py-op">.</tt><tt id="link-43" class="py-name" targets="Method parsimony._functions.CombinedProjectionOperator.proj()=parsimony._functions.CombinedProjectionOperator-class.html#proj,Method parsimony._functions.GeneralisedMultiblock.proj()=parsimony._functions.GeneralisedMultiblock-class.html#proj,Method parsimony._functions.L1.proj()=parsimony._functions.L1-class.html#proj,Method parsimony._functions.MultiblockProjectionOperator.proj()=parsimony._functions.MultiblockProjectionOperator-class.html#proj,Method parsimony._functions.ProjectionOperator.proj()=parsimony._functions.ProjectionOperator-class.html#proj,Method parsimony._functions.RGCCAConstraint.proj()=parsimony._functions.RGCCAConstraint-class.html#proj,Method parsimony.functions.interfaces.CombinedProjectionOperator.proj()=parsimony.functions.interfaces.CombinedProjectionOperator-class.html#proj,Method parsimony.functions.interfaces.ProjectionOperator.proj()=parsimony.functions.interfaces.ProjectionOperator-class.html#proj,Method parsimony.functions.multiblock.interfaces.MultiblockProjectionOperator.proj()=parsimony.functions.multiblock.interfaces.MultiblockProjectionOperator-class.html#proj,Method parsimony.functions.multiblock.losses.GeneralisedMultiblock.proj()=parsimony.functions.multiblock.losses.GeneralisedMultiblock-class.html#proj,Method parsimony.functions.penalties.L1.proj()=parsimony.functions.penalties.L1-class.html#proj,Method parsimony.functions.penalties.L2.proj()=parsimony.functions.penalties.L2-class.html#proj,Method parsimony.functions.penalties.RGCCAConstraint.proj()=parsimony.functions.penalties.RGCCAConstraint-class.html#proj,Method parsimony.functions.penalties.ZeroFunction.proj()=parsimony.functions.penalties.ZeroFunction-class.html#proj"><a title="parsimony._functions.CombinedProjectionOperator.proj
+parsimony._functions.GeneralisedMultiblock.proj
+parsimony._functions.L1.proj
+parsimony._functions.MultiblockProjectionOperator.proj
+parsimony._functions.ProjectionOperator.proj
+parsimony._functions.RGCCAConstraint.proj
+parsimony.functions.interfaces.CombinedProjectionOperator.proj
+parsimony.functions.interfaces.ProjectionOperator.proj
+parsimony.functions.multiblock.interfaces.MultiblockProjectionOperator.proj
+parsimony.functions.multiblock.losses.GeneralisedMultiblock.proj
+parsimony.functions.penalties.L1.proj
+parsimony.functions.penalties.L2.proj
+parsimony.functions.penalties.RGCCAConstraint.proj
+parsimony.functions.penalties.ZeroFunction.proj" class="py-name" href="#" onclick="return doclink('link-43', 'proj', 'link-43');">proj</a></tt><tt class="py-op">(</tt><tt class="py-name">w</tt><tt class="py-op">,</tt> <tt class="py-name">i</tt><tt class="py-op">)</tt> </tt>
+<a name="L153"></a><tt class="py-lineno">153</tt>  <tt class="py-line"><tt class="py-comment">#                    print "proj:", time() - _t</tt> </tt>
+<a name="L154"></a><tt class="py-lineno">154</tt>  <tt class="py-line"> </tt>
+<a name="L155"></a><tt class="py-lineno">155</tt>  <tt class="py-line"><tt class="py-comment">#                    print "l0 :", maths.norm0(w[i]), \</tt> </tt>
+<a name="L156"></a><tt class="py-lineno">156</tt>  <tt class="py-line"><tt class="py-comment">#                        ", l1 :", maths.norm1(w[i]), \</tt> </tt>
+<a name="L157"></a><tt class="py-lineno">157</tt>  <tt class="py-line"><tt class="py-comment">#                        ", l2&#178;:", maths.norm(w[i]) ** 2.0</tt> </tt>
+<a name="L158"></a><tt class="py-lineno">158</tt>  <tt class="py-line"> </tt>
+<a name="L159"></a><tt class="py-lineno">159</tt>  <tt class="py-line">                    <tt class="py-keyword">if</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">output</tt><tt class="py-op">:</tt> </tt>
+<a name="L160"></a><tt class="py-lineno">160</tt>  <tt class="py-line">                        <tt class="py-name">f_</tt> <tt class="py-op">=</tt> <tt class="py-name">function</tt><tt class="py-op">.</tt><tt id="link-44" class="py-name"><a title="parsimony._functions.AnonymousFunction.f
+parsimony._functions.CombinedProjectionOperator.f
+parsimony._functions.Function.f
+parsimony._functions.GeneralisedMultiblock.f
+parsimony._functions.GroupLassoOverlap.f
+parsimony._functions.L1.f
+parsimony._functions.LatentVariableCovariance.f
+parsimony._functions.QuadraticConstraint.f
+parsimony._functions.RGCCAConstraint.f
+parsimony._functions.RR_L1_GL.f
+parsimony._functions.RR_L1_TV.f
+parsimony._functions.RR_SmoothedL1TV.f
+parsimony._functions.RidgeLogisticRegression.f
+parsimony._functions.RidgeRegression.f
+parsimony._functions.SmoothedL1.f
+parsimony._functions.SmoothedL1TV.f
+parsimony._functions.SufficientDescentCondition.f
+parsimony._functions.TotalVariation.f
+parsimony.functions._objectives.functions.CombinedFunction.f
+parsimony.functions._objectives.functions.RR_L1_GL.f
+parsimony.functions._objectives.functions.RR_L1_TV.f
+parsimony.functions._objectives.functions.RR_SmoothedL1TV.f
+parsimony.functions.functions.CombinedFunction.f
+parsimony.functions.functions.RR_L1_GL.f
+parsimony.functions.functions.RR_L1_TV.f
+parsimony.functions.functions.RR_SmoothedL1TV.f
+parsimony.functions.interfaces.CombinedProjectionOperator.f
+parsimony.functions.interfaces.Function.f
+parsimony.functions.losses.LinearRegression.f
+parsimony.functions.losses.RidgeLogisticRegression.f
+parsimony.functions.losses.RidgeRegression.f
+parsimony.functions.multiblock.losses.GeneralisedMultiblock.f
+parsimony.functions.multiblock.losses.LatentVariableCovariance.f
+parsimony.functions.nesterov.L1.L1.f
+parsimony.functions.nesterov.L1TV.L1TV.f
+parsimony.functions.nesterov.gl.GroupLassoOverlap.f
+parsimony.functions.nesterov.tv.TotalVariation.f
+parsimony.functions.objectives.functions.CombinedFunction.f
+parsimony.functions.objectives.functions.RR_L1_GL.f
+parsimony.functions.objectives.functions.RR_L1_TV.f
+parsimony.functions.objectives.functions.RR_SmoothedL1TV.f
+parsimony.functions.penalties.L1.f
+parsimony.functions.penalties.L2.f
+parsimony.functions.penalties.QuadraticConstraint.f
+parsimony.functions.penalties.RGCCAConstraint.f
+parsimony.functions.penalties.SufficientDescentCondition.f
+parsimony.functions.penalties.ZeroFunction.f" class="py-name" href="#" onclick="return doclink('link-44', 'f', 'link-33');">f</a></tt><tt class="py-op">(</tt><tt class="py-name">w</tt><tt class="py-op">)</tt> </tt>
+<a name="L161"></a><tt class="py-lineno">161</tt>  <tt class="py-line"><tt class="py-comment">#                        print "f:", f_</tt> </tt>
+<a name="L162"></a><tt class="py-lineno">162</tt>  <tt class="py-line">                        <tt class="py-name">improvement</tt> <tt class="py-op">=</tt> <tt class="py-name">f_</tt> <tt class="py-op">-</tt> <tt id="link-45" class="py-name"><a title="parsimony._functions.AnonymousFunction.f
+parsimony._functions.CombinedProjectionOperator.f
+parsimony._functions.Function.f
+parsimony._functions.GeneralisedMultiblock.f
+parsimony._functions.GroupLassoOverlap.f
+parsimony._functions.L1.f
+parsimony._functions.LatentVariableCovariance.f
+parsimony._functions.QuadraticConstraint.f
+parsimony._functions.RGCCAConstraint.f
+parsimony._functions.RR_L1_GL.f
+parsimony._functions.RR_L1_TV.f
+parsimony._functions.RR_SmoothedL1TV.f
+parsimony._functions.RidgeLogisticRegression.f
+parsimony._functions.RidgeRegression.f
+parsimony._functions.SmoothedL1.f
+parsimony._functions.SmoothedL1TV.f
+parsimony._functions.SufficientDescentCondition.f
+parsimony._functions.TotalVariation.f
+parsimony.functions._objectives.functions.CombinedFunction.f
+parsimony.functions._objectives.functions.RR_L1_GL.f
+parsimony.functions._objectives.functions.RR_L1_TV.f
+parsimony.functions._objectives.functions.RR_SmoothedL1TV.f
+parsimony.functions.functions.CombinedFunction.f
+parsimony.functions.functions.RR_L1_GL.f
+parsimony.functions.functions.RR_L1_TV.f
+parsimony.functions.functions.RR_SmoothedL1TV.f
+parsimony.functions.interfaces.CombinedProjectionOperator.f
+parsimony.functions.interfaces.Function.f
+parsimony.functions.losses.LinearRegression.f
+parsimony.functions.losses.RidgeLogisticRegression.f
+parsimony.functions.losses.RidgeRegression.f
+parsimony.functions.multiblock.losses.GeneralisedMultiblock.f
+parsimony.functions.multiblock.losses.LatentVariableCovariance.f
+parsimony.functions.nesterov.L1.L1.f
+parsimony.functions.nesterov.L1TV.L1TV.f
+parsimony.functions.nesterov.gl.GroupLassoOverlap.f
+parsimony.functions.nesterov.tv.TotalVariation.f
+parsimony.functions.objectives.functions.CombinedFunction.f
+parsimony.functions.objectives.functions.RR_L1_GL.f
+parsimony.functions.objectives.functions.RR_L1_TV.f
+parsimony.functions.objectives.functions.RR_SmoothedL1TV.f
+parsimony.functions.penalties.L1.f
+parsimony.functions.penalties.L2.f
+parsimony.functions.penalties.QuadraticConstraint.f
+parsimony.functions.penalties.RGCCAConstraint.f
+parsimony.functions.penalties.SufficientDescentCondition.f
+parsimony.functions.penalties.ZeroFunction.f" class="py-name" href="#" onclick="return doclink('link-45', 'f', 'link-33');">f</a></tt><tt class="py-op">[</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt> </tt>
+<a name="L163"></a><tt class="py-lineno">163</tt>  <tt class="py-line">                        <tt class="py-keyword">if</tt> <tt class="py-name">improvement</tt> <tt class="py-op">&gt;</tt> <tt class="py-number">0.0</tt><tt class="py-op">:</tt> </tt>
+<a name="L164"></a><tt class="py-lineno">164</tt>  <tt class="py-line">                            <tt class="py-comment"># If this happens there are two possible reasons:</tt> </tt>
+<a name="L165"></a><tt class="py-lineno">165</tt>  <tt class="py-line">                            <tt class="py-keyword">if</tt> <tt class="py-name">abs</tt><tt class="py-op">(</tt><tt class="py-name">improvement</tt><tt class="py-op">)</tt> <tt class="py-op">&lt;=</tt> <tt id="link-46" class="py-name"><a title="parsimony.utils.consts" class="py-name" href="#" onclick="return doclink('link-46', 'consts', 'link-7');">consts</a></tt><tt class="py-op">.</tt><tt id="link-47" class="py-name"><a title="parsimony.datasets.simulated.utils.TOLERANCE
+parsimony.utils.consts.TOLERANCE" class="py-name" href="#" onclick="return doclink('link-47', 'TOLERANCE', 'link-24');">TOLERANCE</a></tt><tt class="py-op">:</tt> </tt>
+<a name="L166"></a><tt class="py-lineno">166</tt>  <tt class="py-line">                                <tt class="py-comment"># 1. The function is actually converged, and</tt> </tt>
+<a name="L167"></a><tt class="py-lineno">167</tt>  <tt class="py-line">                                <tt class="py-comment">#         the "increase" is because of</tt> </tt>
+<a name="L168"></a><tt class="py-lineno">168</tt>  <tt class="py-line">                                <tt class="py-comment">#         precision errors. This happens</tt> </tt>
+<a name="L169"></a><tt class="py-lineno">169</tt>  <tt class="py-line">                                <tt class="py-comment">#         sometimes.</tt> </tt>
+<a name="L170"></a><tt class="py-lineno">170</tt>  <tt class="py-line">                                <tt class="py-keyword">pass</tt> </tt>
+<a name="L171"></a><tt class="py-lineno">171</tt>  <tt class="py-line">                            <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L172"></a><tt class="py-lineno">172</tt>  <tt class="py-line">                                <tt class="py-comment"># 2. There is an error and the function</tt> </tt>
+<a name="L173"></a><tt class="py-lineno">173</tt>  <tt class="py-line">                                <tt class="py-comment">#         actually increased. Does this</tt> </tt>
+<a name="L174"></a><tt class="py-lineno">174</tt>  <tt class="py-line">                                <tt class="py-comment">#         happen? If so, we need to</tt> </tt>
+<a name="L175"></a><tt class="py-lineno">175</tt>  <tt class="py-line">                                <tt class="py-comment">#         investigate! Possible errors are:</tt> </tt>
+<a name="L176"></a><tt class="py-lineno">176</tt>  <tt class="py-line">                                <tt class="py-comment">#          * The gradient is wrong.</tt> </tt>
+<a name="L177"></a><tt class="py-lineno">177</tt>  <tt class="py-line">                                <tt class="py-comment">#          * The step size is too large.</tt> </tt>
+<a name="L178"></a><tt class="py-lineno">178</tt>  <tt class="py-line">                                <tt class="py-comment">#          * Other reasons?</tt> </tt>
+<a name="L179"></a><tt class="py-lineno">179</tt>  <tt class="py-line">                                <tt class="py-keyword">print</tt> <tt class="py-string">"ERROR! Function increased!"</tt> </tt>
+<a name="L180"></a><tt class="py-lineno">180</tt>  <tt class="py-line"> </tt>
+<a name="L181"></a><tt class="py-lineno">181</tt>  <tt class="py-line">                            <tt class="py-comment"># Either way, we stop and regroup if it happens.</tt> </tt>
+<a name="L182"></a><tt class="py-lineno">182</tt>  <tt class="py-line">                            <tt class="py-keyword">break</tt> </tt>
+<a name="L183"></a><tt class="py-lineno">183</tt>  <tt class="py-line"> </tt>
+<a name="L184"></a><tt class="py-lineno">184</tt>  <tt class="py-line">                        <tt id="link-48" class="py-name"><a title="parsimony._functions.AnonymousFunction.f
+parsimony._functions.CombinedProjectionOperator.f
+parsimony._functions.Function.f
+parsimony._functions.GeneralisedMultiblock.f
+parsimony._functions.GroupLassoOverlap.f
+parsimony._functions.L1.f
+parsimony._functions.LatentVariableCovariance.f
+parsimony._functions.QuadraticConstraint.f
+parsimony._functions.RGCCAConstraint.f
+parsimony._functions.RR_L1_GL.f
+parsimony._functions.RR_L1_TV.f
+parsimony._functions.RR_SmoothedL1TV.f
+parsimony._functions.RidgeLogisticRegression.f
+parsimony._functions.RidgeRegression.f
+parsimony._functions.SmoothedL1.f
+parsimony._functions.SmoothedL1TV.f
+parsimony._functions.SufficientDescentCondition.f
+parsimony._functions.TotalVariation.f
+parsimony.functions._objectives.functions.CombinedFunction.f
+parsimony.functions._objectives.functions.RR_L1_GL.f
+parsimony.functions._objectives.functions.RR_L1_TV.f
+parsimony.functions._objectives.functions.RR_SmoothedL1TV.f
+parsimony.functions.functions.CombinedFunction.f
+parsimony.functions.functions.RR_L1_GL.f
+parsimony.functions.functions.RR_L1_TV.f
+parsimony.functions.functions.RR_SmoothedL1TV.f
+parsimony.functions.interfaces.CombinedProjectionOperator.f
+parsimony.functions.interfaces.Function.f
+parsimony.functions.losses.LinearRegression.f
+parsimony.functions.losses.RidgeLogisticRegression.f
+parsimony.functions.losses.RidgeRegression.f
+parsimony.functions.multiblock.losses.GeneralisedMultiblock.f
+parsimony.functions.multiblock.losses.LatentVariableCovariance.f
+parsimony.functions.nesterov.L1.L1.f
+parsimony.functions.nesterov.L1TV.L1TV.f
+parsimony.functions.nesterov.gl.GroupLassoOverlap.f
+parsimony.functions.nesterov.tv.TotalVariation.f
+parsimony.functions.objectives.functions.CombinedFunction.f
+parsimony.functions.objectives.functions.RR_L1_GL.f
+parsimony.functions.objectives.functions.RR_L1_TV.f
+parsimony.functions.objectives.functions.RR_SmoothedL1TV.f
+parsimony.functions.penalties.L1.f
+parsimony.functions.penalties.L2.f
+parsimony.functions.penalties.QuadraticConstraint.f
+parsimony.functions.penalties.RGCCAConstraint.f
+parsimony.functions.penalties.SufficientDescentCondition.f
+parsimony.functions.penalties.ZeroFunction.f" class="py-name" href="#" onclick="return doclink('link-48', 'f', 'link-33');">f</a></tt><tt class="py-op">.</tt><tt class="py-name">append</tt><tt class="py-op">(</tt><tt class="py-name">f_</tt><tt class="py-op">)</tt> </tt>
+<a name="L185"></a><tt class="py-lineno">185</tt>  <tt class="py-line"> </tt>
+<a name="L186"></a><tt class="py-lineno">186</tt>  <tt class="py-line">                    <tt class="py-name">err</tt> <tt class="py-op">=</tt> <tt id="link-49" class="py-name"><a title="parsimony.utils.maths" class="py-name" href="#" onclick="return doclink('link-49', 'maths', 'link-3');">maths</a></tt><tt class="py-op">.</tt><tt id="link-50" class="py-name" targets="Function parsimony.utils.maths.norm()=parsimony.utils.maths-module.html#norm"><a title="parsimony.utils.maths.norm" class="py-name" href="#" onclick="return doclink('link-50', 'norm', 'link-50');">norm</a></tt><tt class="py-op">(</tt><tt class="py-name">w_old</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt> <tt class="py-op">-</tt> <tt class="py-name">w</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L187"></a><tt class="py-lineno">187</tt>  <tt class="py-line"><tt class="py-comment">#                    print "err: %.10f &lt; %.10f * %.10f = %.10f" \</tt> </tt>
+<a name="L188"></a><tt class="py-lineno">188</tt>  <tt class="py-line"><tt class="py-comment">#                        % (err, t[i], self.eps, t[i] * self.eps)</tt> </tt>
+<a name="L189"></a><tt class="py-lineno">189</tt>  <tt class="py-line">                    <tt class="py-keyword">if</tt> <tt class="py-name">err</tt> <tt class="py-op">&lt;=</tt> <tt id="link-51" class="py-name"><a title="parsimony.tests._playhouse.t" class="py-name" href="#" onclick="return doclink('link-51', 't', 'link-35');">t</a></tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt> <tt class="py-op">*</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-52" class="py-name"><a title="parsimony.tests._playhouse.eps" class="py-name" href="#" onclick="return doclink('link-52', 'eps', 'link-29');">eps</a></tt> <tt class="py-keyword">and</tt> <tt id="link-53" class="py-name"><a title="parsimony.tests._playhouse.k" class="py-name" href="#" onclick="return doclink('link-53', 'k', 'link-36');">k</a></tt> <tt class="py-op">+</tt> <tt class="py-number">1</tt> <tt class="py-op">&gt;=</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">min_iter</tt><tt class="py-op">:</tt> </tt>
+<a name="L190"></a><tt class="py-lineno">190</tt>  <tt class="py-line">                        <tt class="py-name">converged</tt> <tt class="py-op">=</tt> <tt class="py-name">True</tt> </tt>
+<a name="L191"></a><tt class="py-lineno">191</tt>  <tt class="py-line">                        <tt class="py-keyword">break</tt> </tt>
+<a name="L192"></a><tt class="py-lineno">192</tt>  <tt class="py-line"> </tt>
+<a name="L193"></a><tt class="py-lineno">193</tt>  <tt class="py-line">                <tt class="py-keyword">print</tt> <tt class="py-string">"l0 :"</tt><tt class="py-op">,</tt> <tt id="link-54" class="py-name"><a title="parsimony.utils.maths" class="py-name" href="#" onclick="return doclink('link-54', 'maths', 'link-3');">maths</a></tt><tt class="py-op">.</tt><tt id="link-55" class="py-name" targets="Function parsimony.utils.maths.norm0()=parsimony.utils.maths-module.html#norm0"><a title="parsimony.utils.maths.norm0" class="py-name" href="#" onclick="return doclink('link-55', 'norm0', 'link-55');">norm0</a></tt><tt class="py-op">(</tt><tt class="py-name">w</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> \ </tt>
+<a name="L194"></a><tt class="py-lineno">194</tt>  <tt class="py-line">                    <tt class="py-string">", l1 :"</tt><tt class="py-op">,</tt> <tt id="link-56" class="py-name"><a title="parsimony.utils.maths" class="py-name" href="#" onclick="return doclink('link-56', 'maths', 'link-3');">maths</a></tt><tt class="py-op">.</tt><tt id="link-57" class="py-name" targets="Function parsimony.utils.maths.norm1()=parsimony.utils.maths-module.html#norm1"><a title="parsimony.utils.maths.norm1" class="py-name" href="#" onclick="return doclink('link-57', 'norm1', 'link-57');">norm1</a></tt><tt class="py-op">(</tt><tt class="py-name">w</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> \ </tt>
+<a name="L195"></a><tt class="py-lineno">195</tt>  <tt class="py-line">                    <tt class="py-string">", l2&#178;:"</tt><tt class="py-op">,</tt> <tt id="link-58" class="py-name"><a title="parsimony.utils.maths" class="py-name" href="#" onclick="return doclink('link-58', 'maths', 'link-3');">maths</a></tt><tt class="py-op">.</tt><tt id="link-59" class="py-name"><a title="parsimony.utils.maths.norm" class="py-name" href="#" onclick="return doclink('link-59', 'norm', 'link-50');">norm</a></tt><tt class="py-op">(</tt><tt class="py-name">w</tt><tt class="py-op">[</tt><tt class="py-name">i</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> <tt class="py-op">**</tt> <tt class="py-number">2.</tt> </tt>
+<a name="L196"></a><tt class="py-lineno">196</tt>  <tt class="py-line">                <tt class="py-keyword">print</tt> <tt class="py-string">"f:"</tt><tt class="py-op">,</tt> <tt id="link-60" class="py-name"><a title="parsimony._functions.AnonymousFunction.f
+parsimony._functions.CombinedProjectionOperator.f
+parsimony._functions.Function.f
+parsimony._functions.GeneralisedMultiblock.f
+parsimony._functions.GroupLassoOverlap.f
+parsimony._functions.L1.f
+parsimony._functions.LatentVariableCovariance.f
+parsimony._functions.QuadraticConstraint.f
+parsimony._functions.RGCCAConstraint.f
+parsimony._functions.RR_L1_GL.f
+parsimony._functions.RR_L1_TV.f
+parsimony._functions.RR_SmoothedL1TV.f
+parsimony._functions.RidgeLogisticRegression.f
+parsimony._functions.RidgeRegression.f
+parsimony._functions.SmoothedL1.f
+parsimony._functions.SmoothedL1TV.f
+parsimony._functions.SufficientDescentCondition.f
+parsimony._functions.TotalVariation.f
+parsimony.functions._objectives.functions.CombinedFunction.f
+parsimony.functions._objectives.functions.RR_L1_GL.f
+parsimony.functions._objectives.functions.RR_L1_TV.f
+parsimony.functions._objectives.functions.RR_SmoothedL1TV.f
+parsimony.functions.functions.CombinedFunction.f
+parsimony.functions.functions.RR_L1_GL.f
+parsimony.functions.functions.RR_L1_TV.f
+parsimony.functions.functions.RR_SmoothedL1TV.f
+parsimony.functions.interfaces.CombinedProjectionOperator.f
+parsimony.functions.interfaces.Function.f
+parsimony.functions.losses.LinearRegression.f
+parsimony.functions.losses.RidgeLogisticRegression.f
+parsimony.functions.losses.RidgeRegression.f
+parsimony.functions.multiblock.losses.GeneralisedMultiblock.f
+parsimony.functions.multiblock.losses.LatentVariableCovariance.f
+parsimony.functions.nesterov.L1.L1.f
+parsimony.functions.nesterov.L1TV.L1TV.f
+parsimony.functions.nesterov.gl.GroupLassoOverlap.f
+parsimony.functions.nesterov.tv.TotalVariation.f
+parsimony.functions.objectives.functions.CombinedFunction.f
+parsimony.functions.objectives.functions.RR_L1_GL.f
+parsimony.functions.objectives.functions.RR_L1_TV.f
+parsimony.functions.objectives.functions.RR_SmoothedL1TV.f
+parsimony.functions.penalties.L1.f
+parsimony.functions.penalties.L2.f
+parsimony.functions.penalties.QuadraticConstraint.f
+parsimony.functions.penalties.RGCCAConstraint.f
+parsimony.functions.penalties.SufficientDescentCondition.f
+parsimony.functions.penalties.ZeroFunction.f" class="py-name" href="#" onclick="return doclink('link-60', 'f', 'link-33');">f</a></tt><tt class="py-op">[</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt> </tt>
+<a name="L197"></a><tt class="py-lineno">197</tt>  <tt class="py-line"> </tt>
+<a name="L198"></a><tt class="py-lineno">198</tt>  <tt class="py-line">                <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">converged</tt><tt class="py-op">:</tt> </tt>
+<a name="L199"></a><tt class="py-lineno">199</tt>  <tt class="py-line">                    <tt class="py-name">all_converged</tt> <tt class="py-op">=</tt> <tt class="py-name">False</tt> </tt>
+<a name="L200"></a><tt class="py-lineno">200</tt>  <tt class="py-line"> </tt>
+<a name="L201"></a><tt class="py-lineno">201</tt>  <tt class="py-line">            <tt class="py-keyword">if</tt> <tt class="py-name">all_converged</tt><tt class="py-op">:</tt> </tt>
+<a name="L202"></a><tt class="py-lineno">202</tt>  <tt class="py-line">                <tt class="py-keyword">print</tt> <tt class="py-string">"All converged!"</tt> </tt>
+<a name="L203"></a><tt class="py-lineno">203</tt>  <tt class="py-line">                <tt class="py-keyword">break</tt> </tt>
+<a name="L204"></a><tt class="py-lineno">204</tt>  <tt class="py-line"> </tt>
+<a name="L205"></a><tt class="py-lineno">205</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">output</tt><tt class="py-op">:</tt> </tt>
+<a name="L206"></a><tt class="py-lineno">206</tt>  <tt class="py-line"><tt class="py-comment">#            output = {"t": t, "f": f}</tt> </tt>
+<a name="L207"></a><tt class="py-lineno">207</tt>  <tt class="py-line">            <tt class="py-name">output</tt> <tt class="py-op">=</tt> <tt class="py-op">{</tt><tt class="py-string">"f"</tt><tt class="py-op">:</tt> <tt id="link-61" class="py-name"><a title="parsimony._functions.AnonymousFunction.f
+parsimony._functions.CombinedProjectionOperator.f
+parsimony._functions.Function.f
+parsimony._functions.GeneralisedMultiblock.f
+parsimony._functions.GroupLassoOverlap.f
+parsimony._functions.L1.f
+parsimony._functions.LatentVariableCovariance.f
+parsimony._functions.QuadraticConstraint.f
+parsimony._functions.RGCCAConstraint.f
+parsimony._functions.RR_L1_GL.f
+parsimony._functions.RR_L1_TV.f
+parsimony._functions.RR_SmoothedL1TV.f
+parsimony._functions.RidgeLogisticRegression.f
+parsimony._functions.RidgeRegression.f
+parsimony._functions.SmoothedL1.f
+parsimony._functions.SmoothedL1TV.f
+parsimony._functions.SufficientDescentCondition.f
+parsimony._functions.TotalVariation.f
+parsimony.functions._objectives.functions.CombinedFunction.f
+parsimony.functions._objectives.functions.RR_L1_GL.f
+parsimony.functions._objectives.functions.RR_L1_TV.f
+parsimony.functions._objectives.functions.RR_SmoothedL1TV.f
+parsimony.functions.functions.CombinedFunction.f
+parsimony.functions.functions.RR_L1_GL.f
+parsimony.functions.functions.RR_L1_TV.f
+parsimony.functions.functions.RR_SmoothedL1TV.f
+parsimony.functions.interfaces.CombinedProjectionOperator.f
+parsimony.functions.interfaces.Function.f
+parsimony.functions.losses.LinearRegression.f
+parsimony.functions.losses.RidgeLogisticRegression.f
+parsimony.functions.losses.RidgeRegression.f
+parsimony.functions.multiblock.losses.GeneralisedMultiblock.f
+parsimony.functions.multiblock.losses.LatentVariableCovariance.f
+parsimony.functions.nesterov.L1.L1.f
+parsimony.functions.nesterov.L1TV.L1TV.f
+parsimony.functions.nesterov.gl.GroupLassoOverlap.f
+parsimony.functions.nesterov.tv.TotalVariation.f
+parsimony.functions.objectives.functions.CombinedFunction.f
+parsimony.functions.objectives.functions.RR_L1_GL.f
+parsimony.functions.objectives.functions.RR_L1_TV.f
+parsimony.functions.objectives.functions.RR_SmoothedL1TV.f
+parsimony.functions.penalties.L1.f
+parsimony.functions.penalties.L2.f
+parsimony.functions.penalties.QuadraticConstraint.f
+parsimony.functions.penalties.RGCCAConstraint.f
+parsimony.functions.penalties.SufficientDescentCondition.f
+parsimony.functions.penalties.ZeroFunction.f" class="py-name" href="#" onclick="return doclink('link-61', 'f', 'link-33');">f</a></tt><tt class="py-op">}</tt> </tt>
+<a name="L208"></a><tt class="py-lineno">208</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-op">(</tt><tt class="py-name">w</tt><tt class="py-op">,</tt> <tt class="py-name">output</tt><tt class="py-op">)</tt> </tt>
+<a name="L209"></a><tt class="py-lineno">209</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L210"></a><tt class="py-lineno">210</tt>  <tt class="py-line">            <tt class="py-keyword">return</tt> <tt class="py-name">w</tt> </tt>
+</div></div><a name="L211"></a><tt class="py-lineno">211</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="parsimony-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Feb 21 18:01:45 2014
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

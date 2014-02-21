@@ -51,37 +51,49 @@
 <span id="tutorials"></span><h1>General framework<a class="headerlink" href="#general-framework" title="Permalink to this headline">¶</a></h1>
 <p>Three principle modules have been defined: <strong>algorithms</strong>, <strong>estimators</strong>, and <strong>functions</strong>.</p>
 <ul class="simple">
-<li><strong>functions</strong> define the loss function OLS (ordinary least squares) with different penalties
-(for instance, L1 Lasso, L2 Ridge Regression, etc.). We need to minimize this functions.</li>
+<li><strong>functions</strong> define the loss function and penalties and combination of both. We need to minimize this functions.</li>
 <li><strong>algorithms</strong> define algorithms (Fast Iterative Shrinkage-Thresholding Algorithm (FISTA) <a class="reference internal" href="#fista2009">[FISTA2009]</a>,
 COntinuation of NESTerov&#8217;s smoothing Algorithm (conesta), Excessive gap method)
 to minimize the above function.</li>
 <li><strong>estimators</strong> define the combination of function and algorithm.</li>
 </ul>
 <p>A general framework for our package:</p>
+<ul>
+<li><p class="first">Functions</p>
+<ul>
+<li><p class="first">Loss function</p>
 <ul class="simple">
-<li>Functions<ul>
-<li>Loss function<ul>
-<li>OLS</li>
+<li>RidgeRegression</li>
+<li>RidgeLogisticRegression</li>
 </ul>
 </li>
-<li>Penalties<ul>
+<li><p class="first">Penalties</p>
+<ul class="simple">
 <li>L1 (Lasso)</li>
 <li>L2 (Ridge)</li>
-<li>L1 + L2 (Elastic net)</li>
-<li>Total variation (TV)</li>
+<li>Total Variation (TV)</li>
 </ul>
 </li>
-<li>Any combination of the above</li>
+<li><dl class="first docutils">
+<dt>Objectives are any combination of the above</dt>
+<dd><ul class="first last simple">
+<li>RR_L1_TV Ridge Regression with L1 and TV.</li>
+<li>RLR_L1_TV Ridge Logistic Regression with L1 and TV.</li>
+</ul>
+</dd>
+</dl>
+</li>
 </ul>
 </li>
-<li>Algorithms<ul>
+<li><p class="first">Algorithms</p>
+<ul class="simple">
 <li>Fast Iterative Shrinkage-Thresholding Algorithm (FISTA)</li>
 <li>COntinuation of NESTerov&#8217;s smoothing Algorithm (conesta)</li>
 <li>Excessive gap method</li>
 </ul>
 </li>
-<li>Estimators<ul>
+<li><p class="first">Estimators</p>
+<ul class="simple">
 <li>RidgeRegression_L1_TV</li>
 <li>RidgeRegression_SmoothedL1TV</li>
 </ul>

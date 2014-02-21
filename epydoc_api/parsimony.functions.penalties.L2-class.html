@@ -112,21 +112,6 @@ penalty_start : Non-negative integer. The number of columns, variables
         etc., to except from penalisation. Equivalently, the first index
         to be penalised. Default is 0, all columns are included.
 
-Example
--------
-&gt;&gt;&gt; import numpy as np
-&gt;&gt;&gt; from parsimony.functions.penalties import L2
-
-&gt;&gt;&gt; np.random.seed(42)
-&gt;&gt;&gt; beta = np.random.rand(100,1)
-&gt;&gt;&gt; l2 = L2(l=3.14159, c=2.71828)
-&gt;&gt;&gt; np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
-5.8179830878866391e-10
-
-&gt;&gt;&gt; l2 = L2(l=3.14159, c=2.71828, penalty_start=5)
-&gt;&gt;&gt; np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
-5.0187970725495645e-10
-
 </pre>
 
 <!-- ==================== INSTANCE METHODS ==================== -->
@@ -307,13 +292,6 @@ Example
         <a name="__abstractmethods__"></a><span class="summary-name">__abstractmethods__</span> = <code title="frozenset([])"><code class="variable-group">frozenset([</code><code class="variable-group">])</code></code>
     </td>
   </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-        <a name="_abc_negative_cache_version"></a><span class="summary-name">_abc_negative_cache_version</span> = <code title="15">15</code>
-    </td>
-  </tr>
   <tr>
     <td colspan="2" class="summary">
     <p class="indent-wrapped-lines"><b>Inherited from <code><a href="parsimony.functions.interfaces.AtomicFunction-class.html">interfaces.AtomicFunction</a></code></b>:
@@ -322,6 +300,7 @@ Example
     <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="parsimony.functions.interfaces.Function-class.html">interfaces.Function</a></code></b> (private):
       <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_cache" onclick="show_private();">_abc_cache</a></code>,
       <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_negative_cache" onclick="show_private();">_abc_negative_cache</a></code>,
+      <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_negative_cache_version" onclick="show_private();">_abc_negative_cache_version</a></code>,
       <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_registry" onclick="show_private();">_abc_registry</a></code>
       </p></div>
     </td>
@@ -436,8 +415,27 @@ Example
     </td>
   </tr></table>
   
-  <p>Gradient of the function.</p>
-  <p>From the interface &quot;Gradient&quot;.</p>
+  <pre class="literalblock">
+Gradient of the function.
+
+From the interface &quot;Gradient&quot;.
+
+Example
+-------
+&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from parsimony.functions.penalties import L2
+&gt;&gt;&gt;
+&gt;&gt;&gt; np.random.seed(42)
+&gt;&gt;&gt; beta = np.random.rand(100, 1)
+&gt;&gt;&gt; l2 = L2(l=3.14159, c=2.71828)
+&gt;&gt;&gt; np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
+5.8179830878866391e-10
+&gt;&gt;&gt;
+&gt;&gt;&gt; l2 = L2(l=3.14159, c=2.71828, penalty_start=5)
+&gt;&gt;&gt; np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
+5.0187970725495645e-10
+
+</pre>
   <dl class="fields">
     <dt>Overrides:
         <a href="parsimony.functions.interfaces.Gradient-class.html#grad">interfaces.Gradient.grad</a>
@@ -485,8 +483,27 @@ Example
     </td>
   </tr></table>
   
-  <p>The corresponding projection operator.</p>
-  <p>From the interface &quot;ProjectionOperator&quot;.</p>
+  <pre class="literalblock">
+The corresponding projection operator.
+
+From the interface &quot;ProjectionOperator&quot;.
+
+Examples
+--------
+&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from parsimony.functions.penalties import L2
+&gt;&gt;&gt; np.random.seed(42)
+&gt;&gt;&gt; l2 = L2(c=0.3183098861837907)
+&gt;&gt;&gt; y1 = l2.proj(np.random.rand(100, 1) * 2.0 - 1.0)
+&gt;&gt;&gt; np.linalg.norm(y1) ** 2.0
+0.31830988618379052
+&gt;&gt;&gt; y2 = np.random.rand(100, 1) * 2.0 - 1.0
+&gt;&gt;&gt; l2.feasible(y2)
+False
+&gt;&gt;&gt; l2.feasible(l2.proj(y2))
+True
+
+</pre>
   <dl class="fields">
     <dt>Overrides:
         <a href="parsimony.functions.interfaces.ProjectionOperator-class.html#proj">interfaces.ProjectionOperator.proj</a>
@@ -511,6 +528,20 @@ Example
   
   <p>Feasibility of the constraint.</p>
   <p>From the interface &quot;Constraint&quot;.</p>
+<pre class="py-doctest">
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> numpy <span class="py-keyword">as</span> np
+<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> parsimony.functions.penalties <span class="py-keyword">import</span> L2
+<span class="py-prompt">&gt;&gt;&gt; </span>np.random.seed(42)
+<span class="py-prompt">&gt;&gt;&gt; </span>l2 = L2(c=0.3183098861837907)
+<span class="py-prompt">&gt;&gt;&gt; </span>y1 = 0.1 * (np.random.rand(50, 1) * 2.0 - 1.0)
+<span class="py-prompt">&gt;&gt;&gt; </span>l2.feasible(y1)
+<span class="py-output">True</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span>y2 = 10.0 * (np.random.rand(50, 1) * 2.0 - 1.0)
+<span class="py-prompt">&gt;&gt;&gt; </span>l2.feasible(y2)
+<span class="py-output">False</span>
+<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span>y3 = l2.proj(50.0 * np.random.rand(100, 1) * 2.0 - 1.0)
+<span class="py-prompt">&gt;&gt;&gt; </span>l2.feasible(y3)
+<span class="py-output">True</span></pre>
   <dl class="fields">
     <dt>Overrides:
         <a href="parsimony.functions.interfaces.Constraint-class.html#feasible">interfaces.Constraint.feasible</a>
@@ -545,7 +576,7 @@ Example
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Feb 21 17:38:26 2014
+    Generated by Epydoc 3.0.1 on Fri Feb 21 18:01:45 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

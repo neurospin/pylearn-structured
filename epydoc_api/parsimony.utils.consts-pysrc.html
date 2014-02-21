@@ -65,17 +65,20 @@
 <a name="L6"></a><tt class="py-lineno"> 6</tt>  <tt class="py-line"><tt class="py-docstring">@email:   tommy.loefstedt@cea.fr</tt> </tt>
 <a name="L7"></a><tt class="py-lineno"> 7</tt>  <tt class="py-line"><tt class="py-docstring">@license: TBD.</tt> </tt>
 <a name="L8"></a><tt class="py-lineno"> 8</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
-<a name="L9"></a><tt class="py-lineno"> 9</tt>  <tt class="py-line"> </tt>
-<a name="L10"></a><tt class="py-lineno">10</tt>  <tt class="py-line"><tt class="py-name">__all__</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-string">'TOLERANCE'</tt><tt class="py-op">,</tt> <tt class="py-string">'MAX_ITER'</tt><tt class="py-op">]</tt> </tt>
-<a name="L11"></a><tt class="py-lineno">11</tt>  <tt class="py-line"> </tt>
-<a name="L12"></a><tt class="py-lineno">12</tt>  <tt class="py-line"><tt class="py-comment"># Settings</tt> </tt>
-<a name="L13"></a><tt class="py-lineno">13</tt>  <tt class="py-line"><tt id="link-0" class="py-name" targets="Variable parsimony.datasets.simulated.utils.TOLERANCE=parsimony.datasets.simulated.utils-module.html#TOLERANCE,Variable parsimony.utils.consts.TOLERANCE=parsimony.utils.consts-module.html#TOLERANCE"><a title="parsimony.datasets.simulated.utils.TOLERANCE
+<a name="L9"></a><tt class="py-lineno"> 9</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">as</tt> <tt class="py-name">np</tt> </tt>
+<a name="L10"></a><tt class="py-lineno">10</tt>  <tt class="py-line"> </tt>
+<a name="L11"></a><tt class="py-lineno">11</tt>  <tt class="py-line"><tt class="py-name">__all__</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-string">"TOLERANCE"</tt><tt class="py-op">,</tt> <tt class="py-string">"MAX_ITER"</tt><tt class="py-op">,</tt> <tt class="py-string">"FLOAT_EPSILON"</tt><tt class="py-op">]</tt> </tt>
+<a name="L12"></a><tt class="py-lineno">12</tt>  <tt class="py-line"> </tt>
+<a name="L13"></a><tt class="py-lineno">13</tt>  <tt class="py-line"><tt class="py-comment"># Settings</tt> </tt>
+<a name="L14"></a><tt class="py-lineno">14</tt>  <tt class="py-line"><tt id="link-0" class="py-name" targets="Variable parsimony.datasets.simulated.utils.TOLERANCE=parsimony.datasets.simulated.utils-module.html#TOLERANCE,Variable parsimony.utils.consts.TOLERANCE=parsimony.utils.consts-module.html#TOLERANCE"><a title="parsimony.datasets.simulated.utils.TOLERANCE
 parsimony.utils.consts.TOLERANCE" class="py-name" href="#" onclick="return doclink('link-0', 'TOLERANCE', 'link-0');">TOLERANCE</a></tt> <tt class="py-op">=</tt> <tt class="py-number">5e-8</tt> </tt>
-<a name="L14"></a><tt class="py-lineno">14</tt>  <tt class="py-line"><tt class="py-comment"># TODO: MAX_ITER is heavily algorithm-dependent, so we have to think about if</tt> </tt>
-<a name="L15"></a><tt class="py-lineno">15</tt>  <tt class="py-line"><tt class="py-comment"># we should include a package-wide maximum at all.</tt> </tt>
-<a name="L16"></a><tt class="py-lineno">16</tt>  <tt class="py-line"><tt id="link-1" class="py-name" targets="Variable parsimony.utils.consts.MAX_ITER=parsimony.utils.consts-module.html#MAX_ITER"><a title="parsimony.utils.consts.MAX_ITER" class="py-name" href="#" onclick="return doclink('link-1', 'MAX_ITER', 'link-1');">MAX_ITER</a></tt> <tt class="py-op">=</tt> <tt class="py-number">10000</tt> </tt>
-<a name="L17"></a><tt class="py-lineno">17</tt>  <tt class="py-line"><tt class="py-comment">#mu_zero = 5e-8</tt> </tt>
-<a name="L18"></a><tt class="py-lineno">18</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<a name="L15"></a><tt class="py-lineno">15</tt>  <tt class="py-line"><tt class="py-comment"># TODO: MAX_ITER is heavily algorithm-dependent, so we have to think about if</tt> </tt>
+<a name="L16"></a><tt class="py-lineno">16</tt>  <tt class="py-line"><tt class="py-comment"># we should include a package-wide maximum at all.</tt> </tt>
+<a name="L17"></a><tt class="py-lineno">17</tt>  <tt class="py-line"><tt id="link-1" class="py-name" targets="Variable parsimony.utils.consts.MAX_ITER=parsimony.utils.consts-module.html#MAX_ITER"><a title="parsimony.utils.consts.MAX_ITER" class="py-name" href="#" onclick="return doclink('link-1', 'MAX_ITER', 'link-1');">MAX_ITER</a></tt> <tt class="py-op">=</tt> <tt class="py-number">10000</tt> </tt>
+<a name="L18"></a><tt class="py-lineno">18</tt>  <tt class="py-line"><tt class="py-comment">#mu_zero = 5e-8</tt> </tt>
+<a name="L19"></a><tt class="py-lineno">19</tt>  <tt class="py-line"> </tt>
+<a name="L20"></a><tt class="py-lineno">20</tt>  <tt class="py-line"><tt id="link-2" class="py-name" targets="Variable parsimony.utils.consts.FLOAT_EPSILON=parsimony.utils.consts-module.html#FLOAT_EPSILON"><a title="parsimony.utils.consts.FLOAT_EPSILON" class="py-name" href="#" onclick="return doclink('link-2', 'FLOAT_EPSILON', 'link-2');">FLOAT_EPSILON</a></tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">finfo</tt><tt class="py-op">(</tt><tt class="py-name">float</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt id="link-3" class="py-name" targets="Variable parsimony.tests._playhouse.eps=parsimony.tests._playhouse-module.html#eps"><a title="parsimony.tests._playhouse.eps" class="py-name" href="#" onclick="return doclink('link-3', 'eps', 'link-3');">eps</a></tt> </tt>
+<a name="L21"></a><tt class="py-lineno">21</tt>  <tt class="py-line"> </tt><script type="text/javascript">
 <!--
 expandto(location.href);
 // -->
@@ -108,7 +111,7 @@ expandto(location.href);
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Feb 21 17:38:26 2014
+    Generated by Epydoc 3.0.1 on Fri Feb 21 18:01:45 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

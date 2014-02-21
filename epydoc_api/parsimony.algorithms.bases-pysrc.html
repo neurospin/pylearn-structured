@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>parsimony.algorithms.bases</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="parsimony-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="parsimony-module.html">Package&nbsp;parsimony</a> ::
+        <a href="parsimony.algorithms-module.html">Package&nbsp;algorithms</a> ::
+        Module&nbsp;bases
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="parsimony.algorithms.bases-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="parsimony.algorithms.bases-module.html">Module parsimony.algorithms.bases</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno"> 1</tt>  <tt class="py-line"><tt class="py-comment"># -*- coding: utf-8 -*-</tt> </tt>
+<a name="L2"></a><tt class="py-lineno"> 2</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L3"></a><tt class="py-lineno"> 3</tt>  <tt class="py-line"><tt class="py-docstring">The :mod:`parsimony.algorithms.bases` module includes several base classes</tt> </tt>
+<a name="L4"></a><tt class="py-lineno"> 4</tt>  <tt class="py-line"><tt class="py-docstring">for using and creating algorithms.</tt> </tt>
+<a name="L5"></a><tt class="py-lineno"> 5</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L6"></a><tt class="py-lineno"> 6</tt>  <tt class="py-line"><tt class="py-docstring">Algorithms may not store states. I.e., if they are classes, do not keep</tt> </tt>
+<a name="L7"></a><tt class="py-lineno"> 7</tt>  <tt class="py-line"><tt class="py-docstring">references to objects with state in the algorithm objects. It should be</tt> </tt>
+<a name="L8"></a><tt class="py-lineno"> 8</tt>  <tt class="py-line"><tt class="py-docstring">possible to copy and share algorithms between e.g. estimators, and thus they</tt> </tt>
+<a name="L9"></a><tt class="py-lineno"> 9</tt>  <tt class="py-line"><tt class="py-docstring">should not depend on any state.</tt> </tt>
+<a name="L10"></a><tt class="py-lineno">10</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L11"></a><tt class="py-lineno">11</tt>  <tt class="py-line"><tt class="py-docstring">There are currently two main types of algorithms: implicit and explicit. The</tt> </tt>
+<a name="L12"></a><tt class="py-lineno">12</tt>  <tt class="py-line"><tt class="py-docstring">difference is whether they run directly on the data (implicit) or if they have</tt> </tt>
+<a name="L13"></a><tt class="py-lineno">13</tt>  <tt class="py-line"><tt class="py-docstring">an actual loss function than is minimised (explicit). Implicit algorithms take</tt> </tt>
+<a name="L14"></a><tt class="py-lineno">14</tt>  <tt class="py-line"><tt class="py-docstring">the data as input, and then run on the data. Explicit algorithms take a loss</tt> </tt>
+<a name="L15"></a><tt class="py-lineno">15</tt>  <tt class="py-line"><tt class="py-docstring">function and possibly a start vector as input, and then minimise the function</tt> </tt>
+<a name="L16"></a><tt class="py-lineno">16</tt>  <tt class="py-line"><tt class="py-docstring">value starting from the point of the start vector.</tt> </tt>
+<a name="L17"></a><tt class="py-lineno">17</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L18"></a><tt class="py-lineno">18</tt>  <tt class="py-line"><tt class="py-docstring">Algorithms that don't fit well in either category should go in utils instead.</tt> </tt>
+<a name="L19"></a><tt class="py-lineno">19</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L20"></a><tt class="py-lineno">20</tt>  <tt class="py-line"><tt class="py-docstring">Created on Thu Feb 20 17:42:16 2014</tt> </tt>
+<a name="L21"></a><tt class="py-lineno">21</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L22"></a><tt class="py-lineno">22</tt>  <tt class="py-line"><tt class="py-docstring">@author:  Tommy L&#246;fstedt</tt> </tt>
+<a name="L23"></a><tt class="py-lineno">23</tt>  <tt class="py-line"><tt class="py-docstring">@email:   lofstedt.tommy@gmail.com</tt> </tt>
+<a name="L24"></a><tt class="py-lineno">24</tt>  <tt class="py-line"><tt class="py-docstring">@license: BSD 3-clause.</tt> </tt>
+<a name="L25"></a><tt class="py-lineno">25</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L26"></a><tt class="py-lineno">26</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">abc</tt> </tt>
+<a name="L27"></a><tt class="py-lineno">27</tt>  <tt class="py-line"> </tt>
+<a name="L28"></a><tt class="py-lineno">28</tt>  <tt class="py-line"><tt class="py-name">__all__</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-string">"BaseAlgorithm"</tt><tt class="py-op">,</tt> <tt class="py-string">"ImplicitAlgorithm"</tt><tt class="py-op">,</tt> <tt class="py-string">"ExplicitAlgorithm"</tt><tt class="py-op">]</tt> </tt>
+<a name="BaseAlgorithm"></a><div id="BaseAlgorithm-def"><a name="L29"></a><tt class="py-lineno">29</tt>  <tt class="py-line"> </tt>
+<a name="L30"></a><tt class="py-lineno">30</tt>  <tt class="py-line"> </tt>
+<a name="L31"></a><tt class="py-lineno">31</tt> <a class="py-toggle" href="#" id="BaseAlgorithm-toggle" onclick="return toggle('BaseAlgorithm');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="parsimony.algorithms.bases.BaseAlgorithm-class.html">BaseAlgorithm</a><tt class="py-op">(</tt><tt class="py-base-class">object</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="BaseAlgorithm-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="BaseAlgorithm-expanded"><a name="L32"></a><tt class="py-lineno">32</tt>  <tt class="py-line"> </tt>
+<a name="BaseAlgorithm.check_compatibility"></a><div id="BaseAlgorithm.check_compatibility-def"><a name="L33"></a><tt class="py-lineno">33</tt> <a class="py-toggle" href="#" id="BaseAlgorithm.check_compatibility-toggle" onclick="return toggle('BaseAlgorithm.check_compatibility');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.algorithms.bases.BaseAlgorithm-class.html#check_compatibility">check_compatibility</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">function</tt><tt class="py-op">,</tt> <tt class="py-param">interfaces</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="BaseAlgorithm.check_compatibility-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="BaseAlgorithm.check_compatibility-expanded"><a name="L34"></a><tt class="py-lineno">34</tt>  <tt class="py-line">        <tt class="py-docstring">"""Check if the function considered implements the given interfaces</tt> </tt>
+<a name="L35"></a><tt class="py-lineno">35</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L36"></a><tt class="py-lineno">36</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt class="py-name">interface</tt> <tt class="py-keyword">in</tt> <tt id="link-0" class="py-name" targets="Module parsimony.functions.interfaces=parsimony.functions.interfaces-module.html,Module parsimony.functions.multiblock.interfaces=parsimony.functions.multiblock.interfaces-module.html,Module parsimony.functions.nesterov.interfaces=parsimony.functions.nesterov.interfaces-module.html"><a title="parsimony.functions.interfaces
+parsimony.functions.multiblock.interfaces
+parsimony.functions.nesterov.interfaces" class="py-name" href="#" onclick="return doclink('link-0', 'interfaces', 'link-0');">interfaces</a></tt><tt class="py-op">:</tt> </tt>
+<a name="L37"></a><tt class="py-lineno">37</tt>  <tt class="py-line">            <tt class="py-keyword">if</tt> <tt class="py-keyword">not</tt> <tt class="py-name">isinstance</tt><tt class="py-op">(</tt><tt class="py-name">function</tt><tt class="py-op">,</tt> <tt class="py-name">interface</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L38"></a><tt class="py-lineno">38</tt>  <tt class="py-line">                <tt class="py-keyword">raise</tt> <tt class="py-name">ValueError</tt><tt class="py-op">(</tt><tt class="py-string">"%s does not implement interface %s"</tt> <tt class="py-op">%</tt> </tt>
+<a name="L39"></a><tt class="py-lineno">39</tt>  <tt class="py-line">                                <tt class="py-op">(</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">function</tt><tt class="py-op">)</tt><tt class="py-op">,</tt> <tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">interface</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L40"></a><tt class="py-lineno">40</tt>  <tt class="py-line"> </tt>
+<a name="BaseAlgorithm.set_params"></a><div id="BaseAlgorithm.set_params-def"><a name="L41"></a><tt class="py-lineno">41</tt> <a class="py-toggle" href="#" id="BaseAlgorithm.set_params-toggle" onclick="return toggle('BaseAlgorithm.set_params');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.algorithms.bases.BaseAlgorithm-class.html#set_params">set_params</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-op">**</tt><tt class="py-param">kwargs</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="BaseAlgorithm.set_params-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="BaseAlgorithm.set_params-expanded"><a name="L42"></a><tt class="py-lineno">42</tt>  <tt class="py-line"> </tt>
+<a name="L43"></a><tt class="py-lineno">43</tt>  <tt class="py-line">        <tt class="py-keyword">for</tt> <tt id="link-1" class="py-name" targets="Variable parsimony.tests._playhouse.k=parsimony.tests._playhouse-module.html#k"><a title="parsimony.tests._playhouse.k" class="py-name" href="#" onclick="return doclink('link-1', 'k', 'link-1');">k</a></tt> <tt class="py-keyword">in</tt> <tt class="py-name">kwargs</tt><tt class="py-op">:</tt> </tt>
+<a name="L44"></a><tt class="py-lineno">44</tt>  <tt class="py-line">            <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">__setattr__</tt><tt class="py-op">(</tt><tt id="link-2" class="py-name"><a title="parsimony.tests._playhouse.k" class="py-name" href="#" onclick="return doclink('link-2', 'k', 'link-1');">k</a></tt><tt class="py-op">,</tt> <tt class="py-name">kwargs</tt><tt class="py-op">[</tt><tt id="link-3" class="py-name"><a title="parsimony.tests._playhouse.k" class="py-name" href="#" onclick="return doclink('link-3', 'k', 'link-1');">k</a></tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+</div></div><a name="L45"></a><tt class="py-lineno">45</tt>  <tt class="py-line"> </tt>
+<a name="ImplicitAlgorithm"></a><div id="ImplicitAlgorithm-def"><a name="L46"></a><tt class="py-lineno">46</tt>  <tt class="py-line"> </tt>
+<a name="L47"></a><tt class="py-lineno">47</tt> <a class="py-toggle" href="#" id="ImplicitAlgorithm-toggle" onclick="return toggle('ImplicitAlgorithm');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="parsimony.algorithms.bases.ImplicitAlgorithm-class.html">ImplicitAlgorithm</a><tt class="py-op">(</tt><tt class="py-base-class">BaseAlgorithm</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="ImplicitAlgorithm-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="ImplicitAlgorithm-expanded"><a name="L48"></a><tt class="py-lineno">48</tt>  <tt class="py-line">    <tt class="py-docstring">"""Implicit algorithms are algorithms that do not use a loss function, but</tt> </tt>
+<a name="L49"></a><tt class="py-lineno">49</tt>  <tt class="py-line"><tt class="py-docstring">    instead minimise or maximise some underlying function implicitly, from the</tt> </tt>
+<a name="L50"></a><tt class="py-lineno">50</tt>  <tt class="py-line"><tt class="py-docstring">    data.</tt> </tt>
+<a name="L51"></a><tt class="py-lineno">51</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L52"></a><tt class="py-lineno">52</tt>  <tt class="py-line"><tt class="py-docstring">    Parameters</tt> </tt>
+<a name="L53"></a><tt class="py-lineno">53</tt>  <tt class="py-line"><tt class="py-docstring">    ----------</tt> </tt>
+<a name="L54"></a><tt class="py-lineno">54</tt>  <tt class="py-line"><tt class="py-docstring">    X : Regressor</tt> </tt>
+<a name="L55"></a><tt class="py-lineno">55</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L56"></a><tt class="py-lineno">56</tt>  <tt class="py-line">    <tt id="link-4" class="py-name" targets="Variable parsimony._functions.AtomicFunction.__metaclass__=parsimony._functions.AtomicFunction-class.html#__metaclass__,Variable parsimony._functions.CompositeFunction.__metaclass__=parsimony._functions.CompositeFunction-class.html#__metaclass__,Variable parsimony._functions.MultiblockFunction.__metaclass__=parsimony._functions.MultiblockFunction-class.html#__metaclass__,Variable parsimony.estimators.LogisticRegressionEstimator.__metaclass__=parsimony.estimators.LogisticRegressionEstimator-class.html#__metaclass__,Variable parsimony.estimators.RegressionEstimator.__metaclass__=parsimony.estimators.RegressionEstimator-class.html#__metaclass__,Variable parsimony.functions.interfaces.AtomicFunction.__metaclass__=parsimony.functions.interfaces.AtomicFunction-class.html#__metaclass__,Variable parsimony.functions.interfaces.CompositeFunction.__metaclass__=parsimony.functions.interfaces.CompositeFunction-class.html#__metaclass__,Variable parsimony.functions.multiblock.interfaces.MultiblockFunction.__metaclass__=parsimony.functions.multiblock.interfaces.MultiblockFunction-class.html#__metaclass__"><a title="parsimony._functions.AtomicFunction.__metaclass__
+parsimony._functions.CompositeFunction.__metaclass__
+parsimony._functions.MultiblockFunction.__metaclass__
+parsimony.estimators.LogisticRegressionEstimator.__metaclass__
+parsimony.estimators.RegressionEstimator.__metaclass__
+parsimony.functions.interfaces.AtomicFunction.__metaclass__
+parsimony.functions.interfaces.CompositeFunction.__metaclass__
+parsimony.functions.multiblock.interfaces.MultiblockFunction.__metaclass__" class="py-name" href="#" onclick="return doclink('link-4', '__metaclass__', 'link-4');">__metaclass__</a></tt> <tt class="py-op">=</tt> <tt class="py-name">abc</tt><tt class="py-op">.</tt><tt id="link-5" class="py-name" targets="Class abc.ABCMeta=abc.ABCMeta-class.html"><a title="abc.ABCMeta" class="py-name" href="#" onclick="return doclink('link-5', 'ABCMeta', 'link-5');">ABCMeta</a></tt> </tt>
+<a name="L57"></a><tt class="py-lineno">57</tt>  <tt class="py-line"> </tt>
+<a name="L58"></a><tt class="py-lineno">58</tt>  <tt class="py-line">    <tt class="py-decorator">@</tt><tt class="py-decorator">abc</tt><tt class="py-op">.</tt><tt class="py-name">abstractmethod</tt> </tt>
+<a name="ImplicitAlgorithm.run"></a><div id="ImplicitAlgorithm.run-def"><a name="L59"></a><tt class="py-lineno">59</tt> <a class="py-toggle" href="#" id="ImplicitAlgorithm.run-toggle" onclick="return toggle('ImplicitAlgorithm.run');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.algorithms.bases.ImplicitAlgorithm-class.html#run">run</a><tt class="py-op">(</tt><tt class="py-param">X</tt><tt class="py-op">,</tt> <tt class="py-op">**</tt><tt class="py-param">kwargs</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="ImplicitAlgorithm.run-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="ImplicitAlgorithm.run-expanded"><a name="L60"></a><tt class="py-lineno">60</tt>  <tt class="py-line">        <tt class="py-keyword">raise</tt> <tt class="py-name">NotImplementedError</tt><tt class="py-op">(</tt><tt class="py-string">'Abstract method "run" must be '</tt> \ </tt>
+<a name="L61"></a><tt class="py-lineno">61</tt>  <tt class="py-line">                                  <tt class="py-string">'specialised!'</tt><tt class="py-op">)</tt> </tt>
+</div></div><a name="L62"></a><tt class="py-lineno">62</tt>  <tt class="py-line"> </tt>
+<a name="ExplicitAlgorithm"></a><div id="ExplicitAlgorithm-def"><a name="L63"></a><tt class="py-lineno">63</tt>  <tt class="py-line"> </tt>
+<a name="L64"></a><tt class="py-lineno">64</tt> <a class="py-toggle" href="#" id="ExplicitAlgorithm-toggle" onclick="return toggle('ExplicitAlgorithm');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="parsimony.algorithms.bases.ExplicitAlgorithm-class.html">ExplicitAlgorithm</a><tt class="py-op">(</tt><tt class="py-base-class">BaseAlgorithm</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="ExplicitAlgorithm-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="ExplicitAlgorithm-expanded"><a name="L65"></a><tt class="py-lineno">65</tt>  <tt class="py-line">    <tt class="py-docstring">"""Explicit algorithms are algorithms that minimises a given function</tt> </tt>
+<a name="L66"></a><tt class="py-lineno">66</tt>  <tt class="py-line"><tt class="py-docstring">    explicitly from properties of the function.</tt> </tt>
+<a name="L67"></a><tt class="py-lineno">67</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L68"></a><tt class="py-lineno">68</tt>  <tt class="py-line">    <tt id="link-6" class="py-name"><a title="parsimony._functions.AtomicFunction.__metaclass__
+parsimony._functions.CompositeFunction.__metaclass__
+parsimony._functions.MultiblockFunction.__metaclass__
+parsimony.estimators.LogisticRegressionEstimator.__metaclass__
+parsimony.estimators.RegressionEstimator.__metaclass__
+parsimony.functions.interfaces.AtomicFunction.__metaclass__
+parsimony.functions.interfaces.CompositeFunction.__metaclass__
+parsimony.functions.multiblock.interfaces.MultiblockFunction.__metaclass__" class="py-name" href="#" onclick="return doclink('link-6', '__metaclass__', 'link-4');">__metaclass__</a></tt> <tt class="py-op">=</tt> <tt class="py-name">abc</tt><tt class="py-op">.</tt><tt id="link-7" class="py-name"><a title="abc.ABCMeta" class="py-name" href="#" onclick="return doclink('link-7', 'ABCMeta', 'link-5');">ABCMeta</a></tt> </tt>
+<a name="L69"></a><tt class="py-lineno">69</tt>  <tt class="py-line"> </tt>
+<a name="L70"></a><tt class="py-lineno">70</tt>  <tt class="py-line">    <tt class="py-decorator">@</tt><tt class="py-decorator">abc</tt><tt class="py-op">.</tt><tt class="py-name">abstractmethod</tt> </tt>
+<a name="ExplicitAlgorithm.run"></a><div id="ExplicitAlgorithm.run-def"><a name="L71"></a><tt class="py-lineno">71</tt> <a class="py-toggle" href="#" id="ExplicitAlgorithm.run-toggle" onclick="return toggle('ExplicitAlgorithm.run');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.algorithms.bases.ExplicitAlgorithm-class.html#run">run</a><tt class="py-op">(</tt><tt class="py-param">function</tt><tt class="py-op">,</tt> <tt class="py-param">beta</tt><tt class="py-op">,</tt> <tt class="py-op">**</tt><tt class="py-param">kwargs</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="ExplicitAlgorithm.run-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="ExplicitAlgorithm.run-expanded"><a name="L72"></a><tt class="py-lineno">72</tt>  <tt class="py-line">        <tt class="py-docstring">"""Run this algorithm to obtain the variable that gives the minimum of</tt> </tt>
+<a name="L73"></a><tt class="py-lineno">73</tt>  <tt class="py-line"><tt class="py-docstring">        the give function(s).</tt> </tt>
+<a name="L74"></a><tt class="py-lineno">74</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L75"></a><tt class="py-lineno">75</tt>  <tt class="py-line"><tt class="py-docstring">        Parameters</tt> </tt>
+<a name="L76"></a><tt class="py-lineno">76</tt>  <tt class="py-line"><tt class="py-docstring">        ----------</tt> </tt>
+<a name="L77"></a><tt class="py-lineno">77</tt>  <tt class="py-line"><tt class="py-docstring">        function : The function to minimise.</tt> </tt>
+<a name="L78"></a><tt class="py-lineno">78</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L79"></a><tt class="py-lineno">79</tt>  <tt class="py-line"><tt class="py-docstring">        beta : A start vector.</tt> </tt>
+<a name="L80"></a><tt class="py-lineno">80</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
+<a name="L81"></a><tt class="py-lineno">81</tt>  <tt class="py-line">        <tt class="py-keyword">raise</tt> <tt class="py-name">NotImplementedError</tt><tt class="py-op">(</tt><tt class="py-string">'Abstract method "run" must be '</tt> \ </tt>
+<a name="L82"></a><tt class="py-lineno">82</tt>  <tt class="py-line">                                  <tt class="py-string">'specialised!'</tt><tt class="py-op">)</tt> </tt>
+</div></div><a name="L83"></a><tt class="py-lineno">83</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="parsimony-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Fri Feb 21 18:01:45 2014
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>
