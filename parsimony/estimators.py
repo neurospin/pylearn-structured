@@ -400,7 +400,7 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
     >>> import parsimony.estimators as estimators
     >>> import parsimony.algorithms.explicit as explicit
     >>> import parsimony.functions.nesterov.tv as tv
-    >>> shape = (4, 4, 1)
+    >>> shape = (1, 4, 4)
     >>> num_samples = 10
     >>> num_ft = shape[0] * shape[1] * shape[2]
     >>> np.random.seed(seed=1)
