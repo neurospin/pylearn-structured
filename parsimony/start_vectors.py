@@ -77,7 +77,7 @@ class RandomStartVector(BaseStartVector):
     Parameters
     ----------
     normalise : Bool. If True, normalise the randomly created vectors
-            Default is True
+            Default is True.
 
     Examples
     --------
@@ -102,18 +102,17 @@ class RandomStartVector(BaseStartVector):
      [ 0.46546651]]
     >>> print maths.norm(random_normalized)
     1.0
-
     """
     def __init__(self, **kwargs):
 
         super(RandomStartVector, self).__init__(**kwargs)
 
     def get_vector(self, shape):
-        """Return randomly generated vector of chosen shape
+        """Return randomly generated vector of given shape.
 
         Parameters
         ----------
-        shape : tuple. Size of the vector to generate
+        shape : List or tuple. Shape of the vector to generate.
 
         Examples
         --------
@@ -125,7 +124,6 @@ class RandomStartVector(BaseStartVector):
          [ 0.12228144]
          [ 0.80464505]]
         """
-
         vector = np.random.rand(*shape)  # Random start vector
 
         if self.normalise:
@@ -218,7 +216,7 @@ class ZerosStartVector(BaseStartVector):
         super(ZerosStartVector, self).__init__(normalise=False, **kwargs)
 
     def get_vector(self, shape):
-        '''Return vector of zeros of chosen shape
+        """Return vector of zeros of chosen shape.
 
         Parameters
         ----------
@@ -233,7 +231,7 @@ class ZerosStartVector(BaseStartVector):
         [[ 0.]
          [ 0.]
          [ 0.]]
-        '''
+        """
         w = np.zeros(shape)  # Using a vector of zeros.
 
         return w

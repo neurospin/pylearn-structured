@@ -2,53 +2,17 @@
 """
 Created on Thu Feb 8 09:22:00 2013
 
-@author:   tommy.loefstedt@cea.fr, edouard.duchesnay@cea.fr
-@license: BSD-3-Clause
+@author:  Tommy Löfstedt and Edouard Duchesnay
+@email:   lofstedt.tommy@gmail.com, edouard.duchesnay@cea.fr
+@license: BSD 3-clause.
 """
-
-#from parsimony.utils import math
-
 import maths
 import consts
 
-from .utils import deprecated, approx_grad, AnonymousClass, optimal_shrinkage
+from .utils import time_cpu, time_wall, deprecated, approx_grad
+from .utils import AnonymousClass, optimal_shrinkage
 from .plot import plot_map2d
 
 __all__ = ["maths", "consts",
-           "deprecated", "approx_grad", "AnonymousClass", "optimal_shrinkage",
-           "plot_map2d"]
-
-#from .utils import norm
-#from .utils import norm1
-#from .utils import norm0
-#from .utils import normI
-#from .utils import make_list
-#from .utils import sign
-#from .utils import cov
-#from .utils import corr
-#from .utils import TOLERANCE
-#from .utils import MAX_ITER
-#from .utils import copy
-#from .utils import sstot
-#from .utils import ssvar
-#from .utils import sqrt
-#from .utils import rand
-#from .utils import zeros
-#from .utils import direct
-#from .utils import debug
-#from .utils import warning
-#from .utils import _DEBUG
-#from .utils import optimal_shrinkage
-#from .utils import delete_sparse_csr_row
-#from .utils import AnonymousClass
-#from .check_arrays import check_arrays
-
-#import testing
-
-#__all__ = ['TOLERANCE', 'MAX_ITER', "math"]
-#, 'norm1', 'norm0', 'normI', 'make_list', 'sign',
-#           'cov', 'corr', 'copy',
-#           'sstot', 'ssvar', 'sqrt', 'rand', 'zeros',
-#           'testing', 'direct', 'debug', 'warning', '_DEBUG',
-#           'optimal_shrinkage', 'delete_sparse_csr_row', 'AnonymousClass',
-#           'check_arrays']
+           "time_cpu", "time_wall", "deprecated", "approx_grad",
+           "AnonymousClass", "optimal_shrinkage", "plot_map2d"]

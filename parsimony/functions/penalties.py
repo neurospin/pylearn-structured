@@ -242,13 +242,13 @@ class L2(interfaces.AtomicFunction,
         -------
         >>> import numpy as np
         >>> from parsimony.functions.penalties import L2
-
+        >>>
         >>> np.random.seed(42)
-        >>> beta = np.random.rand(100,1)
+        >>> beta = np.random.rand(100, 1)
         >>> l2 = L2(l=3.14159, c=2.71828)
         >>> np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
         5.8179830878866391e-10
-
+        >>>
         >>> l2 = L2(l=3.14159, c=2.71828, penalty_start=5)
         >>> np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
         5.0187970725495645e-10

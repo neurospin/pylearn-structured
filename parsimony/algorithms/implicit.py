@@ -25,7 +25,10 @@ Created on Thu Feb 20 17:46:17 2014
 """
 import numpy as np
 
-from . import bases
+try:
+    from . import bases  # Only works when imported as a package.
+except ValueError:
+    import parsimony.algorithms.bases as bases  # When run as a program
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
 import parsimony.start_vectors as start_vectors
@@ -35,7 +38,7 @@ __all__ = ["FastSVD", "FastSparseSVD", "FastSVDProduct"]
 
 class FastSVD(bases.ImplicitAlgorithm):
 
-    def run(self, X, max_iter=100, start_vector=None):
+    def run(self, X, max_iter=100, eps=consts.TOLERANCE, start_vector=None):
         """A kernel SVD implementation.
 
         Performs SVD of given matrix. This is always faster than np.linalg.svd.
@@ -44,23 +47,27 @@ class FastSVD(bases.ImplicitAlgorithm):
 
         Parameters
         ----------
-        X : The matrix to decompose.
+        X : Numpy array. The matrix to decompose.
 
-        max_iter : maximum allowed number of iterations
+        max_iter : Integer. The maximum allowed number of iterations.
 
-        start_vector : a start vector
+        eps : The tolerance used by the stopping criterion.
+
+        start_vector : BaseStartVector. A start vector generator. Default is
+                to use a random start vector.
 
         Returns
         -------
         v : The right singular vector of X that corresponds to the largest
                 singular value.
 
-        Example
-        -------
+        Examples
+        --------
         >>> import numpy as np
         >>> from parsimony.algorithms.implicit import FastSVD
+        >>>
         >>> np.random.seed(0)
-        >>> X = np.random.random((10,10))
+        >>> X = np.random.random((10, 10))
         >>> fast_svd = FastSVD()
         >>> fast_svd.run(X)
         array([[-0.3522974 ],
@@ -73,7 +80,27 @@ class FastSVD(bases.ImplicitAlgorithm):
                [-0.29501092],
                [-0.42311297],
                [-0.27656382]])
+        >>>
+        >>> np.random.seed(0)
+        >>> X = np.random.random((100, 150))
+        >>> fast_svd = FastSVD()
+        >>> v = fast_svd.run(X)
+        >>> us = np.linalg.norm(np.dot(X, v))
+        >>> s = np.linalg.svd(X, full_matrices=False, compute_uv=False)
+        >>> np.sum(us ** 2.0) - np.max(s) ** 2.0
+        9.0949470177292824e-13
+        >>>
+        >>> np.random.seed(0)
+        >>> X = np.random.random((100, 50))
+        >>> fast_svd = FastSVD()
+        >>> v = fast_svd.run(X)
+        >>> us = np.linalg.norm(np.dot(X, v))
+        >>> s = np.linalg.svd(X, full_matrices=False, compute_uv=False)
+        >>> np.sum(us ** 2.0) - np.max(s) ** 2.0
+        -4.5474735088646412e-13
         """
+        if start_vector is None:
+            start_vector = start_vectors.RandomStartVector(normalise=True)
         M, N = X.shape
         if M < 80 and N < 80:  # Very arbitrary threshold for my computer ;-)
             _, _, V = np.linalg.svd(X, full_matrices=True)
@@ -81,14 +108,14 @@ class FastSVD(bases.ImplicitAlgorithm):
         elif M < N:
             K = np.dot(X, X.T)
             # TODO: Use module for this!
-            t = np.random.rand(X.shape[0], 1)
-    #        t = start_vectors.RandomStartVector().get_vector(Xt)
+#            t = np.random.rand(X.shape[0], 1)
+            t = start_vector.get_vector((X.shape[0], 1))
             for it in xrange(max_iter):
                 t_ = t
                 t = np.dot(K, t_)
                 t /= np.sqrt(np.sum(t ** 2.0))
 
-                if np.sqrt(np.sum((t_ - t) ** 2.0)) < consts.TOLERANCE:
+                if maths.norm(t_ - t) / maths.norm(t) < eps:
                     break
 
             v = np.dot(X.T, t)
@@ -97,15 +124,15 @@ class FastSVD(bases.ImplicitAlgorithm):
         else:
             K = np.dot(X.T, X)
             # TODO: Use module for this!
-            v = np.random.rand(X.shape[1], 1)
-            v /= maths.norm(v)
-    #        v = start_vectors.RandomStartVector().get_vector(X)
+#            v = np.random.rand(X.shape[1], 1)
+#            v /= maths.norm(v)
+            v = start_vector.get_vector((X.shape[1], 1))
             for it in xrange(max_iter):
                 v_ = v
                 v = np.dot(K, v_)
                 v /= np.sqrt(np.sum(v ** 2.0))
 
-                if np.sqrt(np.sum((v_ - v) ** 2.0)) < consts.TOLERANCE:
+                if maths.norm(v_ - v) / maths.norm(v) < eps:
                     break
 
         return v
@@ -252,3 +279,7 @@ class FastSVDProduct(bases.ImplicitAlgorithm):
                 break
 
         return v
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

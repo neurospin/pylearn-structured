@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`parsimony.functions.loss` module contains the loss functions used
+The :mod:`parsimony.functions.losses` module contains the loss functions used
 throughout the package. These represent mathematical functions and should thus
 have properties used by the corresponding algorithms. These properties are
 defined in :mod:`parsimony.functions.interfaces`.
@@ -18,17 +18,142 @@ Created on Mon Apr 22 10:54:29 2013
 """
 import numpy as np
 
-from . import interfaces
+try:
+    from . import interfaces  # Only works when imported as a package.
+except ValueError:
+    import parsimony.functions.interfaces as interfaces  # Run as a script
 import parsimony.utils as utils
 
-__all__ = ["RidgeRegression", "RidgeLogisticRegression", "AnonymousFunction"]
+__all__ = ["LinearRegression", "RidgeRegression", "RidgeLogisticRegression"]
+
+
+class LinearRegression(interfaces.CompositeFunction,
+                       interfaces.Gradient,
+                       interfaces.LipschitzContinuousGradient,
+                       interfaces.StepSize):
+    """The Linear regression loss function.
+    """
+    def __init__(self, X, y, mean=True):
+        """
+        Parameters
+        ----------
+        X : Numpy array (n-by-p). The regressor matrix.
+
+        y : Numpy array (n-by-1). The regressand vector.
+
+        k : Non-negative float. The ridge parameter.
+
+        mean : Boolean. Whether to compute the squared loss or the mean
+                squared loss. Default is True, the mean squared loss.
+        """
+        self.X = X
+        self.y = y
+        self.mean = bool(mean)
+
+        self.reset()
+
+    def reset(self):
+        """Reset the value of _lambda_max and _lambda_min.
+
+        From the interface "Function".
+        """
+        self._lambda_max = None
+
+    def f(self, beta):
+        """Function value.
+
+        From the interface "Function".
+
+        Parameters
+        ----------
+        beta : Numpy array. Regression coefficient vector. The point at which
+                to evaluate the function.
+        """
+        if self.mean:
+            d = 2.0 * float(self.X.shape[0])
+        else:
+            d = 2.0
+
+        f = (1.0 / d) * np.sum((np.dot(self.X, beta) - self.y) ** 2.0)
+
+        return f
+
+    def grad(self, beta):
+        """Gradient of the function at beta.
+
+        From the interface "Gradient".
+
+        Parameters
+        ----------
+        beta : The point at which to evaluate the gradient.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.functions.losses import LinearRegression
+        >>>
+        >>> np.random.seed(42)
+        >>> X = np.random.rand(100, 150)
+        >>> y = np.random.rand(100, 1)
+        >>> lr = LinearRegression(X=X, y=y)
+        >>> beta = np.random.rand(150, 1)
+        >>> np.linalg.norm(lr.grad(beta) - lr.approx_grad(beta, eps=1e-4))
+        1.2786255934730075e-08
+        """
+        grad = np.dot(self.X.T, np.dot(self.X, beta) - self.y)
+
+        if self.mean:
+            grad /= float(self.X.shape[0])
+
+        return grad
+
+    def L(self):
+        """Lipschitz constant of the gradient.
+
+        From the interface "LipschitzContinuousGradient".
+        """
+        if self._lambda_max is None:
+
+            from parsimony.algorithms.implicit import FastSVD
+
+            n, p = self.X.shape
+            if (max(n, p) > 500 and max(n, p) <= 1000 \
+                    and float(max(n, p)) / min(n, p) <= 1.3) \
+               or (max(n, p) > 1000 and max(n, p) <= 5000 \
+                    and float(max(n, p)) / min(n, p) <= 5.0) \
+               or (max(n, p) > 5000 and max(n, p) <= 10000 \
+                       and float(max(n, p)) / min(n, p) <= 15.0) \
+               or (max(n, p) > 10000 and max(n, p) <= 20000 \
+                       and float(max(n, p)) / min(n, p) <= 200.0) \
+               or max(n, p) > 10000:
+
+                v = FastSVD().run(self.X, max_iter=1000)
+                us = np.dot(self.X, v)
+                self._lambda_max = np.sum(us ** 2.0)
+
+            else:
+                s = np.linalg.svd(self.X,
+                                  full_matrices=False, compute_uv=False)
+                self._lambda_max = np.max(s) ** 2.0
+
+        return self._lambda_max
+
+    def step(self, beta, index=0):
+        """The step size to use in descent methods.
+
+        Parameters
+        ----------
+        beta : Numpy array. The point at which to determine the step size.
+        """
+        return 1.0 / self.L()
 
 
 class RidgeRegression(interfaces.CompositeFunction,
                       interfaces.Gradient,
                       interfaces.LipschitzContinuousGradient,
                       interfaces.Eigenvalues,
-                      interfaces.StronglyConvex):
+                      interfaces.StronglyConvex,
+                      interfaces.StepSize):
     """ The Ridge Regression function
 
     Parameters
@@ -71,7 +196,20 @@ class RidgeRegression(interfaces.CompositeFunction,
 
         Parameters
         ----------
-        beta : The point at which to evaluate the gradient.
+        beta : Numpy array. The point at which to evaluate the gradient.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.functions.losses import RidgeRegression
+        >>>
+        >>> np.random.seed(42)
+        >>> X = np.random.rand(100, 150)
+        >>> y = np.random.rand(100, 1)
+        >>> rr = RidgeRegression(X=X, y=y, k=3.14159265)
+        >>> beta = np.random.rand(150, 1)
+        >>> np.linalg.norm(rr.grad(beta) - rr.approx_grad(beta, eps=1e-4))
+        1.2734924643975701e-06
         """
         return np.dot((np.dot(self.X, beta) - self.y).T, self.X).T \
              + self.k * beta
@@ -106,17 +244,7 @@ class RidgeRegression(interfaces.CompositeFunction,
 
         From the interface "Eigenvalues".
         """
-        if self._lambda_min is None:
-            s = np.linalg.svd(self.X, full_matrices=False, compute_uv=False)
-
-            self._lambda_max = np.max(s) ** 2.0
-
-            if len(s) < self.X.shape[1]:
-                self._lambda_min = 0.0
-            else:
-                self._lambda_min = np.min(s) ** 2.0
-
-        return self._lambda_min + self.k
+        return self.parameter()
 
     def parameter(self):
         """Returns the strongly convex parameter for the function.
@@ -135,11 +263,20 @@ class RidgeRegression(interfaces.CompositeFunction,
 
         return self._lambda_min + self.k
 
+    def step(self, beta, index=0):
+        """The step size to use in descent methods.
+
+        Parameters
+        ----------
+        beta : Numpy array. The point at which to determine the step size.
+        """
+        return 1.0 / self.L()
+
 
 class RidgeLogisticRegression(interfaces.CompositeFunction,
                               interfaces.Gradient,
                               interfaces.LipschitzContinuousGradient):
-    """ The Logistic Regression function.
+    """The Logistic Regression loss function.
 
     Ridge (re-weighted) log-likelihood (cross-entropy):
     * f(beta) = -Sum wi (yi log(pi) + (1 − yi) log(1 − pi)) + k/2 ||beta||^2_2
@@ -150,16 +287,19 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
     pi = p(y=1|xi, beta) = 1 / (1 + exp(-xi' beta))
     wi: sample i weight
     [Hastie 2009, p.: 102, 119 and 161, Bishop 2006 p.: 206]
-
-    Parameters
-    ----------
-    X : Numpy array (n-by-p). The regressor matrix.
-
-    y : Numpy array (n-by-1). The regressand vector.
-
-    weights: Numpy array (n-by-1). The sample's weights.
     """
-    def __init__(self, X, y, k=0, weights=None):
+    def __init__(self, X, y, k=0.0, weights=None):
+        """
+        Parameters
+        ----------
+        X : Numpy array (n-by-p). The regressor matrix.
+
+        y : Numpy array (n-by-1). The regressand vector.
+
+        k : Non-negative float. The ridge parameter.
+
+        weights: Numpy array (n-by-1). The sample's weights.
+        """
         self.X = X
         self.y = y
         self.k = float(k)
@@ -175,7 +315,7 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
     def reset(self):
         """Reset the value of _lambda_max and _lambda_min
         """
-        self.lipschitz = None
+        self._lipschitz = None
 #        self._lambda_max = None
 #        self._lambda_min = None
 
@@ -184,7 +324,8 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
 
         Parameters
         ----------
-        beta : Regression coefficient vector
+        beta : Numpy array. Regression coefficient vector. The point at which
+                to evaluate the function.
         """
         # TODO check the correctness of the re-weighted loglike
         Xbeta = np.dot(self.X, beta)
@@ -205,7 +346,22 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
 
         Parameters
         ----------
-        beta : The point at which to evaluate the gradient.
+        beta : Numpy array. The point at which to evaluate the gradient.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.functions.losses import RidgeLogisticRegression
+        >>>
+        >>> np.random.seed(42)
+        >>> X = np.random.rand(100, 150)
+        >>> y = np.random.rand(100, 1)
+        >>> y[y < 0.5] = 0.0
+        >>> y[y >= 0.5] = 1.0
+        >>> rr = RidgeLogisticRegression(X=X, y=y, k=2.71828182)
+        >>> beta = np.random.rand(150, 1)
+        >>> np.linalg.norm(rr.grad(beta) - rr.approx_grad(beta, eps=1e-4))
+        3.3344262548517587e-08
         """
         Xbeta = np.dot(self.X, beta)
         pi = 1.0 / (1.0 + np.exp(-Xbeta))
@@ -217,10 +373,11 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
     def L(self):
         """Lipschitz constant of the gradient.
 
+        Returns the maximum eigenvalue of (1 / 4) * X'WX.
+
         From the interface "LipschitzContinuousGradient".
-        max eigen value of (1/4 Xt W X)
         """
-        if self.lipschitz == None:
+        if self._lipschitz == None:
             # pi(x) * (1 - pi(x)) <= 0.25 = 0.5 * 0.5
             PWX = 0.5 * np.sqrt(self.weights) * self.X  # TODO: CHECK WITH FOUAD
             # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
@@ -228,34 +385,21 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
             #PWX = np.dot(PW, self.X)
             # TODO: Use FastSVD for speedup!
             s = np.linalg.svd(PWX, full_matrices=False, compute_uv=False)
-            self.lipschitz = np.max(s) ** 2.0 + self.k  # TODO: CHECK
-        return self.lipschitz
-#        return self.lambda_max()
+            self._lipschitz = np.max(s) ** 2.0 + self.k  # TODO: CHECK
+        return self._lipschitz
 
-#    def lambda_max(self):
-#        """Largest eigenvalue of the corresponding covariance matrix.
+
+#class AnonymousFunction(interfaces.AtomicFunction):
 #
-#        From the interface "Eigenvalues".
-#        """
-#        if self._lambda_max is None:
-#            s = np.linalg.svd(self.X, full_matrices=False, compute_uv=False)
+#    def __init__(self, f):
 #
-#            self._lambda_max = np.max(s) ** 2.0
+#        self._f = f
 #
-#            if len(s) < self.X.shape[1]:
-#                self._lambda_min = 0.0
-#            else:
-#                self._lambda_min = np.min(s) ** 2.0
+#    def f(self, x):
 #
-#        return self._lambda_max + self.k
+#        return self._f(x)
 
 
-class AnonymousFunction(interfaces.AtomicFunction):
-
-    def __init__(self, f):
-
-        self._f = f
-
-    def f(self, x):
-
-        return self._f(x)
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

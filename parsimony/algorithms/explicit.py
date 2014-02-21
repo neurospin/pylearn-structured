@@ -25,7 +25,10 @@ Created on Thu Feb 20 17:50:40 2014
 """
 import numpy as np
 
-from . import bases
+try:
+    from . import bases  # Only works when imported as a package.
+except ValueError:
+    import parsimony.algorithms.bases as bases  # When run as a program
 import parsimony.utils as utils
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
@@ -33,9 +36,151 @@ import parsimony.functions.penalties as penalties
 import parsimony.functions.interfaces as interfaces
 import parsimony.functions.nesterov.interfaces as nesterov_interfaces
 
+__all__ = ["GradientDescent",
+
+           "ISTA", "FISTA",
+           "CONESTA", "StaticCONESTA", "DynamicCONESTA",
+           "ExcessiveGapMethod",
+
+           "Bisection",
+
+           "ProjectionADMM", "DykstrasProjectionAlgorithm",
+           "ParallelDykstrasProjectionAlgorithm",
+
+           "BacktrackingLineSearch"]
+
+
+class GradientDescent(bases.ExplicitAlgorithm):
+    """The gradient descent algorithm.
+
+    Examples
+    --------
+    >>> from parsimony.algorithms.explicit import GradientDescent
+    >>> from parsimony.functions.losses import RidgeRegression
+    >>> import numpy as np
+    >>> np.random.seed(42)
+    >>> X = np.random.rand(100, 50)
+    >>> y = np.random.rand(100, 1)
+    >>> gd = GradientDescent(max_iter=10000)
+    >>> function = RidgeRegression(X, y, k=0.0)
+    >>> beta1 = gd.run(function, np.random.rand(50, 1))
+    >>> beta2 = np.dot(np.linalg.pinv(X), y)
+    >>> np.linalg.norm(beta1 - beta2)
+    0.00031215576325542625
+    """
+    INTERFACES = [interfaces.Function,
+                  interfaces.Gradient,
+                  interfaces.StepSize,
+                 ]
+
+    def __init__(self, step=None, output=False,
+                 eps=consts.TOLERANCE,
+                 max_iter=consts.MAX_ITER, min_iter=1):
+        """
+        Parameters
+        ----------
+        step : Non-negative float. The step-size to use in each iteration.
+                This is usually not provided, and StepSize.step is used
+                instead.
+
+        output : Boolean. Whether or not to return extra output information.
+                If output is True, running the algorithm will return a tuple
+                with two elements. The first element is the found regression
+                vector, and the second is the extra output information.
+
+        eps : Positive float. Tolerance for the stopping criterion.
+
+        max_iter : Positive integer. Maximum allowed number of iterations.
+
+        min_iter : Positive integer. Minimum number of iterations.
+        """
+        self.step = step
+        self.output = output
+        self.eps = eps
+        self.max_iter = max_iter
+        self.min_iter = min_iter
+
+    def run(self, function, beta):
+        """Find the minimiser of the given function, starting at beta.
+
+        Parameters
+        ----------
+        function : Function. The function to minimise.
+
+        beta : Numpy array. The start vector.
+        """
+        self.check_compatibility(function, self.INTERFACES)
+
+        if self.step is None:
+            step = function.step(beta)
+        else:
+            step = self.step
+
+        betanew = betaold = beta
+
+        if self.output:
+            t = []
+            f = []
+        for i in xrange(1, self.max_iter + 1):
+            if self.output:
+                tm = utils.time_cpu()
+
+            if self.step is None:
+                step = function.step(betanew)
+
+            betaold = betanew
+            betanew = betaold - step * function.grad(betaold)
+
+            if self.output:
+                t.append(utils.time_cpu() - tm)
+                f.append(function.f(betanew))
+
+            if maths.norm(betanew - betaold) < self.eps \
+                    and i >= self.min_iter:
+                break
+
+        if self.output:
+            output = {"t": t, "f": f}
+            return betanew, output
+        else:
+            return betanew
+
 
 class ISTA(bases.ExplicitAlgorithm):
     """The iterative shrinkage-thresholding algorithm.
+
+    Examples
+    --------
+    >>> from parsimony.algorithms.explicit import ISTA
+    >>> from parsimony.functions import RR_L1_TV
+    >>> import scipy.sparse as sparse
+    >>> import numpy as np
+    >>>
+    >>> np.random.seed(42)
+    >>> X = np.random.rand(100, 50)
+    >>> y = np.random.rand(100, 1)
+    >>> A = sparse.csr_matrix((50, 50))  # Unused here
+    >>> function = RR_L1_TV(X, y, k=0.0, l=0.0, g=0.0, A=A, mu=0.0)
+    >>> ista = ISTA(max_iter=10000)
+    >>> beta1 = ista.run(function, np.random.rand(50, 1))
+    >>> beta2 = np.dot(np.linalg.pinv(X), y)
+    >>> np.linalg.norm(beta1 - beta2)
+    0.00031215576325542625
+    >>>
+    >>> np.random.seed(42)
+    >>> X = np.random.rand(100, 50)
+    >>> y = np.random.rand(100, 1)
+    >>> A = sparse.csr_matrix((50, 50))  # Unused here
+    >>> function = RR_L1_TV(X, y, k=0.0, l=1.0, g=0.0, A=A, mu=0.0)
+    >>> ista = ISTA(max_iter=10000)
+    >>> beta1 = ista.run(function, np.random.rand(50, 1))
+    >>> beta2 = np.dot(np.linalg.pinv(X), y)
+    >>> np.linalg.norm(beta1 - beta2)
+    0.79569125997550139
+    >>> np.linalg.norm(beta2.ravel(), 0)
+    50
+    >>> np.linalg.norm(beta1.ravel(), 0)
+    11
     """
     INTERFACES = [interfaces.Function,
                   interfaces.Gradient,
@@ -100,7 +245,7 @@ class ISTA(bases.ExplicitAlgorithm):
             f = []
         for i in xrange(1, self.max_iter + 1):
             if self.output:
-                tm = utils.time_func()
+                tm = utils.time_cpu()
 
             if has_step:
                 self.step = function.step(betanew)
@@ -111,7 +256,7 @@ class ISTA(bases.ExplicitAlgorithm):
                                     self.step)
 
             if self.output:
-                t.append(utils.time_func() - tm)
+                t.append(utils.time_cpu() - tm)
                 f.append(function.f(betanew))
 
             if (1.0 / self.step) * maths.norm(betanew - betaold) < self.eps \
@@ -257,7 +402,7 @@ class FISTA(bases.ExplicitAlgorithm):
             f = []
         for i in xrange(1, self.max_iter + 1):
             if self.output:
-                tm = utils.time_func()
+                tm = utils.time_cpu()
 
             z = betanew + ((i - 2.0) / (i + 1.0)) * (betanew - betaold)
 
@@ -269,7 +414,7 @@ class FISTA(bases.ExplicitAlgorithm):
                                     self.step)
 
             if self.output:
-                t.append(utils.time_func() - tm)
+                t.append(utils.time_cpu() - tm)
                 f.append(function.f(betanew))
 
             if (1.0 / self.step) * maths.norm(betanew - z) < self.eps \
@@ -400,7 +545,7 @@ class CONESTA(bases.ExplicitAlgorithm):
                 stop = True
 
             if self.output:
-                gap_time = utils.time_func()
+                gap_time = utils.time_cpu()
             if self.dynamic:
                 G_new = function.gap(beta)
                 # TODO: Warn if G_new < 0.
@@ -418,7 +563,7 @@ class CONESTA(bases.ExplicitAlgorithm):
 
 #            print "Gap:", G
             if self.output:
-                gap_time = utils.time_func() - gap_time
+                gap_time = utils.time_cpu() - gap_time
                 Gval.append(G)
 
                 f = f + fval
@@ -538,7 +683,7 @@ class ExcessiveGapMethod(bases.ExplicitAlgorithm):
 
         while True:
             if self.output:
-                tm = utils.time_func()
+                tm = utils.time_cpu()
 
             tau = 2.0 / (float(k) + 3.0)
 
@@ -554,7 +699,7 @@ class ExcessiveGapMethod(bases.ExplicitAlgorithm):
 
             ulim = mu[k + 1] * function.h.M()
             if self.output:
-                t.append(utils.time_func() - tm)
+                t.append(utils.time_cpu() - tm)
                 mu_old = function.h.get_mu()
                 function.h.set_mu(0.0)
                 f.append(function.f(beta))

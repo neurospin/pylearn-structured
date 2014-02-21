@@ -18,24 +18,11 @@ from time import time, clock
 import numpy as np
 
 #TODO: This depends on the OS. We should try to be clever here ...
-time_func = clock
-#time_func = time
+time_cpu = clock  # UNIX-based system measures CPU time used.
+time_wall = time  # UNIX-based system measures time in seconds since the epoch.
 
-
-#import scipy
-#from numpy.linalg import norm
-#from numpy.random import rand
-#from numpy import sqrt
-#from copy import copy
-#import traceback
-
-__all__ = ["time_func", "deprecated", "approx_grad", "optimal_shrinkage",
-           "AnonymousClass"]
-
-#__all__ = ['make_list', 'sign',
-#           'cov', 'corr', 'copy', 'sstot', 'ssvar',
-#           'sqrt', 'rand', 'zeros', 'direct', '_DEBUG', 'debug', 'warning',
-#           'optimal_shrinkage', 'delete_sparse_csr_row', 'AnonymousClass']
+__all__ = ["time_cpu", "time_cpu", "deprecated", "approx_grad",
+           "optimal_shrinkage", "AnonymousClass"]
 
 #_DEBUG = True
 
