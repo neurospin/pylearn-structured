@@ -6,8 +6,7 @@ General framework
 
 Three principle modules have been defined: **algorithms**, **estimators**, and **functions**.
 
-* **functions** define the loss function OLS (ordinary least squares) with different penalties 
-  (for instance, L1 Lasso, L2 Ridge Regression, etc.). We need to minimize this functions.
+* **functions** define the loss function and penalties and combination of both. We need to minimize this functions.
 * **algorithms** define algorithms (Fast Iterative Shrinkage-Thresholding Algorithm (FISTA) [FISTA2009]_,
   COntinuation of NESTerov's smoothing Algorithm (conesta), Excessive gap method)
   to minimize the above function.
@@ -19,16 +18,19 @@ A general framework for our package:
 
   * Loss function
 
-    * OLS
+    * RidgeRegression
+    * RidgeLogisticRegression
 
   * Penalties
 
     * L1 (Lasso)
     * L2 (Ridge)
-    * L1 + L2 (Elastic net)
-    * Total variation (TV)
+    * Total Variation (TV)
 
-  * Any combination of the above
+
+  * Objectives are any combination of the above
+     * RR_L1_TV Ridge Regression with L1 and TV.
+     * RLR_L1_TV Ridge Logistic Regression with L1 and TV.
 
 * Algorithms
 

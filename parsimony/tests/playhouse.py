@@ -31,148 +31,149 @@ from parsimony.functions.objectives import *
 
 import parsimony.datasets.simulated.grad as grad
 
+if __name__ == "__main__":
 
-np.random.seed(42)
-
-eps = 0.001
-maxit = 20000
-mu = 1e-6
-k = 0.6
-l = 0.4
-g = 0.9
-
-px = 100
-py = 1
-pz = 1
-shape = (pz, py, px)
-p = 1 + px * py * pz  # Must be even!
-n = 60
-alpha = 1.0
-Sigma = alpha * np.eye(p, p) + (1.0 - alpha) * np.random.randn(p, p)
-mean = np.zeros(p)
-M = np.random.multivariate_normal(mean, Sigma, n)
-X = np.hstack((np.ones((n, 1)), np.random.randn(n, p - 1)))
-betastar = np.concatenate((np.zeros(((p - 1) / 2, 1)),
-                           np.random.randn(round((p - 1) / 2.0), 1)))
-betastar = np.sort(np.abs(betastar), axis=0)
-betastar = np.concatenate((np.random.rand(1, 1), betastar))
-#betastar = np.array([[2.0],[0.5]])
-
-print X.shape
-print betastar.shape
-
-y = np.dot(X, betastar)
-#m = np.mean(y)
-#y[y < m] = 0.0
-#y[y >= m] = 1.0
-#print y
-
-A, n_compacts = tv.A_from_shape(shape)
-#A = gl.A_from_groups(px, [range(0, int(px / 2.0)),
-#                          range(int(px / 2.0), px)])
-Al1 = sparse.eye(p - 1, p - 1)
-
-beta_start = start_vectors.RandomStartVector(normalise=False)
-beta_start = beta_start.get_vector((p, 1))
-
-
-
-##rr = RR_L1_GL(X, y, k, l, g, A=A, mu=mu, penalty_start=0)
-#rr = RR_SmoothedL1TV(X, y, k, l, g, Atv=A, Al1=Al1, mu=mu,
-#                     penalty_start=0)
-#
-#print maths.norm(betastar - beta_start)
-#
-#ista = algorithms.ISTA(output=True, max_iter=maxit)
-#t = time.time()
-#beta, output = ista(rr, beta_start)
-##print time.time() - t
-#
-#print maths.norm(betastar - beta)
-
-
-#rr = RR_L1_TV(X, y, k, l, g, A=A, mu=mu, penalty_start=0)
-#rr = RR_L1_GL(X, y, k, l, g, A=A, mu=mu, penalty_start=1)
-rr = RR_SmoothedL1TV(X, y, k=0.01, l=l, g=g, Atv=A, Al1=Al1, mu=mu,
-                     penalty_start=1)
-#rr = RLR_L1_TV(X, y, k, l, g, A=A, mu=mu, weights=None, penalty_start=1)
-
-print maths.norm(betastar - beta_start)
-print maths.norm(np.dot(X, betastar) - np.dot(X, beta_start))
-
-#ista = algorithms.ISTA(output=True, max_iter=maxit)
-ista = algorithms.ExcessiveGapMethod(output=True, max_iter=maxit)
-t = time.time()
-beta, output = ista(rr, beta_start)
-#print time.time() - t
-print beta
-
-print maths.norm(betastar - beta)
-print maths.norm(np.dot(X, betastar) - np.dot(X, beta))
-
-
-
-#rr = RR_L1_TV(X, y, k, l, g, A=A, mu=mu, penalty_start=1)
-#rr = RR_L1_GL(X, y, k, l, g=0.9, A=A, mu=mu, penalty_start=1)
-rr = RR_SmoothedL1TV(X, y, k, l=0.0, g=g, Atv=A, Al1=Al1,
-                     mu=mu, penalty_start=1)
-#rr = RLR_L1_TV(X, y, k, l, g=0.9, A=A, mu=mu, weights=None, penalty_start=1)
-
-print maths.norm(betastar - beta_start)
-print maths.norm(np.dot(X, betastar) - np.dot(X, beta_start))
-
-#ista = algorithms.ISTA(output=True, max_iter=maxit)
-ista = algorithms.ExcessiveGapMethod(output=True, max_iter=maxit)
-t = time.time()
-beta, output = ista(rr, beta_start)
-#print time.time() - t
-print beta
-
-print maths.norm(betastar - beta)
-print maths.norm(np.dot(X, betastar) - np.dot(X, beta))
-
-
-
-#rr = RR_L1_TV(X, y, k, l, g, A=A, mu=mu, penalty_start=1)
-#rr = RR_L1_GL(X, y, k, l, g=0.9, A=A, mu=mu, penalty_start=1)
-rr = RR_SmoothedL1TV(X, y, k, l, g=0.0, Atv=A, Al1=Al1,
-                     mu=mu, penalty_start=1)
-#rr = RLR_L1_TV(X, y, k, l, g=0.9, A=A, mu=mu, weights=None, penalty_start=1)
-
-print maths.norm(betastar - beta_start)
-print maths.norm(np.dot(X, betastar) - np.dot(X, beta_start))
-
-#ista = algorithms.ISTA(output=True, max_iter=maxit)
-ista = algorithms.ExcessiveGapMethod(output=True, max_iter=maxit)
-t = time.time()
-beta, output = ista(rr, beta_start)
-#print time.time() - t
-print beta
-
-print maths.norm(betastar - beta)
-print maths.norm(np.dot(X, betastar) - np.dot(X, beta))
-
-
-
-#rr = RR_L1_TV(X, y, k, l, g, A=A, mu=mu, penalty_start=1)
-#rr = RR_L1_GL(X, y, k, l, g=0.9, A=A, mu=mu, penalty_start=1)
-rr = RR_SmoothedL1TV(X, y, k, l=0.0, g=0.0, Atv=A, Al1=Al1,
-                     mu=mu, penalty_start=1)
-#rr = RLR_L1_TV(X, y, k, l, g=0.9, A=A, mu=mu, weights=None, penalty_start=1)
-
-print maths.norm(betastar - beta_start)
-print maths.norm(np.dot(X, betastar) - np.dot(X, beta_start))
-
-#ista = algorithms.ISTA(output=True, max_iter=maxit)
-ista = algorithms.ExcessiveGapMethod(output=True, max_iter=maxit)
-t = time.time()
-beta, output = ista(rr, beta_start)
-#print time.time() - t
-print beta
-
-print maths.norm(betastar - beta)
-print maths.norm(np.dot(X, betastar) - np.dot(X, beta))
-
+    np.random.seed(42)
+    
+    eps = 0.001
+    maxit = 20000
+    mu = 1e-6
+    k = 0.6
+    l = 0.4
+    g = 0.9
+    
+    px = 100
+    py = 1
+    pz = 1
+    shape = (pz, py, px)
+    p = 1 + px * py * pz  # Must be even!
+    n = 60
+    alpha = 1.0
+    Sigma = alpha * np.eye(p, p) + (1.0 - alpha) * np.random.randn(p, p)
+    mean = np.zeros(p)
+    M = np.random.multivariate_normal(mean, Sigma, n)
+    X = np.hstack((np.ones((n, 1)), np.random.randn(n, p - 1)))
+    betastar = np.concatenate((np.zeros(((p - 1) / 2, 1)),
+                               np.random.randn(round((p - 1) / 2.0), 1)))
+    betastar = np.sort(np.abs(betastar), axis=0)
+    betastar = np.concatenate((np.random.rand(1, 1), betastar))
+    #betastar = np.array([[2.0],[0.5]])
+    
+    print X.shape
+    print betastar.shape
+    
+    y = np.dot(X, betastar)
+    #m = np.mean(y)
+    #y[y < m] = 0.0
+    #y[y >= m] = 1.0
+    #print y
+    
+    A, n_compacts = tv.A_from_shape(shape)
+    #A = gl.A_from_groups(px, [range(0, int(px / 2.0)),
+    #                          range(int(px / 2.0), px)])
+    Al1 = sparse.eye(p - 1, p - 1)
+    
+    beta_start = start_vectors.RandomStartVector(normalise=False)
+    beta_start = beta_start.get_vector((p, 1))
+    
+    
+    
+    ##rr = RR_L1_GL(X, y, k, l, g, A=A, mu=mu, penalty_start=0)
+    #rr = RR_SmoothedL1TV(X, y, k, l, g, Atv=A, Al1=Al1, mu=mu,
+    #                     penalty_start=0)
+    #
+    #print maths.norm(betastar - beta_start)
+    #
+    #ista = algorithms.ISTA(output=True, max_iter=maxit)
+    #t = time.time()
+    #beta, output = ista(rr, beta_start)
+    ##print time.time() - t
+    #
+    #print maths.norm(betastar - beta)
+    
+    
+    #rr = RR_L1_TV(X, y, k, l, g, A=A, mu=mu, penalty_start=0)
+    #rr = RR_L1_GL(X, y, k, l, g, A=A, mu=mu, penalty_start=1)
+    rr = RR_SmoothedL1TV(X, y, k=0.01, l=l, g=g, Atv=A, Al1=Al1, mu=mu,
+                         penalty_start=1)
+    #rr = RLR_L1_TV(X, y, k, l, g, A=A, mu=mu, weights=None, penalty_start=1)
+    
+    print maths.norm(betastar - beta_start)
+    print maths.norm(np.dot(X, betastar) - np.dot(X, beta_start))
+    
+    #ista = algorithms.ISTA(output=True, max_iter=maxit)
+    ista = algorithms.ExcessiveGapMethod(output=True, max_iter=maxit)
+    t = time.time()
+    beta, output = ista(rr, beta_start)
+    #print time.time() - t
+    print beta
+    
+    print maths.norm(betastar - beta)
+    print maths.norm(np.dot(X, betastar) - np.dot(X, beta))
+    
+    
+    
+    #rr = RR_L1_TV(X, y, k, l, g, A=A, mu=mu, penalty_start=1)
+    #rr = RR_L1_GL(X, y, k, l, g=0.9, A=A, mu=mu, penalty_start=1)
+    rr = RR_SmoothedL1TV(X, y, k, l=0.0, g=g, Atv=A, Al1=Al1,
+                         mu=mu, penalty_start=1)
+    #rr = RLR_L1_TV(X, y, k, l, g=0.9, A=A, mu=mu, weights=None, penalty_start=1)
+    
+    print maths.norm(betastar - beta_start)
+    print maths.norm(np.dot(X, betastar) - np.dot(X, beta_start))
+    
+    #ista = algorithms.ISTA(output=True, max_iter=maxit)
+    ista = algorithms.ExcessiveGapMethod(output=True, max_iter=maxit)
+    t = time.time()
+    beta, output = ista(rr, beta_start)
+    #print time.time() - t
+    print beta
+    
+    print maths.norm(betastar - beta)
+    print maths.norm(np.dot(X, betastar) - np.dot(X, beta))
+    
+    
+    
+    #rr = RR_L1_TV(X, y, k, l, g, A=A, mu=mu, penalty_start=1)
+    #rr = RR_L1_GL(X, y, k, l, g=0.9, A=A, mu=mu, penalty_start=1)
+    rr = RR_SmoothedL1TV(X, y, k, l, g=0.0, Atv=A, Al1=Al1,
+                         mu=mu, penalty_start=1)
+    #rr = RLR_L1_TV(X, y, k, l, g=0.9, A=A, mu=mu, weights=None, penalty_start=1)
+    
+    print maths.norm(betastar - beta_start)
+    print maths.norm(np.dot(X, betastar) - np.dot(X, beta_start))
+    
+    #ista = algorithms.ISTA(output=True, max_iter=maxit)
+    ista = algorithms.ExcessiveGapMethod(output=True, max_iter=maxit)
+    t = time.time()
+    beta, output = ista(rr, beta_start)
+    #print time.time() - t
+    print beta
+    
+    print maths.norm(betastar - beta)
+    print maths.norm(np.dot(X, betastar) - np.dot(X, beta))
+    
+    
+    
+    #rr = RR_L1_TV(X, y, k, l, g, A=A, mu=mu, penalty_start=1)
+    #rr = RR_L1_GL(X, y, k, l, g=0.9, A=A, mu=mu, penalty_start=1)
+    rr = RR_SmoothedL1TV(X, y, k, l=0.0, g=0.0, Atv=A, Al1=Al1,
+                         mu=mu, penalty_start=1)
+    #rr = RLR_L1_TV(X, y, k, l, g=0.9, A=A, mu=mu, weights=None, penalty_start=1)
+    
+    print maths.norm(betastar - beta_start)
+    print maths.norm(np.dot(X, betastar) - np.dot(X, beta_start))
+    
+    #ista = algorithms.ISTA(output=True, max_iter=maxit)
+    ista = algorithms.ExcessiveGapMethod(output=True, max_iter=maxit)
+    t = time.time()
+    beta, output = ista(rr, beta_start)
+    #print time.time() - t
+    print beta
+    
+    print maths.norm(betastar - beta)
+    print maths.norm(np.dot(X, betastar) - np.dot(X, beta))
+    
 
 
 #mx = np.mean(X)
