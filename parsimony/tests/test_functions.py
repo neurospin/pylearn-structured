@@ -16,7 +16,7 @@ class TestFunctions(TestCase):
     def test_ridge_l1(self):
 
         import parsimony.estimators as estimators
-        import parsimony.algorithms as algorithms
+        import parsimony.algorithms.explicit as explicit
         import parsimony.functions.nesterov.tv as tv
         spams_generator = SpamsGenerator()
         ret_data = spams_generator.get_x_y_estimated_beta()
@@ -32,16 +32,15 @@ class TestFunctions(TestCase):
         g = 0  # tv coefficient
         tvl1l2_fista_ridge = estimators.RidgeRegression_L1_TV(k, l, g,
                                                   Atv,
-                                                  algorithm=algorithms.FISTA())
+                                                  algorithm=explicit.FISTA())
         tvl1l2_fista_ridge.fit(X, y)
         k = 0  # ridge regression coefficient
         l = 0.05  # l1 coefficient
         g = 0  # tv coefficient
         tvl1l2_fista_l1 = estimators.RidgeRegression_L1_TV(k, l, g,
                                                   Atv,
-                                                  algorithm=algorithms.FISTA())
+                                                  algorithm=explicit.FISTA())
         tvl1l2_fista_l1.fit(X, y)
-
 
         err_ridge = np.sum(np.absolute(
                           np.dot(X, tvl1l2_fista_ridge.beta) - y))

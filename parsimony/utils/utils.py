@@ -11,9 +11,16 @@ Created on Thu Feb 8 09:22:00 2013
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
-import numpy as np
 import warnings
 from functools import wraps
+from time import time, clock
+
+import numpy as np
+
+#TODO: This depends on the OS. We should try to be clever here ...
+time_func = clock
+#time_func = time
+
 
 #import scipy
 #from numpy.linalg import norm
@@ -22,7 +29,8 @@ from functools import wraps
 #from copy import copy
 #import traceback
 
-__all__ = ["deprecated", "approx_grad", "optimal_shrinkage", "AnonymousClass"]
+__all__ = ["time_func", "deprecated", "approx_grad", "optimal_shrinkage",
+           "AnonymousClass"]
 
 #__all__ = ['make_list', 'sign',
 #           'cov', 'corr', 'copy', 'sstot', 'ssvar',

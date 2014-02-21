@@ -7,8 +7,8 @@ Created on Thu Nov 14 10:23:53 2013
 
 import unittest
 import numpy as np
-from parsimony.algorithms import FastSVD
-from parsimony.algorithms import FastSparseSVD
+from parsimony.algorithms.implicit import FastSVD
+from parsimony.algorithms.implicit import FastSparseSVD
 import parsimony.utils as utils
 
 

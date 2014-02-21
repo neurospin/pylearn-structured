@@ -1,341 +1,40 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`parsimony.algorithms` module includes several algorithms used
-throughout the package.
+The :mod:`parsimony.algorithms.implicit` module includes several algorithms
+that minimises an implicit loss function.
 
 Algorithms may not store states. I.e., if they are classes, do not keep
 references to objects with state in the algorithm objects. It should be
-possible to copy and share algorithms between estimators, and thus they should
-not depend on any state.
+possible to copy and share algorithms between e.g. estimators, and thus they
+should not depend on any state.
 
-There are currently two types of algorithms: implicit and explicit. The
+There are currently two main types of algorithms: implicit and explicit. The
 difference is whether they run directly on the data (implicit) or if they have
 an actual loss function than is minimised (explicit). Implicit algorithms take
 the data as input, and then run on the data. Explicit algorithms take a loss
-function and a start vector as input, and then minimise the function value
-starting from the point of the start vector.
+function and possibly a start vector as input, and then minimise the function
+value starting from the point of the start vector.
 
-Created on Fri Feb  8 17:24:11 2013
+Algorithms that don't fit well in either category should go in utils instead.
+
+Created on Thu Feb 20 17:50:40 2014
 
 @author:  Tommy Löfstedt
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
-import abc
-import copy
-from time import time, clock
-
 import numpy as np
 
+from . import bases
+import parsimony.utils as utils
+import parsimony.utils.maths as maths
+import parsimony.utils.consts as consts
 import parsimony.functions.penalties as penalties
 import parsimony.functions.interfaces as interfaces
-from parsimony.functions.nesterov.interfaces import NesterovFunction
-from parsimony.functions.multiblock.interfaces import MultiblockFunction
-from parsimony.functions.multiblock.interfaces import MultiblockGradient
-from parsimony.functions.multiblock.interfaces import MultiblockProjectionOperator
-import parsimony.start_vectors as start_vectors
-import parsimony.utils.consts as consts
-import parsimony.utils.maths as maths
+import parsimony.functions.nesterov.interfaces as nesterov_interfaces
 
-#TODO: This depends on the OS. We should try to be clever here ...
-time_func = clock
-#time_func = time
 
-__all__ = ["BaseAlgorithm",
-           "ImplicitAlgorithm",
-           "FastSVD", "FastSparseSVD", "FastSVDProduct",
-
-           "ExplicitAlgorithm",
-           "ISTA", "FISTA", "CONESTA", "StaticCONESTA", "DynamicCONESTA",
-           "ExcessiveGapMethod",
-
-           "Bisection",
-
-           "MultiblockProjectedGradientMethod",
-
-           "ProjectionADMM", "DykstrasProjectionAlgorithm",
-           "ParallelDykstrasProjectionAlgorithm",
-
-           "BacktrackingLineSearch"]
-
-
-class BaseAlgorithm(object):
-
-    def check_compatibility(self, function, interfaces):
-        """Check if the function considered implements the given interfaces
-        """
-        for interface in interfaces:
-            if not isinstance(function, interface):
-                raise ValueError("%s does not implement interface %s" %
-                                (str(function), str(interface)))
-
-    def set_params(self, **kwargs):
-
-        for k in kwargs:
-            self.__setattr__(k, kwargs[k])
-
-
-class ImplicitAlgorithm(BaseAlgorithm):
-    """Implicit algorithms are algorithms that do not use a loss function, but
-    instead minimise or maximise some underlying function implicitly, from the
-    data.
-
-    Parameters
-    ----------
-    X : Regressor
-    """
-    __metaclass__ = abc.ABCMeta
-
-    @abc.abstractmethod
-    def run(X, **kwargs):
-        raise NotImplementedError('Abstract method "run" must be ' \
-                                  'specialised!')
-
-
-class ExplicitAlgorithm(BaseAlgorithm):
-    """Explicit algorithms are algorithms that minimises a given function
-    explicitly from properties of the function.
-    """
-    __metaclass__ = abc.ABCMeta
-
-    @abc.abstractmethod
-    def run(function, beta, **kwargs):
-        """Run this algorithm to obtain the variable that gives the minimum of
-        the give function(s).
-
-        Parameters
-        ----------
-        function : The function to minimise.
-
-        beta : A start vector.
-        """
-        raise NotImplementedError('Abstract method "run" must be ' \
-                                  'specialised!')
-
-
-class FastSVD(ImplicitAlgorithm):
-
-    def run(self, X, max_iter=100, start_vector=None):
-        """A kernel SVD implementation.
-
-        Performs SVD of given matrix. This is always faster than np.linalg.svd.
-        Particularly, this is a lot faster than np.linalg.svd when M << N or
-        M >> N, for an M-by-N matrix.
-
-        Parameters
-        ----------
-        X : The matrix to decompose.
-
-        max_iter : maximum allowed number of iterations
-
-        start_vector : a start vector
-
-        Returns
-        -------
-        v : The right singular vector of X that corresponds to the largest
-                singular value.
-
-        Example
-        -------
-        >>> import numpy as np
-        >>> from parsimony.algorithms import FastSVD
-        >>> np.random.seed(0)
-        >>> X = np.random.random((10,10))
-        >>> fast_svd = FastSVD()
-        >>> fast_svd.run(X)
-        array([[-0.3522974 ],
-               [-0.35647707],
-               [-0.35190104],
-               [-0.34715338],
-               [-0.19594198],
-               [-0.24103104],
-               [-0.25578904],
-               [-0.29501092],
-               [-0.42311297],
-               [-0.27656382]])
-
-        """
-        M, N = X.shape
-        if M < 80 and N < 80:  # Very arbitrary threshold for my computer ;-)
-            _, _, V = np.linalg.svd(X, full_matrices=True)
-            v = V[[0], :].T
-        elif M < N:
-            K = np.dot(X, X.T)
-            # TODO: Use module for this!
-            t = np.random.rand(X.shape[0], 1)
-    #        t = start_vectors.RandomStartVector().get_vector(Xt)
-            for it in xrange(max_iter):
-                t_ = t
-                t = np.dot(K, t_)
-                t /= np.sqrt(np.sum(t ** 2.0))
-
-                if np.sqrt(np.sum((t_ - t) ** 2.0)) < consts.TOLERANCE:
-                    break
-
-            v = np.dot(X.T, t)
-            v /= np.sqrt(np.sum(v ** 2.0))
-
-        else:
-            K = np.dot(X.T, X)
-            # TODO: Use module for this!
-            v = np.random.rand(X.shape[1], 1)
-            v /= maths.norm(v)
-    #        v = start_vectors.RandomStartVector().get_vector(X)
-            for it in xrange(max_iter):
-                v_ = v
-                v = np.dot(K, v_)
-                v /= np.sqrt(np.sum(v ** 2.0))
-
-                if np.sqrt(np.sum((v_ - v) ** 2.0)) < consts.TOLERANCE:
-                    break
-
-        return v
-
-
-class FastSparseSVD(ImplicitAlgorithm):
-
-    def run(self, X, max_iter=100, start_vector=None):
-        """A kernel SVD implementation for sparse CSR matrices.
-
-        This is usually faster than np.linalg.svd when density < 20% and when
-        M << N or N << M (at least one order of magnitude). When M = N >= 10000
-        it is faster when the density < 1% and always faster regardless of
-        density when M = N < 10000.
-
-        These are ballpark estimates that may differ on your computer.
-
-        Parameters
-        ----------
-        X : Numpy array. The matrix to decompose.
-
-        max_iter : Integer. Maximum allowed number of iterations.
-
-        start_vector : Numpy array. The start vector.
-
-        Returns
-        -------
-        v : Numpy array. The right singular vector.
-
-        Example
-        -------
-        >>> import numpy as np
-        >>> from parsimony.algorithms import FastSparseSVD
-        >>> np.random.seed(0)
-        >>> X = np.random.random((10,10))
-        >>> fast_sparse_svd = FastSparseSVD()
-        >>> fast_sparse_svd.run(X)
-        array([[ 0.3522974 ],
-               [ 0.35647707],
-               [ 0.35190103],
-               [ 0.34715338],
-               [ 0.19594198],
-               [ 0.24103104],
-               [ 0.25578904],
-               [ 0.29501092],
-               [ 0.42311297],
-               [ 0.27656382]])
-        """
-        M, N = X.shape
-        if M < N:
-            K = X.dot(X.T)
-    #        t = X.dot(p)
-            # TODO: Use module for this!
-            t = np.random.rand(X.shape[0], 1)
-            for it in xrange(max_iter):
-                t_ = t
-                t = K.dot(t_)
-                t /= np.sqrt(np.sum(t ** 2.0))
-
-                a = float(np.sqrt(np.sum((t_ - t) ** 2.0)))
-                if a < consts.TOLERANCE:
-                    break
-
-            v = X.T.dot(t)
-            v /= np.sqrt(np.sum(v ** 2.0))
-
-        else:
-            K = X.T.dot(X)
-            # TODO: Use module for this!
-            v = np.random.rand(X.shape[1], 1)
-            v /= maths.norm(v)
-    #        v = start_vectors.RandomStartVector().get_vector(X)
-            for it in xrange(max_iter):
-                v_ = v
-                v = K.dot(v_)
-                v /= np.sqrt(np.sum(v ** 2.0))
-
-                a = float(np.sqrt(np.sum((v_ - v) ** 2.0)))
-                if a < consts.TOLERANCE:
-                    break
-
-        return v
-
-
-class FastSVDProduct(ImplicitAlgorithm):
-
-    def run(self, X, Y, start_vector=None,
-                 eps=consts.TOLERANCE, max_iter=100, min_iter=1):
-        """A kernel SVD implementation of a product of two matrices, X and Y.
-        I.e. the SVD of np.dot(X, Y), but the SVD is computed without actually
-        computing the matrix product.
-
-        Performs SVD of a given matrix. This is always faster than
-        np.linalg.svd when extracting only one, or a few, vectors.
-
-        Parameters
-        ----------
-        X : Numpy array with shape (n, p). The first matrix of the product.
-
-        Y : Numpy array with shape (p, m). The second matrix of the product.
-
-        start_vector : Numpy array. The start vector.
-
-        eps : Float. Tolerance.
-
-        max_iter : Integer. Maximum number of iterations.
-
-        min_iter : Integer. Minimum number of iterations.
-
-        Returns
-        -------
-        v : Numpy array. The right singular vector of np.dot(X, Y) that
-                corresponds to the largest singular value of np.dot(X, Y).
-
-        Example
-        -------
-        >>> import numpy as np
-        >>> from parsimony.algorithms import FastSVDProduct
-        >>> np.random.seed(0)
-        >>> X = np.random.random((15,10))
-        >>> Y = np.random.random((10,5))
-        >>> fast_svd = FastSVDProduct()
-        >>> fast_svd.run(X, Y)
-        array([[ 0.47169804],
-               [ 0.38956366],
-               [ 0.41397845],
-               [ 0.52493576],
-               [ 0.42285389]])
-        """
-        M, N = X.shape
-
-        if start_vector is None:
-            start_vector = start_vectors.RandomStartVector(normalise=True)
-        v = start_vector.get_vector((Y.shape[1], 1))
-
-        for it in xrange(1, max_iter + 1):
-            v_ = v
-            v = np.dot(X, np.dot(Y, v_))
-            v = np.dot(Y.T, np.dot(X.T, v))
-            v /= np.sqrt(np.sum(v ** 2.0))
-
-            if np.sqrt(np.sum((v_ - v) ** 2.0)) < eps \
-                    and it >= min_iter:
-                break
-
-        return v
-
-
-class ISTA(ExplicitAlgorithm):
+class ISTA(bases.ExplicitAlgorithm):
     """The iterative shrinkage-thresholding algorithm.
     """
     INTERFACES = [interfaces.Function,
@@ -401,7 +100,7 @@ class ISTA(ExplicitAlgorithm):
             f = []
         for i in xrange(1, self.max_iter + 1):
             if self.output:
-                tm = time_func()
+                tm = utils.time_func()
 
             if has_step:
                 self.step = function.step(betanew)
@@ -412,7 +111,7 @@ class ISTA(ExplicitAlgorithm):
                                     self.step)
 
             if self.output:
-                t.append(time_func() - tm)
+                t.append(utils.time_func() - tm)
                 f.append(function.f(betanew))
 
             if (1.0 / self.step) * maths.norm(betanew - betaold) < self.eps \
@@ -426,7 +125,7 @@ class ISTA(ExplicitAlgorithm):
             return betanew
 
 
-class FISTA(ExplicitAlgorithm):
+class FISTA(bases.ExplicitAlgorithm):
     """ The fast iterative shrinkage threshold algorithm.
 
     Parameters
@@ -558,7 +257,7 @@ class FISTA(ExplicitAlgorithm):
             f = []
         for i in xrange(1, self.max_iter + 1):
             if self.output:
-                tm = time_func()
+                tm = utils.time_func()
 
             z = betanew + ((i - 2.0) / (i + 1.0)) * (betanew - betaold)
 
@@ -570,7 +269,7 @@ class FISTA(ExplicitAlgorithm):
                                     self.step)
 
             if self.output:
-                t.append(time_func() - tm)
+                t.append(utils.time_func() - tm)
                 f.append(function.f(betanew))
 
             if (1.0 / self.step) * maths.norm(betanew - z) < self.eps \
@@ -584,7 +283,7 @@ class FISTA(ExplicitAlgorithm):
             return betanew
 
 
-class CONESTA(ExplicitAlgorithm):
+class CONESTA(bases.ExplicitAlgorithm):
     """COntinuation with NEsterov smoothing in a Soft-Thresholding Algorithm,
     or CONESTA for short.
 
@@ -615,7 +314,7 @@ class CONESTA(ExplicitAlgorithm):
 
     min_iter : Positive integer. Minimum number of inner loop iterations.
     """
-    INTERFACES = [NesterovFunction,
+    INTERFACES = [nesterov_interfaces.NesterovFunction,
                   interfaces.Continuation,
                   interfaces.LipschitzContinuousGradient,
                   interfaces.ProximalOperator,
@@ -701,7 +400,7 @@ class CONESTA(ExplicitAlgorithm):
                 stop = True
 
             if self.output:
-                gap_time = time_func()
+                gap_time = utils.time_func()
             if self.dynamic:
                 G_new = function.gap(beta)
                 # TODO: Warn if G_new < 0.
@@ -719,7 +418,7 @@ class CONESTA(ExplicitAlgorithm):
 
 #            print "Gap:", G
             if self.output:
-                gap_time = time_func() - gap_time
+                gap_time = utils.time_func() - gap_time
                 Gval.append(G)
 
                 f = f + fval
@@ -768,10 +467,10 @@ class DynamicCONESTA(CONESTA):
         super(DynamicCONESTA, self).__init__(**kwargs)
 
 
-class ExcessiveGapMethod(ExplicitAlgorithm):
+class ExcessiveGapMethod(bases.ExplicitAlgorithm):
     """Nesterov's excessive gap method for strongly convex functions.
     """
-    INTERFACES = [NesterovFunction,
+    INTERFACES = [nesterov_interfaces.NesterovFunction,
                   interfaces.LipschitzContinuousGradient,
                   interfaces.GradientMap,
                   interfaces.DualFunction,
@@ -839,7 +538,7 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
 
         while True:
             if self.output:
-                tm = time_func()
+                tm = utils.time_func()
 
             tau = 2.0 / (float(k) + 3.0)
 
@@ -855,7 +554,7 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
 
             ulim = mu[k + 1] * function.h.M()
             if self.output:
-                t.append(time_func() - tm)
+                t.append(utils.time_func() - tm)
                 mu_old = function.h.get_mu()
                 function.h.set_mu(0.0)
                 f.append(function.f(beta))
@@ -877,7 +576,7 @@ class ExcessiveGapMethod(ExplicitAlgorithm):
             return beta
 
 
-class Bisection(ExplicitAlgorithm):
+class Bisection(bases.ExplicitAlgorithm):
     """Finds a root of the function assumed to be on the line between two
     points.
 
@@ -1057,185 +756,7 @@ class Bisection(ExplicitAlgorithm):
         return mid
 
 
-#class GeneralisedMultiblockISTA(ExplicitAlgorithm):
-#    """ The iterative shrinkage threshold algorithm in a multiblock setting.
-#    """
-#    INTERFACES = [functions.MultiblockFunction,
-#                  functions.MultiblockGradient,
-#                  functions.MultiblockProximalOperator,
-#                  functions.StepSize,
-#                 ]
-#
-#    def __init__(self, step=None, output=False,
-#                 eps=consts.TOLERANCE,
-#                 max_iter=consts.MAX_ITER, min_iter=1):
-#
-#        self.step = step
-#        self.output = output
-#        self.eps = eps
-#        self.max_iter = max_iter
-#        self.min_iter = min_iter
-#
-#    def __call__(self, function, w):
-#
-#        self.check_compatability(function, self.INTERFACES)
-#
-#        for it in xrange(10):  # TODO: Get number of iterations!
-#            print "it:", it
-#
-#            for i in xrange(len(w)):
-#                print "  i:", i
-#
-#                for k in xrange(10000):
-#                    print "    k:", k
-#
-#                    t = function.step(w, i)
-#                    w[i] = w[i] - t * function.grad(w, i)
-#                    w = function.prox(w, i, t)
-##                    = w[:i] + [wi] + w[i+1:]
-#
-#                    print "    f:", function.f(w)
-#
-##                w[i] = wi
-#
-#        return w
-
-
-class MultiblockProjectedGradientMethod(ExplicitAlgorithm):
-    """ The projected gradient algorithm with alternating minimisations in a
-    multiblock setting.
-    """
-    INTERFACES = [MultiblockFunction,
-                  MultiblockGradient,
-                  MultiblockProjectionOperator,
-                  interfaces.StepSize]
-
-    def __init__(self, step=None, output=False,
-                 eps=consts.TOLERANCE,
-                 outer_iter=25, max_iter=consts.MAX_ITER, min_iter=1):
-
-        self.step = step
-        self.output = output
-        self.eps = eps
-        self.outer_iter = outer_iter
-        self.max_iter = max_iter
-        self.min_iter = min_iter
-
-    def run(self, function, w):
-
-        self.check_compatibility(function, self.INTERFACES)
-
-        print "outer_iter:", self.outer_iter
-        print "len(w):", len(w)
-        print "max_iter:", self.max_iter
-
-#        z = w_old = w
-
-        if self.output:
-            f = [function.f(w)]
-
-        t = [1.0] * len(w)
-
-        for it in xrange(self.outer_iter):  # TODO: Get number of iterations!
-            all_converged = True
-            for i in xrange(len(w)):
-                converged = False
-                print "it: %d, i: %d" % (it, i)
-                for k in xrange(self.max_iter):
-#                    print "it: %d, i: %d, k: %d" % (it, i, k)
-
-#                    z = w[i] + ((k - 2.0) / (k + 1.0)) * (w[i] - w_old[i])
-
-                    w_old = copy.deepcopy(w)
-
-#                    _t = time()
-                    t[i] = function.step(w_old, i)
-#                    print "t:", t[i]
-#                    print "step:", time() - _t
-
-#                    _t = time()
-                    grad = function.grad(w_old, i)
-                    w[i] = w_old[i] - t[i] * grad
-
-#                    def fun(x):
-#                        w_ = [0, 0]
-#                        w_[i] = x
-#                        w_[1 - i] = w[1 - i]
-#                        return function.f(w_)
-#                    approx_grad = utils.approx_grad(fun, w[i], eps=1e-6)
-#                    diff = float(maths.norm(grad - approx_grad))
-#                    print "grad err: %e, lim: %e" % (diff, 5e-5)
-#                    if diff > 5e-4:
-#                        pass
-
-#                    w[i] = z[i] - t[i] * function.grad(w_old[:i] +
-#                                                       [z] +
-#                                                       w_old[i + 1:], i)
-#                    print "grad:", time() - _t
-
-#                    _t = time()
-                    w = function.proj(w, i)
-#                    print "proj:", time() - _t
-
-#                    print "l0 :", maths.norm0(w[i]), \
-#                        ", l1 :", maths.norm1(w[i]), \
-#                        ", l2²:", maths.norm(w[i]) ** 2.0
-
-                    if self.output:
-                        f_ = function.f(w)
-#                        print "f:", f_
-                        improvement = f_ - f[-1]
-                        if improvement > 0.0:
-                            # If this happens there are two possible reasons:
-                            if abs(improvement) <= consts.TOLERANCE:
-                                # 1. The function is actually converged, and
-                                #         the "increase" is because of
-                                #         precision errors. This happens
-                                #         sometimes.
-                                pass
-                            else:
-                                # 2. There is an error and the function
-                                #         actually increased. Does this
-                                #         happen? If so, we need to
-                                #         investigate! Possible errors are:
-                                #          * The gradient is wrong.
-                                #          * The step size is too large.
-                                #          * Other reasons?
-                                print "ERROR! Function increased!"
-
-                            # Either way, we stop and regroup if it happens.
-                            break
-
-                        f.append(f_)
-
-                    err = maths.norm(w_old[i] - w[i])
-#                    print "err: %.10f < %.10f * %.10f = %.10f" \
-#                        % (err, t[i], self.eps, t[i] * self.eps)
-                    if err <= t[i] * self.eps and k + 1 >= self.min_iter:
-                        converged = True
-                        break
-
-                print "l0 :", maths.norm0(w[i]), \
-                    ", l1 :", maths.norm1(w[i]), \
-                    ", l2²:", maths.norm(w[i]) ** 2.
-                print "f:", f[-1]
-
-                if not converged:
-                    all_converged = False
-
-            if all_converged:
-                print "All converged!"
-                break
-
-        if self.output:
-#            output = {"t": t, "f": f}
-            output = {"f": f}
-            return (w, output)
-        else:
-            return w
-
-
-class ProjectionADMM(ExplicitAlgorithm):
+class ProjectionADMM(bases.ExplicitAlgorithm):
     """ The Alternating direction method of multipliers, where the functions
     have projection operators onto the corresponding convex sets.
     """
@@ -1277,7 +798,7 @@ class ProjectionADMM(ExplicitAlgorithm):
         return z
 
 
-class DykstrasProjectionAlgorithm(ExplicitAlgorithm):
+class DykstrasProjectionAlgorithm(bases.ExplicitAlgorithm):
     """Dykstra's projection algorithm. Computes the projection onto the
     intersection of two convex sets.
 
@@ -1329,7 +850,7 @@ class DykstrasProjectionAlgorithm(ExplicitAlgorithm):
         return x_new
 
 
-class ParallelDykstrasProjectionAlgorithm(ExplicitAlgorithm):
+class ParallelDykstrasProjectionAlgorithm(bases.ExplicitAlgorithm):
     """Dykstra's projection algorithm for two or more functions. Computes the
     projection onto the intersection of two or more convex sets.
 
@@ -1397,7 +918,7 @@ class ParallelDykstrasProjectionAlgorithm(ExplicitAlgorithm):
         return x_new
 
 
-class BacktrackingLineSearch(ExplicitAlgorithm):
+class BacktrackingLineSearch(bases.ExplicitAlgorithm):
     """Finds a step length a that fulfills a given descent criterion.
     """
     INTERFACES = [interfaces.Function,

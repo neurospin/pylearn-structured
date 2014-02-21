@@ -146,7 +146,7 @@ class L1TV(interfaces.AtomicFunction,
 
         elif self._lambda_max is None:
 
-            from parsimony.algorithms import FastSparseSVD
+            from parsimony.algorithms.implicit import FastSparseSVD
 
             A = sparse.vstack(self.A()[1:])
             # TODO: Add max_iter here!!

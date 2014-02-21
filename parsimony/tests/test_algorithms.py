@@ -20,7 +20,7 @@ class TestAlgorithms(TestCase):
 
         import numpy as np
         import parsimony.estimators as estimators
-        import parsimony.algorithms as algorithms
+        import parsimony.algorithms.explicit as explicit
         import parsimony.functions.nesterov.tv as tv
         spams_generator = SpamsGenerator()
         ret_data = spams_generator.get_x_y_estimated_beta()
@@ -40,15 +40,15 @@ class TestAlgorithms(TestCase):
         tvl1l2_fista = estimators.RidgeRegression_L1_TV(
                                 k, l, g,
                                 Atv,
-                                algorithm=algorithms.FISTA())
+                                algorithm=explicit.FISTA())
         tvl1l2_conesta_static = estimators.RidgeRegression_L1_TV(
                                 k, l, g,
                                 Atv,
-                                algorithm=algorithms.CONESTA(dynamic=False))
+                                algorithm=explicit.CONESTA(dynamic=False))
         tvl1l2_conesta_dynamic = estimators.RidgeRegression_L1_TV(
                                 k, l, g,
                                 Atv,
-                                algorithm=algorithms.CONESTA(dynamic=True))
+                                algorithm=explicit.CONESTA(dynamic=True))
 
         tvl1l2_algorithms.append(tvl1l2_fista)
         tvl1l2_algorithms.append(tvl1l2_conesta_static)

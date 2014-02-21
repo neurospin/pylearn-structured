@@ -66,6 +66,8 @@ class TestCase(unittest.TestCase):
 @nottest
 def test_all():
 
+    # Find parsimony directory.
+    # TODO: Is there a better way to do this?
     testdir = os.path.dirname(__file__)
     if len(testdir) == 0:
         testdir = ".."
@@ -74,8 +76,9 @@ def test_all():
     else:
         testdir += "/.."
 
+    # --exclude='^playhouse\\.py$'
     exec_string = "nosetests --with-doctest --doctest-tests " + \
-                  "--with-coverage --exclude='^playhouse\\.py$' -vv -w %s" \
+                  "--with-coverage -vv -w %s" \
                   % (testdir,)
 
     print "Running: " + exec_string
