@@ -20,6 +20,7 @@ import numpy as np
 
 from . import interfaces
 import parsimony.utils.maths as maths
+import parsimony.utils.consts as consts
 
 __all__ = ["ZeroFunction", "L1", "L2",
            "QuadraticConstraint", "RGCCAConstraint",
@@ -213,21 +214,6 @@ class L2(interfaces.AtomicFunction,
     penalty_start : Non-negative integer. The number of columns, variables
             etc., to except from penalisation. Equivalently, the first index
             to be penalised. Default is 0, all columns are included.
-
-    Example
-    -------
-    >>> import numpy as np
-    >>> from parsimony.functions.penalties import L2
-
-    >>> np.random.seed(42)
-    >>> beta = np.random.rand(100,1)
-    >>> l2 = L2(l=3.14159, c=2.71828)
-    >>> np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
-    5.8179830878866391e-10
-
-    >>> l2 = L2(l=3.14159, c=2.71828, penalty_start=5)
-    >>> np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
-    5.0187970725495645e-10
     """
     def __init__(self, l=1.0, c=0.0, penalty_start=0):
 
@@ -251,6 +237,21 @@ class L2(interfaces.AtomicFunction,
         """Gradient of the function.
 
         From the interface "Gradient".
+
+        Example
+        -------
+        >>> import numpy as np
+        >>> from parsimony.functions.penalties import L2
+        >>>
+        >>> np.random.seed(42)
+        >>> beta = np.random.rand(100, 1)
+        >>> l2 = L2(l=3.14159, c=2.71828)
+        >>> np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
+        5.8179830878866391e-10
+        >>>
+        >>> l2 = L2(l=3.14159, c=2.71828, penalty_start=5)
+        >>> np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
+        5.0187970725495645e-10
         """
 #        if self.unbiased:
 #            n = self.X.shape[0] - 1.0
@@ -290,6 +291,21 @@ class L2(interfaces.AtomicFunction,
         """The corresponding projection operator.
 
         From the interface "ProjectionOperator".
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.functions.penalties import L2
+        >>> np.random.seed(42)
+        >>> l2 = L2(c=0.3183098861837907)
+        >>> y1 = l2.proj(np.random.rand(100, 1) * 2.0 - 1.0)
+        >>> np.linalg.norm(y1) ** 2.0
+        0.31830988618379052
+        >>> y2 = np.random.rand(100, 1) * 2.0 - 1.0
+        >>> l2.feasible(y2)
+        False
+        >>> l2.feasible(l2.proj(y2))
+        True
         """
         if self.penalty_start > 0:
             beta_ = beta[self.penalty_start:, :]
@@ -301,8 +317,10 @@ class L2(interfaces.AtomicFunction,
         if sqnorm <= self.c:
             return beta
 
+        # The correction by eps is to nudge the squared norm just below self.c.
+        eps = consts.FLOAT_EPSILON
         proj = np.vstack((beta[:self.penalty_start, :],
-                          beta_ * np.sqrt(self.c / sqnorm)))
+                          beta_ * np.sqrt((self.c - eps) / sqnorm)))
 
         return proj
 
@@ -310,6 +328,20 @@ class L2(interfaces.AtomicFunction,
         """Feasibility of the constraint.
 
         From the interface "Constraint".
+
+        >>> import numpy as np
+        >>> from parsimony.functions.penalties import L2
+        >>> np.random.seed(42)
+        >>> l2 = L2(c=0.3183098861837907)
+        >>> y1 = 0.1 * (np.random.rand(50, 1) * 2.0 - 1.0)
+        >>> l2.feasible(y1)
+        True
+        >>> y2 = 10.0 * (np.random.rand(50, 1) * 2.0 - 1.0)
+        >>> l2.feasible(y2)
+        False
+        >>> y3 = l2.proj(50.0 * np.random.rand(100, 1) * 2.0 - 1.0)
+        >>> l2.feasible(y3)
+        True
         """
         if self.penalty_start > 0:
             beta_ = beta[self.penalty_start:, :]
@@ -477,14 +509,14 @@ class RGCCAConstraint(QuadraticConstraint,
     def reset(self):
 
         self._VU = None
-        self._Vt = None
-        self._UV = None
+        self._Pt = None
+        self._UP = None
 
 #        self._Ip = None
         self._M = None
 
         self._D = None
-        self._V = None
+        self._P = None
 
     def f(self, beta):
         """Function value.
@@ -553,7 +585,7 @@ class RGCCAConstraint(QuadraticConstraint,
 
         xtMx = self._compute_value(beta_)
         if xtMx <= self.c:
-            return beta
+            return beta, beta
 
         n, p = self.X.shape
         if p > n:
@@ -564,11 +596,11 @@ class RGCCAConstraint(QuadraticConstraint,
             if self._VU is None:
                 self._VU = np.dot(self.X, U)  # XX', n-by-n
 
-#                self._V, self._D, self._Vt = np.linalg.svd(self._VU)
-                self._D, self._V = np.linalg.eig(self._VU)
-#                self._Vt = np.linalg.pinv(self._V)
-                self._Vt = self._V.T
-                self._UV = np.dot(U, self._V)
+#                self._P, self._D, self._Pt = np.linalg.svd(self._VU)
+                self._D, self._P = np.linalg.eig(self._VU)
+#                self._Pt = np.linalg.pinv(self._P)
+                self._Pt = self._P.T
+                self._UP = np.dot(U, self._P)
 
             if self.unbiased:
                 n_ = float(n - 1.0)
@@ -580,11 +612,11 @@ class RGCCAConstraint(QuadraticConstraint,
                 m = 0.5 * l * ((1.0 - self.tau) / n_)
 
 #                invIVU = np.linalg.inv((k / m) * In + self._VU)
-#                invIVU = np.dot(self._V * np.reciprocal(self._D + (k / m)), self._Vt)
-                VtinvIVU = (np.reciprocal(self._D + (k / m)) * self._Vt.T).T
+#                invIVU = np.dot(self._P * np.reciprocal(self._D + (k / m)), self._Pt)
 
+                PtinvIVU = (np.reciprocal(self._D + (k / m)) * self._Pt.T).T
 #                invIMx = (x - np.dot(U, np.dot(invIVU, Vx))) / k
-                invIMx = (x - np.dot(self._UV, np.dot(VtinvIVU, Vx))) / k
+                invIMx = (x - np.dot(self._UP, np.dot(PtinvIVU, Vx))) / k
 
                 return invIMx
 
@@ -593,7 +625,7 @@ class RGCCAConstraint(QuadraticConstraint,
                                   parameter_positive=True,
                                   parameter_negative=False,
                                   parameter_zero=False,
-                                  eps=1e-3)
+                                  eps=1e-6)
 
             class F(interfaces.Function):
                 def __init__(self, x, c, val):
@@ -674,10 +706,11 @@ class RGCCAConstraint(QuadraticConstraint,
                 else:
                     n_ = float(n)
 
-                self._M = self.tau * self._Ip + \
+                Ip = np.eye(p)
+                self._M = self.tau * Ip + \
                           ((1.0 - self.tau) / n_) * XtX
 
-                self._D, self._V = np.linalg.eig(self._M)
+                self._D, self._P = np.linalg.eig(self._M)
 
             def prox2(x, l):
 
@@ -685,18 +718,18 @@ class RGCCAConstraint(QuadraticConstraint,
 
 #                invIM = np.linalg.inv(self._Ip + (0.5 * l) * self._M)
 #                print maths.norm(np.linalg.inv(self._Ip + (0.5 * l) * self._M) - \
-#                                  np.dot(self._V * np.reciprocal(0.5 * l * self._D + 1.0),
-#                                         self._V.T))
-#                print maths.norm(self._M - np.dot(self._V, np.dot(np.diag(self._D), self._V.T)))
+#                                  np.dot(self._P * np.reciprocal(0.5 * l * self._D + 1.0),
+#                                         self._P.T))
+#                print maths.norm(self._M - np.dot(self._P, np.dot(np.diag(self._D), self._P.T)))
 #                print maths.norm((self._Ip + (0.5 * l) * self._M) - \
-#                                  np.dot(self._V,
+#                                  np.dot(self._P,
 #                                         np.dot(np.diag(self._D + 1.0 + 0.5 * l),
-#                                                self._V.T)))
+#                                                self._P.T)))
 
 #                invIM = np.linalg.inv(self._Ip + (0.5 * l) * self._M)
-                invIM = np.dot(self._V * \
+                invIM = np.dot(self._P * \
                                    np.reciprocal(0.5 * l * self._D + 1.0),
-                               self._V.T)
+                               self._P.T)
                 y = np.dot(invIM, x)
 
 #                print "err:", maths.norm(y - yd)
@@ -771,22 +804,31 @@ class RGCCAConstraint(QuadraticConstraint,
 #        print low, ", ", high
 #        print l
 
-#        _Ip = np.eye(p)  # p-by-p
-#
-#        XtX = np.dot(self.X.T, self.X)
-#        _M = self.tau * _Ip + ((1.0 - self.tau) / float(n - 1)) * XtX
-#
-#        l = max(0.0, xtMx - self.c)
-#        y_ = np.dot(np.linalg.inv(_Ip + (0.5 * l) * _M), beta_)
-#
-#        print self._compute_value(y)
-#        print self._compute_value(y_)
+        _Ip = np.eye(p)  # p-by-p
+
+        XtX = np.dot(self.X.T, self.X)
+        _M = self.tau * _Ip + ((1.0 - self.tau) / float(n - 1)) * XtX
+        _D, _P = np.linalg.eig(_M)
+
+#        l = 2.0 * max(0.0, np.sqrt(xtMx) - self.c)
+        y_ = np.dot(np.linalg.inv(_Ip + (0.5 * l) * _M), beta_)
+
+        sqrtD = np.sqrt(_D)
+        K = np.reciprocal(1.0 + (0.5 * l) * _D)
+        sqrtDK = sqrtD * K  # Slightly faster than np.multiply.
+        Ptx = np.dot(_P.T, beta)
+        c = maths.norm((sqrtDK * Ptx.T).T) ** 2.0
+        print "c:", c
+        c = maths.norm(np.dot(np.diag(sqrtDK), Ptx)) ** 2.0
+        print "c:", c
+        print "y'My:", np.dot(y.T, np.dot(_M, y))
+        print "y_'My_:", np.dot(y_.T, np.dot(_M, y_))
 
 #        if maths.norm(beta_ - (beta_ / np.sqrt(xtMx))) < maths.norm(beta_ - y):
 #            print maths.norm(beta_ - (beta_ / np.sqrt(xtMx)))
 #            print maths.norm(beta_ - y)
 
-        return y
+        return y#, y_
 
     def _compute_value(self, beta):
         """Helper function to compute the function value.

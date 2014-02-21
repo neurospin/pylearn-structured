@@ -3,7 +3,7 @@
 Created on Sat Nov  2 15:19:17 2013
 
 @author:  Tommy Löfstedt, Edouard Duchesnay
-@email:   tommy.loefstedt@cea.fr, edouard.duchesnay@cea.fr
+@email:   lofstedt.tommy@gmail.com, edouard.duchesnay@cea.fr
 @license: BSD 3-clause.
 """
 import abc
@@ -14,7 +14,7 @@ import numpy as np
 
 import parsimony.utils.consts as consts
 import parsimony.functions as functions
-import parsimony.algorithms as algorithms
+import parsimony.algorithms.explicit as explicit
 import parsimony.start_vectors as start_vectors
 
 __all__ = ['BaseEstimator', 'RegressionEstimator',
@@ -29,7 +29,7 @@ class BaseEstimator(object):
 
     Parameters
     ----------
-    algorithm : Which algorithm will be applied
+    algorithm : BaseAlgorithm. The algorithm that will be applied.
     """
     __metaclass__ = abc.ABCMeta
 
@@ -74,11 +74,11 @@ class RegressionEstimator(BaseEstimator):
 
     Parameters
     ----------
-    algorithm : Which algorithm will be applied
+    algorithm : ExplicitAlgorithm. The algorithm that will be applied.
 
-    output : Boolean. Get output information
+    output : Boolean. Whether or not to return extra output information.
 
-    start_vector : Determine what kind of beta will be initiated
+    start_vector : Numpy array. Generates the start vector that will be used.
     """
     __metaclass__ = abc.ABCMeta
 
@@ -123,11 +123,11 @@ class LogisticRegressionEstimator(BaseEstimator):
 
     Parameters
     ----------
-    algorithm : Which algorithm will be applied
+    algorithm : ExplicitAlgorithm. The algorithm that will be applied.
 
-    output : Boolean. Get output information
+    output : Boolean. Whether or not to return extra output information.
 
-    start_vector : Determine what kind of beta will be initiated
+    start_vector : Numpy array. Generates the start vector that will be used.
     """
     __metaclass__ = abc.ABCMeta
 
@@ -163,7 +163,7 @@ class LogisticRegressionEstimator(BaseEstimator):
         y[proba < .5] = 0
         return y
 
-    def predict_proba(self, X):
+    def predict_probability(self, X):
         logit = np.dot(X, self.beta)
         proba = 1. / (1. + np.exp(-logit))
         return proba
@@ -179,30 +179,32 @@ class RidgeRegression_L1_TV(RegressionEstimator):
     """
     Parameters
     ----------
-    l : The L1 regularization parameter.
+    l : Non-negative float. The L1 regularization parameter.
 
-    k : The L2 regularization parameter.
+    k : Non-negative float. The L2 regularization parameter.
 
-    g : The total variation regularization parameter.
+    g : Non-negative float. The total variation regularization parameter.
 
-    A : The linear operator for the total variation Nesterov function
+    A : Numpy or (usually) scipy.sparse array. The linear operator for the
+            smoothed total variation Nesterov function.
 
-    mu : The regularisation constant for the smoothing.
+    mu : Non-negative float. The regularisation constant for the smoothing.
 
-    output : Boolean. Get output information
+    output : Boolean. Whether or not to return extra output information.
 
-    algorithm : which algorithm will be applied :
-        1. algorithms.StaticCONESTA()
-        2. algorithms.DynamicCONESTA()
-        3. algorithms.FISTA()
+    algorithm : ExplicitAlgorithm. The algorithm that be applied. Should be
+            one of:
+                1. algorithms.StaticCONESTA()
+                2. algorithms.DynamicCONESTA()
+                3. algorithms.FISTA()
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> import parsimony.estimators as estimators
-    >>> import parsimony.algorithms as algorithms
-    >>> import parsimony.tv
-    >>> shape = (4, 4, 1)
+    >>> import parsimony.algorithms.explicit as explicit
+    >>> import parsimony.functions.nesterov.tv as tv
+    >>> shape = (1, 4, 4)
     >>> num_samples = 10
     >>> num_ft = shape[0] * shape[1] * shape[2]
     >>> np.random.seed(seed=1)
@@ -211,28 +213,28 @@ class RidgeRegression_L1_TV(RegressionEstimator):
     >>> k = 0.9  # ridge regression coefficient
     >>> l = 0.1  # l1 coefficient
     >>> g = 1.0  # tv coefficient
-    >>> A, n_compacts = parsimony.tv.A_from_shape(shape)
+    >>> A, n_compacts = tv.A_from_shape(shape)
     >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
-    ...                     algorithm=algorithms.StaticCONESTA(max_iter=1000))
+    ...                     algorithm=explicit.StaticCONESTA(max_iter=1000))
     >>> res = ridge_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
     >>> print "error = ", error
     error =  4.70079220678
     >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
-    ...                     algorithm=algorithms.DynamicCONESTA(max_iter=1000))
+    ...                     algorithm=explicit.DynamicCONESTA(max_iter=1000))
     >>> res = ridge_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
     >>> print "error = ", error
     error =  4.70096488794
     >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
-    ...                     algorithm=algorithms.FISTA(max_iter=1000))
+    ...                     algorithm=explicit.FISTA(max_iter=1000))
     >>> res = ridge_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
     >>> print "error = ", error
     error =  4.27776729699
     """
     def __init__(self, k, l, g, A, mu=None, output=False,
-                 algorithm=algorithms.StaticCONESTA()):
+                 algorithm=explicit.StaticCONESTA()):
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
 
@@ -274,9 +276,9 @@ class RidgeRegression_L1_TV(RegressionEstimator):
         self.algorithm.set_params(output=self.output)
 
         if self.output:
-            (self.beta, self.info) = self.algorithm(self.function, beta)
+            (self.beta, self.info) = self.algorithm.run(self.function, beta)
         else:
-            self.beta = self.algorithm(self.function, beta)
+            self.beta = self.algorithm.run(self.function, beta)
 
         return self
 
@@ -295,31 +297,32 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
 
     Parameters
     ----------
-    l : The L1 regularization parameter.
+    l : Non-negative float. The L1 regularization parameter.
 
-    k : The L2 regularization parameter.
+    k : Non-negative float. The L2 regularization parameter.
 
-    g : The total variation regularization parameter.
+    g : Non-negative float. The total variation regularization parameter.
 
-    A : The linear operator for the total variation Nesterov function
+    A : Numpy or (usually) scipy.sparse array. The linear operator for the
+            smoothed total variation Nesterov function.
 
-    weights: array, shape = [n_samples]
-        samples weights
+    weights: Numpy array with shape = (n_samples,). The samples weights.
 
-    mu : The regularisation constant for the smoothing.
+    mu : Non-negative float. The regularisation constant for the smoothing.
 
-    output : Boolean. Get output information
+    output : Boolean. Whether or not to return extra output information.
 
-    algorithm : which algorithm will be applied :
-        1. algorithms.StaticCONESTA()
-        2. algorithms.DynamicCONESTA()
-        3. algorithms.FISTA()
+    algorithm : ExplicitAlgorithm. The algorithm that will be run. Should be
+            one of:
+                1. algorithms.StaticCONESTA()
+                2. algorithms.DynamicCONESTA()
+                3. algorithms.FISTA()
 
-    Example
-    -------
+    Examples
+    --------
     """
     def __init__(self, k, l, g, A, weigths=None, mu=None, output=False,
-                 algorithm=algorithms.StaticCONESTA()):
+                 algorithm=explicit.StaticCONESTA()):
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
         self.k = float(k)
@@ -331,6 +334,7 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
             self.mu = float(mu)
         else:
             self.mu = None
+
         super(RidgeLogisticRegression_L1_TV,
               self).__init__(algorithm=algorithm, output=output)
 
@@ -360,9 +364,9 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
         self.algorithm.set_params(output=self.output)
 
         if self.output:
-            (self.beta, self.info) = self.algorithm(self.function, beta)
+            (self.beta, self.info) = self.algorithm.run(self.function, beta)
         else:
-            self.beta = self.algorithm(self.function, beta)
+            self.beta = self.algorithm.run(self.function, beta)
 
         return self
 
@@ -371,30 +375,32 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
     """
     Parameters
     ----------
-    l : The L1 regularisation parameter.
+    l : Non-negative float. The L1 regularisation parameter.
 
-    k : The L2 regularisation parameter.
+    k : Non-negative float. The L2 regularisation parameter.
 
-    g : The total variation regularization parameter.
+    g : Non-negative float. The total variation regularization parameter.
 
-    Atv : The linear operator for the total variation Nesterov function
+    Atv : Numpy array (usually sparse). The linear operator for the smoothed
+            total variation Nesterov function.
 
-    Al1 : Matrix allocation for regression
+    Al1 : Numpy array (usually sparse). The linear operator for the smoothed
+            L1 Nesterov function.
 
-    mu : The regularisation constant for the smoothing.
+    mu : Non-negative float. The regularisation constant for the smoothing.
 
-    output : Boolean, get output information
+    output : Boolean. Whether or not to return extra output information.
 
-    algorithm : The algorithm that will be applied
+    algorithm : ExplicitAlgorithm. The algorithm that will be applied.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> import scipy.sparse as sparse
     >>> import parsimony.estimators as estimators
-    >>> import parsimony.algorithms as algorithms
-    >>> import parsimony.tv
-    >>> shape = (4, 4, 1)
+    >>> import parsimony.algorithms.explicit as explicit
+    >>> import parsimony.functions.nesterov.tv as tv
+    >>> shape = (1, 4, 4)
     >>> num_samples = 10
     >>> num_ft = shape[0] * shape[1] * shape[2]
     >>> np.random.seed(seed=1)
@@ -403,18 +409,18 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
     >>> k = 0.05  # ridge regression coefficient
     >>> l = 0.05  # l1 coefficient
     >>> g = 0.05  # tv coefficient
-    >>> Atv, n_compacts = parsimony.tv.A_from_shape(shape)
+    >>> Atv, n_compacts = tv.A_from_shape(shape)
     >>> Al1 = sparse.eye(num_ft, num_ft)
     >>> ridge_smoothed_l1_tv = estimators.RidgeRegression_SmoothedL1TV(k, l, g,
     ...                 Atv=Atv, Al1=Al1,
-    ...                 algorithm=algorithms.ExcessiveGapMethod(max_iter=1000))
+    ...                 algorithm=explicit.ExcessiveGapMethod(max_iter=1000))
     >>> res = ridge_smoothed_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_smoothed_l1_tv.beta) - y))
     >>> print "error = ", error
     error =  1.69470206808
     """
     def __init__(self, k, l, g, Atv, Al1, mu=None, output=False,
-                 algorithm=algorithms.ExcessiveGapMethod()):
+                 algorithm=explicit.ExcessiveGapMethod()):
 
         self.k = float(k)
         self.l = float(l)
@@ -449,13 +455,14 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
 
         self.algorithm.set_params(output=self.output)
         if self.output:
-            (self.beta, self.info) = self.algorithm(self.function)
+            (self.beta, self.info) = self.algorithm.run(self.function)
         else:
-            self.beta = self.algorithm(self.function)
+            self.beta = self.algorithm.run(self.function)
 
         return self
 
 
 if __name__ == "__main__":
+
     import doctest
     doctest.testmod()

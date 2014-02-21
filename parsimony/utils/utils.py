@@ -11,23 +11,18 @@ Created on Thu Feb 8 09:22:00 2013
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
-import numpy as np
 import warnings
 from functools import wraps
+from time import time, clock
 
-#import scipy
-#from numpy.linalg import norm
-#from numpy.random import rand
-#from numpy import sqrt
-#from copy import copy
-#import traceback
+import numpy as np
 
-__all__ = ["deprecated", "approx_grad", "optimal_shrinkage", "AnonymousClass"]
+#TODO: This depends on the OS. We should try to be clever here ...
+time_cpu = clock  # UNIX-based system measures CPU time used.
+time_wall = time  # UNIX-based system measures time in seconds since the epoch.
 
-#__all__ = ['make_list', 'sign',
-#           'cov', 'corr', 'copy', 'sstot', 'ssvar',
-#           'sqrt', 'rand', 'zeros', 'direct', '_DEBUG', 'debug', 'warning',
-#           'optimal_shrinkage', 'delete_sparse_csr_row', 'AnonymousClass']
+__all__ = ["time_cpu", "time_cpu", "deprecated", "approx_grad",
+           "optimal_shrinkage", "AnonymousClass"]
 
 #_DEBUG = True
 

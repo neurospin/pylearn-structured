@@ -2,47 +2,53 @@
 """
 Created on Fri Nov 22 10:42:07 2013
 
-@author: jinpeng.li@cea.fr
+@author:  Jinpeng Li
+@email:   jinpeng.li@cea.fr
+@license: BSD 3-clause.
 """
 import unittest
+
 from parsimony.tests.spamsdata import SpamsGenerator
+from tests import TestCase
 
 
-class TestAlgorithms(unittest.TestCase):
+class TestAlgorithms(TestCase):
+
     def test_algorithms(self):
-        '''
-        Compare three algorithms (FISTA, conesta_static, and conesta_dynamic)
-        with SPAMS fista algorithm
-        '''
+        # Compares three algorithms (FISTA, conesta_static, and
+        # conesta_dynamic) to the SPAMS FISTA algorithm.
+
         import numpy as np
         import parsimony.estimators as estimators
-        import parsimony.algorithms as algorithms
-        import parsimony.tv
+        import parsimony.algorithms.explicit as explicit
+        import parsimony.functions.nesterov.tv as tv
         spams_generator = SpamsGenerator()
         ret_data = spams_generator.get_x_y_estimated_beta()
         weight_l1_spams = ret_data['weight_l1']
         shape = ret_data["shape"]
         X = ret_data["X"]
         y = ret_data["y"]
-        k = 0  # ridge regression coefficient
+        # WARNING: We must have a non-zero ridge parameter!
+        k = 5e-8  # ridge regression coefficient
         l = 0.05  # l1 coefficient
-        g = 0  # tv coefficient
+        # WARNING: We must have a non-zero TV parameter!
+        g = 5e-8  # tv coefficient
 
-        Atv, n_compacts = parsimony.tv.A_from_shape(shape)
+        Atv, n_compacts = tv.A_from_shape(shape)
         tvl1l2_algorithms = []
         # Al1 = sparse.eye(num_ft, num_ft)
         tvl1l2_fista = estimators.RidgeRegression_L1_TV(
                                 k, l, g,
                                 Atv,
-                                algorithm=algorithms.FISTA())
+                                algorithm=explicit.FISTA())
         tvl1l2_conesta_static = estimators.RidgeRegression_L1_TV(
                                 k, l, g,
                                 Atv,
-                                algorithm=algorithms.CONESTA(dynamic=False))
+                                algorithm=explicit.CONESTA(dynamic=False))
         tvl1l2_conesta_dynamic = estimators.RidgeRegression_L1_TV(
                                 k, l, g,
                                 Atv,
-                                algorithm=algorithms.CONESTA(dynamic=True))
+                                algorithm=explicit.CONESTA(dynamic=True))
 
         tvl1l2_algorithms.append(tvl1l2_fista)
         tvl1l2_algorithms.append(tvl1l2_conesta_static)

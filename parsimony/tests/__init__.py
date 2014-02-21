@@ -7,7 +7,7 @@ modules.
 @email:   tommy.loefstedt@cea.fr
 @license: TBD.
 """
+from .tests import TestCase
+from .tests import test_all
 
-#import data
-
-__all__ = []  # 'data']
+__all__ = ["TestCase", "test_all"]

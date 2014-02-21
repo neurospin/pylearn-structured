@@ -225,7 +225,11 @@ class Gradient(object):
         """
         p = x.shape[0]
         grad = np.zeros(x.shape)
-        for i in xrange(self.penalty_start, p):
+        if isinstance(self, (Penalty, Constraint)):
+            start = self.penalty_start
+        else:
+            start = 0
+        for i in xrange(start, p):
             x[i, 0] -= eps
             loss1 = self.f(x)
             x[i, 0] += 2.0 * eps

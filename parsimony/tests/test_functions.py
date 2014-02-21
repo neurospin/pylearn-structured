@@ -5,15 +5,19 @@ Created on Fri Nov 22 10:42:07 2013
 @author: jinpeng
 """
 import unittest
-import numpy as np
-from parsimony.tests.spamsdata import SpamsGenerator
 
-class TestFunctions(unittest.TestCase):
+import numpy as np
+
+from parsimony.tests.spamsdata import SpamsGenerator
+from tests import TestCase
+
+class TestFunctions(TestCase):
+
     def test_ridge_l1(self):
-        import numpy as np
+
         import parsimony.estimators as estimators
-        import parsimony.algorithms as algorithms
-        import parsimony.tv
+        import parsimony.algorithms.explicit as explicit
+        import parsimony.functions.nesterov.tv as tv
         spams_generator = SpamsGenerator()
         ret_data = spams_generator.get_x_y_estimated_beta()
         weight_l1_spams = ret_data['weight_l1']
@@ -22,22 +26,21 @@ class TestFunctions(unittest.TestCase):
         X = ret_data["X"]
         y = ret_data["y"]
 
-        Atv, n_compacts = parsimony.tv.A_from_shape(shape)
+        Atv, n_compacts = tv.A_from_shape(shape)
         k = 0.05  # ridge regression coefficient
         l = 0  # l1 coefficient
         g = 0  # tv coefficient
         tvl1l2_fista_ridge = estimators.RidgeRegression_L1_TV(k, l, g,
                                                   Atv,
-                                                  algorithm=algorithms.FISTA())
+                                                  algorithm=explicit.FISTA())
         tvl1l2_fista_ridge.fit(X, y)
         k = 0  # ridge regression coefficient
         l = 0.05  # l1 coefficient
         g = 0  # tv coefficient
         tvl1l2_fista_l1 = estimators.RidgeRegression_L1_TV(k, l, g,
                                                   Atv,
-                                                  algorithm=algorithms.FISTA())
+                                                  algorithm=explicit.FISTA())
         tvl1l2_fista_l1.fit(X, y)
-
 
         err_ridge = np.sum(np.absolute(
                           np.dot(X, tvl1l2_fista_ridge.beta) - y))

@@ -24,42 +24,35 @@ def make_classification_struct(n_samples=100, shape=(30, 30, 1),
 
     Parameters
     ----------
+    See make_regression_struct, exept for r2 which is replaced by snr.
 
-    See make_regression_struct, exept for r2 which is replaced by snr
+    snr: Float. Default 2. Signal to noise ratio: std(X * beta) / std(noise)
+            in 1. / (1 + exp(-(X * beta + noise))
 
-    snr: float (default 2.)
-        Signal to noise ratio: std(X * beta) / std(noise) in
-        1. / (1 + exp(-(X * beta + noise))
+    sigma_logit: Float. Default is 5. The standard deviation of
+        logit = X * beta + noise. Large sigma_logit promotes sharp shape of
+        logistic function, ie: probabilities are close to 0 or 1, which
+        increases likekihood.
 
-    sigma_logit: float (default 5.)
-        standard deviation of logit = X * beta + noise
-        large sigma_logit promotes sharp shape of logistic function, ie:
-        probabilities are close to 0 or 1, which increases likekihood.
+    Returns
+    -------
+    X3d: Numpy array of shape [n_sample, shape]. The input features.
 
-    Return
-    ------
+    y: Numpy array of shape [n_sample, 1]. The target variable.
 
-    X3d: array of shape [n_sample, shape]
-        The input features.
+    beta3d: Float array of shape [shape]. It is the beta such that
+    y = 1. / (1 + exp(-(X * beta + noise)).
 
-    y: array of shape [n_sample, 1]
-        The target variable.
-
-    beta3d: float array of shape [shape]
-       It is the beta such that y = 1. / (1 + exp(-(X * beta + noise))
-
-    proba: array of shape [n_sample, 1]
-        Samples posterior probabilities
+    proba: Numpy array of shape [n_sample, 1]. Samples posterior probabilities.
 
     See also
     --------
-
     make_regression_struct
 
     Examples
     --------
     >>> import numpy as np
-    >>> import matplotlib.pyplot as plt
+    >>> import matplotlib.pyplot as plot
     >>> from parsimony.datasets import make_classification_struct
     >>> n_samples = 100
     >>> shape = (11, 11, 1)
@@ -67,14 +60,14 @@ def make_classification_struct(n_samples=100, shape=(30, 30, 1),
     ...     shape=shape, sigma_logit=1., random_seed=1)
     >>> print "Likelihood=", np.prod(proba[y.ravel()==1]) * np.prod(1-proba[y.ravel()==0])
     Likelihood= 1.98405647549e-18
-    >>> plt.plot(proba[y.ravel()==1], "ro", proba[y.ravel()==0], "bo")
-    >>> plt.show()
+    >>> # plot.plot(proba[y.ravel()==1], "ro", proba[y.ravel()==0], "bo")
+    >>> # plot.show()
     >>> X3d, y, beta3d, proba = make_classification_struct(n_samples=n_samples,
     ...     shape=shape, sigma_logit=5., random_seed=1)
     >>> print "Likelihood=", np.prod(proba[y.ravel()==1]) * np.prod(1-proba[y.ravel()==0])
     Likelihood= 2.19102268035e-06
-    >>> plt.plot(proba[y.ravel()==1], "ro", proba[y.ravel()==0], "bo")
-    >>> plt.show()
+    >>> # plot.plot(proba[y.ravel()==1], "ro", proba[y.ravel()==0], "bo")
+    >>> # plot.show()
     """
     X3d, y, beta3d = make_regression_struct(n_samples=n_samples, shape=shape, r2=1.,
                                             random_seed=random_seed, **kwargs)
@@ -97,14 +90,13 @@ def make_classification_struct(n_samples=100, shape=(30, 30, 1),
     return X3d, y, beta3d, proba
 
 
-############################################################################
 def make_regression_struct(n_samples=100, shape=(30, 30, 1),
                            r2=.75,
                            sigma_spatial_smoothing=1,
                            object_pixel_ratio=.5,
                            objects=None,
                            random_seed=None):
-    """Generate regression samples (images + target variable) and beta.
+    """Generates regression samples (images + target variable) and beta.
 
     Input features (X) covariance structure is controled both at a pixel
     level (spatial smoothing) and object level. Objects are component
@@ -115,57 +107,48 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
 
     Parameters
     ----------
+    n_samples: Integer. Number of samples. Default is 100.
 
-    n_samples: int
-        nb of samples, (default 100).
+    # TODO: This is wrong. Shape should be Z, Y, X.
+    shape: Tuple or list with three integers. Order x, y, z shape each samples
+            Default is (30, 30, 1).
 
-    shape: (int, int, int)
-        x, y, z shape each samples (default (30, 30, 1)).
+    r2: Float. The desire R-squared (explained variance) ie.:
+            r_square(y, X * beta) = r2 (Default is .75)
 
-    r2: float
-        The desire R-squared (explained variance) ie.:
-        r_square(y, X * beta) = r2 (Default is .75)
+    sigma_spatial_smoothing: Float. Standard deviation for Gaussian kernel
+            (default is 1). High value promotes spatial correlation pixels.
 
-    sigma_spatial_smoothing: scalar
-        Standard deviation for Gaussian kernel (default 1). High value promotes
-        spatial correlation pixels.
+    object_pixel_ratio: Float. Controls the ratio between object-level signal
+            and pixel-level signal for pixels within objects. If
+            object_pixel_ratio == 1 then 100% of the signal of pixels within
+            the same object is shared (ie.: no pixel level) signal. If
+            object_pixel_ratio == 0 then all the signal is pixel specific.
+            High object_pixel_ratio promotes spatial correlation between
+            pixels of the same object.
 
-    object_pixel_ratio: float
-        Controls the ratio between object-level signal and pixel-level signal
-        for pixels within objects. If object_pixel_ratio == 1 then 100% of
-        the signal of pixels within the same object is shared (ie.: no pixel
-        level) signal. If object_pixel_ratio == 0 then all the signal is
-        pixel specific. High object_pixel_ratio promotes spatial
-        correlation between pixels of the same object.
+    objects: List of objects. Objects carying information to be drawn in the
+            image. If not provide a dice with five points (object) will be
+            drawn. Point 1, 3, 4 are carying predictive information while
+            point 2 is a suppressor of point 1 and point 5 is a suppressor of
+            point 3. Object should implement "get_mask()" method, a have
+            "is_suppressor" (bool) and "r" (ref to suppressor object,
+            possibely None) attributes.
 
-    objects: list of objects
-        Objects carying information to be drawn in the image. If not provide
-        a dice with five points (object) will be drawn. Point 1, 3, 4 are
-        carying predictive information while point 2 is a suppressor of point
-        1 and point 5 is a suppressor of point 3.
-        Object should implement "get_mask()" method, a have "is_suppressor"
-        (bool) and "r" (ref to suppressor object, possibely None)
-        attributes.
+    random_seed: None or integer. See numpy.random.seed(). If not None, it can
+            be used to obtain reproducable samples.
 
-    random_seed: None or int
-        See numpy.random.seed(). If not None, it can be used to obtain
-        reproducable samples.
+    Returns
+    -------
+    X3d: Numpy array of shape [n_sample, shape]. The input features.
 
-    Return
-    ------
+    y: Numpy array of shape [n_sample, 1]. The target variable.
 
-    X3d: array of shape [n_sample, shape]
-        The input features.
-
-    y: array of shape [n_sample, 1]
-        The target variable.
-
-    beta3d: float array of shape [shape]
-       It is the beta such that y = X * beta + noise
+    beta3d: Numpy array of shape [shape,]. It is the beta such that
+            y = X * beta + noise.
 
     Details
     -------
-
     The general procedure is:
         1) For each pixel i, Generate independant variables Xi ~ N(0, 1)
         2) Add object level structure corresponding to the five dots:
@@ -203,21 +186,21 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
     Examples
     --------
     >>> import numpy as np
-    >>> import matplotlib.pyplot as plt
+    >>> import matplotlib.pyplot as plot
     >>> from parsimony.datasets import make_regression_struct
     >>> n_samples = 100
     >>> shape = (11, 11, 1)
-    >>> X3d, y, beta3d = make_regression_struct(n_samples=n_samples, shape=shape,
-    ...                            r2=.5, random_seed=1)
+    >>> X3d, y, beta3d = make_regression_struct(n_samples=n_samples,
+    ...         shape=shape, r2=.5, random_seed=1)
     >>> X = X3d.reshape(n_samples, np.prod(shape))
     >>> beta = beta3d.ravel()
-    >>> from sklearn.metrics import r2_score
-    >>> print np.round(r2_score(y, np.dot(X, beta)), 2)
-    0.47
-    >>> cax = plt.matshow(beta3d.squeeze())
-    >>> plt.colorbar(cax)
-    >>> plt.title("Beta")
-    >>> plt.show()
+    >>> # from sklearn.metrics import r2_score
+    >>> # print np.round(r2_score(y, np.dot(X, beta)), 2)
+    >>> # 0.47
+    >>> # cax = plot.matshow(beta3d.squeeze())
+    >>> # plot.colorbar(cax)
+    >>> # plot.title("Beta")
+    >>> # plot.show()
     """
     sigma_pix = 1  # items std-dev
     mu_e = 0
@@ -296,23 +279,21 @@ def make_regression_struct(n_samples=100, shape=(30, 30, 1),
 
 def corr_to_coef(v_x, v_e, cov_xe, cor):
     """In a linear model y = bx + e. Calculate b such cor(bx + e, x) = cor.
+
     Parameters
     ----------
-    v_x: float
-        var(x)
+    v_x: Float. The variance of x, var(x).
 
-    v_e: float
-        var(e)
+    v_e: Float. The variance of e, var(e).
 
-    cov_xe: float
-        cov(x, e)
+    cov_xe: Float. The covariance between x and e, cov(x, e).
 
-    cor: float
-        The desire correlation
+    cor: Float. The desired correlation.
 
-    Example
-    -------
-    b = corr_to_coef(1, 1, 0, .5)
+    Examples
+    --------
+    >>> corr_to_coef(1, 1, 0, .5)
+    0.57735026918962573
     """
     b2 = v_x ** 2 * (cor ** 2 - 1)
     b1 = 2 * cov_xe * v_x * (cor ** 2 - 1)
@@ -320,7 +301,8 @@ def corr_to_coef(v_x, v_e, cov_xe, cor):
     delta = b1 ** 2 - 4 * b2 * b0
     sol1 = (-b1 - np.sqrt(delta)) / (2 * b2)
     sol2 = (-b1 + np.sqrt(delta)) / (2 * b2)
-    return np.max([sol1, sol2]) if cor >= 0 else  np.min([sol1, sol2])
+
+    return np.max([sol1, sol2]) if cor >= 0 else np.min([sol1, sol2])
 
 
 ############################################################################
@@ -334,20 +316,11 @@ class ObjImage(object):
     """
     Parameters:
     -----------
-    c_x, c_y: Center of object
+    mask: ???
 
-    shape: (nx, ny, nz)
-        Image x, y and z dimensions.
+    coef_info: Float. The coefficient of information.
 
-    coef_info: float
-        coefficient of information
-
-    coef_noise: float
-        coefficient of noise
-
-    beta_z: array of float [1 x n_regressors]
-
-    beta_o: float
+    coef_noise: Float. Coefficient of noise.
     """
     def __init__(self, mask=None, coef_info=.5, coef_noise=.5):
         self.mask = mask
@@ -452,17 +425,17 @@ def dice_five_with_union_of_pairs(shape, coef_info, coef_noise):
     2, 5  have coef_info = -coef_info/2
     union1 and union2 have coef_info = 0
 
-    Example
-    -------
+    Examples
+    --------
     #shape = (5, 5, 1)
     coef_info = 1
     coef_noise = 1
     noise = np.zeros(shape)
     info = np.zeros(shape)
     for o in dice_five_with_union_of_pairs(shape, coef_info, coef_noise):
-        noise[o.get_mask()] += o.coef_noise
-        info[o.get_mask()] += o.coef_info
-        print o.coef_noise, o.coef_info
+       noise[o.get_mask()] += o.coef_noise
+       info[o.get_mask()] += o.coef_info
+       print o.coef_noise, o.coef_info
     plot = plt.subplot(121)
     import matplotlib.pyplot as plt
     cax = plot.matshow(noise.squeeze())
@@ -516,5 +489,3 @@ def spatial_smoothing(Xim, sigma, mu_e=None, sigma_pix=None):
     if sigma_pix is not None:
         X /= X.std(axis=0) * sigma_pix
     return Xim
-
-

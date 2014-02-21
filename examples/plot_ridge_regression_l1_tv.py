@@ -52,8 +52,8 @@ time yte_pred_ridgel1tv = ridgel1tv.fit(X, y).predict(Xte)
 ###########################################################################
 ## Plot
 
-# TODO: Remove dependence on scikit-learn. Add required functionality to
-# parsimony instead.
+# TODO: Please remove dependence on scikit-learn. Add required functionality
+# to parsimony instead.
 
 plot = plt.subplot(131)
 plot_map2d(beta3d.reshape(shape), plot, title="beta star")

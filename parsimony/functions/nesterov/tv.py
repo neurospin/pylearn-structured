@@ -152,11 +152,11 @@ class TotalVariation(interfaces.AtomicFunction,
 
         elif self._lambda_max is None:
 
-            from parsimony.algorithms import FastSparseSVD
+            from parsimony.algorithms.implicit import FastSparseSVD
 
             A = sparse.vstack(self.A())
             # TODO: Add max_iter here!
-            v = FastSparseSVD()(A)  # , max_iter=max_iter)
+            v = FastSparseSVD().run(A)  # , max_iter=max_iter)
             us = A.dot(v)
             self._lambda_max = np.sum(us ** 2.0)
 
