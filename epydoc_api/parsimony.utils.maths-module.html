@@ -90,7 +90,7 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a href="parsimony.utils.maths-module.html#norm" class="summary-sig-name">norm</a>(<span class="summary-sig-arg">x</span>)</span><br />
-      Return the 2-norm for vectors, the Frobenius norm for matrices</td>
+      Returns the L2-norm for a matrix (the Frobenius norm) or vectors.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.utils.maths-pysrc.html#norm">source&nbsp;code</a></span>
             
@@ -107,7 +107,7 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a href="parsimony.utils.maths-module.html#norm1" class="summary-sig-name">norm1</a>(<span class="summary-sig-arg">x</span>)</span><br />
-      Return the 1-norm</td>
+      Returns the L1-norm or a matrix or vector.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.utils.maths-pysrc.html#norm1">source&nbsp;code</a></span>
             
@@ -124,7 +124,7 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a href="parsimony.utils.maths-module.html#norm0" class="summary-sig-name">norm0</a>(<span class="summary-sig-arg">x</span>)</span><br />
-      Return the number of non-zero elements</td>
+      Returns the L0-norm of a vector.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.utils.maths-pysrc.html#norm0">source&nbsp;code</a></span>
             
@@ -140,27 +140,10 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a href="parsimony.utils.maths-module.html#normInf" class="summary-sig-name">normInf</a>(<span class="summary-sig-arg">x</span>)</span><br />
-      Return the max of the absolute sum for each column of the matrix</td>
+          <td><span class="summary-sig"><a href="parsimony.utils.maths-module.html#norm_inf" class="summary-sig-name">norm_inf</a>(<span class="summary-sig-arg">x</span>)</span><br />
+      Return the infinity norm of a matrix or vector.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.utils.maths-pysrc.html#normInf">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="sign"></a><span class="summary-sig-name">sign</span>(<span class="summary-sig-arg">v</span>)</span><br />
-      Return the sign of v, or 0 if v is null</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.utils.maths-pysrc.html#sign">source&nbsp;code</a></span>
+            <span class="codelink"><a href="parsimony.utils.maths-pysrc.html#norm_inf">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -193,13 +176,13 @@
       
     </td>
   </tr>
-<tr>
+<tr class="private">
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a href="parsimony.utils.maths-module.html#cov" class="summary-sig-name">cov</a>(<span class="summary-sig-arg">a</span>,
+          <td><span class="summary-sig"><a href="parsimony.utils.maths-module.html#cov" class="summary-sig-name" onclick="show_private();">cov</a>(<span class="summary-sig-arg">a</span>,
         <span class="summary-sig-arg">b</span>)</span><br />
       Example
 -------
@@ -208,7 +191,7 @@
 &gt;&gt;&gt; v1 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
 &gt;&gt;&gt; v2 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
 &gt;&gt;&gt; print cov(v1, v2)
-[[ 1.</td>
+[[ 2.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.utils.maths-pysrc.html#cov">source&nbsp;code</a></span>
             
@@ -277,7 +260,7 @@
   </tr></table>
   
   <pre class="literalblock">
-Return the 2-norm for vectors, the Frobenius norm for matrices
+Returns the L2-norm for a matrix (the Frobenius norm) or vectors.
 
 Examples
 --------
@@ -309,10 +292,10 @@ Examples
   </tr></table>
   
   <pre class="literalblock">
-Return the 1-norm
+Returns the L1-norm or a matrix or vector.
 
-For vectors : sum(abs(x)**2)**(1./2)
-For matrices : max(sum(abs(x), axis=0))
+For vectors: sum(abs(x)**2)**(1./2)
+For matrices: max(sum(abs(x), axis=0))
 
 Examples
 --------
@@ -344,14 +327,16 @@ Examples
   </tr></table>
   
   <pre class="literalblock">
-Return the number of non-zero elements
+Returns the L0-norm of a vector.
 
 Examples
 --------
 &gt;&gt;&gt; from parsimony.utils.maths import norm0
 &gt;&gt;&gt; matrix = np.array([[0.2, 1.0, 0.4], [2.0, 1.5, 0.1]])
 &gt;&gt;&gt; norm0(matrix)
-6
+Traceback (most recent call last):
+    ...
+ValueError: The L0 norm is not defined for matrices.
 &gt;&gt;&gt; vector = np.array([[0.2], [1.0], [0.4]])
 &gt;&gt;&gt; norm0(vector)
 3
@@ -361,34 +346,34 @@ Examples
   </dl>
 </td></tr></table>
 </div>
-<a name="normInf"></a>
+<a name="norm_inf"></a>
 <div>
 <table class="details" border="1" cellpadding="3"
        cellspacing="0" width="100%" bgcolor="white">
 <tr><td>
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">normInf</span>(<span class="sig-arg">x</span>)</span>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">norm_inf</span>(<span class="sig-arg">x</span>)</span>
   </h3>
   </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.utils.maths-pysrc.html#normInf">source&nbsp;code</a></span>&nbsp;
+    ><span class="codelink"><a href="parsimony.utils.maths-pysrc.html#norm_inf">source&nbsp;code</a></span>&nbsp;
     </td>
   </tr></table>
   
   <pre class="literalblock">
-Return the max of the absolute sum for each column of the matrix
+Return the infinity norm of a matrix or vector.
 
 For vectors : max(abs(x))
 For matrices : max(sum(abs(x), axis=1))
 
 Examples
 --------
-&gt;&gt;&gt; from parsimony.utils.maths import normInf
+&gt;&gt;&gt; from parsimony.utils.maths import norm_inf
 &gt;&gt;&gt; matrix = np.array([[0.2, 1.0, 0.4], [2.0, 1.5, 0.1]])
-&gt;&gt;&gt; normInf(matrix)
+&gt;&gt;&gt; norm_inf(matrix)
 3.6000000000000001
 &gt;&gt;&gt; vector = np.array([[0.2], [1.0], [0.4]])
-&gt;&gt;&gt; normInf(vector)
+&gt;&gt;&gt; norm_inf(vector)
 1.0
 
 </pre>
@@ -430,7 +415,7 @@ Example
 </td></tr></table>
 </div>
 <a name="cov"></a>
-<div>
+<div class="private">
 <table class="details" border="1" cellpadding="3"
        cellspacing="0" width="100%" bgcolor="white">
 <tr><td>
@@ -453,10 +438,9 @@ Example
 &gt;&gt;&gt; v1 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
 &gt;&gt;&gt; v2 = np.asarray([[1., 2., 3.], [1., 2., 3.]])
 &gt;&gt;&gt; print cov(v1, v2)
-[[ 1.  1.  1.  1.]
- [ 1.  1.  1.  1.]
- [ 1.  1.  1.  1.]
- [ 1.  1.  1.  1.]]
+[[ 2.  0. -2.]
+ [ 0.  0.  0.]
+ [-2.  0.  2.]]
 
 </pre>
   <dl class="fields">
@@ -490,7 +474,7 @@ Example
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Dec  6 11:21:59 2013
+    Generated by Epydoc 3.0.1 on Fri Feb 21 17:38:24 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

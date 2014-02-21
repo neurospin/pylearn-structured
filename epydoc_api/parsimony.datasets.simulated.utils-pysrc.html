@@ -58,140 +58,247 @@
 </table>
 <h1 class="epydoc">Source Code for <a href="parsimony.datasets.simulated.utils-module.html">Module parsimony.datasets.simulated.utils</a></h1>
 <pre class="py-src">
-<a name="L1"></a><tt class="py-lineno"> 1</tt>  <tt class="py-line"><tt class="py-comment"># -*- coding: utf-8 -*-</tt> </tt>
-<a name="L2"></a><tt class="py-lineno"> 2</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
-<a name="L3"></a><tt class="py-lineno"> 3</tt>  <tt class="py-line"><tt class="py-docstring">Created on Thu Sep 26 10:50:17 2013</tt> </tt>
-<a name="L4"></a><tt class="py-lineno"> 4</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
-<a name="L5"></a><tt class="py-lineno"> 5</tt>  <tt class="py-line"><tt class="py-docstring">@author:  Tommy L&#246;fstedt</tt> </tt>
-<a name="L6"></a><tt class="py-lineno"> 6</tt>  <tt class="py-line"><tt class="py-docstring">@email:   tommy.loefstedt@cea.fr</tt> </tt>
-<a name="L7"></a><tt class="py-lineno"> 7</tt>  <tt class="py-line"><tt class="py-docstring">@license: TBD.</tt> </tt>
-<a name="L8"></a><tt class="py-lineno"> 8</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
-<a name="L9"></a><tt class="py-lineno"> 9</tt>  <tt class="py-line"> </tt>
-<a name="L10"></a><tt class="py-lineno">10</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">as</tt> <tt class="py-name">np</tt> </tt>
-<a name="L11"></a><tt class="py-lineno">11</tt>  <tt class="py-line"> </tt>
-<a name="L12"></a><tt class="py-lineno">12</tt>  <tt class="py-line"><tt class="py-name">__all__</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-string">'TOLERANCE'</tt><tt class="py-op">,</tt> <tt class="py-string">'RandomUniform'</tt><tt class="py-op">,</tt> <tt class="py-string">'U'</tt><tt class="py-op">,</tt> <tt class="py-string">'norm2'</tt><tt class="py-op">,</tt> <tt class="py-string">'bisection_method'</tt><tt class="py-op">]</tt> </tt>
-<a name="L13"></a><tt class="py-lineno">13</tt>  <tt class="py-line"> </tt>
-<a name="L14"></a><tt class="py-lineno">14</tt>  <tt class="py-line"><tt id="link-0" class="py-name" targets="Variable parsimony.datasets.simulated.utils.TOLERANCE=parsimony.datasets.simulated.utils-module.html#TOLERANCE,Variable parsimony.utils.consts.TOLERANCE=parsimony.utils.consts-module.html#TOLERANCE"><a title="parsimony.datasets.simulated.utils.TOLERANCE
+<a name="L1"></a><tt class="py-lineno">  1</tt>  <tt class="py-line"><tt class="py-comment"># -*- coding: utf-8 -*-</tt> </tt>
+<a name="L2"></a><tt class="py-lineno">  2</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L3"></a><tt class="py-lineno">  3</tt>  <tt class="py-line"><tt class="py-docstring">Created on Thu Sep 26 10:50:17 2013</tt> </tt>
+<a name="L4"></a><tt class="py-lineno">  4</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L5"></a><tt class="py-lineno">  5</tt>  <tt class="py-line"><tt class="py-docstring">@author:  Tommy L&#246;fstedt</tt> </tt>
+<a name="L6"></a><tt class="py-lineno">  6</tt>  <tt class="py-line"><tt class="py-docstring">@email:   tommy.loefstedt@cea.fr</tt> </tt>
+<a name="L7"></a><tt class="py-lineno">  7</tt>  <tt class="py-line"><tt class="py-docstring">@license: BSD 3-clause.</tt> </tt>
+<a name="L8"></a><tt class="py-lineno">  8</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line"> </tt>
+<a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">as</tt> <tt class="py-name">np</tt> </tt>
+<a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"> </tt>
+<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line"><tt class="py-name">__all__</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-string">'TOLERANCE'</tt><tt class="py-op">,</tt> <tt class="py-string">'norm2'</tt><tt class="py-op">,</tt> <tt class="py-string">'bisection_method'</tt><tt class="py-op">,</tt> </tt>
+<a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line">           <tt class="py-string">'RandomUniform'</tt><tt class="py-op">,</tt> <tt class="py-string">'ConstantValue'</tt><tt class="py-op">]</tt> </tt>
+<a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"> </tt>
+<a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt id="link-0" class="py-name" targets="Variable parsimony.datasets.simulated.utils.TOLERANCE=parsimony.datasets.simulated.utils-module.html#TOLERANCE,Variable parsimony.utils.consts.TOLERANCE=parsimony.utils.consts-module.html#TOLERANCE"><a title="parsimony.datasets.simulated.utils.TOLERANCE
 parsimony.utils.consts.TOLERANCE" class="py-name" href="#" onclick="return doclink('link-0', 'TOLERANCE', 'link-0');">TOLERANCE</a></tt> <tt class="py-op">=</tt> <tt class="py-number">5e-8</tt> </tt>
-<a name="L15"></a><tt class="py-lineno">15</tt>  <tt class="py-line"> </tt>
-<a name="L16"></a><tt class="py-lineno">16</tt>  <tt class="py-line"> </tt>
-<a name="RandomUniform"></a><div id="RandomUniform-def"><a name="L17"></a><tt class="py-lineno">17</tt> <a class="py-toggle" href="#" id="RandomUniform-toggle" onclick="return toggle('RandomUniform');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="parsimony.datasets.simulated.utils.RandomUniform-class.html">RandomUniform</a><tt class="py-op">(</tt><tt class="py-base-class">object</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
-</div><div id="RandomUniform-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="RandomUniform-expanded"><a name="L18"></a><tt class="py-lineno">18</tt>  <tt class="py-line"> </tt>
-<a name="RandomUniform.__init__"></a><div id="RandomUniform.__init__-def"><a name="L19"></a><tt class="py-lineno">19</tt> <a class="py-toggle" href="#" id="RandomUniform.__init__-toggle" onclick="return toggle('RandomUniform.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.datasets.simulated.utils.RandomUniform-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">a</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">,</tt> <tt class="py-param">b</tt><tt class="py-op">=</tt><tt class="py-number">1</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
-</div><div id="RandomUniform.__init__-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="RandomUniform.__init__-expanded"><a name="L20"></a><tt class="py-lineno">20</tt>  <tt class="py-line"> </tt>
-<a name="L21"></a><tt class="py-lineno">21</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-1" class="py-name" targets="Variable parsimony.tests.L1L2TV.a=parsimony.tests.L1L2TV-module.html#a"><a title="parsimony.tests.L1L2TV.a" class="py-name" href="#" onclick="return doclink('link-1', 'a', 'link-1');">a</a></tt> <tt class="py-op">=</tt> <tt class="py-name">float</tt><tt class="py-op">(</tt><tt id="link-2" class="py-name"><a title="parsimony.tests.L1L2TV.a" class="py-name" href="#" onclick="return doclink('link-2', 'a', 'link-1');">a</a></tt><tt class="py-op">)</tt> </tt>
-<a name="L22"></a><tt class="py-lineno">22</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">b</tt> <tt class="py-op">=</tt> <tt class="py-name">float</tt><tt class="py-op">(</tt><tt class="py-name">b</tt><tt class="py-op">)</tt> </tt>
-</div><a name="L23"></a><tt class="py-lineno">23</tt>  <tt class="py-line"> </tt>
-<a name="RandomUniform.rand"></a><div id="RandomUniform.rand-def"><a name="L24"></a><tt class="py-lineno">24</tt> <a class="py-toggle" href="#" id="RandomUniform.rand-toggle" onclick="return toggle('RandomUniform.rand');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.datasets.simulated.utils.RandomUniform-class.html#rand">rand</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-op">*</tt><tt class="py-param">d</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
-</div><div id="RandomUniform.rand-collapsed" style="display:none;" pad="++" indent="++++++++"></div><div id="RandomUniform.rand-expanded"><a name="L25"></a><tt class="py-lineno">25</tt>  <tt class="py-line"> </tt>
-<a name="L26"></a><tt class="py-lineno">26</tt>  <tt class="py-line">        <tt class="py-name">R</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">random</tt><tt class="py-op">.</tt><tt id="link-3" class="py-name" targets="Function parsimony.datasets.simulated.beta.rand()=parsimony.datasets.simulated.beta-module.html#rand,Method parsimony.datasets.simulated.utils.RandomUniform.rand()=parsimony.datasets.simulated.utils.RandomUniform-class.html#rand"><a title="parsimony.datasets.simulated.beta.rand
-parsimony.datasets.simulated.utils.RandomUniform.rand" class="py-name" href="#" onclick="return doclink('link-3', 'rand', 'link-3');">rand</a></tt><tt class="py-op">(</tt><tt class="py-op">*</tt><tt class="py-name">d</tt><tt class="py-op">)</tt> </tt>
-<a name="L27"></a><tt class="py-lineno">27</tt>  <tt class="py-line">        <tt class="py-name">R</tt> <tt class="py-op">=</tt> <tt class="py-name">R</tt> <tt class="py-op">*</tt> <tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">b</tt> <tt class="py-op">-</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-4" class="py-name"><a title="parsimony.tests.L1L2TV.a" class="py-name" href="#" onclick="return doclink('link-4', 'a', 'link-1');">a</a></tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-5" class="py-name"><a title="parsimony.tests.L1L2TV.a" class="py-name" href="#" onclick="return doclink('link-5', 'a', 'link-1');">a</a></tt> </tt>
-<a name="L28"></a><tt class="py-lineno">28</tt>  <tt class="py-line"> </tt>
-<a name="L29"></a><tt class="py-lineno">29</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">R</tt> </tt>
-</div></div><a name="L30"></a><tt class="py-lineno">30</tt>  <tt class="py-line"> </tt>
-<a name="L31"></a><tt class="py-lineno">31</tt>  <tt class="py-line"> </tt>
-<a name="U"></a><div id="U-def"><a name="L32"></a><tt class="py-lineno">32</tt> <a class="py-toggle" href="#" id="U-toggle" onclick="return toggle('U');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.datasets.simulated.utils-module.html#U">U</a><tt class="py-op">(</tt><tt class="py-param">a</tt><tt class="py-op">,</tt> <tt class="py-param">b</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
-</div><div id="U-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="U-expanded"><a name="L33"></a><tt class="py-lineno">33</tt>  <tt class="py-line"> </tt>
-<a name="L34"></a><tt class="py-lineno">34</tt>  <tt class="py-line">    <tt class="py-name">t</tt> <tt class="py-op">=</tt> <tt class="py-name">max</tt><tt class="py-op">(</tt><tt id="link-6" class="py-name"><a title="parsimony.tests.L1L2TV.a" class="py-name" href="#" onclick="return doclink('link-6', 'a', 'link-1');">a</a></tt><tt class="py-op">,</tt> <tt class="py-name">b</tt><tt class="py-op">)</tt> </tt>
-<a name="L35"></a><tt class="py-lineno">35</tt>  <tt class="py-line">    <tt id="link-7" class="py-name"><a title="parsimony.tests.L1L2TV.a" class="py-name" href="#" onclick="return doclink('link-7', 'a', 'link-1');">a</a></tt> <tt class="py-op">=</tt> <tt class="py-name">float</tt><tt class="py-op">(</tt><tt class="py-name">min</tt><tt class="py-op">(</tt><tt id="link-8" class="py-name"><a title="parsimony.tests.L1L2TV.a" class="py-name" href="#" onclick="return doclink('link-8', 'a', 'link-1');">a</a></tt><tt class="py-op">,</tt> <tt class="py-name">b</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
-<a name="L36"></a><tt class="py-lineno">36</tt>  <tt class="py-line">    <tt class="py-name">b</tt> <tt class="py-op">=</tt> <tt class="py-name">float</tt><tt class="py-op">(</tt><tt class="py-name">t</tt><tt class="py-op">)</tt> </tt>
-<a name="L37"></a><tt class="py-lineno">37</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">random</tt><tt class="py-op">.</tt><tt id="link-9" class="py-name"><a title="parsimony.datasets.simulated.beta.rand
-parsimony.datasets.simulated.utils.RandomUniform.rand" class="py-name" href="#" onclick="return doclink('link-9', 'rand', 'link-3');">rand</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> <tt class="py-op">*</tt> <tt class="py-op">(</tt><tt class="py-name">b</tt> <tt class="py-op">-</tt> <tt id="link-10" class="py-name"><a title="parsimony.tests.L1L2TV.a" class="py-name" href="#" onclick="return doclink('link-10', 'a', 'link-1');">a</a></tt><tt class="py-op">)</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt id="link-11" class="py-name"><a title="parsimony.tests.L1L2TV.a" class="py-name" href="#" onclick="return doclink('link-11', 'a', 'link-1');">a</a></tt> </tt>
-</div><a name="L38"></a><tt class="py-lineno">38</tt>  <tt class="py-line"> </tt>
-<a name="L39"></a><tt class="py-lineno">39</tt>  <tt class="py-line"> </tt>
-<a name="norm2"></a><div id="norm2-def"><a name="L40"></a><tt class="py-lineno">40</tt> <a class="py-toggle" href="#" id="norm2-toggle" onclick="return toggle('norm2');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.datasets.simulated.utils-module.html#norm2">norm2</a><tt class="py-op">(</tt><tt class="py-param">x</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
-</div><div id="norm2-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="norm2-expanded"><a name="L41"></a><tt class="py-lineno">41</tt>  <tt class="py-line"> </tt>
-<a name="L42"></a><tt class="py-lineno">42</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sqrt</tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-name">x</tt> <tt class="py-op">**</tt> <tt class="py-number">2.0</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
-</div><a name="L43"></a><tt class="py-lineno">43</tt>  <tt class="py-line"> </tt>
-<a name="L44"></a><tt class="py-lineno">44</tt>  <tt class="py-line"> </tt>
-<a name="bisection_method"></a><div id="bisection_method-def"><a name="L45"></a><tt class="py-lineno">45</tt> <a class="py-toggle" href="#" id="bisection_method-toggle" onclick="return toggle('bisection_method');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.datasets.simulated.utils-module.html#bisection_method">bisection_method</a><tt class="py-op">(</tt><tt class="py-param">f</tt><tt class="py-op">,</tt> <tt class="py-param">low</tt><tt class="py-op">=</tt><tt class="py-number">0.0</tt><tt class="py-op">,</tt> <tt class="py-param">high</tt><tt class="py-op">=</tt><tt class="py-number">1.0</tt><tt class="py-op">,</tt> <tt class="py-param">maxiter</tt><tt class="py-op">=</tt><tt class="py-number">30</tt><tt class="py-op">,</tt> <tt class="py-param">eps</tt><tt class="py-op">=</tt><tt id="link-12" class="py-name"><a title="parsimony.datasets.simulated.utils.TOLERANCE
-parsimony.utils.consts.TOLERANCE" class="py-name" href="#" onclick="return doclink('link-12', 'TOLERANCE', 'link-0');">TOLERANCE</a></tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
-</div><div id="bisection_method-collapsed" style="display:none;" pad="++" indent="++++"></div><div id="bisection_method-expanded"><a name="L46"></a><tt class="py-lineno">46</tt>  <tt class="py-line">    <tt class="py-docstring">""" Finds the value of x such that |f(x)|_2 &lt; eps, for x &gt; 0 and where</tt> </tt>
-<a name="L47"></a><tt class="py-lineno">47</tt>  <tt class="py-line"><tt class="py-docstring">    |.|_2 is the 2-norm.</tt> </tt>
-<a name="L48"></a><tt class="py-lineno">48</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
-<a name="L49"></a><tt class="py-lineno">49</tt>  <tt class="py-line"><tt class="py-docstring">    Parameters</tt> </tt>
-<a name="L50"></a><tt class="py-lineno">50</tt>  <tt class="py-line"><tt class="py-docstring">    ----------</tt> </tt>
-<a name="L51"></a><tt class="py-lineno">51</tt>  <tt class="py-line"><tt class="py-docstring">    f : The function for which a root is found. The function must be increasing</tt> </tt>
-<a name="L52"></a><tt class="py-lineno">52</tt>  <tt class="py-line"><tt class="py-docstring">            for increasing x, and decresing for decreasing x.</tt> </tt>
-<a name="L53"></a><tt class="py-lineno">53</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
-<a name="L54"></a><tt class="py-lineno">54</tt>  <tt class="py-line"><tt class="py-docstring">    low : A value for which f(low) &lt; 0. If f(low) &gt;= 0, a lower value, low',</tt> </tt>
-<a name="L55"></a><tt class="py-lineno">55</tt>  <tt class="py-line"><tt class="py-docstring">            will be found such that f(low') &lt; 0 and used instead of low.</tt> </tt>
-<a name="L56"></a><tt class="py-lineno">56</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
-<a name="L57"></a><tt class="py-lineno">57</tt>  <tt class="py-line"><tt class="py-docstring">    high : A value for which f(high) &gt; 0. If f(high) &lt;= 0, a higher value,</tt> </tt>
-<a name="L58"></a><tt class="py-lineno">58</tt>  <tt class="py-line"><tt class="py-docstring">            high', will be found such that f(high') &lt; 0 and used instead of</tt> </tt>
-<a name="L59"></a><tt class="py-lineno">59</tt>  <tt class="py-line"><tt class="py-docstring">            high.</tt> </tt>
-<a name="L60"></a><tt class="py-lineno">60</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
-<a name="L61"></a><tt class="py-lineno">61</tt>  <tt class="py-line"><tt class="py-docstring">    maxiter : The maximum number of iterations.</tt> </tt>
-<a name="L62"></a><tt class="py-lineno">62</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
-<a name="L63"></a><tt class="py-lineno">63</tt>  <tt class="py-line"><tt class="py-docstring">    eps : A positive value such that |f(x)|_2 &lt; eps. Only guaranteed if</tt> </tt>
-<a name="L64"></a><tt class="py-lineno">64</tt>  <tt class="py-line"><tt class="py-docstring">            |f(x)|_2 &lt; eps in less than maxiter iterations.</tt> </tt>
-<a name="L65"></a><tt class="py-lineno">65</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
-<a name="L66"></a><tt class="py-lineno">66</tt>  <tt class="py-line"><tt class="py-docstring">    Returns</tt> </tt>
-<a name="L67"></a><tt class="py-lineno">67</tt>  <tt class="py-line"><tt class="py-docstring">    -------</tt> </tt>
-<a name="L68"></a><tt class="py-lineno">68</tt>  <tt class="py-line"><tt class="py-docstring">    x : The value such that |f(x)|_2 &lt; eps.</tt> </tt>
-<a name="L69"></a><tt class="py-lineno">69</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
-<a name="L70"></a><tt class="py-lineno">70</tt>  <tt class="py-line">    <tt class="py-comment"># Find start values. If the low and high</tt> </tt>
-<a name="L71"></a><tt class="py-lineno">71</tt>  <tt class="py-line">    <tt class="py-comment"># values are feasible this will just break</tt> </tt>
-<a name="L72"></a><tt class="py-lineno">72</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt class="py-name">i</tt> <tt class="py-keyword">in</tt> <tt class="py-name">xrange</tt><tt class="py-op">(</tt><tt class="py-name">maxiter</tt> <tt class="py-op">*</tt> <tt class="py-number">2</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
-<a name="L73"></a><tt class="py-lineno">73</tt>  <tt class="py-line">        <tt id="link-13" class="py-name" targets="Variable parsimony.tests.L1L2TV.l=parsimony.tests.L1L2TV-module.html#l"><a title="parsimony.tests.L1L2TV.l" class="py-name" href="#" onclick="return doclink('link-13', 'l', 'link-13');">l</a></tt> <tt class="py-op">=</tt> <tt id="link-14" class="py-name" targets="Method parsimony.functions.Function.f()=parsimony.functions.Function-class.html#f,Method parsimony.functions.GeneralisedMultiblock.f()=parsimony.functions.GeneralisedMultiblock-class.html#f,Method parsimony.functions.L1.f()=parsimony.functions.L1-class.html#f,Method parsimony.functions.LatentVariableCovariance.f()=parsimony.functions.LatentVariableCovariance-class.html#f,Method parsimony.functions.QuadraticConstraint.f()=parsimony.functions.QuadraticConstraint-class.html#f,Method parsimony.functions.RGCCAConstraint.f()=parsimony.functions.RGCCAConstraint-class.html#f,Method parsimony.functions.RR_L1_TV.f()=parsimony.functions.RR_L1_TV-class.html#f,Method parsimony.functions.RR_SmoothedL1TV.f()=parsimony.functions.RR_SmoothedL1TV-class.html#f,Method parsimony.functions.RidgeRegression.f()=parsimony.functions.RidgeRegression-class.html#f,Method parsimony.functions.SmoothedL1.f()=parsimony.functions.SmoothedL1-class.html#f,Method parsimony.functions.SmoothedL1TV.f()=parsimony.functions.SmoothedL1TV-class.html#f,Method parsimony.functions.TotalVariation.f()=parsimony.functions.TotalVariation-class.html#f"><a title="parsimony.functions.Function.f
-parsimony.functions.GeneralisedMultiblock.f
-parsimony.functions.L1.f
-parsimony.functions.LatentVariableCovariance.f
-parsimony.functions.QuadraticConstraint.f
-parsimony.functions.RGCCAConstraint.f
-parsimony.functions.RR_L1_TV.f
-parsimony.functions.RR_SmoothedL1TV.f
-parsimony.functions.RidgeRegression.f
-parsimony.functions.SmoothedL1.f
-parsimony.functions.SmoothedL1TV.f
-parsimony.functions.TotalVariation.f" class="py-name" href="#" onclick="return doclink('link-14', 'f', 'link-14');">f</a></tt><tt class="py-op">(</tt><tt class="py-name">low</tt><tt class="py-op">)</tt> </tt>
-<a name="L74"></a><tt class="py-lineno">74</tt>  <tt class="py-line">        <tt class="py-name">h</tt> <tt class="py-op">=</tt> <tt id="link-15" class="py-name"><a title="parsimony.functions.Function.f
-parsimony.functions.GeneralisedMultiblock.f
-parsimony.functions.L1.f
-parsimony.functions.LatentVariableCovariance.f
-parsimony.functions.QuadraticConstraint.f
-parsimony.functions.RGCCAConstraint.f
-parsimony.functions.RR_L1_TV.f
-parsimony.functions.RR_SmoothedL1TV.f
-parsimony.functions.RidgeRegression.f
-parsimony.functions.SmoothedL1.f
-parsimony.functions.SmoothedL1TV.f
-parsimony.functions.TotalVariation.f" class="py-name" href="#" onclick="return doclink('link-15', 'f', 'link-14');">f</a></tt><tt class="py-op">(</tt><tt class="py-name">high</tt><tt class="py-op">)</tt> </tt>
-<a name="L75"></a><tt class="py-lineno">75</tt>  <tt class="py-line"> </tt>
-<a name="L76"></a><tt class="py-lineno">76</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt id="link-16" class="py-name"><a title="parsimony.tests.L1L2TV.l" class="py-name" href="#" onclick="return doclink('link-16', 'l', 'link-13');">l</a></tt> <tt class="py-op">&lt;</tt> <tt class="py-number">0</tt> <tt class="py-keyword">and</tt> <tt class="py-name">h</tt> <tt class="py-op">&gt;</tt> <tt class="py-number">0</tt><tt class="py-op">:</tt> </tt>
-<a name="L77"></a><tt class="py-lineno">77</tt>  <tt class="py-line">            <tt class="py-keyword">break</tt> </tt>
-<a name="L78"></a><tt class="py-lineno">78</tt>  <tt class="py-line"> </tt>
-<a name="L79"></a><tt class="py-lineno">79</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt id="link-17" class="py-name"><a title="parsimony.tests.L1L2TV.l" class="py-name" href="#" onclick="return doclink('link-17', 'l', 'link-13');">l</a></tt> <tt class="py-op">&gt;=</tt> <tt class="py-number">0</tt><tt class="py-op">:</tt> </tt>
-<a name="L80"></a><tt class="py-lineno">80</tt>  <tt class="py-line">            <tt class="py-name">low</tt> <tt class="py-op">/=</tt> <tt class="py-number">2.0</tt> </tt>
-<a name="L81"></a><tt class="py-lineno">81</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">h</tt> <tt class="py-op">&lt;=</tt> <tt class="py-number">0</tt><tt class="py-op">:</tt> </tt>
-<a name="L82"></a><tt class="py-lineno">82</tt>  <tt class="py-line">            <tt class="py-name">high</tt> <tt class="py-op">*=</tt> <tt class="py-number">2.0</tt> </tt>
-<a name="L83"></a><tt class="py-lineno">83</tt>  <tt class="py-line"> </tt>
-<a name="L84"></a><tt class="py-lineno">84</tt>  <tt class="py-line">    <tt class="py-comment"># Use the bisection method to find where |f(x)|_2 &lt; eps.</tt> </tt>
-<a name="L85"></a><tt class="py-lineno">85</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt class="py-name">i</tt> <tt class="py-keyword">in</tt> <tt class="py-name">xrange</tt><tt class="py-op">(</tt><tt class="py-name">maxiter</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
-<a name="L86"></a><tt class="py-lineno">86</tt>  <tt class="py-line">        <tt class="py-name">mid</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-name">low</tt> <tt class="py-op">+</tt> <tt class="py-name">high</tt><tt class="py-op">)</tt> <tt class="py-op">/</tt> <tt class="py-number">2.0</tt> </tt>
-<a name="L87"></a><tt class="py-lineno">87</tt>  <tt class="py-line">        <tt class="py-name">val</tt> <tt class="py-op">=</tt> <tt id="link-18" class="py-name"><a title="parsimony.functions.Function.f
-parsimony.functions.GeneralisedMultiblock.f
-parsimony.functions.L1.f
-parsimony.functions.LatentVariableCovariance.f
-parsimony.functions.QuadraticConstraint.f
-parsimony.functions.RGCCAConstraint.f
-parsimony.functions.RR_L1_TV.f
-parsimony.functions.RR_SmoothedL1TV.f
-parsimony.functions.RidgeRegression.f
-parsimony.functions.SmoothedL1.f
-parsimony.functions.SmoothedL1TV.f
-parsimony.functions.TotalVariation.f" class="py-name" href="#" onclick="return doclink('link-18', 'f', 'link-14');">f</a></tt><tt class="py-op">(</tt><tt class="py-name">mid</tt><tt class="py-op">)</tt> </tt>
-<a name="L88"></a><tt class="py-lineno">88</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">val</tt> <tt class="py-op">&lt;</tt> <tt class="py-number">0</tt><tt class="py-op">:</tt> </tt>
-<a name="L89"></a><tt class="py-lineno">89</tt>  <tt class="py-line">            <tt class="py-name">low</tt> <tt class="py-op">=</tt> <tt class="py-name">mid</tt> </tt>
-<a name="L90"></a><tt class="py-lineno">90</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">val</tt> <tt class="py-op">&gt;</tt> <tt class="py-number">0</tt><tt class="py-op">:</tt> </tt>
-<a name="L91"></a><tt class="py-lineno">91</tt>  <tt class="py-line">            <tt class="py-name">high</tt> <tt class="py-op">=</tt> <tt class="py-name">mid</tt> </tt>
-<a name="L92"></a><tt class="py-lineno">92</tt>  <tt class="py-line"> </tt>
-<a name="L93"></a><tt class="py-lineno">93</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sqrt</tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">high</tt> <tt class="py-op">-</tt> <tt class="py-name">low</tt><tt class="py-op">)</tt> <tt class="py-op">**</tt> <tt class="py-number">2.0</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> <tt class="py-op">&lt;=</tt> <tt id="link-19" class="py-name" targets="Variable parsimony.tests.L1L2TV.eps=parsimony.tests.L1L2TV-module.html#eps"><a title="parsimony.tests.L1L2TV.eps" class="py-name" href="#" onclick="return doclink('link-19', 'eps', 'link-19');">eps</a></tt><tt class="py-op">:</tt> </tt>
-<a name="L94"></a><tt class="py-lineno">94</tt>  <tt class="py-line">            <tt class="py-keyword">break</tt> </tt>
-<a name="L95"></a><tt class="py-lineno">95</tt>  <tt class="py-line"> </tt>
-<a name="L96"></a><tt class="py-lineno">96</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-op">(</tt><tt class="py-name">low</tt> <tt class="py-op">+</tt> <tt class="py-name">high</tt><tt class="py-op">)</tt> <tt class="py-op">/</tt> <tt class="py-number">2.0</tt> </tt>
-</div><a name="L97"></a><tt class="py-lineno">97</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"> </tt>
+<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"> </tt>
+<a name="RandomUniform"></a><div id="RandomUniform-def"><a name="L18"></a><tt class="py-lineno"> 18</tt> <a class="py-toggle" href="#" id="RandomUniform-toggle" onclick="return toggle('RandomUniform');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="parsimony.datasets.simulated.utils.RandomUniform-class.html">RandomUniform</a><tt class="py-op">(</tt><tt class="py-base-class">object</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="RandomUniform-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="RandomUniform-expanded"><a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"> </tt>
+<a name="RandomUniform.__init__"></a><div id="RandomUniform.__init__-def"><a name="L20"></a><tt class="py-lineno"> 20</tt> <a class="py-toggle" href="#" id="RandomUniform.__init__-toggle" onclick="return toggle('RandomUniform.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.datasets.simulated.utils.RandomUniform-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">a</tt><tt class="py-op">=</tt><tt class="py-number">0</tt><tt class="py-op">,</tt> <tt class="py-param">b</tt><tt class="py-op">=</tt><tt class="py-number">1</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="RandomUniform.__init__-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="RandomUniform.__init__-expanded"><a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"> </tt>
+<a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">a</tt> <tt class="py-op">=</tt> <tt class="py-name">float</tt><tt class="py-op">(</tt><tt class="py-name">a</tt><tt class="py-op">)</tt> </tt>
+<a name="L23"></a><tt class="py-lineno"> 23</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">b</tt> <tt class="py-op">=</tt> <tt class="py-name">float</tt><tt class="py-op">(</tt><tt class="py-name">b</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line"> </tt>
+<a name="RandomUniform.rand"></a><div id="RandomUniform.rand-def"><a name="L25"></a><tt class="py-lineno"> 25</tt> <a class="py-toggle" href="#" id="RandomUniform.rand-toggle" onclick="return toggle('RandomUniform.rand');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.datasets.simulated.utils.RandomUniform-class.html#rand">rand</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-op">*</tt><tt class="py-param">d</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="RandomUniform.rand-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="RandomUniform.rand-expanded"><a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line"> </tt>
+<a name="L27"></a><tt class="py-lineno"> 27</tt>  <tt class="py-line">        <tt class="py-name">R</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">random</tt><tt class="py-op">.</tt><tt id="link-1" class="py-name" targets="Function parsimony.datasets.simulated.beta.rand()=parsimony.datasets.simulated.beta-module.html#rand,Method parsimony.datasets.simulated.utils.RandomUniform.rand()=parsimony.datasets.simulated.utils.RandomUniform-class.html#rand"><a title="parsimony.datasets.simulated.beta.rand
+parsimony.datasets.simulated.utils.RandomUniform.rand" class="py-name" href="#" onclick="return doclink('link-1', 'rand', 'link-1');">rand</a></tt><tt class="py-op">(</tt><tt class="py-op">*</tt><tt class="py-name">d</tt><tt class="py-op">)</tt> </tt>
+<a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line">        <tt class="py-name">R</tt> <tt class="py-op">=</tt> <tt class="py-name">R</tt> <tt class="py-op">*</tt> <tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">b</tt> <tt class="py-op">-</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">a</tt><tt class="py-op">)</tt> <tt class="py-op">+</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">a</tt> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line"> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">R</tt> </tt>
+</div><a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line"> </tt>
+<a name="RandomUniform.__call__"></a><div id="RandomUniform.__call__-def"><a name="L32"></a><tt class="py-lineno"> 32</tt> <a class="py-toggle" href="#" id="RandomUniform.__call__-toggle" onclick="return toggle('RandomUniform.__call__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.datasets.simulated.utils.RandomUniform-class.html#__call__">__call__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-op">*</tt><tt class="py-param">d</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="RandomUniform.__call__-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="RandomUniform.__call__-expanded"><a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line"> </tt>
+<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">self</tt><tt class="py-op">.</tt><tt id="link-2" class="py-name"><a title="parsimony.datasets.simulated.beta.rand
+parsimony.datasets.simulated.utils.RandomUniform.rand" class="py-name" href="#" onclick="return doclink('link-2', 'rand', 'link-1');">rand</a></tt><tt class="py-op">(</tt><tt class="py-op">*</tt><tt class="py-name">d</tt><tt class="py-op">)</tt> </tt>
+</div></div><a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line"> </tt>
+<a name="L36"></a><tt class="py-lineno"> 36</tt>  <tt class="py-line"> </tt>
+<a name="ConstantValue"></a><div id="ConstantValue-def"><a name="L37"></a><tt class="py-lineno"> 37</tt> <a class="py-toggle" href="#" id="ConstantValue-toggle" onclick="return toggle('ConstantValue');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="parsimony.datasets.simulated.utils.ConstantValue-class.html">ConstantValue</a><tt class="py-op">(</tt><tt class="py-base-class">object</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="ConstantValue-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="ConstantValue-expanded"><a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line">    <tt class="py-docstring">"""Random like number generator that returns a constant value.</tt> </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L40"></a><tt class="py-lineno"> 40</tt>  <tt class="py-line"><tt class="py-docstring">    Example</tt> </tt>
+<a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line"><tt class="py-docstring">    -------</tt> </tt>
+<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; rnd = ConstantValue(5.)</tt> </tt>
+<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; rnd(3)</tt> </tt>
+<a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line"><tt class="py-docstring">    array([ 5.,  5.,  5.])</tt> </tt>
+<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; rnd(2, 2)</tt> </tt>
+<a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line"><tt class="py-docstring">    array([[ 5.,  5.],</tt> </tt>
+<a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line"><tt class="py-docstring">           [ 5.,  5.]])</tt> </tt>
+<a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="ConstantValue.__init__"></a><div id="ConstantValue.__init__-def"><a name="L49"></a><tt class="py-lineno"> 49</tt> <a class="py-toggle" href="#" id="ConstantValue.__init__-toggle" onclick="return toggle('ConstantValue.__init__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.datasets.simulated.utils.ConstantValue-class.html#__init__">__init__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-param">val</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="ConstantValue.__init__-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="ConstantValue.__init__-expanded"><a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line"> </tt>
+<a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line">        <tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">val</tt> <tt class="py-op">=</tt> <tt class="py-name">val</tt> </tt>
+</div><a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line"> </tt>
+<a name="ConstantValue.__call__"></a><div id="ConstantValue.__call__-def"><a name="L53"></a><tt class="py-lineno"> 53</tt> <a class="py-toggle" href="#" id="ConstantValue.__call__-toggle" onclick="return toggle('ConstantValue.__call__');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.datasets.simulated.utils.ConstantValue-class.html#__call__">__call__</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">,</tt> <tt class="py-op">*</tt><tt class="py-param">shape</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="ConstantValue.__call__-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="ConstantValue.__call__-expanded"><a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line"> </tt>
+<a name="L55"></a><tt class="py-lineno"> 55</tt>  <tt class="py-line">        <tt class="py-keyword">return</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">repeat</tt><tt class="py-op">(</tt><tt class="py-name">self</tt><tt class="py-op">.</tt><tt class="py-name">val</tt><tt class="py-op">,</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">prod</tt><tt class="py-op">(</tt><tt class="py-name">shape</tt><tt class="py-op">)</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt class="py-name">reshape</tt><tt class="py-op">(</tt><tt class="py-name">shape</tt><tt class="py-op">)</tt> </tt>
+</div></div><a name="L56"></a><tt class="py-lineno"> 56</tt>  <tt class="py-line"> </tt>
+<a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line"> </tt>
+<a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line"><tt class="py-comment">#def U(a, b):</tt> </tt>
+<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line"><tt class="py-comment">#</tt> </tt>
+<a name="L60"></a><tt class="py-lineno"> 60</tt>  <tt class="py-line"><tt class="py-comment">#    t = max(a, b)</tt> </tt>
+<a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line"><tt class="py-comment">#    a = float(min(a, b))</tt> </tt>
+<a name="L62"></a><tt class="py-lineno"> 62</tt>  <tt class="py-line"><tt class="py-comment">#    b = float(t)</tt> </tt>
+<a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line"><tt class="py-comment">#    return (np.random.rand() * (b - a)) + a</tt> </tt>
+<a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line"> </tt>
+<a name="L65"></a><tt class="py-lineno"> 65</tt>  <tt class="py-line"> </tt>
+<a name="norm2"></a><div id="norm2-def"><a name="L66"></a><tt class="py-lineno"> 66</tt> <a class="py-toggle" href="#" id="norm2-toggle" onclick="return toggle('norm2');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.datasets.simulated.utils-module.html#norm2">norm2</a><tt class="py-op">(</tt><tt class="py-param">x</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="norm2-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="norm2-expanded"><a name="L67"></a><tt class="py-lineno"> 67</tt>  <tt class="py-line"> </tt>
+<a name="L68"></a><tt class="py-lineno"> 68</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sqrt</tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-name">x</tt> <tt class="py-op">**</tt> <tt class="py-number">2.0</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L69"></a><tt class="py-lineno"> 69</tt>  <tt class="py-line"> </tt>
+<a name="L70"></a><tt class="py-lineno"> 70</tt>  <tt class="py-line"> </tt>
+<a name="bisection_method"></a><div id="bisection_method-def"><a name="L71"></a><tt class="py-lineno"> 71</tt> <a class="py-toggle" href="#" id="bisection_method-toggle" onclick="return toggle('bisection_method');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.datasets.simulated.utils-module.html#bisection_method">bisection_method</a><tt class="py-op">(</tt><tt class="py-param">f</tt><tt class="py-op">,</tt> <tt class="py-param">low</tt><tt class="py-op">=</tt><tt class="py-number">0.0</tt><tt class="py-op">,</tt> <tt class="py-param">high</tt><tt class="py-op">=</tt><tt class="py-number">1.0</tt><tt class="py-op">,</tt> <tt class="py-param">maxiter</tt><tt class="py-op">=</tt><tt class="py-number">30</tt><tt class="py-op">,</tt> <tt class="py-param">eps</tt><tt class="py-op">=</tt><tt id="link-3" class="py-name"><a title="parsimony.datasets.simulated.utils.TOLERANCE
+parsimony.utils.consts.TOLERANCE" class="py-name" href="#" onclick="return doclink('link-3', 'TOLERANCE', 'link-0');">TOLERANCE</a></tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="bisection_method-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="bisection_method-expanded"><a name="L72"></a><tt class="py-lineno"> 72</tt>  <tt class="py-line">    <tt class="py-docstring">""" Finds the value of x such that |f(x)|_2 &lt; eps, for x &gt; 0 and where</tt> </tt>
+<a name="L73"></a><tt class="py-lineno"> 73</tt>  <tt class="py-line"><tt class="py-docstring">    |.|_2 is the 2-norm.</tt> </tt>
+<a name="L74"></a><tt class="py-lineno"> 74</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L75"></a><tt class="py-lineno"> 75</tt>  <tt class="py-line"><tt class="py-docstring">    Parameters</tt> </tt>
+<a name="L76"></a><tt class="py-lineno"> 76</tt>  <tt class="py-line"><tt class="py-docstring">    ----------</tt> </tt>
+<a name="L77"></a><tt class="py-lineno"> 77</tt>  <tt class="py-line"><tt class="py-docstring">    f : The function for which a root is found. The function must be increasing</tt> </tt>
+<a name="L78"></a><tt class="py-lineno"> 78</tt>  <tt class="py-line"><tt class="py-docstring">            for increasing x, and decresing for decreasing x.</tt> </tt>
+<a name="L79"></a><tt class="py-lineno"> 79</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L80"></a><tt class="py-lineno"> 80</tt>  <tt class="py-line"><tt class="py-docstring">    low : A value for which f(low) &lt; 0. If f(low) &gt;= 0, a lower value, low',</tt> </tt>
+<a name="L81"></a><tt class="py-lineno"> 81</tt>  <tt class="py-line"><tt class="py-docstring">            will be found such that f(low') &lt; 0 and used instead of low.</tt> </tt>
+<a name="L82"></a><tt class="py-lineno"> 82</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L83"></a><tt class="py-lineno"> 83</tt>  <tt class="py-line"><tt class="py-docstring">    high : A value for which f(high) &gt; 0. If f(high) &lt;= 0, a higher value,</tt> </tt>
+<a name="L84"></a><tt class="py-lineno"> 84</tt>  <tt class="py-line"><tt class="py-docstring">            high', will be found such that f(high') &lt; 0 and used instead of</tt> </tt>
+<a name="L85"></a><tt class="py-lineno"> 85</tt>  <tt class="py-line"><tt class="py-docstring">            high.</tt> </tt>
+<a name="L86"></a><tt class="py-lineno"> 86</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line"><tt class="py-docstring">    maxiter : The maximum number of iterations.</tt> </tt>
+<a name="L88"></a><tt class="py-lineno"> 88</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L89"></a><tt class="py-lineno"> 89</tt>  <tt class="py-line"><tt class="py-docstring">    eps : A positive value such that |f(x)|_2 &lt; eps. Only guaranteed if</tt> </tt>
+<a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line"><tt class="py-docstring">            |f(x)|_2 &lt; eps in less than maxiter iterations.</tt> </tt>
+<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line"><tt class="py-docstring">    Returns</tt> </tt>
+<a name="L93"></a><tt class="py-lineno"> 93</tt>  <tt class="py-line"><tt class="py-docstring">    -------</tt> </tt>
+<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line"><tt class="py-docstring">    x : The value such that |f(x)|_2 &lt; eps.</tt> </tt>
+<a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line">    <tt class="py-comment"># Find start values. If the low and high</tt> </tt>
+<a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line">    <tt class="py-comment"># values are feasible this will just break</tt> </tt>
+<a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt class="py-name">i</tt> <tt class="py-keyword">in</tt> <tt class="py-name">xrange</tt><tt class="py-op">(</tt><tt class="py-name">maxiter</tt> <tt class="py-op">*</tt> <tt class="py-number">2</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L99"></a><tt class="py-lineno"> 99</tt>  <tt class="py-line">        <tt class="py-name">l</tt> <tt class="py-op">=</tt> <tt id="link-4" class="py-name" targets="Method parsimony._functions.AnonymousFunction.f()=parsimony._functions.AnonymousFunction-class.html#f,Method parsimony._functions.CombinedProjectionOperator.f()=parsimony._functions.CombinedProjectionOperator-class.html#f,Method parsimony._functions.Function.f()=parsimony._functions.Function-class.html#f,Method parsimony._functions.GeneralisedMultiblock.f()=parsimony._functions.GeneralisedMultiblock-class.html#f,Method parsimony._functions.GroupLassoOverlap.f()=parsimony._functions.GroupLassoOverlap-class.html#f,Method parsimony._functions.L1.f()=parsimony._functions.L1-class.html#f,Method parsimony._functions.LatentVariableCovariance.f()=parsimony._functions.LatentVariableCovariance-class.html#f,Method parsimony._functions.QuadraticConstraint.f()=parsimony._functions.QuadraticConstraint-class.html#f,Method parsimony._functions.RGCCAConstraint.f()=parsimony._functions.RGCCAConstraint-class.html#f,Method parsimony._functions.RR_L1_GL.f()=parsimony._functions.RR_L1_GL-class.html#f,Method parsimony._functions.RR_L1_TV.f()=parsimony._functions.RR_L1_TV-class.html#f,Method parsimony._functions.RR_SmoothedL1TV.f()=parsimony._functions.RR_SmoothedL1TV-class.html#f,Method parsimony._functions.RidgeLogisticRegression.f()=parsimony._functions.RidgeLogisticRegression-class.html#f,Method parsimony._functions.RidgeRegression.f()=parsimony._functions.RidgeRegression-class.html#f,Method parsimony._functions.SmoothedL1.f()=parsimony._functions.SmoothedL1-class.html#f,Method parsimony._functions.SmoothedL1TV.f()=parsimony._functions.SmoothedL1TV-class.html#f,Method parsimony._functions.SufficientDescentCondition.f()=parsimony._functions.SufficientDescentCondition-class.html#f,Method parsimony._functions.TotalVariation.f()=parsimony._functions.TotalVariation-class.html#f,Method parsimony.functions.interfaces.CombinedProjectionOperator.f()=parsimony.functions.interfaces.CombinedProjectionOperator-class.html#f,Method parsimony.functions.interfaces.Function.f()=parsimony.functions.interfaces.Function-class.html#f,Method parsimony.functions.losses.AnonymousFunction.f()=parsimony.functions.losses.AnonymousFunction-class.html#f,Method parsimony.functions.losses.RidgeLogisticRegression.f()=parsimony.functions.losses.RidgeLogisticRegression-class.html#f,Method parsimony.functions.losses.RidgeRegression.f()=parsimony.functions.losses.RidgeRegression-class.html#f,Method parsimony.functions.multiblock.losses.GeneralisedMultiblock.f()=parsimony.functions.multiblock.losses.GeneralisedMultiblock-class.html#f,Method parsimony.functions.multiblock.losses.LatentVariableCovariance.f()=parsimony.functions.multiblock.losses.LatentVariableCovariance-class.html#f,Method parsimony.functions.nesterov.L1.L1.f()=parsimony.functions.nesterov.L1.L1-class.html#f,Method parsimony.functions.nesterov.L1TV.L1TV.f()=parsimony.functions.nesterov.L1TV.L1TV-class.html#f,Method parsimony.functions.nesterov.gl.GroupLassoOverlap.f()=parsimony.functions.nesterov.gl.GroupLassoOverlap-class.html#f,Method parsimony.functions.nesterov.tv.TotalVariation.f()=parsimony.functions.nesterov.tv.TotalVariation-class.html#f,Method parsimony.functions.objectives.functions.CombinedFunction.f()=parsimony.functions.objectives.functions.CombinedFunction-class.html#f,Method parsimony.functions.objectives.functions.RR_L1_GL.f()=parsimony.functions.objectives.functions.RR_L1_GL-class.html#f,Method parsimony.functions.objectives.functions.RR_L1_TV.f()=parsimony.functions.objectives.functions.RR_L1_TV-class.html#f,Method parsimony.functions.objectives.functions.RR_SmoothedL1TV.f()=parsimony.functions.objectives.functions.RR_SmoothedL1TV-class.html#f,Method parsimony.functions.penalties.L1.f()=parsimony.functions.penalties.L1-class.html#f,Method parsimony.functions.penalties.L2.f()=parsimony.functions.penalties.L2-class.html#f,Method parsimony.functions.penalties.QuadraticConstraint.f()=parsimony.functions.penalties.QuadraticConstraint-class.html#f,Method parsimony.functions.penalties.RGCCAConstraint.f()=parsimony.functions.penalties.RGCCAConstraint-class.html#f,Method parsimony.functions.penalties.SufficientDescentCondition.f()=parsimony.functions.penalties.SufficientDescentCondition-class.html#f,Method parsimony.functions.penalties.ZeroFunction.f()=parsimony.functions.penalties.ZeroFunction-class.html#f"><a title="parsimony._functions.AnonymousFunction.f
+parsimony._functions.CombinedProjectionOperator.f
+parsimony._functions.Function.f
+parsimony._functions.GeneralisedMultiblock.f
+parsimony._functions.GroupLassoOverlap.f
+parsimony._functions.L1.f
+parsimony._functions.LatentVariableCovariance.f
+parsimony._functions.QuadraticConstraint.f
+parsimony._functions.RGCCAConstraint.f
+parsimony._functions.RR_L1_GL.f
+parsimony._functions.RR_L1_TV.f
+parsimony._functions.RR_SmoothedL1TV.f
+parsimony._functions.RidgeLogisticRegression.f
+parsimony._functions.RidgeRegression.f
+parsimony._functions.SmoothedL1.f
+parsimony._functions.SmoothedL1TV.f
+parsimony._functions.SufficientDescentCondition.f
+parsimony._functions.TotalVariation.f
+parsimony.functions.interfaces.CombinedProjectionOperator.f
+parsimony.functions.interfaces.Function.f
+parsimony.functions.losses.AnonymousFunction.f
+parsimony.functions.losses.RidgeLogisticRegression.f
+parsimony.functions.losses.RidgeRegression.f
+parsimony.functions.multiblock.losses.GeneralisedMultiblock.f
+parsimony.functions.multiblock.losses.LatentVariableCovariance.f
+parsimony.functions.nesterov.L1.L1.f
+parsimony.functions.nesterov.L1TV.L1TV.f
+parsimony.functions.nesterov.gl.GroupLassoOverlap.f
+parsimony.functions.nesterov.tv.TotalVariation.f
+parsimony.functions.objectives.functions.CombinedFunction.f
+parsimony.functions.objectives.functions.RR_L1_GL.f
+parsimony.functions.objectives.functions.RR_L1_TV.f
+parsimony.functions.objectives.functions.RR_SmoothedL1TV.f
+parsimony.functions.penalties.L1.f
+parsimony.functions.penalties.L2.f
+parsimony.functions.penalties.QuadraticConstraint.f
+parsimony.functions.penalties.RGCCAConstraint.f
+parsimony.functions.penalties.SufficientDescentCondition.f
+parsimony.functions.penalties.ZeroFunction.f" class="py-name" href="#" onclick="return doclink('link-4', 'f', 'link-4');">f</a></tt><tt class="py-op">(</tt><tt class="py-name">low</tt><tt class="py-op">)</tt> </tt>
+<a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line">        <tt class="py-name">h</tt> <tt class="py-op">=</tt> <tt id="link-5" class="py-name"><a title="parsimony._functions.AnonymousFunction.f
+parsimony._functions.CombinedProjectionOperator.f
+parsimony._functions.Function.f
+parsimony._functions.GeneralisedMultiblock.f
+parsimony._functions.GroupLassoOverlap.f
+parsimony._functions.L1.f
+parsimony._functions.LatentVariableCovariance.f
+parsimony._functions.QuadraticConstraint.f
+parsimony._functions.RGCCAConstraint.f
+parsimony._functions.RR_L1_GL.f
+parsimony._functions.RR_L1_TV.f
+parsimony._functions.RR_SmoothedL1TV.f
+parsimony._functions.RidgeLogisticRegression.f
+parsimony._functions.RidgeRegression.f
+parsimony._functions.SmoothedL1.f
+parsimony._functions.SmoothedL1TV.f
+parsimony._functions.SufficientDescentCondition.f
+parsimony._functions.TotalVariation.f
+parsimony.functions.interfaces.CombinedProjectionOperator.f
+parsimony.functions.interfaces.Function.f
+parsimony.functions.losses.AnonymousFunction.f
+parsimony.functions.losses.RidgeLogisticRegression.f
+parsimony.functions.losses.RidgeRegression.f
+parsimony.functions.multiblock.losses.GeneralisedMultiblock.f
+parsimony.functions.multiblock.losses.LatentVariableCovariance.f
+parsimony.functions.nesterov.L1.L1.f
+parsimony.functions.nesterov.L1TV.L1TV.f
+parsimony.functions.nesterov.gl.GroupLassoOverlap.f
+parsimony.functions.nesterov.tv.TotalVariation.f
+parsimony.functions.objectives.functions.CombinedFunction.f
+parsimony.functions.objectives.functions.RR_L1_GL.f
+parsimony.functions.objectives.functions.RR_L1_TV.f
+parsimony.functions.objectives.functions.RR_SmoothedL1TV.f
+parsimony.functions.penalties.L1.f
+parsimony.functions.penalties.L2.f
+parsimony.functions.penalties.QuadraticConstraint.f
+parsimony.functions.penalties.RGCCAConstraint.f
+parsimony.functions.penalties.SufficientDescentCondition.f
+parsimony.functions.penalties.ZeroFunction.f" class="py-name" href="#" onclick="return doclink('link-5', 'f', 'link-4');">f</a></tt><tt class="py-op">(</tt><tt class="py-name">high</tt><tt class="py-op">)</tt> </tt>
+<a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line"> </tt>
+<a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">l</tt> <tt class="py-op">&lt;</tt> <tt class="py-number">0</tt> <tt class="py-keyword">and</tt> <tt class="py-name">h</tt> <tt class="py-op">&gt;</tt> <tt class="py-number">0</tt><tt class="py-op">:</tt> </tt>
+<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line">            <tt class="py-keyword">break</tt> </tt>
+<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line"> </tt>
+<a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">l</tt> <tt class="py-op">&gt;=</tt> <tt class="py-number">0</tt><tt class="py-op">:</tt> </tt>
+<a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line">            <tt class="py-name">low</tt> <tt class="py-op">/=</tt> <tt class="py-number">2.0</tt> </tt>
+<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">h</tt> <tt class="py-op">&lt;=</tt> <tt class="py-number">0</tt><tt class="py-op">:</tt> </tt>
+<a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line">            <tt class="py-name">high</tt> <tt class="py-op">*=</tt> <tt class="py-number">2.0</tt> </tt>
+<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line"> </tt>
+<a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line">    <tt class="py-comment"># Use the bisection method to find where |f(x)|_2 &lt; eps.</tt> </tt>
+<a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt class="py-name">i</tt> <tt class="py-keyword">in</tt> <tt class="py-name">xrange</tt><tt class="py-op">(</tt><tt class="py-name">maxiter</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line">        <tt class="py-name">mid</tt> <tt class="py-op">=</tt> <tt class="py-op">(</tt><tt class="py-name">low</tt> <tt class="py-op">+</tt> <tt class="py-name">high</tt><tt class="py-op">)</tt> <tt class="py-op">/</tt> <tt class="py-number">2.0</tt> </tt>
+<a name="L113"></a><tt class="py-lineno">113</tt>  <tt class="py-line">        <tt class="py-name">val</tt> <tt class="py-op">=</tt> <tt id="link-6" class="py-name"><a title="parsimony._functions.AnonymousFunction.f
+parsimony._functions.CombinedProjectionOperator.f
+parsimony._functions.Function.f
+parsimony._functions.GeneralisedMultiblock.f
+parsimony._functions.GroupLassoOverlap.f
+parsimony._functions.L1.f
+parsimony._functions.LatentVariableCovariance.f
+parsimony._functions.QuadraticConstraint.f
+parsimony._functions.RGCCAConstraint.f
+parsimony._functions.RR_L1_GL.f
+parsimony._functions.RR_L1_TV.f
+parsimony._functions.RR_SmoothedL1TV.f
+parsimony._functions.RidgeLogisticRegression.f
+parsimony._functions.RidgeRegression.f
+parsimony._functions.SmoothedL1.f
+parsimony._functions.SmoothedL1TV.f
+parsimony._functions.SufficientDescentCondition.f
+parsimony._functions.TotalVariation.f
+parsimony.functions.interfaces.CombinedProjectionOperator.f
+parsimony.functions.interfaces.Function.f
+parsimony.functions.losses.AnonymousFunction.f
+parsimony.functions.losses.RidgeLogisticRegression.f
+parsimony.functions.losses.RidgeRegression.f
+parsimony.functions.multiblock.losses.GeneralisedMultiblock.f
+parsimony.functions.multiblock.losses.LatentVariableCovariance.f
+parsimony.functions.nesterov.L1.L1.f
+parsimony.functions.nesterov.L1TV.L1TV.f
+parsimony.functions.nesterov.gl.GroupLassoOverlap.f
+parsimony.functions.nesterov.tv.TotalVariation.f
+parsimony.functions.objectives.functions.CombinedFunction.f
+parsimony.functions.objectives.functions.RR_L1_GL.f
+parsimony.functions.objectives.functions.RR_L1_TV.f
+parsimony.functions.objectives.functions.RR_SmoothedL1TV.f
+parsimony.functions.penalties.L1.f
+parsimony.functions.penalties.L2.f
+parsimony.functions.penalties.QuadraticConstraint.f
+parsimony.functions.penalties.RGCCAConstraint.f
+parsimony.functions.penalties.SufficientDescentCondition.f
+parsimony.functions.penalties.ZeroFunction.f" class="py-name" href="#" onclick="return doclink('link-6', 'f', 'link-4');">f</a></tt><tt class="py-op">(</tt><tt class="py-name">mid</tt><tt class="py-op">)</tt> </tt>
+<a name="L114"></a><tt class="py-lineno">114</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">val</tt> <tt class="py-op">&lt;</tt> <tt class="py-number">0</tt><tt class="py-op">:</tt> </tt>
+<a name="L115"></a><tt class="py-lineno">115</tt>  <tt class="py-line">            <tt class="py-name">low</tt> <tt class="py-op">=</tt> <tt class="py-name">mid</tt> </tt>
+<a name="L116"></a><tt class="py-lineno">116</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">val</tt> <tt class="py-op">&gt;</tt> <tt class="py-number">0</tt><tt class="py-op">:</tt> </tt>
+<a name="L117"></a><tt class="py-lineno">117</tt>  <tt class="py-line">            <tt class="py-name">high</tt> <tt class="py-op">=</tt> <tt class="py-name">mid</tt> </tt>
+<a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line"> </tt>
+<a name="L119"></a><tt class="py-lineno">119</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sqrt</tt><tt class="py-op">(</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">sum</tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt class="py-name">high</tt> <tt class="py-op">-</tt> <tt class="py-name">low</tt><tt class="py-op">)</tt> <tt class="py-op">**</tt> <tt class="py-number">2.0</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> <tt class="py-op">&lt;=</tt> <tt class="py-name">eps</tt><tt class="py-op">:</tt> </tt>
+<a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line">            <tt class="py-keyword">break</tt> </tt>
+<a name="L121"></a><tt class="py-lineno">121</tt>  <tt class="py-line"> </tt>
+<a name="L122"></a><tt class="py-lineno">122</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-op">(</tt><tt class="py-name">low</tt> <tt class="py-op">+</tt> <tt class="py-name">high</tt><tt class="py-op">)</tt> <tt class="py-op">/</tt> <tt class="py-number">2.0</tt> </tt>
+</div><a name="L123"></a><tt class="py-lineno">123</tt>  <tt class="py-line"> </tt><script type="text/javascript">
 <!--
 expandto(location.href);
 // -->
@@ -224,7 +331,7 @@ expandto(location.href);
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Dec  6 11:22:00 2013
+    Generated by Epydoc 3.0.1 on Fri Feb 21 17:38:26 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

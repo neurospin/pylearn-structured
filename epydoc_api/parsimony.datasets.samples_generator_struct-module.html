@@ -64,7 +64,7 @@
         Edouard Duchesnay
       </p>
       <p><strong>License:</strong>
-        TBD.
+        BSD-3-Clause
       </p>
 </div><!-- ==================== CLASSES ==================== -->
 <a name="section-Classes"></a>
@@ -138,6 +138,51 @@ c_x, c_y: Center of object
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
+          <td><span class="summary-sig"><a href="parsimony.datasets.samples_generator_struct-module.html#make_classification_struct" class="summary-sig-name">make_classification_struct</a>(<span class="summary-sig-arg">n_samples</span>=<span class="summary-sig-default">100</span>,
+        <span class="summary-sig-arg">shape</span>=<span class="summary-sig-default"><code class="variable-group">(</code>30<code class="variable-op">, </code>30<code class="variable-op">, </code>1<code class="variable-group">)</code></span>,
+        <span class="summary-sig-arg">snr</span>=<span class="summary-sig-default">2.0</span>,
+        <span class="summary-sig-arg">sigma_logit</span>=<span class="summary-sig-default">5.0</span>,
+        <span class="summary-sig-arg">random_seed</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">**kwargs</span>)</span><br />
+      Generate classification samples (images + target variable) and beta.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#make_classification_struct">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="parsimony.datasets.samples_generator_struct-module.html#make_regression_struct" class="summary-sig-name">make_regression_struct</a>(<span class="summary-sig-arg">n_samples</span>=<span class="summary-sig-default">100</span>,
+        <span class="summary-sig-arg">shape</span>=<span class="summary-sig-default"><code class="variable-group">(</code>30<code class="variable-op">, </code>30<code class="variable-op">, </code>1<code class="variable-group">)</code></span>,
+        <span class="summary-sig-arg">r2</span>=<span class="summary-sig-default">0.75</span>,
+        <span class="summary-sig-arg">sigma_spatial_smoothing</span>=<span class="summary-sig-default">1</span>,
+        <span class="summary-sig-arg">object_pixel_ratio</span>=<span class="summary-sig-default">0.5</span>,
+        <span class="summary-sig-arg">objects</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">random_seed</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Generate regression samples (images + target variable) and beta.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#make_regression_struct">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
           <td><span class="summary-sig"><a href="parsimony.datasets.samples_generator_struct-module.html#corr_to_coef" class="summary-sig-name">corr_to_coef</a>(<span class="summary-sig-arg">v_x</span>,
         <span class="summary-sig-arg">v_e</span>,
         <span class="summary-sig-arg">cov_xe</span>,
@@ -199,32 +244,9 @@ union1 and union2 have coef_info = 0</td>
           <td><span class="summary-sig"><a name="spatial_smoothing"></a><span class="summary-sig-name">spatial_smoothing</span>(<span class="summary-sig-arg">Xim</span>,
         <span class="summary-sig-arg">sigma</span>,
         <span class="summary-sig-arg">mu_e</span>=<span class="summary-sig-default">None</span>,
-        <span class="summary-sig-arg">sigma_e</span>=<span class="summary-sig-default">None</span>)</span></td>
+        <span class="summary-sig-arg">sigma_pix</span>=<span class="summary-sig-default">None</span>)</span></td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#spatial_smoothing">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a href="parsimony.datasets.samples_generator_struct-module.html#make_regression_struct" class="summary-sig-name">make_regression_struct</a>(<span class="summary-sig-arg">n_samples</span>=<span class="summary-sig-default">100</span>,
-        <span class="summary-sig-arg">shape</span>=<span class="summary-sig-default"><code class="variable-group">(</code>30<code class="variable-op">, </code>30<code class="variable-op">, </code>1<code class="variable-group">)</code></span>,
-        <span class="summary-sig-arg">r2</span>=<span class="summary-sig-default">0.75</span>,
-        <span class="summary-sig-arg">sigma_spatial_smoothing</span>=<span class="summary-sig-default">1</span>,
-        <span class="summary-sig-arg">noize_object_pixel_ratio</span>=<span class="summary-sig-default">0.5</span>,
-        <span class="summary-sig-arg">objects</span>=<span class="summary-sig-default">None</span>,
-        <span class="summary-sig-arg">random_seed</span>=<span class="summary-sig-default">None</span>)</span><br />
-      Generate regression samples (images + target variable) and beta.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#make_regression_struct">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -276,6 +298,231 @@ union1 and union2 have coef_info = 0</td>
   </td>
 </tr>
 </table>
+<a name="make_classification_struct"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">make_classification_struct</span>(<span class="sig-arg">n_samples</span>=<span class="sig-default">100</span>,
+        <span class="sig-arg">shape</span>=<span class="sig-default"><code class="variable-group">(</code>30<code class="variable-op">, </code>30<code class="variable-op">, </code>1<code class="variable-group">)</code></span>,
+        <span class="sig-arg">snr</span>=<span class="sig-default">2.0</span>,
+        <span class="sig-arg">sigma_logit</span>=<span class="sig-default">5.0</span>,
+        <span class="sig-arg">random_seed</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">**kwargs</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#make_classification_struct">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+Generate classification samples (images + target variable) and beta.
+Call make_regression_struct then apply the logistic function:
+proba = 1. / (1 + exp(-(X * beta + noise)), then
+y = 1 if proba &gt;= 0.5 else 0
+
+Parameters
+----------
+
+See make_regression_struct, exept for r2 which is replaced by snr
+
+snr: float (default 2.)
+    Signal to noise ratio: std(X * beta) / std(noise) in
+    1. / (1 + exp(-(X * beta + noise))
+
+sigma_logit: float (default 5.)
+    standard deviation of logit = X * beta + noise
+    large sigma_logit promotes sharp shape of logistic function, ie:
+    probabilities are close to 0 or 1, which increases likekihood.
+
+Return
+------
+
+X3d: array of shape [n_sample, shape]
+    The input features.
+
+y: array of shape [n_sample, 1]
+    The target variable.
+
+beta3d: float array of shape [shape]
+   It is the beta such that y = 1. / (1 + exp(-(X * beta + noise))
+
+proba: array of shape [n_sample, 1]
+    Samples posterior probabilities
+
+See also
+--------
+
+make_regression_struct
+
+Examples
+--------
+&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; import matplotlib.pyplot as plt
+&gt;&gt;&gt; from parsimony.datasets import make_classification_struct
+&gt;&gt;&gt; n_samples = 100
+&gt;&gt;&gt; shape = (11, 11, 1)
+&gt;&gt;&gt; X3d, y, beta3d, proba = make_classification_struct(n_samples=n_samples,
+...     shape=shape, sigma_logit=1., random_seed=1)
+&gt;&gt;&gt; print &quot;Likelihood=&quot;, np.prod(proba[y.ravel()==1]) * np.prod(1-proba[y.ravel()==0])
+Likelihood= 1.98405647549e-18
+&gt;&gt;&gt; plt.plot(proba[y.ravel()==1], &quot;ro&quot;, proba[y.ravel()==0], &quot;bo&quot;)
+&gt;&gt;&gt; plt.show()
+&gt;&gt;&gt; X3d, y, beta3d, proba = make_classification_struct(n_samples=n_samples,
+...     shape=shape, sigma_logit=5., random_seed=1)
+&gt;&gt;&gt; print &quot;Likelihood=&quot;, np.prod(proba[y.ravel()==1]) * np.prod(1-proba[y.ravel()==0])
+Likelihood= 2.19102268035e-06
+&gt;&gt;&gt; plt.plot(proba[y.ravel()==1], &quot;ro&quot;, proba[y.ravel()==0], &quot;bo&quot;)
+&gt;&gt;&gt; plt.show()
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="make_regression_struct"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">make_regression_struct</span>(<span class="sig-arg">n_samples</span>=<span class="sig-default">100</span>,
+        <span class="sig-arg">shape</span>=<span class="sig-default"><code class="variable-group">(</code>30<code class="variable-op">, </code>30<code class="variable-op">, </code>1<code class="variable-group">)</code></span>,
+        <span class="sig-arg">r2</span>=<span class="sig-default">0.75</span>,
+        <span class="sig-arg">sigma_spatial_smoothing</span>=<span class="sig-default">1</span>,
+        <span class="sig-arg">object_pixel_ratio</span>=<span class="sig-default">0.5</span>,
+        <span class="sig-arg">objects</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">random_seed</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#make_regression_struct">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+Generate regression samples (images + target variable) and beta.
+
+Input features (X) covariance structure is controled both at a pixel
+level (spatial smoothing) and object level. Objects are component
+of pixels sharing a covariance that stem from a latent variable.
+beta is non null within objects (default is five dots).
+Then y is obtained with y = X * beta + noise, where beta is scalled such
+that r_square(y, X * beta) = r2 and noise is sampled according to N(0, 1).
+
+Parameters
+----------
+
+n_samples: int
+    nb of samples, (default 100).
+
+shape: (int, int, int)
+    x, y, z shape each samples (default (30, 30, 1)).
+
+r2: float
+    The desire R-squared (explained variance) ie.:
+    r_square(y, X * beta) = r2 (Default is .75)
+
+sigma_spatial_smoothing: scalar
+    Standard deviation for Gaussian kernel (default 1). High value promotes
+    spatial correlation pixels.
+
+object_pixel_ratio: float
+    Controls the ratio between object-level signal and pixel-level signal
+    for pixels within objects. If object_pixel_ratio == 1 then 100% of
+    the signal of pixels within the same object is shared (ie.: no pixel
+    level) signal. If object_pixel_ratio == 0 then all the signal is
+    pixel specific. High object_pixel_ratio promotes spatial
+    correlation between pixels of the same object.
+
+objects: list of objects
+    Objects carying information to be drawn in the image. If not provide
+    a dice with five points (object) will be drawn. Point 1, 3, 4 are
+    carying predictive information while point 2 is a suppressor of point
+    1 and point 5 is a suppressor of point 3.
+    Object should implement &quot;get_mask()&quot; method, a have &quot;is_suppressor&quot;
+    (bool) and &quot;r&quot; (ref to suppressor object, possibely None)
+    attributes.
+
+random_seed: None or int
+    See numpy.random.seed(). If not None, it can be used to obtain
+    reproducable samples.
+
+Return
+------
+
+X3d: array of shape [n_sample, shape]
+    The input features.
+
+y: array of shape [n_sample, 1]
+    The target variable.
+
+beta3d: float array of shape [shape]
+   It is the beta such that y = X * beta + noise
+
+Details
+-------
+
+The general procedure is:
+    1) For each pixel i, Generate independant variables Xi ~ N(0, 1)
+    2) Add object level structure corresponding to the five dots:
+       - Sample five latent variables ~ N(0, 1): l1, l12, l3, l4, l45.
+       - Pixel i of dots X1, X2, X3, X4, X5 are sampled as:
+         X1i = l1 + l12 + Xi
+         X2i = l12 + Xi
+         X3i = 2 * l3 + Xi
+         X4i = l4 + l45 + Xi
+         X5i = l45 + Xi
+         Note that:
+         Pixels of dot X1 share a common variance that stem from l1 + l12.
+         Pixels of dot X2 share a common variance that stem from l12.
+         Pixels of dot X1 and pixel of dot X2 share a common variance that
+         stem from l12.
+         etc.
+    4) Spatial Smoothing.
+    5) Model: y = X beta + noise
+    - Betas are null outside dots, and 1 or -1 depending on the dot:
+        X1: 1, X2: -1, X3: 1, X4: 1, X5: -1.
+    - Sample noise ~ N(0, 1)
+    - Compute X beta then scale beta such that: r_squared(y, X beta) = r2
+    Return X, y, beta
+
+    Note that negative coeficients for X2 and X5 combined with the shared
+    latent variable l12 and l45 make X2 and X5 suppressor regions ie.:
+    regions are not correlated with y but
+        y = X1 - X2 + X3 + X4 -X5 + noise
+        y = l1 + l3 + l4 + noise
+        So pixels of X2 and X5 are not correlated with the target y so they
+        will not be detected by univariate analysis. However, they
+        are usefull since they are suppressing unwilling variance that stem
+        from latents l12 and l45.
+
+Examples
+--------
+&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; import matplotlib.pyplot as plt
+&gt;&gt;&gt; from parsimony.datasets import make_regression_struct
+&gt;&gt;&gt; n_samples = 100
+&gt;&gt;&gt; shape = (11, 11, 1)
+&gt;&gt;&gt; X3d, y, beta3d = make_regression_struct(n_samples=n_samples, shape=shape,
+...                            r2=.5, random_seed=1)
+&gt;&gt;&gt; X = X3d.reshape(n_samples, np.prod(shape))
+&gt;&gt;&gt; beta = beta3d.ravel()
+&gt;&gt;&gt; from sklearn.metrics import r2_score
+&gt;&gt;&gt; print np.round(r2_score(y, np.dot(X, beta)), 2)
+0.47
+&gt;&gt;&gt; cax = plt.matshow(beta3d.squeeze())
+&gt;&gt;&gt; plt.colorbar(cax)
+&gt;&gt;&gt; plt.title(&quot;Beta&quot;)
+&gt;&gt;&gt; plt.show()
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
 <a name="corr_to_coef"></a>
 <div>
 <table class="details" border="1" cellpadding="3"
@@ -367,148 +614,6 @@ plt.show()
   </dl>
 </td></tr></table>
 </div>
-<a name="make_regression_struct"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">make_regression_struct</span>(<span class="sig-arg">n_samples</span>=<span class="sig-default">100</span>,
-        <span class="sig-arg">shape</span>=<span class="sig-default"><code class="variable-group">(</code>30<code class="variable-op">, </code>30<code class="variable-op">, </code>1<code class="variable-group">)</code></span>,
-        <span class="sig-arg">r2</span>=<span class="sig-default">0.75</span>,
-        <span class="sig-arg">sigma_spatial_smoothing</span>=<span class="sig-default">1</span>,
-        <span class="sig-arg">noize_object_pixel_ratio</span>=<span class="sig-default">0.5</span>,
-        <span class="sig-arg">objects</span>=<span class="sig-default">None</span>,
-        <span class="sig-arg">random_seed</span>=<span class="sig-default">None</span>)</span>
-  </h3>
-  </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#make_regression_struct">source&nbsp;code</a></span>&nbsp;
-    </td>
-  </tr></table>
-  
-  <pre class="literalblock">
-Generate regression samples (images + target variable) and beta.
-Input features (X) have a covariance structure controled both at a pixel
-level (spatial smoothing) and at an object. Objects are component
-of pixels sharing a covariance that stem from a latent variable.
-
-
-Noise is sampled according to N(0, 1).
-Then y is obtained with y = X * beta + noise, where beta is scalled such
-that r_square(y, X * beta) = r2.
-
-The sructure of covariance of X is
-
-Parameters
-----------
-n_samples: int
-    nb of samples, (default 100).
-
-shape: (int, int, int)
-    x, y, z shape each samples (default (30, 30, 1)).
-
-r2: float
-    The desire R-squared (explained variance) ie.:
-
-        r_square(y, X * beta) = r2
-
-    Default is .75
-
-sigma_spatial_smoothing: scalar
-    Standard deviation for Gaussian kernel (default 1). High value promotes
-    spatial correlation pixels.
-
-noize_object_pixel_ratio: float
-    Controls the ratio between object-level noize and pixel-level noize for
-    pixels within objects. If noize_object_pixel_ratio == 1 then 100% of
-    the noize of pixels within the same object is shared (ie.: no pixel
-    level) noize. If noize_object_pixel_ratio == 0 then all the noize is
-    pixel specific. High noize_object_pixel_ratio promotes spatial
-    correlation between pixels of the same object.
-
-objects: list of objects
-    Define objects .
-    Objects carying information to be drawn in the image. If not provide
-    a dice with five points (object) will be drawn. Point 1, 3, 4 are
-    carying predictive information while point 2 is a suppressor of point
-    1 and point 5 is a suppressor of point 3.
-    Object should implement &quot;get_mask()&quot; method, a have &quot;is_suppressor&quot;
-    (bool) and &quot;r&quot; (ref to suppressor object, possibely None)
-    attributes.
-
-random_seed: None or int
-    See numpy.random.seed(). If not None, it can be used to obtain
-    reproducable samples.
-
-Return
-------
-X: array of shape [n_sample, shape]
-    the input features.
-
-y: array of shape [n_sample, 1]
-    the target variable.
-
-beta: float array of shape [shape]
-   It is the beta such that y = X * beta + noize
-
-Details
--------
-The general procedure is:
-    1) For each pixel i, Generate independant variables Xi ~ N(0, 1)
-    2) Add object level structure. By default there are five dots
-    (objects). Pixel i of dot 1, 2, 3, 4, 5 are sampled as:
-    X1i = l1 + l12 + Xi
-    X2i = l12 + Xi
-    X3i = 2 * l3 + Ni
-    X4i = l4 + l45 + Xi
-    X5i = l45 + Xi
-    Where l1, l12, l3, l4, l45 are latent variables ~ N(0, 1)
-    So pixels of X1 share a common variance that stem from l1 + l12.
-    So pixels of X2 share a common variance that stem from l12.
-    So pixels of X1 and X2 share a common variance that stem from l12.
-    etc.
-    4) Spatial Smoothing.
-    5) Model: y = X beta + e
-    - Betas are null outside dots, and 1 or -1 depending on the dot:
-        X1: 1, X2: -1, X3: 1, X4: 1, X5: -1.
-    - Sample noise e ~ N(0, 1)
-    - Compute X beta then scale beta such that: r_squred(y, X beta) = r2
-    Return X, y, beta
-
-    Note that we get:
-        y = X1 - X2 + X3 + X4 -X5 + e
-        y = l1 + l3 + l4 + noise
-        So pixels of X2 and X5 are not correlated with the target y so they
-        will not be detected by univariate analysis. However, they
-        are usefull since they are suppressing unwilling variance that stem
-        from latents l12 and l45.
-
-Examples
---------
-&gt;&gt;&gt; import numpy as np
-&gt;&gt;&gt; import matplotlib.pyplot as plt
-&gt;&gt;&gt; from parsimony.datasets import make_regression_struct
-&gt;&gt;&gt; n_samples = 100
-&gt;&gt;&gt; shape = (11, 11, 1)
-&gt;&gt;&gt; r2 = .5
-&gt;&gt;&gt; X, y, beta = make_regression_struct(n_samples=n_samples, shape=shape,
-...                            r2=r2, random_seed=1)
-&gt;&gt;&gt; X_flat = X.reshape(n_samples, np.prod(shape))
-&gt;&gt;&gt; beta_flat = beta.ravel()
-&gt;&gt;&gt; from sklearn.metrics import r2_score
-&gt;&gt;&gt; print np.round(r2_score(y, np.dot(X_flat, beta_flat)), 2)
-0.5
-&gt;&gt;&gt; cax = plt.matshow(beta.squeeze())
-&gt;&gt;&gt; plt.colorbar(cax)
-&gt;&gt;&gt; plt.title(&quot;Beta&quot;)
-&gt;&gt;&gt; plt.show()
-
-</pre>
-  <dl class="fields">
-  </dl>
-</td></tr></table>
-</div>
 <br />
 <!-- ==================== NAVIGATION BAR ==================== -->
 <table class="navbar" border="0" width="100%" cellpadding="0"
@@ -536,7 +641,7 @@ Examples
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Dec  6 11:21:59 2013
+    Generated by Epydoc 3.0.1 on Fri Feb 21 17:38:24 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

@@ -123,7 +123,9 @@
         <span class="summary-sig-arg">eps</span>=<span class="summary-sig-default">5e-08</span>,
         <span class="summary-sig-arg">max_iter</span>=<span class="summary-sig-default">10000</span>,
         <span class="summary-sig-arg">min_iter</span>=<span class="summary-sig-default">1</span>)</span><br />
-      x.__init__(...) initializes x; see help(type(x)) for signature</td>
+      Parameters:
+----------
+output : Boolean.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.algorithms-pysrc.html#ExcessiveGapMethod.__init__">source&nbsp;code</a></span>
             
@@ -155,7 +157,7 @@
   <tr>
     <td colspan="2" class="summary">
     <p class="indent-wrapped-lines"><b>Inherited from <code><a href="parsimony.algorithms.BaseAlgorithm-class.html">BaseAlgorithm</a></code></b>:
-      <code><a href="parsimony.algorithms.BaseAlgorithm-class.html#check_compatability">check_compatability</a></code>,
+      <code><a href="parsimony.algorithms.BaseAlgorithm-class.html#check_compatibility">check_compatibility</a></code>,
       <code><a href="parsimony.algorithms.BaseAlgorithm-class.html#set_params">set_params</a></code>
       </p>
     <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
@@ -196,10 +198,11 @@
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a href="parsimony.algorithms.ExcessiveGapMethod-class.html#INTERFACES" class="summary-name">INTERFACES</a> = <code title="[&lt;class 'parsimony.functions.NesterovFunction'&gt;,
- &lt;class 'parsimony.functions.LipschitzContinuousGradient'&gt;,
- &lt;class 'parsimony.functions.GradientMap'&gt;,
- &lt;class 'parsimony.functions.DualFunction'&gt;]"><code class="variable-group">[</code>&lt;class 'parsimony.functions.NesterovFunction'&gt;<code class="variable-op">, </code><code class="variable-ellipsis">...</code></code>
+        <a href="parsimony.algorithms.ExcessiveGapMethod-class.html#INTERFACES" class="summary-name">INTERFACES</a> = <code title="[&lt;class 'parsimony.functions.nesterov.interfaces.NesterovFunction'&gt;,
+ &lt;class 'parsimony.functions.interfaces.LipschitzContinuousGradient'&gt;,
+ &lt;class 'parsimony.functions.interfaces.GradientMap'&gt;,
+ &lt;class 'parsimony.functions.interfaces.DualFunction'&gt;,
+ &lt;class 'parsimony.functions.interfaces.StronglyConvex'&gt;]"><code class="variable-group">[</code>&lt;class 'parsimony.functions.nesterov.interfaces.<code class="variable-ellipsis">...</code></code>
     </td>
   </tr>
 <tr>
@@ -282,11 +285,25 @@
     </td>
   </tr></table>
   
-  <p>x.__init__(...) initializes x; see help(type(x)) for signature</p>
+  <pre class="literalblock">
+
+Parameters:
+----------
+output : Boolean. Whether or not to return extra output information.
+        If output is True, running the algorithm will return a tuple
+        with two elements. The first element is the found regression
+        vector, and the second is the extra output information.
+
+eps : Positive float. Tolerance for the stopping criterion.
+
+max_iter : Positive integer. Maximum allowed number of iterations.
+
+min_iter : Positive integer. Minimum allowed number of iterations.
+
+</pre>
   <dl class="fields">
     <dt>Overrides:
         object.__init__
-        <dd><em class="note">(inherited documentation)</em></dd>
     </dt>
   </dl>
 </td></tr></table>
@@ -311,11 +328,14 @@
   <pre class="literalblock">
 The excessive gap method for strongly convex functions.
 
-Parameters
+Parameters:
 ----------
 function : The function to minimise. It contains two parts, function.g
         is the strongly convex part and function.h is the smoothed part
         of the function.
+
+beta : Numpy array. The start vector. This is normally not given, but
+        left None. The start vector is computed by the algorithm.
 
 </pre>
   <dl class="fields">
@@ -356,10 +376,11 @@ function : The function to minimise. It contains two parts, function.g
   <dl class="fields">
     <dt>Value:</dt>
       <dd><table><tr><td><pre class="variable">
-<code class="variable-group">[</code>&lt;class 'parsimony.functions.NesterovFunction'&gt;<code class="variable-op">,</code>
- &lt;class 'parsimony.functions.LipschitzContinuousGradient'&gt;<code class="variable-op">,</code>
- &lt;class 'parsimony.functions.GradientMap'&gt;<code class="variable-op">,</code>
- &lt;class 'parsimony.functions.DualFunction'&gt;<code class="variable-group">]</code>
+<code class="variable-group">[</code>&lt;class 'parsimony.functions.nesterov.interfaces.NesterovFunction'&gt;<code class="variable-op">,</code>
+ &lt;class 'parsimony.functions.interfaces.LipschitzContinuousGradient'&gt;<code class="variable-op">,</code>
+ &lt;class 'parsimony.functions.interfaces.GradientMap'&gt;<code class="variable-op">,</code>
+ &lt;class 'parsimony.functions.interfaces.DualFunction'&gt;<code class="variable-op">,</code>
+ &lt;class 'parsimony.functions.interfaces.StronglyConvex'&gt;<code class="variable-group">]</code>
 </pre></td></tr></table>
 </dd>
   </dl>
@@ -392,7 +413,7 @@ function : The function to minimise. It contains two parts, function.g
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Dec  6 11:21:59 2013
+    Generated by Epydoc 3.0.1 on Fri Feb 21 17:38:25 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

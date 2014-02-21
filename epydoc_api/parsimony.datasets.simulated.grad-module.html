@@ -62,10 +62,10 @@
 
 <hr />
 <div class="fields">      <p><strong>Author:</strong>
-        Tommy L&#246;fstedt
+        Tommy L&#246;fstedt, Edouard Duchesnay
       </p>
       <p><strong>License:</strong>
-        TBD.
+        BSD 3-clause.
       </p>
 </div><!-- ==================== FUNCTIONS ==================== -->
 <a name="section-Functions"></a>
@@ -90,9 +90,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="grad_L1"></a><span class="summary-sig-name">grad_L1</span>(<span class="summary-sig-arg">beta</span>)</span></td>
+          <td><span class="summary-sig"><a href="parsimony.datasets.simulated.grad-module.html#grad_l1" class="summary-sig-name">grad_l1</a>(<span class="summary-sig-arg">beta</span>,
+        <span class="summary-sig-arg">rng</span>=<span class="summary-sig-default">RandomUniform(-1,1)</span>)</span><br />
+      Sub-gradient of the function</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_L1">source&nbsp;code</a></span>
+            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_l1">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -106,42 +108,120 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="grad_L1mu"></a><span class="summary-sig-name">grad_L1mu</span>(<span class="summary-sig-arg">beta</span>,
+          <td><span class="summary-sig"><a href="parsimony.datasets.simulated.grad-module.html#grad_l1mu" class="summary-sig-name">grad_l1mu</a>(<span class="summary-sig-arg">beta</span>,
+        <span class="summary-sig-arg">mu</span>)</span><br />
+      Gradient of the function</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_l1mu">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="parsimony.datasets.simulated.grad-module.html#grad_l2" class="summary-sig-name">grad_l2</a>(<span class="summary-sig-arg">beta</span>,
+        <span class="summary-sig-arg">rng</span>=<span class="summary-sig-default">&lt;built-in method rand of mtrand.RandomState object at 0x7f187a<code class="variable-ellipsis">...</code></span>)</span><br />
+      Sub-gradient of the function</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_l2">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="parsimony.datasets.simulated.grad-module.html#grad_l2_squared" class="summary-sig-name">grad_l2_squared</a>(<span class="summary-sig-arg">beta</span>,
+        <span class="summary-sig-arg">rng</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Gradient of the function</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_l2_squared">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="grad_tv"></a><span class="summary-sig-name">grad_tv</span>(<span class="summary-sig-arg">beta</span>,
+        <span class="summary-sig-arg">A</span>,
+        <span class="summary-sig-arg">rng</span>=<span class="summary-sig-default">&lt;built-in method rand of mtrand.RandomState object at 0x7f187a<code class="variable-ellipsis">...</code></span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_tv">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="grad_gl"></a><span class="summary-sig-name">grad_gl</span>(<span class="summary-sig-arg">beta</span>,
+        <span class="summary-sig-arg">A</span>,
+        <span class="summary-sig-arg">rng</span>=<span class="summary-sig-default">RandomUniform(-1,1)</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_gl">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_grad_Nesterov"></a><span class="summary-sig-name">_grad_Nesterov</span>(<span class="summary-sig-arg">beta</span>,
+        <span class="summary-sig-arg">A</span>,
+        <span class="summary-sig-arg">rng</span>=<span class="summary-sig-default">RandomUniform(-1,1)</span>,
+        <span class="summary-sig-arg">grad_norm</span>=<span class="summary-sig-default">&lt;function grad_l2 at 0x2adc7d0&gt;</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#_grad_Nesterov">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="grad_tvmu"></a><span class="summary-sig-name">grad_tvmu</span>(<span class="summary-sig-arg">beta</span>,
+        <span class="summary-sig-arg">A</span>,
         <span class="summary-sig-arg">mu</span>)</span></td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_L1mu">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="grad_L2"></a><span class="summary-sig-name">grad_L2</span>(<span class="summary-sig-arg">beta</span>)</span></td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_L2">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="grad_norm2"></a><span class="summary-sig-name">grad_norm2</span>(<span class="summary-sig-arg">beta</span>)</span></td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_norm2">source&nbsp;code</a></span>
+            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_tvmu">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -155,62 +235,11 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="_generate_A"></a><span class="summary-sig-name">_generate_A</span>(<span class="summary-sig-arg">shape</span>)</span></td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#_generate_A">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="_generate_Ai"></a><span class="summary-sig-name">_generate_Ai</span>(<span class="summary-sig-arg">i</span>,
+          <td><span class="summary-sig"><a name="grad_glmu"></a><span class="summary-sig-name">grad_glmu</span>(<span class="summary-sig-arg">beta</span>,
         <span class="summary-sig-arg">A</span>,
-        <span class="summary-sig-arg">shape</span>)</span></td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#_generate_Ai">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="grad_TV"></a><span class="summary-sig-name">grad_TV</span>(<span class="summary-sig-arg">beta</span>,
-        <span class="summary-sig-arg">shape</span>)</span></td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_TV">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="grad_TVmu"></a><span class="summary-sig-name">grad_TVmu</span>(<span class="summary-sig-arg">beta</span>,
-        <span class="summary-sig-arg">shape</span>,
         <span class="summary-sig-arg">mu</span>)</span></td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_TVmu">source&nbsp;code</a></span>
+            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_glmu">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -224,79 +253,13 @@
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="_find_mask_ind"></a><span class="summary-sig-name">_find_mask_ind</span>(<span class="summary-sig-arg">mask</span>,
-        <span class="summary-sig-arg">ind</span>)</span></td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#_find_mask_ind">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a href="parsimony.datasets.simulated.grad-module.html#delete_sparse_csr_row" class="summary-sig-name" onclick="show_private();">delete_sparse_csr_row</a>(<span class="summary-sig-arg">mat</span>,
-        <span class="summary-sig-arg">i</span>)</span><br />
-      Delete row i in-place from sparse matrix mat (CSR format).</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#delete_sparse_csr_row">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="generate_A_from_mask"></a><span class="summary-sig-name">generate_A_from_mask</span>(<span class="summary-sig-arg">mask</span>)</span></td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#generate_A_from_mask">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="_generate_sparse_masked_A"></a><span class="summary-sig-name">_generate_sparse_masked_A</span>(<span class="summary-sig-arg">shape</span>,
-        <span class="summary-sig-arg">mask</span>)</span></td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#_generate_sparse_masked_A">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr class="private">
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="_generate_sparse_Ai"></a><span class="summary-sig-name">_generate_sparse_Ai</span>(<span class="summary-sig-arg">i</span>,
+          <td><span class="summary-sig"><a name="_Nestetov_alpha"></a><span class="summary-sig-name">_Nestetov_alpha</span>(<span class="summary-sig-arg">beta</span>,
         <span class="summary-sig-arg">A</span>,
-        <span class="summary-sig-arg">shape</span>)</span></td>
+        <span class="summary-sig-arg">mu</span>,
+        <span class="summary-sig-arg">proj</span>)</span><br />
+      Dual variable of the Nesterov function.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#_generate_sparse_Ai">source&nbsp;code</a></span>
+            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#_Nestetov_alpha">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -304,17 +267,49 @@
       
     </td>
   </tr>
-<tr>
+<tr class="private">
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a name="grad_TV_sparse"></a><span class="summary-sig-name">grad_TV_sparse</span>(<span class="summary-sig-arg">beta</span>,
-        <span class="summary-sig-arg">shape</span>,
-        <span class="summary-sig-arg">mask</span>)</span></td>
+          <td><span class="summary-sig"><a name="_Nesterov_project"></a><span class="summary-sig-name">_Nesterov_project</span>(<span class="summary-sig-arg">alpha</span>)</span></td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_TV_sparse">source&nbsp;code</a></span>
+            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#_Nesterov_project">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="parsimony.datasets.simulated.grad-module.html#_tv_project" class="summary-sig-name" onclick="show_private();">_tv_project</a>(<span class="summary-sig-arg">alpha</span>)</span><br />
+      Projection onto the compact space of the Nesterov function.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#_tv_project">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_grad_Nesterov_smoothed"></a><span class="summary-sig-name">_grad_Nesterov_smoothed</span>(<span class="summary-sig-arg">A</span>,
+        <span class="summary-sig-arg">alpha</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#_grad_Nesterov_smoothed">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -366,29 +361,130 @@
   </td>
 </tr>
 </table>
-<a name="delete_sparse_csr_row"></a>
+<a name="grad_l1"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">grad_l1</span>(<span class="sig-arg">beta</span>,
+        <span class="sig-arg">rng</span>=<span class="sig-default">RandomUniform(-1,1)</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_l1">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+Sub-gradient of the function
+
+    f(x) = |x|_1,
+
+where |x|_1 is the L1-norm.
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="grad_l1mu"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">grad_l1mu</span>(<span class="sig-arg">beta</span>,
+        <span class="sig-arg">mu</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_l1mu">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+Gradient of the function
+
+    f(x) = L1(mu, x),
+
+where L1(mu, x) is the Nesterov smoothed L1-norm.
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="grad_l2"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">grad_l2</span>(<span class="sig-arg">beta</span>,
+        <span class="sig-arg">rng</span>=<span class="sig-default">&lt;built-in method rand of mtrand.RandomState object at 0x7f187a<code class="variable-ellipsis">...</code></span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_l2">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+Sub-gradient of the function
+
+    f(x) = |x|_2,
+
+where |x|_2 is the L2-norm.
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="grad_l2_squared"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">grad_l2_squared</span>(<span class="sig-arg">beta</span>,
+        <span class="sig-arg">rng</span>=<span class="sig-default">None</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#grad_l2_squared">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+Gradient of the function
+
+    f(x) = (1 / 2) * |x|&#178;_2,
+
+where |x|&#178;_2 is the squared L2-norm.
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="_tv_project"></a>
 <div class="private">
 <table class="details" border="1" cellpadding="3"
        cellspacing="0" width="100%" bgcolor="white">
 <tr><td>
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">delete_sparse_csr_row</span>(<span class="sig-arg">mat</span>,
-        <span class="sig-arg">i</span>)</span>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_tv_project</span>(<span class="sig-arg">alpha</span>)</span>
   </h3>
   </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#delete_sparse_csr_row">source&nbsp;code</a></span>&nbsp;
+    ><span class="codelink"><a href="parsimony.datasets.simulated.grad-pysrc.html#_tv_project">source&nbsp;code</a></span>&nbsp;
     </td>
   </tr></table>
   
-  <pre class="literalblock">
-Delete row i in-place from sparse matrix mat (CSR format).
-
-Implementation from:
-
-    http://stackoverflow.com/questions/13077527/is-there-a-numpy-delete-equivalent-for-sparse-matrices
-
-</pre>
+  <p>Projection onto the compact space of the Nesterov function.</p>
+  <p>From the interface &quot;NesterovFunction&quot;.</p>
   <dl class="fields">
   </dl>
 </td></tr></table>
@@ -420,7 +516,7 @@ Implementation from:
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Dec  6 11:21:59 2013
+    Generated by Epydoc 3.0.1 on Fri Feb 21 17:38:24 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

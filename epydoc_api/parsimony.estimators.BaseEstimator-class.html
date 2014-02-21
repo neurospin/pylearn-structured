@@ -66,10 +66,19 @@ object --+
 <dl><dt>Known Subclasses:</dt>
 <dd>
       <ul class="subclass-list">
-<li><a href="parsimony.estimators.RegressionEstimator-class.html">RegressionEstimator</a></li>  </ul>
+<li class="private"><a href="parsimony.estimators.LogisticRegressionEstimator-class.html" onclick="show_private();">LogisticRegressionEstimator</a></li><li>, <a href="parsimony.estimators.RegressionEstimator-class.html">RegressionEstimator</a></li>  </ul>
 </dd></dl>
 
 <hr />
+<pre class="literalblock">
+Base estimator for all kinds of estimation
+
+Parameters
+----------
+algorithm : Which algorithm will be applied
+
+</pre>
+
 <!-- ==================== NESTED CLASSES ==================== -->
 <a name="section-NestedClasses"></a>
 <table class="summary" border="1" cellpadding="3"
@@ -138,7 +147,8 @@ object --+
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="fit"></a><span class="summary-sig-name">fit</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">X</span>)</span></td>
+        <span class="summary-sig-arg">X</span>)</span><br />
+      Fit the estimator to the data</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.estimators-pysrc.html#BaseEstimator.fit">source&nbsp;code</a></span>
             
@@ -171,7 +181,8 @@ object --+
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a href="parsimony.estimators.BaseEstimator-class.html#get_params" class="summary-sig-name">get_params</a>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a href="parsimony.estimators.BaseEstimator-class.html#get_params" class="summary-sig-name">get_params</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Return a dictionary containing all the estimator's parameters</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.estimators-pysrc.html#BaseEstimator.get_params">source&nbsp;code</a></span>
             
@@ -188,7 +199,9 @@ object --+
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a href="parsimony.estimators.BaseEstimator-class.html#predict" class="summary-sig-name">predict</a>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">X</span>)</span></td>
+        <span class="summary-sig-arg">X</span>)</span><br />
+      Return a predicted y corresponding to the X given and the beta 
+      previously determined</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.estimators-pysrc.html#BaseEstimator.predict">source&nbsp;code</a></span>
             
@@ -263,28 +276,28 @@ object --+
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_cache"></a><span class="summary-name">_abc_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x2299350&gt;">&lt;_weakrefset.WeakSet object at 0x2299350&gt;</code>
+        <a name="_abc_cache"></a><span class="summary-name">_abc_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x23205d0&gt;">&lt;_weakrefset.WeakSet object at 0x23205d0&gt;</code>
     </td>
   </tr>
 <tr class="private">
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_negative_cache"></a><span class="summary-name">_abc_negative_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x22993d0&gt;">&lt;_weakrefset.WeakSet object at 0x22993d0&gt;</code>
+        <a name="_abc_negative_cache"></a><span class="summary-name">_abc_negative_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x2320650&gt;">&lt;_weakrefset.WeakSet object at 0x2320650&gt;</code>
     </td>
   </tr>
 <tr class="private">
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_negative_cache_version"></a><span class="summary-name">_abc_negative_cache_version</span> = <code title="14">14</code>
+        <a name="_abc_negative_cache_version"></a><span class="summary-name">_abc_negative_cache_version</span> = <code title="15">15</code>
     </td>
   </tr>
 <tr class="private">
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_registry"></a><span class="summary-name">_abc_registry</span> = <code title="&lt;_weakrefset.WeakSet object at 0x2299290&gt;">&lt;_weakrefset.WeakSet object at 0x2299290&gt;</code>
+        <a name="_abc_registry"></a><span class="summary-name">_abc_registry</span> = <code title="&lt;_weakrefset.WeakSet object at 0x23204d0&gt;">&lt;_weakrefset.WeakSet object at 0x23204d0&gt;</code>
     </td>
   </tr>
 </table>
@@ -370,7 +383,7 @@ object --+
     </td>
   </tr></table>
   
-  
+  <p>Return a dictionary containing all the estimator's parameters</p>
   <dl class="fields">
     <dt>Decorators:</dt>
     <dd><ul class="nomargin-top">
@@ -394,7 +407,8 @@ object --+
     </td>
   </tr></table>
   
-  
+  <p>Return a predicted y corresponding to the X given and the beta 
+  previously determined</p>
   <dl class="fields">
     <dt>Decorators:</dt>
     <dd><ul class="nomargin-top">
@@ -492,7 +506,7 @@ object --+
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Dec  6 11:21:59 2013
+    Generated by Epydoc 3.0.1 on Fri Feb 21 17:38:25 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"
