@@ -521,7 +521,7 @@ class CONESTA(bases.ExplicitAlgorithm):
             # TODO: Use StepSize instead.
             tnew = 1.0 / function.L()
             eps_plus = min(max_eps, function.eps_opt(mu[-1]))
-            self.FISTA.set_params(step=tnew, eps=eps_plus)
+            self.FISTA.set_params(step=tnew, eps=eps_plus, output=self.output)
             if self.output:
                 (beta, info) = self.FISTA.run(function, beta)
                 fval = info["f"]
