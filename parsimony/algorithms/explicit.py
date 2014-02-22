@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`parsimony.algorithms.implicit` module includes several algorithms
-that minimises an implicit loss function.
+The :mod:`parsimony.algorithms.explicit` module includes several algorithms
+that minimises an explicit loss function.
 
 Algorithms may not store states. I.e., if they are classes, do not keep
 references to objects with state in the algorithm objects. It should be

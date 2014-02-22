@@ -108,8 +108,9 @@ if __name__ == '__main__':
 
     # TVL1L2 ===============================================================
     import parsimony.estimators as estimators
-    import parsimony.algorithms as algorithms
-    import parsimony.tv
+    import parsimony.algorithms.explicit as algorithms
+    import parsimony.functions.nesterov.tv as tv
+
 
     def ratio2coef(alpha, tv_ratio, l1_ratio):
         l2_ratio = 1 - tv_ratio - l1_ratio
@@ -123,7 +124,7 @@ if __name__ == '__main__':
     l1_ratio = .9
     l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
 
-    A, n_compacts = parsimony.tv.A_from_shape(shape)
+    A, n_compacts = tv.A_from_shape(shape)
     tvl1l2 = estimators.RidgeRegression_L1_TV(k, l, g, A,
                         algorithm=algorithms.StaticCONESTA(max_iter=100))
     tvl1l2.fit(Xtr, ytr)

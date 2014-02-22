@@ -47,8 +47,7 @@ A, n_compacts = tv.A_from_shape(shape)
 #import parsimony.functions as functions
 #functions.RR_L1_TV(X, y, k, l, g, A=A)
 ridgel1tv = RidgeRegression_L1_TV(k, l, g, A)
-%yte_pred_ridgel1tv = ridgel1tv.fit(X, y).predict(Xte)
-time yte_pred_ridgel1tv = ridgel1tv.fit(X, y).predict(Xte)
+yte_pred_ridgel1tv = ridgel1tv.fit(Xtr, ytr).predict(Xte)
 ###########################################################################
 ## Plot
 

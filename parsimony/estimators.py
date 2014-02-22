@@ -256,7 +256,7 @@ class RidgeRegression_L1_TV(RegressionEstimator):
         return {"k": self.k, "l": self.l, "g": self.g,
                 "A": self.A, "mu": self.mu}
 
-    def fit(self, X, y):
+    def fit(self, X, y, beta=None):
         """Fit the estimator to the data
         """
         self.function = functions.RR_L1_TV(X, y, self.k, self.l, self.g,
@@ -265,7 +265,8 @@ class RidgeRegression_L1_TV(RegressionEstimator):
                                            self.algorithm.INTERFACES)
 
         # TODO: Should we use a seed here so that we get deterministic results?
-        beta = self.start_vector.get_vector((X.shape[1], 1))
+        if beta is None:
+            beta = self.start_vector.get_vector((X.shape[1], 1))
 
         if self.mu is None:
             self.mu = 0.9 * self.function.estimate_mu(beta)
