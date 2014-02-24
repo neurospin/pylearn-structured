@@ -116,6 +116,7 @@ class LinearRegression(interfaces.CompositeFunction,
 
             from parsimony.algorithms.implicit import FastSVD
 
+            # Rough limits for when FastSVD is faster than np.linalg.svd.
             n, p = self.X.shape
             if (max(n, p) > 500 and max(n, p) <= 1000 \
                     and float(max(n, p)) / min(n, p) <= 1.3) \

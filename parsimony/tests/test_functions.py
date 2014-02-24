@@ -2,7 +2,9 @@
 """
 Created on Fri Nov 22 10:42:07 2013
 
-@author: jinpeng
+@author:  Jinpeng Li
+@email:   jinpeng.li@cea.fr
+@license: BSD 3-clause.
 """
 import unittest
 
@@ -10,6 +12,7 @@ import numpy as np
 
 from parsimony.tests.spamsdata import SpamsGenerator
 from tests import TestCase
+
 
 class TestFunctions(TestCase):
 

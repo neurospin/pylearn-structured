@@ -14,7 +14,7 @@ Created on Mon Apr 22 10:54:29 2013
 import numpy as np
 
 from . import interfaces
-from . import penalties
+from .penalties import L1, ZeroFunction
 from .losses import RidgeRegression
 from .losses import RidgeLogisticRegression
 #from parsimony.functions.penalties import ZeroFunction
@@ -33,6 +33,7 @@ __all__ = ["CombinedFunction",
 class CombinedFunction(interfaces.CompositeFunction,
                        interfaces.Gradient,
                        interfaces.ProximalOperator,
+                       interfaces.ProjectionOperator,
                        interfaces.StepSize):
     """Combines one or more loss functions, any number of penalties and zero
     or one proximal operator.
@@ -41,18 +42,24 @@ class CombinedFunction(interfaces.CompositeFunction,
 
         f(x) = f_1(x) [ + f_2(x) ... ] [ + p_1(x) ... ] [ + P(x)],
 
+    subject to [ C_1(x) <= c_1,
+                 C_2(x) <= c_2,
+                 ... ],
+
     where f_i are differentiable Functions, p_j are differentiable penalties
     and P is a ProximalOperator. All functions and penalties must thus be
     Gradient, unless it is a ProximalOperator.
 
-    If ProximalOperator is not given, then prox is the identity.
+    If no ProximalOperator is given, then prox is the identity.
     """
-    def __init__(self):
+    def __init__(self, functions=[], penalties=[], prox=[], constraints=[]):
 
-        self._f = []
-        self._p = []
-        self._prox = penalties.ZeroFunction()
-#        self._c = []  # Not yet used.
+        self._f = list(functions)
+        self._p = list(penalties)
+        self._prox = list(prox)
+        if len(self._prox) == 0:
+            self._prox.append(ZeroFunction())
+        self._c = list(constraints)
 
     def reset(self):
 
@@ -62,10 +69,11 @@ class CombinedFunction(interfaces.CompositeFunction,
         for p in self._p:
             p.reset()
 
-#        for c in self._c:
-#            c.reset()
+        for prox in self._prox:
+            prox.reset()
 
-        self._prox.reset()
+        for c in self._c:
+            c.reset()
 
     def add_function(self, function):
 
@@ -74,22 +82,37 @@ class CombinedFunction(interfaces.CompositeFunction,
 
         self._f.append(function)
 
-    def add_penalty(self, penalty, proximal_operator=False):
+    def add_penalty(self, penalty):
 
-        if proximal_operator:
-            if not isinstance(penalty, interfaces.ProximalOperator):
-                raise ValueError("Not a proximal operator.")
-            else:
-                self._prox = penalty
+        if not isinstance(penalty, interfaces.Penalty):
+            raise ValueError("Not a penalty.")
+        elif not isinstance(penalty, interfaces.Gradient):
+            raise ValueError("Penalties must have gradients.")
         else:
-            if not isinstance(penalty, interfaces.Gradient):
-                raise ValueError("Penalties must have gradients.")
-            else:
-                self._p.append(penalty)
+            self._p.append(penalty)
 
-#    def add_constraint(self, constraint):
-#
-#        self._c.append(constraint)
+    def add_prox(self, penalty):
+
+        if not isinstance(penalty, interfaces.ProximalOperator):
+            raise ValueError("Not a proximal operator.")
+        elif len(self._c) > 0:
+            raise ValueError("Cannot have both ProximalOperator and " \
+                             "ProjectionOperator.")
+        else:
+            # TODO: We currently only allow one proximal operator. Fix this!
+            self._prox[0] = penalty
+
+    def add_constraint(self, constraint):
+
+        if not isinstance(constraint, interfaces.Constraint):
+            raise ValueError("Not a constraint.")
+        elif not isinstance(constraint, interfaces.ProjectionOperator):
+            raise ValueError("Constraints must have projection operators.")
+        elif not isinstance(self._prox, ZeroFunction):
+            raise ValueError("Cannot have both ProjectionOperator and " \
+                             "ProximalOperator.")
+        else:
+            self._c.append(constraint)
 
     def f(self, x):
         """Function value.
@@ -101,7 +124,8 @@ class CombinedFunction(interfaces.CompositeFunction,
         for p in self._p:
             val += p.f(x)
 
-        val += self._prox.f(x)
+        for prox in self._prox:
+            val += prox.f(x)
 
         return val
 
@@ -128,7 +152,11 @@ class CombinedFunction(interfaces.CompositeFunction,
 
         From the interface "ProximalOperator".
         """
-        return self._prox.prox(x, factor=factor)
+        # TODO: We currently only allow one proximal operator. Fix this!
+        return self._prox[0].prox(x, factor=factor)
+
+    def proj(self, x):
+        raise NotImplementedError("Not yet implemented.")
 
     def step(self, x):
         """The step size to use in descent methods.
@@ -150,7 +178,7 @@ class CombinedFunction(interfaces.CompositeFunction,
                 all_lipschitz = False
                 break
 
-        step = 1.0
+        step = 0.0
         if all_lipschitz:
             L = 0.0
             for f in self._f:
@@ -215,7 +243,7 @@ class RR_L1_TV(interfaces.CompositeFunction,
         self.y = y
 
         self.rr = RidgeRegression(X, y, k)
-        self.l1 = penalties.L1(l, penalty_start=penalty_start)
+        self.l1 = L1(l, penalty_start=penalty_start)
         self.tv = TotalVariation(g, A=A, mu=mu, penalty_start=penalty_start)
 
         self.reset()
@@ -495,7 +523,7 @@ class RLR_L1_TV(RR_L1_TV):
         self.y = y
 
         self.rr = RidgeLogisticRegression(X, y, k, weights=weights)
-        self.l1 = penalties.L1(l, penalty_start=penalty_start)
+        self.l1 = L1(l, penalty_start=penalty_start)
         self.tv = TotalVariation(g, A=A, mu=mu, penalty_start=penalty_start)
 
         self.reset()
@@ -535,7 +563,7 @@ class RR_L1_GL(RR_L1_TV):
         self.y = y
 
         self.rr = RidgeRegression(X, y, k)
-        self.l1 = penalties.L1(l, penalty_start=penalty_start)
+        self.l1 = L1(l, penalty_start=penalty_start)
         self.gl = GroupLassoOverlap(g, A=A, mu=mu, penalty_start=penalty_start)
 
         self.reset()

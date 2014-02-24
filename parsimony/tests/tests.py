@@ -10,14 +10,14 @@ Created on Wed Feb 19 14:55:58 2014
 @license: BSD 3-clause.
 """
 from nose.tools import nottest
-import unittest
+#import unittest
 import abc
 import os
 
 __all__ = ["TestCase", "test_all"]
 
 
-class TestCase(unittest.TestCase):
+class TestCase(object):  # unittest.TestCase):
     """Unit test base class.
 
     Example

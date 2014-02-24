@@ -2,19 +2,22 @@
 """
 Created on Mon Dec 16 12:21:44 2013
 
-@author: jinpeng
+@author:  Jinpeng Li
+@email:   jinpeng.li@cea.fr
+@license: BSD 3-clause.
 """
 
 import numpy as np
 
 
 class SpamsGenerator:
+
     def get_x_y_estimated_beta(self):
-        '''
+        """
         Reference:
         ---------
         http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
-        '''
+        """
         shape = (4, 4, 1)
         num_samples = 10
         coefficient = 0.05

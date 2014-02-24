@@ -6,6 +6,7 @@ Created on Wed Jan  1 18:54:46 2014
 """
 import numpy as np
 import matplotlib.pyplot as plt
+# TODO: Remove dependece on scikit-learn.
 from sklearn.metrics import r2_score
 from parsimony.datasets import make_regression_struct
 
@@ -60,6 +61,7 @@ if __name__ == '__main__':
     plt.title("Corr(X, y)")
     #plt.show()
 
+    # TODO: Remove dependece on scikit-learn.
     from sklearn.linear_model import Lasso
     from sklearn.linear_model import ElasticNet, ElasticNetCV
     from sklearn.linear_model import Ridge
@@ -108,9 +110,8 @@ if __name__ == '__main__':
 
     # TVL1L2 ===============================================================
     import parsimony.estimators as estimators
-    import parsimony.algorithms.explicit as algorithms
+    from parsimony.algorithms.explicit import StaticCONESTA
     import parsimony.functions.nesterov.tv as tv
-
 
     def ratio2coef(alpha, tv_ratio, l1_ratio):
         l2_ratio = 1 - tv_ratio - l1_ratio
@@ -126,7 +127,7 @@ if __name__ == '__main__':
 
     A, n_compacts = tv.A_from_shape(shape)
     tvl1l2 = estimators.RidgeRegression_L1_TV(k, l, g, A,
-                        algorithm=algorithms.StaticCONESTA(max_iter=100))
+                        algorithm=StaticCONESTA(max_iter=100))
     tvl1l2.fit(Xtr, ytr)
     plot = plt.subplot(337)
     plot_map(tvl1l2.beta.reshape(nx, ny), plot)
@@ -138,7 +139,7 @@ if __name__ == '__main__':
     l1_ratio = .45
     l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
     tvl1l2 = estimators.RidgeRegression_L1_TV(k, l, g, A,
-                        algorithm=algorithms.StaticCONESTA(max_iter=100))
+                        algorithm=StaticCONESTA(max_iter=100))
     tvl1l2.fit(Xtr, ytr)
     plot = plt.subplot(338)
     plot_map(tvl1l2.beta.reshape(nx, ny), plot)
@@ -150,7 +151,7 @@ if __name__ == '__main__':
     l1_ratio = .05
     l, k, g = ratio2coef(alpha=alpha, tv_ratio=tv_ratio, l1_ratio=l1_ratio)
     tvl1l2 = estimators.RidgeRegression_L1_TV(k, l, g, A,
-                        algorithm=algorithms.StaticCONESTA(max_iter=100))
+                        algorithm=StaticCONESTA(max_iter=100))
     tvl1l2.fit(Xtr, ytr)
     plot = plt.subplot(339)
     plot_map(tvl1l2.beta.reshape(nx, ny), plot)

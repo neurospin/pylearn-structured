@@ -29,32 +29,34 @@ def load(l, k, g, beta, M, e, A, snr=None):
 
     Parameters
     ----------
-    l : The L1 regularisation parameter.
+    l : Non-negative float. The L1 regularisation parameter.
 
-    k : The L2 regularisation parameter.
+    k : Non-negative float. The L2 regularisation parameter.
 
-    g : The total variation regularisation parameter.
+    g : Non-negative float. The group lasso regularisation parameter.
 
-    beta : The regression vector to generate data from.
+    beta : Numpy array (p-by-1). The regression vector to generate data from.
 
-    M : The matrix to use when building data. This matrix carries the desired
-            correlation structure of the generated data. The generated data
-            will be a column-scaled version of this matrix.
+    M : Numpy array (n-by-p). The matrix to use when building data. This
+            matrix carries the desired correlation structure of the generated
+            data. The generated data will be a column-scaled version of this
+            matrix.
 
-    e : The error vector e = Xb - y. This vector carries the desired
-            distribution of the residual.
+    e : Numpy array (n-by-1). The error vector e = Xb - y. This vector carries
+            the desired distribution of the residual.
 
-    A : The linear operator for the Nesterov function.
+    A : Numpy or (usually) scipy.sparse array (K-by-p). The linear operator
+            for the Nesterov function.
 
-    snr : Signal-to-noise ratio between model and residual.
+    snr : Positive float. Signal-to-noise ratio between model and residual.
 
     Returns
     -------
-    X : The generated X matrix.
+    X : Numpy array (n-by-p). The generated X matrix.
 
-    y : The generated y vector.
+    y : Numpy array (n-by-1). The generated y vector.
 
-    beta : The regression vector with the correct snr.
+    beta : Numpy array (p-by-1). The regression vector with the correct snr.
     """
     l = float(l)
     k = float(k)
@@ -64,9 +66,9 @@ def load(l, k, g, beta, M, e, A, snr=None):
         def f(x):
             X, y = _generate(l, k, g, x * beta, M, e, A)
 
-            print "norm(beta) = ", np.linalg.norm(x * beta)
-            print "norm(Xbeta) = ", np.linalg.norm(np.dot(X, x * beta))
-            print "norm(e) = ", np.linalg.norm(e)
+#            print "norm(beta) = ", np.linalg.norm(x * beta)
+#            print "norm(Xbeta) = ", np.linalg.norm(np.dot(X, x * beta))
+#            print "norm(e) = ", np.linalg.norm(e)
 
             print "snr = %.5f = %.5f = |X.b| / |e| = %.5f / %.5f" \
                    % (snr, np.linalg.norm(np.dot(X, x * beta)) \

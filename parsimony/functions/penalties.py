@@ -38,6 +38,9 @@ class ZeroFunction(interfaces.AtomicFunction,
 
         self.l = float(l)
         self.c = float(c)
+        if self.c < 0.0:
+            raise ValueError("A negative constraint parameter does not make " \
+                             "sense, since the function is always zero.")
         self.penalty_start = int(penalty_start)
 
         self.reset()
@@ -80,7 +83,6 @@ class ZeroFunction(interfaces.AtomicFunction,
 
         From the interface "Constraint".
         """
-        # When c is non-negative, the function is always feasible.
         return self.c >= 0.0
 
 

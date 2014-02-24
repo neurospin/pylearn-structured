@@ -90,6 +90,7 @@ class Penalty(object):
     __metaclass__ = abc.ABCMeta
 
 
+# TODO: Should all constraints have the projection operator?
 class Constraint(object):
     """Represents a constraint of a function.
 

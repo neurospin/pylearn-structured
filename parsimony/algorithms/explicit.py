@@ -188,7 +188,7 @@ class ISTA(bases.ExplicitAlgorithm):
                   # Lipschitz constant. All functions don't have L, but will
                   # still run in FISTA with a small enough step size.
                   # Updated: Use StepSize instead!!
-                  interfaces.LipschitzContinuousGradient,
+                  # interfaces.LipschitzContinuousGradient,
                   interfaces.ProximalOperator,
                  ]
 
@@ -361,7 +361,7 @@ class FISTA(bases.ExplicitAlgorithm):
                   # Lipschitz constant. All functions don't have L, but will
                   # still run in FISTA with a small enough step size.
                   # Updated: Use StepSize instead!!
-                  interfaces.LipschitzContinuousGradient,
+#                  interfaces.LipschitzContinuousGradient,
                   interfaces.ProximalOperator,
                  ]
 
