@@ -16,9 +16,8 @@ from tests import TestCase
 class TestGroupLasso(TestCase):
 
     def test_nonoverlapping_nonsmooth(self):
-        """
-        Reference: http://spams-devel.gforge.inria.fr/doc-python/doc_spams.pdf
-        """
+        # Spams: http://spams-devel.gforge.inria.fr/doc-python/doc_spams.pdf
+
         from parsimony.functions import CombinedFunction
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
@@ -124,9 +123,8 @@ class TestGroupLasso(TestCase):
         assert abs(f_parsimony - f_spams) < 1e-5
 
     def test_nonoverlapping_smooth(self):
-        """
-        Reference: http://spams-devel.gforge.inria.fr/doc-python/doc_spams.pdf
-        """
+        # Spams: http://spams-devel.gforge.inria.fr/doc-python/doc_spams.pdf
+
         from parsimony.functions import CombinedFunction
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions

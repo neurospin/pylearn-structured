@@ -37,7 +37,8 @@ class Function(object):
                                   'specialised!')
 
     def reset(self):
-
+        """Free any cached computations from previous use of this Function.
+        """
         pass
 
     def set_params(self, **kwargs):

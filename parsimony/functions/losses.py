@@ -24,7 +24,8 @@ except ValueError:
     import parsimony.functions.interfaces as interfaces  # Run as a script
 import parsimony.utils as utils
 
-__all__ = ["LinearRegression", "RidgeRegression", "RidgeLogisticRegression"]
+__all__ = ["LinearRegression", "RidgeRegression", "RidgeLogisticRegression",
+           "LatentVariableVariance"]
 
 
 class LinearRegression(interfaces.CompositeFunction,
@@ -53,7 +54,7 @@ class LinearRegression(interfaces.CompositeFunction,
         self.reset()
 
     def reset(self):
-        """Reset the value of _lambda_max and _lambda_min.
+        """Free any cached computations from previous use of this Function.
 
         From the interface "Function".
         """
@@ -155,7 +156,11 @@ class RidgeRegression(interfaces.CompositeFunction,
                       interfaces.Eigenvalues,
                       interfaces.StronglyConvex,
                       interfaces.StepSize):
-    """ The Ridge Regression function
+    """The Ridge Regression function, i.e. a representation of
+
+        f(x) = 0.5 * ||Xb - y||²_2 + lambda * 0.5 * ||b||²_2,
+
+    where ||.||²_2 is the L2 norm.
 
     Parameters
     ----------
@@ -174,14 +179,17 @@ class RidgeRegression(interfaces.CompositeFunction,
         self.reset()
 
     def reset(self):
-        """Reset the value of _lambda_max and _lambda_min
-        """
+        """Free any cached computations from previous use of this Function.
 
+        From the interface "Function".
+        """
         self._lambda_max = None
         self._lambda_min = None
 
     def f(self, beta):
-        """Function value of Ridge regression.
+        """Function value.
+
+        From the interface "Function".
 
         Parameters
         ----------
@@ -389,6 +397,132 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
             self._lipschitz = np.max(s) ** 2.0 + self.k  # TODO: CHECK
         return self._lipschitz
 
+
+class LatentVariableVariance(interfaces.Function,
+                               interfaces.Gradient,
+                               interfaces.StepSize,
+                               interfaces.LipschitzContinuousGradient):
+
+    def __init__(self, X, unbiased=True):
+
+        self.X = X
+        if unbiased:
+            self._n = float(X.shape[0] - 1.0)
+        else:
+            self._n = float(X.shape[0])
+
+        self.reset()
+
+    def reset(self):
+
+        self._lambda_max = None
+
+    def f(self, w):
+        """Function value.
+
+        From the interface "Function".
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.algorithms.implicit import FastSVD
+        >>> from parsimony.functions.losses import LatentVariableVariance
+        >>>
+        >>> np.random.seed(1337)
+        >>> X = np.random.rand(50, 150)
+        >>> w = np.random.rand(150, 1)
+        >>> var = LatentVariableVariance(X)
+        >>> var.f(w)
+        -1295.8544751886152
+        >>> -np.dot(w.T, np.dot(X.T, np.dot(X, w)))[0, 0] / 49.0
+        -1295.854475188615
+        """
+        Xw = np.dot(self.X, w)
+        wXXw = np.dot(Xw.T, Xw)[0, 0]
+        return -wXXw / self._n
+
+    def grad(self, w):
+        """Gradient of the function.
+
+        From the interface "Gradient".
+
+        Parameters
+        ----------
+        w : The point at which to evaluate the gradient.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.functions.losses import LatentVariableVariance
+        >>>
+        >>> np.random.seed(42)
+        >>> X = np.random.rand(50, 150)
+        >>> var = LatentVariableVariance(X)
+        >>> w = np.random.rand(150, 1)
+        >>> np.linalg.norm(var.grad(w) - var.approx_grad(w, eps=1e-4))
+        1.0671280908550282e-08
+        """
+        grad = -np.dot(self.X.T, np.dot(self.X, w)) * (2.0 / self._n)
+
+#        approx_grad = utils.approx_grad(f, w, eps=1e-4)
+#        print "LatentVariableVariance:", maths.norm(grad - approx_grad)
+
+        return grad
+
+    def L(self, w):
+        """Lipschitz constant of the gradient with given index.
+
+        From the interface "LipschitzContinuousGradient".
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.algorithms.implicit import FastSVD
+        >>> from parsimony.functions.losses import LatentVariableVariance
+        >>>
+        >>> np.random.seed(1337)
+        >>> X = np.random.rand(50, 150)
+        >>> w = np.random.rand(150, 1)
+        >>> var = LatentVariableVariance(X)
+        >>> var.L(w)
+        47025.080978684098
+        >>> _, S, _ = np.linalg.svd(np.dot(X.T, X))
+        >>> np.max(S) * 49 / 2.0
+        47025.080978684106
+        """
+        if self._lambda_max is None:
+            from parsimony.algorithms.implicit import FastSVD
+            v = FastSVD().run(self.X, max_iter=1000)
+            us = np.dot(self.X, v)
+
+            self._lambda_max = np.linalg.norm(us) ** 2.0
+
+        return self._n * self._lambda_max / 2.0
+
+    def step(self, w, index=0):
+        """The step size to use in descent methods.
+
+        Parameters
+        ----------
+        w : Numpy array. The point at which to determine the step size.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.algorithms.implicit import FastSVD
+        >>> from parsimony.functions.losses import LatentVariableVariance
+        >>>
+        >>> np.random.seed(42)
+        >>> X = np.random.rand(50, 150)
+        >>> w = np.random.rand(150, 1)
+        >>> var = LatentVariableVariance(X)
+        >>> var.step(w)
+        2.1979627581251385e-05
+        >>> _, S, _ = np.linalg.svd(np.dot(X.T, X))
+        >>> 1.0 / (np.max(S) * 49 / 2.0)
+        2.1979627581251389e-05
+        """
+        return 1.0 / self.L(w)
 
 #class AnonymousFunction(interfaces.AtomicFunction):
 #
