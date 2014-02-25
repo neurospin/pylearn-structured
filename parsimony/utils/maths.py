@@ -18,13 +18,14 @@ def norm(x):
 
     Examples
     --------
+    >>> import numpy as np
     >>> from parsimony.utils.maths import norm
     >>> matrix = np.array([[0.2, 1.0, 0.4], [2.0, 1.5, 0.1]])
     >>> norm(matrix)
     2.7313000567495327
     >>> vector = np.array([[0.2], [1.0], [0.4]])
     >>> norm(vector)
-    1.0954451150103324
+    1.0954451150103321
     '''
     n, p = x.shape
     if p == 1:

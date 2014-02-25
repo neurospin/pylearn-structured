@@ -98,7 +98,7 @@ class LinearRegression(interfaces.CompositeFunction,
         >>> lr = LinearRegression(X=X, y=y)
         >>> beta = np.random.rand(150, 1)
         >>> np.linalg.norm(lr.grad(beta) - lr.approx_grad(beta, eps=1e-4))
-        1.2786255934730075e-08
+        1.2935592057892195e-08
         """
         grad = np.dot(self.X.T, np.dot(self.X, beta) - self.y)
 
@@ -210,7 +210,7 @@ class RidgeRegression(interfaces.CompositeFunction,
         >>> rr = RidgeRegression(X=X, y=y, k=3.14159265)
         >>> beta = np.random.rand(150, 1)
         >>> np.linalg.norm(rr.grad(beta) - rr.approx_grad(beta, eps=1e-4))
-        1.2734924643975701e-06
+        1.3403176569860683e-06
         """
         return np.dot((np.dot(self.X, beta) - self.y).T, self.X).T \
              + self.k * beta
@@ -362,7 +362,7 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
         >>> rr = RidgeLogisticRegression(X=X, y=y, k=2.71828182)
         >>> beta = np.random.rand(150, 1)
         >>> np.linalg.norm(rr.grad(beta) - rr.approx_grad(beta, eps=1e-4))
-        3.3344262548517587e-08
+        3.5290185882784444e-08
         """
         Xbeta = np.dot(self.X, beta)
         pi = 1.0 / (1.0 + np.exp(-Xbeta))

@@ -87,7 +87,7 @@ class FastSVD(bases.ImplicitAlgorithm):
         >>> v = fast_svd.run(X)
         >>> us = np.linalg.norm(np.dot(X, v))
         >>> s = np.linalg.svd(X, full_matrices=False, compute_uv=False)
-        >>> np.sum(us ** 2.0) - np.max(s) ** 2.0
+        >>> abs(np.sum(us ** 2.0) - np.max(s) ** 2.0)
         9.0949470177292824e-13
         >>>
         >>> np.random.seed(0)
@@ -96,8 +96,8 @@ class FastSVD(bases.ImplicitAlgorithm):
         >>> v = fast_svd.run(X)
         >>> us = np.linalg.norm(np.dot(X, v))
         >>> s = np.linalg.svd(X, full_matrices=False, compute_uv=False)
-        >>> np.sum(us ** 2.0) - np.max(s) ** 2.0
-        -4.5474735088646412e-13
+        >>> abs(np.sum(us ** 2.0) - np.max(s) ** 2.0)
+        4.5474735088646412e-13
         """
         if start_vector is None:
             start_vector = start_vectors.RandomStartVector(normalise=True)

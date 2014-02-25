@@ -66,7 +66,7 @@ class GradientDescent(bases.ExplicitAlgorithm):
     >>> beta1 = gd.run(function, np.random.rand(50, 1))
     >>> beta2 = np.dot(np.linalg.pinv(X), y)
     >>> np.linalg.norm(beta1 - beta2)
-    0.00031215576325542625
+    0.0003121557632556645
     """
     INTERFACES = [interfaces.Function,
                   interfaces.Gradient,
@@ -165,7 +165,7 @@ class ISTA(bases.ExplicitAlgorithm):
     >>> beta1 = ista.run(function, np.random.rand(50, 1))
     >>> beta2 = np.dot(np.linalg.pinv(X), y)
     >>> np.linalg.norm(beta1 - beta2)
-    0.00031215576325542625
+    0.0003121557632556645
     >>>
     >>> np.random.seed(42)
     >>> X = np.random.rand(100, 50)
@@ -176,7 +176,7 @@ class ISTA(bases.ExplicitAlgorithm):
     >>> beta1 = ista.run(function, np.random.rand(50, 1))
     >>> beta2 = np.dot(np.linalg.pinv(X), y)
     >>> np.linalg.norm(beta1 - beta2)
-    0.79569125997550139
+    0.79569125997550161
     >>> np.linalg.norm(beta2.ravel(), 0)
     50
     >>> np.linalg.norm(beta1.ravel(), 0)

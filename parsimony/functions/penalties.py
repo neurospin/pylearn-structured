@@ -191,13 +191,14 @@ class L1(interfaces.AtomicFunction,
 
 class L2(interfaces.AtomicFunction,
          interfaces.Gradient,
+         interfaces.LipschitzContinuousGradient,
          interfaces.Penalty,
          interfaces.Constraint,
          interfaces.ProximalOperator,
          interfaces.ProjectionOperator):
     """The proximal operator of the L2 function with a penalty formulation
 
-        f(\beta) = l * (||\beta||²_2 - c),
+        f(\beta) = l * (0.5 * ||\beta||²_2 - c),
 
     where ||\beta||²_2 is the squared L2 loss function. The constrained
     version has the form
@@ -210,8 +211,8 @@ class L2(interfaces.AtomicFunction,
             constant, of the function.
 
     c : Float. The limit of the constraint. The function is feasible if
-            ||\beta||²_2 <= c. The default value is c=0, i.e. the default is a
-            regularisation formulation.
+            0.5 * ||\beta||²_2 <= c. The default value is c=0, i.e. the
+            default is a regularised formulation.
 
     penalty_start : Non-negative integer. The number of columns, variables
             etc., to except from penalisation. Equivalently, the first index
@@ -233,7 +234,7 @@ class L2(interfaces.AtomicFunction,
         else:
             beta_ = beta
 
-        return self.l * (np.dot(beta_.T, beta_)[0, 0] - self.c)
+        return self.l * (0.5 * np.dot(beta_.T, beta_)[0, 0] - self.c)
 
     def grad(self, beta):
         """Gradient of the function.
@@ -249,11 +250,11 @@ class L2(interfaces.AtomicFunction,
         >>> beta = np.random.rand(100, 1)
         >>> l2 = L2(l=3.14159, c=2.71828)
         >>> np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
-        5.8179830878866391e-10
+        1.3549757024941964e-10
         >>>
         >>> l2 = L2(l=3.14159, c=2.71828, penalty_start=5)
         >>> np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
-        5.0187970725495645e-10
+        2.1291553983770027e-10
         """
 #        if self.unbiased:
 #            n = self.X.shape[0] - 1.0
@@ -266,12 +267,17 @@ class L2(interfaces.AtomicFunction,
             beta_ = beta
 
         grad = np.vstack((np.zeros((self.penalty_start, 1)),
-                          (2.0 * self.l) * beta_))
+                          self.l * beta_))
 
 #        approx_grad = utils.approx_grad(self.f, beta, eps=1e-4)
 #        print maths.norm(grad - approx_grad)
 
         return grad
+
+    def L(self):
+        """Lipschitz constant of the gradient.
+        """
+        return self.l
 
     def prox(self, beta, factor=1.0):
         """The corresponding proximal operator.
@@ -285,7 +291,7 @@ class L2(interfaces.AtomicFunction,
             beta_ = beta
 
         prox = np.vstack((beta[:self.penalty_start, :],
-                          beta_ / (1.0 + 2.0 * l)))
+                          beta_ / (1.0 + l)))
 
         return prox
 
@@ -301,7 +307,7 @@ class L2(interfaces.AtomicFunction,
         >>> np.random.seed(42)
         >>> l2 = L2(c=0.3183098861837907)
         >>> y1 = l2.proj(np.random.rand(100, 1) * 2.0 - 1.0)
-        >>> np.linalg.norm(y1) ** 2.0
+        >>> 0.5 * np.linalg.norm(y1) ** 2.0
         0.31830988618379052
         >>> y2 = np.random.rand(100, 1) * 2.0 - 1.0
         >>> l2.feasible(y2)
@@ -316,13 +322,14 @@ class L2(interfaces.AtomicFunction,
 
         sqnorm = np.dot(beta_.T, beta_)[0, 0]
 
-        if sqnorm <= self.c:
+        # Feasible?
+        if 0.5 * sqnorm <= self.c:
             return beta
 
         # The correction by eps is to nudge the squared norm just below self.c.
         eps = consts.FLOAT_EPSILON
         proj = np.vstack((beta[:self.penalty_start, :],
-                          beta_ * np.sqrt((self.c - eps) / sqnorm)))
+                          beta_ * np.sqrt((2.0 * self.c - eps) / sqnorm)))
 
         return proj
 
@@ -331,6 +338,8 @@ class L2(interfaces.AtomicFunction,
 
         From the interface "Constraint".
 
+        Examples
+        --------
         >>> import numpy as np
         >>> from parsimony.functions.penalties import L2
         >>> np.random.seed(42)
@@ -352,7 +361,7 @@ class L2(interfaces.AtomicFunction,
 
         sqnorm = np.dot(beta_.T, beta_)[0, 0]
 
-        return sqnorm <= self.c
+        return 0.5 * sqnorm <= self.c
 
 
 class QuadraticConstraint(interfaces.AtomicFunction,
