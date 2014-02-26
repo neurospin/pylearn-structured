@@ -484,7 +484,7 @@ class LatentVariableVariance(interfaces.Function,
         >>> X = np.random.rand(50, 150)
         >>> w = np.random.rand(150, 1)
         >>> var = LatentVariableVariance(X)
-        >>> var.L(w)
+        >>> var.L()
         47025.080978684098
         >>> _, S, _ = np.linalg.svd(np.dot(X.T, X))
         >>> np.max(S) * 49 / 2.0
@@ -522,7 +522,7 @@ class LatentVariableVariance(interfaces.Function,
         >>> 1.0 / (np.max(S) * 49 / 2.0)
         2.1979627581251389e-05
         """
-        return 1.0 / self.L(w)
+        return 1.0 / self.L()
 
 #class AnonymousFunction(interfaces.AtomicFunction):
 #
