@@ -70,34 +70,36 @@
 
 ./parsimony/functions/interfaces.py:
 -----------------------------------
-93: # TODO: Should all constraints have the projection operator?
+94: # TODO: Should all constraints have the projection operator?
 
-175: # TODO: This should be in the NesterovFunction interface, right?
+176: # TODO: This should be in the NesterovFunction interface, right?
+
+285: # TODO: L should by default take a weight vector as argument.
 
 ./parsimony/functions/losses.py:
 -------------------------------
-308: # TODO: Make the weights sparse.
-309: #weights = np.eye(self.X.shape[0])
+316: # TODO: Make the weights sparse.
+317: #weights = np.eye(self.X.shape[0])
 
-311: # TODO: Allow the weight vector to be a list.
+319: # TODO: Allow the weight vector to be a list.
 
-383: PWX = 0.5 * np.sqrt(self.weights) * self.X  # TODO: CHECK WITH FOUAD
-384: # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
-385: #PW = 0.5 * np.sqrt(self.W)
-386: #PWX = np.dot(PW, self.X)
-387: # TODO: Use FastSVD for speedup!
+391: PWX = 0.5 * np.sqrt(self.weights) * self.X  # TODO: CHECK WITH FOUAD
+392: # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
+393: #PW = 0.5 * np.sqrt(self.W)
+394: #PWX = np.dot(PW, self.X)
+395: # TODO: Use FastSVD for speedup!
 
-389: self._lipschitz = np.max(s) ** 2.0 + self.k  # TODO: CHECK
+397: self._lipschitz = np.max(s) ** 2.0 + self.k  # TODO: CHECK
 
 ./parsimony/functions/penalties.py:
 ----------------------------------
-648: # TODO: Tweak these magic numbers on real data. Or even better,
-649: # find theoretical bounds. Convergence is faster if these bounds
-650: # are close to accurate when we start the bisection algorithm.
+1062: # TODO: Tweak these magic numbers on real data. Or even better,
+1063: # find theoretical bounds. Convergence is faster if these bounds
+1064: # are close to accurate when we start the bisection algorithm.
 
-765: # TODO: Tweak these magic numbers on real data. Or even better,
-766: # find theoretical bounds. Convergence is faster if these bounds
-767: # are close to accurate when we start the bisection algorithm.
+1179: # TODO: Tweak these magic numbers on real data. Or even better,
+1180: # find theoretical bounds. Convergence is faster if these bounds
+1181: # are close to accurate when we start the bisection algorithm.
 
 ./parsimony/functions/functions.py:
 ----------------------------------

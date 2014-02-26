@@ -469,7 +469,7 @@ class LatentVariableVariance(interfaces.Function,
 
         return grad
 
-    def L(self):#, w):
+    def L(self):
         """Lipschitz constant of the gradient with given index.
 
         From the interface "LipschitzContinuousGradient".
