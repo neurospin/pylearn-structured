@@ -13,7 +13,7 @@ Created on Mon Feb  3 09:55:51 2014
 """
 import abc
 
-import parsimony.functions.interfaces as interfaces
+from .. import interfaces
 
 __all__ = ["MultiblockFunction", "MultiblockGradient",
            "MultiblockLipschitzContinuousGradient",

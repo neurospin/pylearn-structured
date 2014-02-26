@@ -13,7 +13,8 @@ import numbers
 
 import numpy as np
 
-import parsimony.functions.interfaces as interfaces
+#import parsimony.functions.interfaces as interfaces
+from .. import interfaces
 import interfaces as mb_interfaces
 
 __all__ = ["LatentVariableCovariance"]
