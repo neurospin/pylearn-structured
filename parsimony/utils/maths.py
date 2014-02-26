@@ -10,7 +10,7 @@ Created on Tue Jul 30 20:55:58 2013
 import numpy as np
 from parsimony.utils.consts import TOLERANCE
 
-__all__ = ['norm', 'norm1', 'norm0', 'norm_inf', 'corr']
+__all__ = ['norm', 'norm1', 'norm0', 'normInf', 'corr']
 
 
 def norm(x):
@@ -84,7 +84,7 @@ def norm0(x):
 #    return np.linalg.norm(x, ord=0)
 
 
-def norm_inf(x):
+def normInf(x):
     '''Return the infinity norm of a matrix or vector.
 
     For vectors : max(abs(x))
@@ -92,12 +92,12 @@ def norm_inf(x):
 
     Examples
     --------
-    >>> from parsimony.utils.maths import norm_inf
+    >>> from parsimony.utils.maths import normInf
     >>> matrix = np.array([[0.2, 1.0, 0.4], [2.0, 1.5, 0.1]])
-    >>> norm_inf(matrix)
+    >>> normInf(matrix)
     3.6000000000000001
     >>> vector = np.array([[0.2], [1.0], [0.4]])
-    >>> norm_inf(vector)
+    >>> normInf(vector)
     1.0
     '''
     n, p = x.shape

@@ -18,11 +18,14 @@ Created on Mon Apr 22 10:54:29 2013
 """
 import numpy as np
 
-from . import interfaces
+try:
+    from . import interfaces  # Only works when imported as a package.
+except ValueError:
+    import parsimony.functions.interfaces as interfaces  # Run as a script.
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
 
-__all__ = ["ZeroFunction", "L1", "L2",
+__all__ = ["ZeroFunction", "L0", "L1", "L2", "LInf",
            "QuadraticConstraint", "RGCCAConstraint",
            "SufficientDescentCondition"]
 
@@ -35,7 +38,20 @@ class ZeroFunction(interfaces.AtomicFunction,
                    interfaces.ProjectionOperator):
 
     def __init__(self, l=1.0, c=0.0, penalty_start=0):
+        """
+        Parameters
+        ----------
+        l : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, of the function.
 
+        c : Float. The limit of the constraint. The function is feasible if
+                ||\beta||_1 <= c. The default value is c=0, i.e. the default is
+                a regularisation formulation.
+
+        penalty_start : Non-negative integer. The number of columns, variables
+                etc., to be exempt from penalisation. Equivalently, the first
+                index to be penalised. Default is 0, all columns are included.
+        """
         self.l = float(l)
         self.c = float(c)
         if self.c < 0.0:
@@ -110,7 +126,7 @@ class L1(interfaces.AtomicFunction,
             regularisation formulation.
 
     penalty_start : Non-negative integer. The number of columns, variables
-            etc., to except from penalisation. Equivalently, the first index
+            etc., to be exempt from penalisation. Equivalently, the first index
             to be penalised. Default is 0, all columns are included.
     """
     def __init__(self, l=1.0, c=0.0, penalty_start=0):
@@ -152,7 +168,7 @@ class L1(interfaces.AtomicFunction,
         if self.feasible(beta):
             return beta
 
-        from algorithms import Bisection
+        from parsimony.algorithms.explicit import Bisection
         bisection = Bisection(force_negative=True, eps=1e-8)
 
         class F(interfaces.Function):
@@ -172,7 +188,7 @@ class L1(interfaces.AtomicFunction,
             beta_ = beta
 
         func = F(beta_, self.c)
-        l = bisection(func, [0.0, np.max(np.abs(beta_))])
+        l = bisection.run(func, [0.0, np.max(np.abs(beta_))])
 
         return (np.abs(beta_) > l) * (beta_ - l * np.sign(beta_ - l))
 
@@ -180,6 +196,10 @@ class L1(interfaces.AtomicFunction,
         """Feasibility of the constraint.
 
         From the interface "Constraint".
+
+        Parameters
+        ----------
+        beta : Numpy array. The variable to check for feasibility.
         """
         if self.penalty_start > 0:
             beta_ = beta[self.penalty_start:, :]
@@ -187,6 +207,387 @@ class L1(interfaces.AtomicFunction,
             beta_ = beta
 
         return maths.norm1(beta_) <= self.c
+
+
+class L0(interfaces.AtomicFunction,
+         interfaces.Penalty,
+         interfaces.Constraint,
+         interfaces.ProximalOperator,
+         interfaces.ProjectionOperator):
+    """The proximal operator of the "pseudo" L0 function
+
+        f(x) = l * (||x||_0 - c),
+
+    where ||x||_0 is the L0 loss function. The constrainted version has the
+    form
+
+        ||x||_0 <= c.
+
+    Warning: Note that this function is not convex, and the regular assumptions
+    when using it in e.g. ISTA or FISTA will not apply. Nevertheless, it will
+    still converge to a local minimum if we can guarantee that we obtain a
+    reduction of the smooth part in each step. See e.g.:
+
+        http://eprints.soton.ac.uk/142499/1/BD_NIHT09.pdf
+        http://people.ee.duke.edu/~lcarin/blumensath.pdf
+
+    Parameters
+    ----------
+    l : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the function.
+
+    c : Float. The limit of the constraint. The function is feasible if
+            ||x||_0 <= c. The default value is c=0, i.e. the default is a
+            regularisation formulation.
+
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to be exempt from penalisation. Equivalently, the first index
+            to be penalised. Default is 0, all columns are included.
+    """
+    def __init__(self, l=1.0, c=0.0, penalty_start=0):
+
+        self.l = float(l)
+        self.c = float(c)
+        self.penalty_start = int(penalty_start)
+
+    def f(self, x):
+        """Function value.
+
+        From the interface "Function".
+
+        Example
+        -------
+        >>> import numpy as np
+        >>> from parsimony.functions.penalties import L0
+        >>> import parsimony.utils.maths as maths
+        >>>
+        >>> np.random.seed(42)
+        >>> x = np.random.rand(10, 1)
+        >>> l0 = L0(l=0.5)
+        >>> maths.norm0(x)
+        10
+        >>> l0.f(x) - 0.5 * maths.norm0(x)
+        0.0
+        >>> x[0, 0] = 0.0
+        >>> maths.norm0(x)
+        9
+        >>> l0.f(x) - 0.5 * maths.norm0(x)
+        0.0
+        """
+        if self.penalty_start > 0:
+            x_ = x[self.penalty_start:, :]
+        else:
+            x_ = x
+
+        return self.l * (maths.norm0(x_) - self.c)
+
+    def prox(self, x, factor=1.0):
+        """The corresponding proximal operator.
+
+        From the interface "ProximalOperator".
+
+        Example
+        -------
+        >>> import numpy as np
+        >>> from parsimony.functions.penalties import L0
+        >>> import parsimony.utils.maths as maths
+        >>>
+        >>> np.random.seed(42)
+        >>> x = np.random.rand(10, 1)
+        >>> l0 = L0(l=0.5)
+        >>> maths.norm0(x)
+        10
+        >>> l0.prox(x)
+        array([[ 0.        ],
+               [ 0.95071431],
+               [ 0.73199394],
+               [ 0.59865848],
+               [ 0.        ],
+               [ 0.        ],
+               [ 0.        ],
+               [ 0.86617615],
+               [ 0.60111501],
+               [ 0.70807258]])
+        >>> l0.f(l0.prox(x))
+        3.0
+        >>> 0.5 * maths.norm0(l0.prox(x))
+        3.0
+        """
+        if self.penalty_start > 0:
+            x_ = x[self.penalty_start:, :]
+        else:
+            x_ = x
+
+        l = self.l * factor
+        prox = x_ * (np.abs(x_) > l)  # Hard thresholding.
+        prox = np.vstack((x[:self.penalty_start, :],  # Unregularised variables
+                          prox))
+
+        return prox
+
+    def proj(self, x):
+        """The corresponding projection operator.
+
+        From the interface "ProjectionOperator".
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.functions.penalties import L0
+        >>>
+        >>> np.random.seed(42)
+        >>> x = np.random.rand(10, 1) * 2.0 - 1.0
+        >>> l0 = L0(c=5.0)
+        >>> l0.proj(x)
+        array([[ 0.        ],
+               [ 0.90142861],
+               [ 0.        ],
+               [ 0.        ],
+               [-0.68796272],
+               [-0.68801096],
+               [-0.88383278],
+               [ 0.73235229],
+               [ 0.        ],
+               [ 0.        ]])
+        """
+        if self.penalty_start > 0:
+            x_ = x[self.penalty_start:, :]
+        else:
+            x_ = x
+
+        if maths.norm0(x_) <= self.c:
+            return x
+
+        K = int(np.floor(self.c) + 0.5)
+        ind = np.abs(x_.ravel()).argsort()[:K]
+        y = np.copy(x_)
+        y[ind] = 0.0
+
+        y = np.vstack((x[:self.penalty_start, :],  # Unregularised variables.
+                       y))
+
+        return y
+
+    def feasible(self, beta):
+        """Feasibility of the constraint.
+
+        From the interface "Constraint".
+
+        Parameters
+        ----------
+        beta : Numpy array. The variable to check for feasibility.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.functions.penalties import L0
+        >>>
+        >>> np.random.seed(42)
+        >>> x = np.random.rand(10, 1) * 2.0 - 1.0
+        >>> l0 = L0(c=5.0)
+        >>> l0.feasible(x)
+        False
+        >>> l0.feasible(l0.proj(x))
+        True
+        """
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        return maths.norm0(beta_) <= self.c
+
+
+class LInf(interfaces.AtomicFunction,
+         interfaces.Penalty,
+         interfaces.Constraint,
+         interfaces.ProximalOperator,
+         interfaces.ProjectionOperator):
+    """The proximal operator of the L-infinity function
+
+        f(x) = l * (||x||_inf - c),
+
+    where ||x||_inf is the L-infinity loss function. The constrainted version
+    has the form
+
+        ||x||_inf <= c.
+
+    Parameters
+    ----------
+    l : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the function.
+
+    c : Float. The limit of the constraint. The function is feasible if
+            ||x||_inf <= c. The default value is c=0, i.e. the default is a
+            regularisation formulation.
+
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to be exempt from penalisation. Equivalently, the first index
+            to be penalised. Default is 0, all columns are included.
+    """
+    def __init__(self, l=1.0, c=0.0, penalty_start=0):
+
+        self.l = float(l)
+        self.c = float(c)
+        self.penalty_start = int(penalty_start)
+
+    def f(self, x):
+        """Function value.
+
+        From the interface "Function".
+
+        Parameters
+        ----------
+        x : Numpy array. The point at which to evaluate the function.
+
+        Example
+        -------
+        >>> import numpy as np
+        >>> from parsimony.functions.penalties import LInf
+        >>> import parsimony.utils.maths as maths
+        >>>
+        >>> np.random.seed(42)
+        >>> x = np.random.rand(10, 1)
+        >>> linf = LInf(l=1.1)
+        >>> linf.f(x) - 1.1 * maths.normInf(x)
+        0.0
+        """
+        if self.penalty_start > 0:
+            x_ = x[self.penalty_start:, :]
+        else:
+            x_ = x
+
+        return self.l * (maths.normInf(x_) - self.c)
+
+    def prox(self, x, factor=1.0):
+        """The corresponding proximal operator.
+
+        From the interface "ProximalOperator".
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.functions.penalties import LInf
+        >>> import parsimony.utils.maths as maths
+        >>>
+        >>> np.random.seed(42)
+        >>> x = np.random.rand(10, 1)
+        >>> linf = LInf(l=1.45673045, c=0.5)
+        >>> linf_prox = linf.prox(x)
+        >>> linf_prox
+        array([[ 0.37454012],
+               [ 0.5       ],
+               [ 0.5       ],
+               [ 0.5       ],
+               [ 0.15601864],
+               [ 0.15599452],
+               [ 0.05808361],
+               [ 0.5       ],
+               [ 0.5       ],
+               [ 0.5       ]])
+        >>> linf_proj = linf.proj(x)
+        >>> linf_proj
+        array([[ 0.37454012],
+               [ 0.5       ],
+               [ 0.5       ],
+               [ 0.5       ],
+               [ 0.15601864],
+               [ 0.15599452],
+               [ 0.05808361],
+               [ 0.5       ],
+               [ 0.5       ],
+               [ 0.5       ]])
+        >>> np.linalg.norm(linf_prox - linf_proj)
+        7.5691221815410567e-09
+        """
+        if self.penalty_start > 0:
+            x_ = x[self.penalty_start:, :]
+        else:
+            x_ = x
+
+        l = self.l * factor
+        l1 = L1(c=l)  # Project onto an L1 ball with radius c=l.
+        y = x_ - l1.proj(x_)
+
+        # Put the unregularised variables back.
+        if self.penalty_start > 0:
+            y = np.vstack((x[:self.penalty_start, :],
+                           y))
+
+        return y
+
+    def proj(self, x):
+        """The corresponding projection operator.
+
+        From the interface "ProjectionOperator".
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.functions.penalties import LInf
+        >>>
+        >>> np.random.seed(42)
+        >>> x = np.random.rand(10, 1) * 2.0 - 1.0
+        >>> linf = LInf(c=0.618)
+        >>> linf.proj(x)
+        array([[-0.25091976],
+               [ 0.618     ],
+               [ 0.46398788],
+               [ 0.19731697],
+               [-0.618     ],
+               [-0.618     ],
+               [-0.618     ],
+               [ 0.618     ],
+               [ 0.20223002],
+               [ 0.41614516]])
+        """
+        if self.penalty_start > 0:
+            x_ = x[self.penalty_start:, :]
+        else:
+            x_ = x
+
+        if maths.normInf(x_) <= self.c:
+            return x
+
+        y = np.copy(x_)
+        y[y > self.c] = self.c
+        y[y < -self.c] = -self.c
+
+        # Put the unregularised variables back.
+        if self.penalty_start > 0:
+            y = np.vstack((x[:self.penalty_start, :],
+                           y))
+
+        return y
+
+    def feasible(self, x):
+        """Feasibility of the constraint.
+
+        From the interface "Constraint".
+
+        Parameters
+        ----------
+        x : Numpy array. The variable to check for feasibility.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.functions.penalties import LInf
+        >>>
+        >>> np.random.seed(42)
+        >>> x = np.random.rand(10, 1) * 2.0 - 1.0
+        >>> linf = LInf(c=0.618)
+        >>> linf.feasible(x)
+        False
+        >>> linf.feasible(linf.proj(x))
+        True
+        """
+        if self.penalty_start > 0:
+            x_ = x[self.penalty_start:, :]
+        else:
+            x_ = x
+
+        return maths.normInf(x_) <= self.c
 
 
 class L2(interfaces.AtomicFunction,
@@ -215,7 +616,7 @@ class L2(interfaces.AtomicFunction,
             default is a regularised formulation.
 
     penalty_start : Non-negative integer. The number of columns, variables
-            etc., to except from penalisation. Equivalently, the first index
+            etc., to be exempt from penalisation. Equivalently, the first index
             to be penalised. Default is 0, all columns are included.
     """
     def __init__(self, l=1.0, c=0.0, penalty_start=0):
@@ -337,6 +738,10 @@ class L2(interfaces.AtomicFunction,
         """Feasibility of the constraint.
 
         From the interface "Constraint".
+
+        Parameters
+        ----------
+        beta : Numpy array. The variable to check for feasibility.
 
         Examples
         --------
@@ -499,7 +904,7 @@ class RGCCAConstraint(QuadraticConstraint,
             Default is unbiased.
 
     penalty_start : Non-negative integer. The number of columns, variables
-            etc., to be exepmt from penalisation. Equivalently, the first index
+            etc., to be exempt from penalisation. Equivalently, the first index
             to be penalised. Default is 0, all columns are included.
     """
     def __init__(self, l=1.0, c=0.0, tau=1.0, X=None, unbiased=True,
