@@ -17,6 +17,7 @@ from . import interfaces
 from .penalties import L1, ZeroFunction
 from .losses import RidgeRegression
 from .losses import RidgeLogisticRegression
+#from .multiblock.losses import LatentVariableCovariance
 #from parsimony.functions.penalties import ZeroFunction
 #from parsimony.functions.penalties import L1
 import nesterov.interfaces as nesterov_interfaces
@@ -1025,3 +1026,4 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
         From the interface "NesterovFunction".
         """
         return self.h.project(a)
+
