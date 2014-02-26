@@ -12,7 +12,7 @@ from . import penalties
 
 from .functions import CombinedFunction
 from .functions import RR_L1_TV, RLR_L1_TV, RR_L1_GL, RR_SmoothedL1TV
-from .multiblock.composite import PCA_L1_TV
+from .functions import PCA_L1_TV
 
 __all__ = ["interfaces", "losses", "penalties",
 

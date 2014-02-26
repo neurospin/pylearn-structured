@@ -21,15 +21,17 @@ alpha = 10.
 k, l, g = alpha * np.array((.1, .4, .5))  # l2, l1, tv penalties
 
 # run /home/fh235918/git/pylearn-parsimony/parsimony/functions/functions.py
-func = PCA_L1_TV(X, k, l, g, A)
+func = PCA_L1_TV(X, k, l, g, A, mu=0.0001)
 
-algo = MultiblockProjectedGradientMethod(max_iter=10)
+#algo = MultiblockProjectedGradientMethod(max_iter=10)
+#
+##    w_x = start_vector_x.get_vector((X.shape[1], 1))
+##    w_y = start_vector_y.get_vector((Y.shape[1], 1))
+#
+#algo.run(func, w)
 
 
-#    w_x = start_vector_x.get_vector((X.shape[1], 1))
-#    w_y = start_vector_y.get_vector((Y.shape[1], 1))
 
+from parsimony.algorithms.explicit import FISTA
+algo = FISTA(max_iter=10)
 algo.run(func, w)
-
-
-

@@ -282,6 +282,7 @@ class LipschitzContinuousGradient(object):
 
     __metaclass__ = abc.ABCMeta
 
+    # TODO: L should by default take a weight vector as argument.
     @abc.abstractmethod
     def L(self):
         """Lipschitz constant of the gradient.
