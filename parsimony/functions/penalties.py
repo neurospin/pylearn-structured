@@ -508,6 +508,7 @@ class LInf(interfaces.AtomicFunction,
         l = self.l * factor
         l1 = L1(c=l)  # Project onto an L1 ball with radius c=l.
         y = x_ - l1.proj(x_)
+        # TODO: Check if this is correct!
 
         # Put the unregularised variables back.
         if self.penalty_start > 0:

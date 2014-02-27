@@ -13,12 +13,16 @@ from nose.tools import nottest
 import unittest
 import abc
 import os
+import re
 
 __all__ = ["TestCase", "test_all"]
 
 
 class TestCase(unittest.TestCase):
     """Unit test base class.
+
+    Inherit from this class and add tests by naming the test methods such that
+    the method name begins with "test_".
 
     Example
     -------
@@ -37,6 +41,11 @@ class TestCase(unittest.TestCase):
         """
         pass
 
+    def setUp(self):
+        """From unittest.
+        """
+        self.setup()
+
     def teardown(self):
         """This method is run after each unit test.
 
@@ -44,6 +53,11 @@ class TestCase(unittest.TestCase):
         is run.
         """
         pass
+
+    def tearDown(self):
+        """From unittest.
+        """
+        self.teardown()
 
     @classmethod
     def setup_class(cls):
@@ -54,6 +68,12 @@ class TestCase(unittest.TestCase):
         pass
 
     @classmethod
+    def setUpClass(cls):
+        """From unittest.
+        """
+        cls.setup_class()
+
+    @classmethod
     def teardown_class(cls):
         """This method is run after all other methods in this class.
 
@@ -62,12 +82,28 @@ class TestCase(unittest.TestCase):
         """
         pass
 
+    @classmethod
+    def tearDownClass(cls):
+        """From unittest.
+        """
+        cls.teardown_class()
+
+    def runTest(self):
+        """Runs all unit tests.
+
+        From baseclass "unittest.TestCase".
+        """
+        RE_TEST = re.compile("[Tt]est[-_]")
+        for attr in dir(self):
+            if callable(getattr(self, attr)) and RE_TEST.match(attr):
+                getattr(self, attr)()
+
 
 @nottest
 def test_all():
 
     # Find parsimony directory.
-    # TODO: Is there a better way to do this?
+    # TODO: There is a better way to do this!
     testdir = os.path.dirname(__file__)
     if len(testdir) == 0:
         testdir = ".."

@@ -2,8 +2,9 @@
 """
 Created on Tue Jun 18 09:22:40 2013
 
-@author: Tommy Löfstedt
-@email: tommy.loefstedt@cea.fr
+@author:  Tommy Löfstedt
+@email:   tommy.loefstedt@cea.fr
+@license: BSD 3-clause.
 """
 
 import correlation_matrices

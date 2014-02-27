@@ -13,7 +13,7 @@ import numpy as np
 from tests import TestCase
 
 
-class TestTotalVariation():#TestCase):
+class TestTotalVariation(TestCase):
 
     def test_nonsmooth(self):
 

@@ -142,6 +142,8 @@ class TotalVariation(interfaces.AtomicFunction,
         From the interface "Eigenvalues".
         """
         # Note that we can save the state here since lmax(A) does not change.
+        # TODO: This only work if the elements of self._A are scipy.sparse. We
+        # should allow dense matrices as well.
         if len(self._A) == 3 \
                 and self._A[1].nnz == 0 and self._A[2].nnz == 0:
             # TODO: Instead of p, this should really be the number of non-zero
