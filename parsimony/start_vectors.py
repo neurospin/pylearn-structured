@@ -76,7 +76,7 @@ class RandomStartVector(BaseStartVector):
 
     Parameters
     ----------
-    normalise : Bool. If True, normalise the randomly created vectors
+    normalise : Bool. If True, normalise the randomly created vectors.
             Default is True.
 
     Examples

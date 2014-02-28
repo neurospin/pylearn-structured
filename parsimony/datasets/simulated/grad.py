@@ -79,19 +79,37 @@ def grad_tv(beta, A, rng=np.random.rand):
     beta_flat = beta.ravel()
     Ab = np.vstack([Ai.dot(beta_flat) for Ai in A]).T
     Ab_norm2 = np.sqrt(np.sum(Ab ** 2.0, axis=1))
+#    print beta
+#    print A[0].toarray()
+#    print A[1].toarray()
+#    print A[2].toarray()
+#    print Ab
+#    print Ab_norm2
+
     upper = Ab_norm2 > TOLERANCE
     grad_Ab_norm2 = Ab
     grad_Ab_norm2[upper] = (Ab[upper].T / Ab_norm2[upper]).T
+
     lower = Ab_norm2 <= TOLERANCE
     n_lower = lower.sum()
+#    m = 0.57735026918962584
+#    test_rand_flat = ((rng(beta.shape[0], 1) * m) - (m / 2.0)).ravel()
+#    test_Ab = np.vstack([Ai.dot(test_rand_flat) for Ai in A]).T
+#    print test_Ab
+
     if n_lower:
         D = len(A)
         vec_rnd = (rng(n_lower, D) * 2.0) - 1.0
+#        vec_rnd = test_Ab[lower, :]
         norm_vec = np.sqrt(np.sum(vec_rnd ** 2.0, axis=1))
         a = rng(n_lower)
         grad_Ab_norm2[lower] = (vec_rnd.T * (a / norm_vec)).T
+#        print grad_Ab_norm2[lower]
+#        print lower
+
     grad = np.vstack([A[i].T.dot(grad_Ab_norm2[:, i]) for i in xrange(len(A))])
     grad = grad.sum(axis=0)
+
     return grad.reshape(beta.shape)
 
 

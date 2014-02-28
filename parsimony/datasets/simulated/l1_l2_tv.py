@@ -91,6 +91,9 @@ def _generate(l, k, g, beta, M, e, A):
     gradL1 = grad_l1(beta)
     gradL2 = grad_l2_squared(beta)
     gradTV = grad_tv(beta, A)
+#    from grad import grad_tvmu
+#    gradTVmu = grad_tvmu(beta, A, mu=1e-10)
+#    print np.hstack((beta, gradTV, gradTVmu, gradTV - gradTVmu))
 
     alpha = -(l * gradL1 + k * gradL2 + g * gradTV)
     alpha = np.divide(alpha, np.dot(M.T, e))

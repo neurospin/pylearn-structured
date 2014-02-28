@@ -88,15 +88,15 @@ class TestCase(unittest.TestCase):
         """
         cls.teardown_class()
 
-    def runTest(self):
-        """Runs all unit tests.
-
-        From baseclass "unittest.TestCase".
-        """
-        RE_TEST = re.compile("[Tt]est[-_]")
-        for attr in dir(self):
-            if callable(getattr(self, attr)) and RE_TEST.match(attr):
-                getattr(self, attr)()
+#    def runTest(self):
+#        """Runs all unit tests.
+#
+#        From baseclass "unittest.TestCase".
+#        """
+#        RE_TEST = re.compile("[Tt]est[-_]")
+#        for attr in dir(self):
+#            if callable(getattr(self, attr)) and RE_TEST.match(attr):
+#                getattr(self, attr)()
 
 
 @nottest
