@@ -16,6 +16,8 @@ import abc
 
 import numpy as np
 
+import parsimony.utils.maths as maths
+
 __all__ = ["Function", "AtomicFunction", "CompositeFunction",
            "Penalty", "Constraint",
            "ProximalOperator", "ProjectionOperator",
@@ -289,6 +291,28 @@ class LipschitzContinuousGradient(object):
         """
         raise NotImplementedError('Abstract method "L" must be '
                                   'specialised!')
+
+    def approx_L(self, shape, max_iter=10000):
+        """Monte Carlo approximation of the Lipschitz constant.
+
+        Warning: This will not yield a good approximation within reasonable
+        time for very large data sets. Use only if you know what you are doing.
+
+        Parameters
+        ----------
+        shape : List or tuple. Usually has the form (p, 1). The shape of the
+                points which we draw randomly.
+        """
+        L = -float("inf")
+        for i in xrange(max_iter):
+            a = np.random.rand(*shape) * 2.0 - 1.0
+            b = np.random.rand(*shape) * 2.0 - 1.0
+            grad_a = self.grad(a)
+            grad_b = self.grad(b)
+            L_ = maths.norm(grad_a - grad_b) / maths.norm(a - b)
+            L = max(L, L_)
+
+        return L
 
 
 class StepSize(object):

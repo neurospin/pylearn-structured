@@ -24,7 +24,8 @@ except ValueError:
     import parsimony.functions.interfaces as interfaces  # Run as a script
 import parsimony.utils as utils
 
-__all__ = ["LinearRegression", "RidgeRegression", "RidgeLogisticRegression",
+__all__ = ["LinearRegression", "RidgeRegression",
+           "LogisticRegression", "RidgeLogisticRegression",
            "LatentVariableVariance"]
 
 
@@ -58,7 +59,7 @@ class LinearRegression(interfaces.CompositeFunction,
 
         From the interface "Function".
         """
-        self._lambda_max = None
+        self._L = None
 
     def f(self, beta):
         """Function value.
@@ -112,8 +113,24 @@ class LinearRegression(interfaces.CompositeFunction,
         """Lipschitz constant of the gradient.
 
         From the interface "LipschitzContinuousGradient".
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.functions.losses import LinearRegression
+        >>>
+        >>> np.random.seed(42)
+        >>> X = np.random.rand(10, 15)
+        >>> y = np.random.rand(10, 1)
+        >>> lr = LinearRegression(X=X, y=y)
+        >>> L = lr.L()
+        >>> L_ = lr.approx_L((15, 1), 10000)
+        >>> L >= L_
+        True
+        >>> (L - L_) / L
+        0.14039091870818254
         """
-        if self._lambda_max is None:
+        if self._L is None:
 
             from parsimony.algorithms.implicit import FastSVD
 
@@ -131,14 +148,17 @@ class LinearRegression(interfaces.CompositeFunction,
 
                 v = FastSVD().run(self.X, max_iter=1000)
                 us = np.dot(self.X, v)
-                self._lambda_max = np.sum(us ** 2.0)
+                self._L = np.sum(us ** 2.0)
 
             else:
                 s = np.linalg.svd(self.X,
                                   full_matrices=False, compute_uv=False)
-                self._lambda_max = np.max(s) ** 2.0
+                self._L = np.max(s) ** 2.0
 
-        return self._lambda_max
+            if self.mean:
+                self._L /= float(n)
+
+        return self._L
 
     def step(self, beta, index=0):
         """The step size to use in descent methods.
@@ -282,6 +302,177 @@ class RidgeRegression(interfaces.CompositeFunction,
         return 1.0 / self.L()
 
 
+class LogisticRegression(interfaces.AtomicFunction,
+                         interfaces.Gradient,
+                         interfaces.LipschitzContinuousGradient,
+                         interfaces.StepSize):
+    """The Logistic Regression loss function.
+
+    (Re-weighted) Log-likelihood (cross-entropy):
+      * f(beta) = -Sum wi (yi log(pi) + (1 − yi) log(1 − pi))
+                = -Sum wi (yi xi' beta − log(1 + e(x_i'beta))),
+
+      * grad f(beta) = -Sum wi[ xi (yi - pi)] + k beta,
+
+    where pi = p(y=1 | xi, beta) = 1 / (1 + exp(-x_i'beta)) and wi is the
+    weight for sample i.
+
+    See [Hastie 2009, p.: 102, 119 and 161, Bishop 2006 p.: 206] for details.
+    """
+    def __init__(self, X, y, weights=None, mean=True):
+        """
+        Parameters
+        ----------
+        X : Numpy array (n-by-p). The regressor matrix.
+
+        y : Numpy array (n-by-1). The regressand vector.
+
+        weights: Numpy array (n-by-1). The sample's weights.
+        """
+        self.X = X
+        self.y = y
+        if weights is None:
+            # TODO: Make the weights sparse.
+            #weights = np.eye(self.X.shape[0])
+            weights = np.ones(y.shape).reshape(y.shape)
+        # TODO: Allow the weight vector to be a list.
+        self.weights = weights
+        self.mean = bool(mean)
+
+        self.reset()
+
+    def reset(self):
+        """Free any cached computations from previous use of this Function.
+
+        From the interface "Function".
+        """
+        self._L = None
+
+    def f(self, beta):
+        """Function value at the point beta.
+
+        From the interface "Function".
+
+        Parameters
+        ----------
+        beta : Numpy array. Regression coefficient vector. The point at which
+                to evaluate the function.
+        """
+        # TODO check the correctness of the re-weighted loglike.
+        Xbeta = np.dot(self.X, beta)
+        negloglike = -np.sum(self.weights *
+                                ((self.y * Xbeta) - np.log(1 + np.exp(Xbeta))))
+
+        if self.mean:
+            negloglike /= float(self.X.shape[0])
+
+        return negloglike
+
+#        n = self.X.shape[0]
+#        s = 0
+#        for i in xrange(n):
+#            s = s + self.W[i, i] * (self.y[i, 0] * Xbeta[i, 0] \
+#                                    - np.log(1 + np.exp(Xbeta[i, 0])))
+#        return -s  + (self.k / 2.0) * np.sum(beta ** 2.0) ## TOCHECK
+
+    def grad(self, beta):
+        """Gradient of the function at beta.
+
+        From the interface "Gradient".
+
+        Parameters
+        ----------
+        beta : Numpy array. The point at which to evaluate the gradient.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.functions.losses import LogisticRegression
+        >>>
+        >>> np.random.seed(42)
+        >>> X = np.random.rand(100, 150)
+        >>> y = np.random.randint(0, 2, (100, 1))
+        >>> lr = LogisticRegression(X=X, y=y, mean=True)
+        >>> beta = np.random.rand(150, 1)
+        >>> np.linalg.norm(lr.grad(beta) - lr.approx_grad(beta, eps=1e-4))
+        3.9485788278025618e-10
+        >>>
+        >>> np.random.seed(42)
+        >>> X = np.random.rand(100, 150)
+        >>> y = np.random.randint(0, 2, (100, 1))
+        >>> lr = LogisticRegression(X=X, y=y, mean=False)
+        >>> beta = np.random.rand(150, 1)
+        >>> np.linalg.norm(lr.grad(beta) - lr.approx_grad(beta, eps=1e-4))
+        3.9366299418257381e-08
+        """
+        Xbeta = np.dot(self.X, beta)
+        pi = 1.0 / (1.0 + np.exp(-Xbeta))
+
+        grad = -np.dot(self.X.T, self.weights * (self.y - pi))
+
+        if self.mean:
+            grad /= float(self.X.shape[0])
+
+        return grad
+
+#        return -np.dot(self.X.T,
+#                       np.dot(self.W, (self.y - pi)))
+
+    def L(self):
+        """Lipschitz constant of the gradient.
+
+        Returns the maximum eigenvalue of (1 / 4) * X'WX.
+
+        From the interface "LipschitzContinuousGradient".
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.functions.losses import LogisticRegression
+        >>>
+        >>> np.random.seed(42)
+        >>> X = np.random.rand(10, 15)
+        >>> y = np.random.randint(0, 2, (10, 1))
+        >>> lr = LogisticRegression(X=X, y=y, mean=True)
+        >>> L = lr.L()
+        >>> L_ = lr.approx_L((15, 1), 10000)
+        >>> L >= L_
+        True
+        >>> (L - L_) / L
+        0.4511091045798799
+        >>> lr = LogisticRegression(X=X, y=y, mean=False)
+        >>> L = lr.L()
+        >>> L_ = lr.approx_L((15, 1), 10000)
+        >>> L >= L_
+        True
+        >>> (L - L_) / L
+        0.43030668361201979
+        """
+        if self._L == None:
+            # pi(x) * (1 - pi(x)) <= 0.25 = 0.5 * 0.5
+            PWX = 0.5 * np.sqrt(self.weights) * self.X  # TODO: CHECK WITH FOUAD
+            # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
+            #PW = 0.5 * np.sqrt(self.W)
+            #PWX = np.dot(PW, self.X)
+            # TODO: Use FastSVD for speedup!
+            s = np.linalg.svd(PWX, full_matrices=False, compute_uv=False)
+            self._L = np.max(s) ** 2.0  # TODO: CHECK
+
+            if self.mean:
+                self._L /= float(self.X.shape[0])
+
+        return self._L
+
+    def step(self, beta, index=0):
+        """The step size to use in descent methods.
+
+        Parameters
+        ----------
+        beta : Numpy array. The point at which to determine the step size.
+        """
+        return 1.0 / self.L()
+
+
 class RidgeLogisticRegression(interfaces.CompositeFunction,
                               interfaces.Gradient,
                               interfaces.LipschitzContinuousGradient):
@@ -322,7 +513,9 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
         self.reset()
 
     def reset(self):
-        """Reset the value of _lambda_max and _lambda_min
+        """Free any cached computations from previous use of this Function.
+
+        From the interface "Function".
         """
         self._lipschitz = None
 #        self._lambda_max = None

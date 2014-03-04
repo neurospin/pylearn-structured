@@ -15,7 +15,7 @@ from tests import TestCase
 import parsimony.utils.consts as consts
 
 
-class TestLinearRegression():#TestCase):
+class TestLinearRegression(TestCase):
 
     def test_linear_regression_overdetermined(self):
 
