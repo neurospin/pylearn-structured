@@ -10,9 +10,9 @@ from . import interfaces
 from . import losses
 from . import penalties
 
-from .functions import CombinedFunction
-from .functions import RR_L1_TV, RLR_L1_TV, RR_L1_GL, RR_SmoothedL1TV
-from .functions import PCA_L1_TV
+from .combinedfunctions import CombinedFunction
+from .combinedfunctions import RR_L1_TV, RLR_L1_TV, RR_L1_GL, RR_SmoothedL1TV
+from .combinedfunctions import PCA_L1_TV
 
 __all__ = ["interfaces", "losses", "penalties",
 
