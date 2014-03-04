@@ -89,7 +89,7 @@ class TestLogisticRegression(TestCase):
                      [0.96899678], [1.11948487], [0.64488373], [-0.65170164],
                      [0.33778775], [-0.1380265], [-0.04784483], [-0.02324114],
                      [0.55396485], [0.53091428], [-0.06142249], [-1.481608],
-                     [-1.09504543], [-1.2885626 ], [0.4204063 ], [0.691696],
+                     [-1.09504543], [-1.2885626], [0.4204063], [0.691696],
                      [-0.23795757], [1.13300874], [-0.02437729], [0.61871999],
                      [0.95775709], [1.586174], [1.0027941], [0.84361898],
                      [0.25268826], [-0.72440374], [-0.96623248], [-1.153285],
@@ -328,6 +328,122 @@ class TestLogisticRegression(TestCase):
                                 "the correct function value.",
                             places=5)
 
+    def test_logistic_regression_gl(self):
+        # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
+
+        from parsimony.functions import CombinedFunction
+        import parsimony.functions.losses as losses
+        import parsimony.functions.penalties as penalties
+        import parsimony.algorithms.explicit as explicit
+        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.maths as maths
+        import parsimony.functions.nesterov.gl as gl
+
+        np.random.seed(42)
+
+        start_vector = start_vectors.RandomStartVector(normalise=True)
+
+        # Note that p must be even!
+        n, p = 50, 100
+        groups = [range(0, p / 2), range(p / 2, p)]
+#        weights = [1.5, 0.5]
+
+        A = gl.A_from_groups(p, groups=groups)  # , weights=weights)
+
+        alpha = 0.9
+        Sigma = alpha * np.eye(p, p) \
+              + (1.0 - alpha) * np.random.randn(p, p)
+        mean = np.zeros(p)
+        X = np.random.multivariate_normal(mean, Sigma, n)
+        y = np.array(np.random.randint(0, 2, (n, 1)), dtype=X.dtype)
+
+        eps = 1e-8
+        max_iter = 7000
+
+        l = 0.0
+        k = 0.0
+        g = 0.001
+        mu = 5e-4
+
+        algorithm = explicit.ISTA(eps=eps, max_iter=max_iter)
+        function = CombinedFunction()
+        function.add_function(losses.LogisticRegression(X, y, mean=True))
+        function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
+                                                  penalty_start=0))
+        beta_start = start_vector.get_vector((p, 1))
+
+        beta = algorithm.run(function, beta_start)
+
+        try:
+            import spams
+
+            params = {"loss": "logistic",
+                      "regul": "group-lasso-l2",
+                      "groups": np.array([1] * (p / 2) + [2] * (p / 2),
+                                         dtype=np.int32),
+                      "lambda1": g,
+                      "max_it": max_iter,
+                      "tol": eps,
+                      "ista": True,
+                      "numThreads": -1,
+                      "intercept": False,
+                     }
+
+            y_ = y.copy()
+            y_[y_ == 0.0] = -1.0
+            beta_spams, optim_info = \
+                    spams.fistaFlat(Y=np.asfortranarray(y_),
+                                    X=np.asfortranarray(X),
+                                    W0=np.asfortranarray(beta_start),
+                                    return_optim_info=True,
+                                    **params)
+
+        except ImportError:
+            beta_spams = np.asarray(
+                    [[-0.72542349], [0.02830505], [-0.21973781], [0.41495258],
+                     [0.229409], [-0.32370782], [-0.15752327], [0.0632292],
+                     [1.06252282], [0.66542057], [-0.84258213], [0.69489539],
+                     [0.72518289], [0.46540807], [-0.34997616], [-0.34717853],
+                     [0.78537712], [1.09381737], [-0.33570154], [0.25842894],
+                     [-0.00959316], [0.92931029], [0.16074866], [0.11725611],
+                     [1.18146773], [0.03350294], [0.8230971], [0.98554419],
+                     [-0.61217155], [0.40936428], [-0.43282706], [0.19459689],
+                     [-0.44080338], [-0.33548882], [0.32473485], [0.56413217],
+                     [-0.66081985], [-0.43362073], [0.58328254], [0.41602645],
+                     [-0.01677669], [0.06827701], [-0.57902052], [0.64755089],
+                     [0.5010607], [0.09013846], [0.03085689], [0.0684073],
+                     [0.2971785], [1.03409051], [0.2652446], [1.23882265],
+                     [-0.27871008], [0.05570645], [-0.76659011], [-0.66016803],
+                     [-0.51300177], [-0.2289061], [0.40504384], [-0.8754489],
+                     [0.65528664], [0.76493272], [0.45700299], [-0.43729913],
+                     [0.16797076], [-0.12563883], [-0.05556865], [0.01500861],
+                     [0.27430934], [0.36472081], [-0.12008283], [-1.04799662],
+                     [-0.78768917], [-0.93620521], [0.21787308], [0.44862306],
+                     [-0.20981051], [0.75096296], [-0.0357571], [0.40723417],
+                     [0.65944272], [1.12012117], [0.70820101], [0.57642298],
+                     [0.12019244], [-0.54588467], [-0.68402079], [-0.86922667],
+                     [0.41024387], [-0.28984963], [-0.22063841], [-0.06986448],
+                     [0.5727723], [-0.24701453], [-0.73092213], [0.31178252],
+                     [-1.05972579], [0.19986263], [-0.1638552], [0.6232789]])
+
+        re = maths.norm(beta - beta_spams) / maths.norm(beta_spams)
+#        print "re:", re
+        assert_almost_equal(re, 0.065260,
+                            msg="The found regression vector is not correct.",
+                            places=5)
+
+        f_parsimony = function.f(beta)
+        f_spams = function.f(beta_spams)
+        if abs(f_spams) > consts.TOLERANCE:
+            err = abs(f_parsimony - f_spams) / f_spams
+        else:
+            err = abs(f_parsimony - f_spams)
+#        print "err:", err
+        assert_almost_equal(err, 0.003466,
+                            msg="The found regression vector does not give " \
+                                "the correct function value.",
+                            places=5)
+
     def test_logistic_regression_l1_l2(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
 
@@ -430,6 +546,116 @@ class TestLogisticRegression(TestCase):
             err = abs(f_parsimony - f_spams)
 #        print "err:", err
         assert_almost_equal(err, 3.644088e-16,
+                            msg="The found regression vector does not give " \
+                                "the correct function value.",
+                            places=5)
+
+    def test_logistic_regression_l1_gl(self):
+        # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
+
+        from parsimony.functions import CombinedFunction
+        import parsimony.functions.losses as losses
+        import parsimony.functions.penalties as penalties
+        import parsimony.algorithms.explicit as explicit
+        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.maths as maths
+        import parsimony.functions.nesterov.gl as gl
+
+        np.random.seed(42)
+
+        start_vector = start_vectors.RandomStartVector(normalise=True)
+
+        # Note that p must be even!
+        n, p = 50, 100
+        groups = [range(0, p / 2), range(p / 2, p)]
+#        weights = [1.5, 0.5]
+
+        A = gl.A_from_groups(p, groups=groups)  # , weights=weights)
+
+        alpha = 0.9
+        Sigma = alpha * np.eye(p, p) \
+              + (1.0 - alpha) * np.random.randn(p, p)
+        mean = np.zeros(p)
+        X = np.random.multivariate_normal(mean, Sigma, n)
+        y = np.array(np.random.randint(0, 2, (n, 1)), dtype=X.dtype)
+
+        eps = 1e-8
+        max_iter = 6600
+
+        l = 0.01
+        k = 0.0
+        g = 0.001
+        mu = 5e-4
+
+        algorithm = explicit.ISTA(eps=eps, max_iter=max_iter)
+        function = CombinedFunction()
+        function.add_function(losses.LogisticRegression(X, y, mean=True))
+        function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
+                                                  penalty_start=0))
+        function.add_prox(penalties.L1(l))
+        beta_start = start_vector.get_vector((p, 1))
+
+        beta = algorithm.run(function, beta_start)
+
+        try:
+            import spams
+
+            params = {"loss": "logistic",
+                      "regul": "sparse-group-lasso-l2",
+                      "groups": np.array([1] * (p / 2) + [2] * (p / 2),
+                                         dtype=np.int32),
+                      "lambda1": g,
+                      "lambda2": l,
+                      "max_it": max_iter,
+                      "tol": eps,
+                      "ista": True,
+                      "numThreads": -1,
+                      "intercept": False,
+                     }
+
+            y_ = y.copy()
+            y_[y_ == 0.0] = -1.0
+            beta_spams, optim_info = \
+                    spams.fistaFlat(Y=np.asfortranarray(y_),
+                                    X=np.asfortranarray(X),
+                                    W0=np.asfortranarray(beta_start),
+                                    return_optim_info=True,
+                                    **params)
+
+        except ImportError:
+            beta_spams = np.asarray(
+                    [[-0.49445071], [0.], [0.], [0.], [0.], [0.], [0.], [0.],
+                     [0.90020246], [0.40967343], [-0.17363366], [0.],
+                     [0.4458841], [0.07978072], [0.], [0.], [0.56516372],
+                     [0.3811369], [0.], [0.07324983], [0.], [0.41067348], [0.],
+                     [0.], [0.79465353], [0.], [0.], [0.22514379],
+                     [-0.28391624], [0.], [0.], [0.], [0.], [0.], [0.],
+                     [0.57412006], [-0.08485725], [0.], [0.], [0.], [0.], [0.],
+                     [-0.16013528], [0.], [0.], [0.], [0.], [0.], [0.],
+                     [1.01262503], [0.], [1.24327631], [0.], [0.],
+                     [-0.35373743], [0.], [-0.02456871], [0.], [0.],
+                     [-0.44805359], [0.], [0.39618791], [0.], [0.], [0.], [0.],
+                     [0.], [0.], [0.], [0.], [0.], [-0.4650603], [-0.86402976],
+                     [-0.64165934], [0.], [0.], [0.], [0.24080178], [0.], [0.],
+                     [0.02534903], [0.57627445], [0.], [0.], [0.],
+                     [-0.03991855], [-0.35161357], [-0.35708467], [0.], [0.],
+                     [0.], [0.], [0.], [0.], [0.], [0.26739579], [-0.6467167],
+                     [0.], [0.], [0.19439507]])
+
+        re = maths.norm(beta - beta_spams) / maths.norm(beta_spams)
+#        print "re:", re
+        assert_almost_equal(re, 0.000915,
+                            msg="The found regression vector is not correct.",
+                            places=5)
+
+        f_parsimony = function.f(beta)
+        f_spams = function.f(beta_spams)
+        if abs(f_spams) > consts.TOLERANCE:
+            err = abs(f_parsimony - f_spams) / f_spams
+        else:
+            err = abs(f_parsimony - f_spams)
+#        print "err:", err
+        assert_almost_equal(err, 5.848802e-08,
                             msg="The found regression vector does not give " \
                                 "the correct function value.",
                             places=5)
