@@ -1120,8 +1120,8 @@ class BacktrackingLineSearch(bases.ExplicitAlgorithm):
         it = 0
         while True:
             if line_search.feasible((x, a)):
-                print "Broke after %d iterations of %d iterations." \
-                    % (it, self.max_iter)
+#                print "Broke after %d iterations of %d iterations." \
+#                    % (it, self.max_iter)
                 return a
 
             it += 1

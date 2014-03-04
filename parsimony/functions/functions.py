@@ -191,13 +191,13 @@ class CombinedFunction(interfaces.CompositeFunction,
         else:
             # If not all functions have Lipschitz continuous gradients, try
             # to find the step size through backtracking line search.
-            from algorithms import BacktrackingLineSearch
+            from parsimony.algorithms.explicit import BacktrackingLineSearch
             import parsimony.functions.penalties as penalties
 
             p = -self.grad(x)
             line_search = BacktrackingLineSearch(
                 condition=penalties.SufficientDescentCondition, max_iter=30)
-            step = line_search(self, x, p, rho=0.5, a=0.1, c=1e-4)
+            step = line_search.run(self, x, p, rho=0.5, a=0.1, c=1e-4)
 
         return step
 

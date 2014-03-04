@@ -88,6 +88,8 @@ class TestCase(unittest.TestCase):
         """
         cls.teardown_class()
 
+# TODO: Wait for Nose issue #732: https://github.com/nose-devs/nose/issues/732
+#    @nottest
 #    def runTest(self):
 #        """Runs all unit tests.
 #

@@ -7,7 +7,7 @@ Created on Thu Feb 27 09:21:23 2014
 @license: BSD 3-clause.
 """
 import unittest
-from nose.tools import assert_less
+from nose.tools import assert_less, assert_almost_equal
 
 import numpy as np
 
@@ -15,7 +15,7 @@ from tests import TestCase
 import parsimony.utils.consts as consts
 
 
-class TestLinearRegression(TestCase):
+class TestLinearRegression():#TestCase):
 
     def test_linear_regression_overdetermined(self):
 
@@ -302,9 +302,9 @@ class TestLinearRegression(TestCase):
     def test_linear_regression_tv(self):
 
         from parsimony.functions.losses import LinearRegression
-        from parsimony.functions.losses import RidgeRegression
-        from parsimony.functions.penalties import L1
-        from parsimony.functions.penalties import L2
+#        from parsimony.functions.losses import RidgeRegression
+#        from parsimony.functions.penalties import L1
+#        from parsimony.functions.penalties import L2
         import parsimony.functions.nesterov.tv as tv
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
@@ -395,9 +395,9 @@ class TestLinearRegression(TestCase):
     def test_linear_regression_gl(self):
 
         from parsimony.functions.losses import LinearRegression
-        from parsimony.functions.losses import RidgeRegression
-        from parsimony.functions.penalties import L1
-        from parsimony.functions.penalties import L2
+#        from parsimony.functions.losses import RidgeRegression
+#        from parsimony.functions.penalties import L1
+#        from parsimony.functions.penalties import L2
         import parsimony.functions.nesterov.gl as gl
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
@@ -564,9 +564,9 @@ class TestLinearRegression(TestCase):
     def test_linear_regression_l1_tv(self):
 
         from parsimony.functions.losses import LinearRegression
-        from parsimony.functions.losses import RidgeRegression
+#        from parsimony.functions.losses import RidgeRegression
         from parsimony.functions.penalties import L1
-        from parsimony.functions.penalties import L2
+#        from parsimony.functions.penalties import L2
         import parsimony.functions.nesterov.tv as tv
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
@@ -662,9 +662,9 @@ class TestLinearRegression(TestCase):
     def test_linear_regression_l1_gl(self):
 
         from parsimony.functions.losses import LinearRegression
-        from parsimony.functions.losses import RidgeRegression
+#        from parsimony.functions.losses import RidgeRegression
         from parsimony.functions.penalties import L1
-        from parsimony.functions.penalties import L2
+#        from parsimony.functions.penalties import L2
         import parsimony.functions.nesterov.gl as gl
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
@@ -757,7 +757,7 @@ class TestLinearRegression(TestCase):
 
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
-        from parsimony.functions.penalties import L1
+#        from parsimony.functions.penalties import L1
         from parsimony.functions.penalties import L2
         import parsimony.functions.nesterov.tv as tv
         from parsimony.functions import CombinedFunction
@@ -936,7 +936,7 @@ class TestLinearRegression(TestCase):
 
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
-        from parsimony.functions.penalties import L1
+#        from parsimony.functions.penalties import L1
         from parsimony.functions.penalties import L2
         import parsimony.functions.nesterov.gl as gl
         from parsimony.functions import CombinedFunction
@@ -1390,6 +1390,292 @@ class TestLinearRegression(TestCase):
 #        print "err:", err
         assert_less(err, 1e-6, "The found regression vector does not give " \
                                "the correct function value.")
+
+    def test_estimators(self):
+
+        import numpy as np
+        import parsimony.estimators as estimators
+        import parsimony.algorithms.explicit as explicit
+        import parsimony.functions.nesterov.tv as tv
+        import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
+
+        np.random.seed(42)
+
+        shape = (4, 4, 4)
+        A, n_compacts = tv.A_from_shape(shape)
+
+        n, p = 64, np.prod(shape)
+
+        alpha = 0.9
+        Sigma = alpha * np.eye(p, p) \
+              + (1.0 - alpha) * np.random.randn(p, p)
+        mean = np.zeros(p)
+        M = np.random.multivariate_normal(mean, Sigma, n)
+        e = np.random.randn(n, 1)
+        beta = np.random.rand(p, 1)
+        snr = 100.0
+
+        l = 0.0  # L1 coefficient
+        k = 0.1  # Ridge coefficient
+        g = 0.0  # TV coefficient
+        np.random.seed(42)
+        X, y, beta_star = l1_l2_tv.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
+                                        A=A, snr=snr)
+
+        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
+                                       algorithm=explicit.FISTA(max_iter=1000))
+        lr.fit(X, y)
+        score = lr.score(X, y)
+        print "score:", score
+        assert_almost_equal(score, 1.299125,
+                            msg="The found regression vector does not give " \
+                                "a low enough score value.",
+                            places=5)
+
+        n, p = 50, np.prod(shape)
+
+        alpha = 0.9
+        Sigma = alpha * np.eye(p, p) \
+              + (1.0 - alpha) * np.random.randn(p, p)
+        mean = np.zeros(p)
+        M = np.random.multivariate_normal(mean, Sigma, n)
+        e = np.random.randn(n, 1)
+        beta = np.random.rand(p, 1)
+        snr = 100.0
+
+        l = 0.0  # L1 coefficient
+        k = 0.1  # Ridge coefficient
+        g = 0.0  # TV coefficient
+        np.random.seed(42)
+        X, y, beta_star = l1_l2_tv.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
+                                        A=A, snr=snr)
+
+        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
+                                       algorithm=explicit.FISTA(max_iter=1000))
+        lr.fit(X, y)
+        score = lr.score(X, y)
+        print "score:", score
+        assert_almost_equal(score, 0.969570,
+                            msg="The found regression vector does not give " \
+                                "a low enough score value.",
+                            places=5)
+
+        n, p = 100, np.prod(shape)
+
+        alpha = 0.9
+        Sigma = alpha * np.eye(p, p) \
+              + (1.0 - alpha) * np.random.randn(p, p)
+        mean = np.zeros(p)
+        M = np.random.multivariate_normal(mean, Sigma, n)
+        e = np.random.randn(n, 1)
+        beta = np.random.rand(p, 1)
+        snr = 100.0
+
+        l = 0.0  # L1 coefficient
+        k = 0.1  # Ridge coefficient
+        g = 0.0  # TV coefficient
+        np.random.seed(42)
+        X, y, beta_star = l1_l2_tv.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
+                                        A=A, snr=snr)
+
+        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
+                                       algorithm=explicit.FISTA(max_iter=1000))
+        lr.fit(X, y)
+        score = lr.score(X, y)
+        print "score:", score
+        assert_almost_equal(score, 1.154561,
+                            msg="The found regression vector does not give " \
+                                "a low enough score value.",
+                            places=5)
+
+        n, p = 100, np.prod(shape)
+
+        alpha = 0.9
+        Sigma = alpha * np.eye(p, p) \
+              + (1.0 - alpha) * np.random.randn(p, p)
+        mean = np.zeros(p)
+        M = np.random.multivariate_normal(mean, Sigma, n)
+        e = np.random.randn(n, 1)
+        beta = np.random.rand(p, 1)
+        beta = np.sort(beta, axis=0)
+        beta[:10, :] = 0.0
+        snr = 100.0
+
+        l = 0.618  # L1 coefficient
+        k = 1.0 - l  # Ridge coefficient
+        g = 2.718  # TV coefficient
+        np.random.seed(42)
+        X, y, beta_star = l1_l2_tv.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
+                                        A=A, snr=snr)
+
+        l = 0.0
+        k = 0.0
+        g = 0.0
+        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
+                                       algorithm=explicit.FISTA(max_iter=1000))
+        lr.fit(X, y)
+        score = lr.score(X, y)
+        print "score:", score
+        assert_almost_equal(score, 1.019992,
+                            msg="The found regression vector does not give " \
+                                "a low enough score value.",
+                            places=5)
+
+        l = 0.618
+        k = 0.0
+        g = 0.0
+        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
+                                       algorithm=explicit.FISTA(max_iter=1000))
+        lr.fit(X, y)
+        score = lr.score(X, y)
+        print "score:", score
+        assert_almost_equal(score, 1.064312,
+                            msg="The found regression vector does not give " \
+                                "a low enough score value.",
+                            places=5)
+
+        l = 0.0
+        k = 1.0 - 0.618
+        g = 0.0
+        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
+                                       algorithm=explicit.FISTA(max_iter=1000))
+        lr.fit(X, y)
+        score = lr.score(X, y)
+        print "score:", score
+        assert_almost_equal(score, 1.024532,
+                            msg="The found regression vector does not give " \
+                                "a low enough score value.",
+                            places=5)
+
+        l = 0.0
+        k = 0.0
+        g = 2.718
+        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
+                                       algorithm=explicit.FISTA(max_iter=1000))
+        lr.fit(X, y)
+        score = lr.score(X, y)
+        print "score:", score
+        assert_almost_equal(score, 14.631501,
+                            msg="The found regression vector does not give " \
+                                "a low enough score value.",
+                            places=5)
+
+        l = 0.618
+        k = 1.0 - l
+        g = 0.0
+        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
+                                       algorithm=explicit.FISTA(max_iter=1000))
+        lr.fit(X, y)
+        score = lr.score(X, y)
+        print "score:", score
+        assert_almost_equal(score, 1.070105,
+                            msg="The found regression vector does not give " \
+                                "a low enough score value.",
+                            places=5)
+
+        l = 0.618
+        k = 0.0
+        g = 2.718
+        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
+                                       algorithm=explicit.FISTA(max_iter=1000))
+        lr.fit(X, y)
+        score = lr.score(X, y)
+        print "score:", score
+        assert_almost_equal(score, 14.458926,
+                            msg="The found regression vector does not give " \
+                                "a low enough score value.",
+                            places=5)
+
+        l = 0.0
+        k = 1.0 - 0.618
+        g = 2.718
+        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
+                                       algorithm=explicit.FISTA(max_iter=1000))
+        lr.fit(X, y)
+        score = lr.score(X, y)
+        print "score:", score
+        assert_almost_equal(score, 13.982838,
+                            msg="The found regression vector does not give " \
+                                "a low enough score value.",
+                            places=5)
+
+        l = 0.618
+        k = 1.0 - l
+        g = 2.718
+        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
+                                        algorithm=explicit.ISTA(max_iter=1000))
+        lr.fit(X, y)
+        score = lr.score(X, y)
+        print "score:", score
+        assert_almost_equal(score, 1041.254962,
+                            msg="The found regression vector does not give " \
+                                "the correct score value.",
+                            places=5)
+
+        l = 0.618
+        k = 1.0 - l
+        g = 2.718
+        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
+                                      algorithm=explicit.FISTA(max_iter=1000))
+        lr.fit(X, y)
+        score = lr.score(X, y)
+        print "score:", score
+        assert_almost_equal(score, 13.112947,
+                            msg="The found regression vector does not give " \
+                                "the correct score value.",
+                            places=5)
+
+        l = 0.618
+        k = 1.0 - l
+        g = 2.718
+        rr = estimators.RidgeRegression_L1_TV(k, l, g, A,
+                                        algorithm=explicit.ISTA(max_iter=1000))
+        rr.fit(X, y)
+        score = rr.score(X, y)
+        print "score:", score
+        assert_almost_equal(score, 7.106687,
+                            msg="The found regression vector does not give " \
+                                "the correct score value.",
+                            places=5)
+
+        l = 0.618
+        k = 1.0 - l
+        g = 2.718
+        rr = estimators.RidgeRegression_L1_TV(k, l, g, A,
+                                       algorithm=explicit.FISTA(max_iter=1000))
+        rr.fit(X, y)
+        score = rr.score(X, y)
+        print "score:", score
+        assert_almost_equal(score, 1.081411,
+                            msg="The found regression vector does not give " \
+                                "the correct score value.",
+                            places=5)
+
+        l = 0.618
+        k = 1.0 - l
+        g = 2.718
+        rr = estimators.RidgeRegression_L1_TV(k, l, g, A,
+            algorithm=explicit.DynamicCONESTA(continuations=10, max_iter=1000))
+        rr.fit(X, y)
+        score = rr.score(X, y)
+        print "score:", score
+        assert_almost_equal(score, 1.060818,
+                            msg="The found regression vector does not give " \
+                                "the correct score value.",
+                            places=5)
+
+        l = 0.618
+        k = 1.0 - l
+        g = 2.718
+        rr = estimators.RidgeRegression_L1_TV(k, l, g, A,
+             algorithm=explicit.StaticCONESTA(continuations=10, max_iter=1000))
+        rr.fit(X, y)
+        score = rr.score(X, y)
+        print "score:", score
+        assert_almost_equal(score, 1.060906,
+                            msg="The found regression vector does not give " \
+                                "the correct score value.",
+                            places=5)
 
 if __name__ == "__main__":
     unittest.main()
