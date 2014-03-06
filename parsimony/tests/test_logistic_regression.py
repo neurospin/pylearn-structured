@@ -19,7 +19,7 @@ import parsimony.utils.consts as consts
 # TODO: Test total variation.
 
 
-class TestLogisticRegression():#TestCase):
+class TestLogisticRegression(TestCase):
 
     def test_logistic_regression(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23

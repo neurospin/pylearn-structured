@@ -7,7 +7,7 @@ Created on Thu Feb 27 09:21:23 2014
 @license: BSD 3-clause.
 """
 import unittest
-from nose.tools import assert_less, assert_almost_equal
+from nose.tools import assert_less, assert_equal, assert_almost_equal
 
 import numpy as np
 
@@ -15,7 +15,7 @@ from tests import TestCase
 import parsimony.utils.consts as consts
 
 
-class TestLinearRegression(TestCase):
+class TestLinearRegression():#TestCase):
 
     def test_linear_regression_overdetermined(self):
 
@@ -1676,6 +1676,111 @@ class TestLinearRegression(TestCase):
                             msg="The found regression vector does not give " \
                                 "the correct score value.",
                             places=5)
+
+    def test_linear_regression_large(self):
+
+        import parsimony.algorithms.explicit as explicit
+        import parsimony.estimators as estimators
+        import parsimony.functions.nesterov.tv as tv
+
+        np.random.seed(42)
+
+        px = 10
+        py = 10
+        pz = 10
+        shape = (pz, py, px)
+        n, p = 100, np.prod(shape)
+
+        A, _ = tv.A_from_shape(shape)
+
+        alpha = 0.9
+        Sigma = alpha * np.eye(p, p) \
+              + (1.0 - alpha) * np.random.randn(p, p)
+        mean = np.zeros(p)
+        X = np.random.multivariate_normal(mean, Sigma, n)
+
+        beta = np.random.rand(p, 1) * 2.0 - 1.0
+        beta = np.sort(beta, axis=0)
+        beta[np.abs(beta) < 0.1] = 0.0
+
+        y = np.dot(X, beta)
+
+        eps = 1e-8
+        max_iter = 500
+
+        k = 0.618
+        l = 1.0 - k
+        g = 1.618
+
+        mu = None
+        logreg_static = estimators.RidgeRegression_L1_TV(
+                           k=k,
+                           l=l,
+                           g=g,
+                           A=A,
+                           mu=mu,
+                           output=False,
+                           algorithm=explicit.StaticCONESTA(eps=eps,
+                                                            continuations=20,
+                                                            max_iter=max_iter))
+        logreg_static.fit(X, y)
+        err = logreg_static.score(X, y)
+#        print err
+        assert_almost_equal(err, 0.025976,
+                     msg="The found regression vector is not correct.",
+                     places=5)
+
+        mu = None
+        logreg_dynamic = estimators.RidgeRegression_L1_TV(
+                          k=k,
+                          l=l,
+                          g=g,
+                          A=A,
+                          mu=mu,
+                          output=False,
+                          algorithm=explicit.DynamicCONESTA(eps=eps,
+                                                            continuations=20,
+                                                            max_iter=max_iter))
+        logreg_dynamic.fit(X, y)
+        err = logreg_dynamic.score(X, y)
+#        print err
+        assert_almost_equal(err, 0.025976,
+                     msg="The found regression vector is not correct.",
+                     places=5)
+
+        mu = 5e-4
+        logreg_fista = estimators.RidgeRegression_L1_TV(
+                          k=k,
+                          l=l,
+                          g=g,
+                          A=A,
+                          mu=mu,
+                          output=False,
+                          algorithm=explicit.FISTA(eps=eps,
+                                                   max_iter=10000))
+        logreg_fista.fit(X, y)
+        err = logreg_fista.score(X, y)
+#        print err
+        assert_almost_equal(err, 0.025868,
+                     msg="The found regression vector is not correct.",
+                     places=5)
+
+        mu = 5e-4
+        logreg_ista = estimators.RidgeRegression_L1_TV(
+                          k=k,
+                          l=l,
+                          g=g,
+                          A=A,
+                          mu=mu,
+                          output=False,
+                          algorithm=explicit.ISTA(eps=eps,
+                                                  max_iter=10000))
+        logreg_ista.fit(X, y)
+        err = logreg_ista.score(X, y)
+#        print err
+        assert_almost_equal(err, 0.034949,
+                     msg="The found regression vector is not correct.",
+                     places=5)
 
 if __name__ == "__main__":
     unittest.main()
