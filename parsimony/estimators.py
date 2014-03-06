@@ -18,6 +18,7 @@ import parsimony.functions.penalties as penalties
 import parsimony.functions.nesterov.tv as tv
 import parsimony.algorithms.explicit as explicit
 import parsimony.start_vectors as start_vectors
+from parsimony.utils import check_arrays
 
 __all__ = ["BaseEstimator", "RegressionEstimator",
 
@@ -112,7 +113,7 @@ class RegressionEstimator(BaseEstimator):
     def predict(self, X):
         """Perform prediction using the fitted parameters.
         """
-        return np.dot(X, self.beta)
+        return np.dot(check_arrays(X), self.beta)
 
     @abc.abstractmethod
     def score(self, X, y):
@@ -167,6 +168,7 @@ class LogisticRegressionEstimator(BaseEstimator):
         """Return a predicted y corresponding to the X given and the beta
         previously determined.
         """
+        X = check_arrays(X)
         prob = self.predict_probability(X)
         y = np.ones((X.shape[0], 1))
         y[prob < 0.5] = 0.0
@@ -174,6 +176,7 @@ class LogisticRegressionEstimator(BaseEstimator):
         return y
 
     def predict_probability(self, X):
+        X = check_arrays(X)
         logit = np.dot(X, self.beta)
         prob = 1. / (1. + np.exp(-logit))
 
@@ -263,6 +266,7 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
     def fit(self, X, y, beta=None):
         """Fit the estimator to the data.
         """
+        X, y = check_arrays(X, y)
         self.function = functions.CombinedFunction()
         self.function.add_function(losses.LinearRegression(X, y, mean=False))
         if self.k > 0:
@@ -293,6 +297,7 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
     def score(self, X, y):
         """Return the mean squared error of the estimator.
         """
+        X, y = check_arrays(X, y)
         n, p = X.shape
         y_hat = np.dot(X, self.beta)
         return np.sum((y_hat - y) ** 2.0) / float(n)
@@ -383,6 +388,7 @@ class RidgeRegression_L1_TV(RegressionEstimator):
     def fit(self, X, y, beta=None):
         """Fit the estimator to the data
         """
+        X, y = check_arrays(X, y)
         self.function = functions.RR_L1_TV(X, y, self.k, self.l, self.g,
                                            A=self.A)
         self.algorithm.check_compatibility(self.function,
@@ -410,6 +416,7 @@ class RidgeRegression_L1_TV(RegressionEstimator):
     def score(self, X, y):
         """Return the mean squared error of the estimator.
         """
+        X, y = check_arrays(X, y)
         n, p = X.shape
         y_hat = np.dot(X, self.beta)
         return np.sum((y_hat - y) ** 2.0) / float(n)
@@ -484,6 +491,7 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
     def fit(self, X, y):
         """Fit the estimator to the data
         """
+        X, y = check_arrays(X, y)
         self.function = functions.RLR_L1_TV(X, y, self.k, self.l, self.g,
                                            A=self.A, weights=self.weigths,
                                            mean=self.mean)
@@ -582,6 +590,7 @@ class RidgeLogisticRegression_L1_GL(LogisticRegressionEstimator):
     def fit(self, X, y):
         """Fit the estimator to the data.
         """
+        X, y = check_arrays(X, y)
         self.function = functions.RLR_L1_GL(X, y, self.k, self.l, self.g,
                                             A=self.A,
                                             weights=self.weigths,
@@ -684,6 +693,7 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
     def fit(self, X, y):
         """Fit the estimator to the data
         """
+        X, y = check_arrays(X, y)
         self.function = functions.RR_SmoothedL1TV(X, y,
                                                   self.k, self.l, self.g,
                                                   Atv=self.Atv, Al1=self.Al1)

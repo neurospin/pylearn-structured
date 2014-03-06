@@ -50,7 +50,7 @@ def check_arrays(*arrays):
 
         checked_arrays.append(array)
 
-    return checked_arrays
+    return checked_arrays[0] if len(checked_arrays) == 1 else checked_arrays
 
 
 if __name__ == "__main__":
