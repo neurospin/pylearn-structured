@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import parsimony.datasets
 import parsimony.functions.nesterov.tv as tv
 from parsimony.estimators import RidgeRegression_L1_TV
+from parsimony.algorithms.explicit import StaticCONESTA
 from parsimony.utils import plot_map2d
 from sklearn.linear_model import ElasticNet
 from sklearn.metrics import r2_score
@@ -46,8 +47,8 @@ k, l, g = alpha_g * np.array((.1, .4, .5))  # l2, l1, tv penalties
 A, n_compacts = tv.A_from_shape(shape)
 #import parsimony.functions as functions
 #functions.RR_L1_TV(X, y, k, l, g, A=A)
-ridgel1tv = RidgeRegression_L1_TV(k, l, g, A)
-yte_pred_ridgel1tv = ridgel1tv.fit(Xtr, ytr).predict(Xte)
+enettv = RidgeRegression_L1_TV(k, l, g, A, algorithm=StaticCONESTA(max_iter=500))
+yte_pred_enettv = enettv.fit(Xtr, ytr).predict(Xte)
 ###########################################################################
 ## Plot
 
@@ -60,7 +61,7 @@ plot = plt.subplot(132)
 plot_map2d(enet.coef_.reshape(shape), plot, title="beta enet (R2=%.2f)" %
     r2_score(yte, yte_pred_enet))
 plot = plt.subplot(133)
-plot_map2d(ridgel1tv.beta.reshape(shape), plot,
-           title="beta ridgel1tv (R2=%.2f)" \
-                 % r2_score(yte, yte_pred_ridgel1tv))
+plot_map2d(enettv.beta.reshape(shape), plot,
+           title="beta enettv (R2=%.2f)" \
+                 % r2_score(yte, yte_pred_enettv))
 plt.show()
