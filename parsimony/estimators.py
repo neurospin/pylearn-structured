@@ -349,7 +349,7 @@ class RidgeRegression_L1_TV(RegressionEstimator):
     >>> res = ridge_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
     >>> print "error = ", error
-    error =  4.70096488794
+    error =  4.70096544168
     >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
     ...                     algorithm=explicit.FISTA(max_iter=1000))
     >>> res = ridge_l1_tv.fit(X, y)
@@ -698,6 +698,13 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
             self.beta = self.algorithm.run(self.function)
 
         return self
+
+    def score(self, X, y):
+        """Return the mean squared error of the estimator.
+        """
+        n, p = X.shape
+        y_hat = np.dot(X, self.beta)
+        return np.sum((y_hat - y) ** 2.0) / float(n)
 
 
 if __name__ == "__main__":

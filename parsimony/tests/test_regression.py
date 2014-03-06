@@ -1659,7 +1659,7 @@ class TestLinearRegression(TestCase):
         rr.fit(X, y)
         score = rr.score(X, y)
         print "score:", score
-        assert_almost_equal(score, 1.060818,
+        assert_almost_equal(score, 1.061931,
                             msg="The found regression vector does not give " \
                                 "the correct score value.",
                             places=5)
@@ -1672,7 +1672,7 @@ class TestLinearRegression(TestCase):
         rr.fit(X, y)
         score = rr.score(X, y)
         print "score:", score
-        assert_almost_equal(score, 1.060906,
+        assert_almost_equal(score, 1.062117,
                             msg="The found regression vector does not give " \
                                 "the correct score value.",
                             places=5)
