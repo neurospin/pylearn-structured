@@ -493,10 +493,10 @@ class CONESTA(bases.ExplicitAlgorithm):
 
         self.check_compatibility(function, self.INTERFACES)
 
-        if self.mu_start is not None:
-            mu = [self.mu_start]
-        else:
+        if self.mu_start is None:
             mu = [0.9 * function.estimate_mu(beta)]
+        else:
+            mu = [self.mu_start]
 
 #        old_mu = function.get_mu()
         function.set_mu(self.mu_min)
@@ -538,7 +538,7 @@ class CONESTA(bases.ExplicitAlgorithm):
             function.set_mu(mu[-1])
 
             if (1.0 / tmin) * maths.norm(beta - beta_tilde) < self.eps \
-                    or i >= self.continuations:
+                    or i >= self.continuations - 1:
 #                print "%f < %f" % ((1. / tmin) \
 #                                * maths.norm(beta - beta_tilde), self.eps)
 #                print "%d >= %d" % (i, self.continuations)

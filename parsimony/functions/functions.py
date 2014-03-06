@@ -26,8 +26,10 @@ from .losses import LatentVariableVariance
 import parsimony.utils.consts as consts
 
 __all__ = ["CombinedFunction",
-           "RR_L1_TV", "RLR_L1_TV", "RR_L1_GL", "RR_SmoothedL1TV",
+           "RR_L1_TV", "RR_L1_GL", "RLR_L1_TV", "RLR_L1_GL", "RR_SmoothedL1TV",
            "PCA_L1_TV"]
+
+# TODO: Add penalty_start and mean to all of these!
 
 
 class CombinedFunction(interfaces.CompositeFunction,
@@ -210,7 +212,7 @@ class RR_L1_TV(interfaces.CompositeFunction,
                interfaces.Continuation,
                interfaces.DualFunction,
                interfaces.StronglyConvex):
-    """Combination (sum) of RidgeRegression, L1 and TotalVariation
+    """Combination (sum) of RidgeRegression, L1 and TotalVariation.
     """
     def __init__(self, X, y, k, l, g, A=None, mu=0.0, penalty_start=0):
         """
@@ -486,49 +488,6 @@ class RR_L1_TV(interfaces.CompositeFunction,
         return self.rr.k
 
 
-class RLR_L1_TV(RR_L1_TV):
-    """Combination (sum) of RidgeLogisticRegression, L1 and TotalVariation.
-    """
-    def __init__(self, X, y, k, l, g, A=None, mu=0.0, weights=None,
-                 penalty_start=0):
-        """
-        Parameters
-        ----------
-        X : Numpy array. The X matrix (n-by-p) for the logistic regression.
-
-        y : Numpy array. The y vector for the logistic regression.
-
-        k : Non-negative float. The Lagrange multiplier, or regularisation
-                constant, for the ridge penalty.
-
-        l : Non-negative float. The Lagrange multiplier, or regularisation
-                constant, for the L1 penalty.
-
-        g : Non-negative float. The Lagrange multiplier, or regularisation
-                constant, of the smoothed TV function.
-
-        A : Numpy array (usually sparse). The linear operator for the Nesterov
-                formulation for TV. May not be None!
-
-        mu : Non-negative float. The regularisation constant for the smoothing
-                of the TV function.
-
-        weights: List with n elements. The sample's weights.
-
-        penalty_start : Non-negative integer. The number of columns, variables
-                etc., to except from penalisation. Equivalently, the first
-                index to be penalised. Default is 0, all columns are included.
-        """
-        self.X = X
-        self.y = y
-
-        self.rr = RidgeLogisticRegression(X, y, k, weights=weights)
-        self.l1 = L1(l, penalty_start=penalty_start)
-        self.tv = TotalVariation(g, A=A, mu=mu, penalty_start=penalty_start)
-
-        self.reset()
-
-
 class RR_L1_GL(RR_L1_TV):
     """Combination (sum) of RidgeRegression, L1 and Overlapping Group Lasso.
     """
@@ -800,6 +759,92 @@ class RR_L1_GL(RR_L1_TV):
         return self.gl.project(a)
 
 
+class RLR_L1_TV(RR_L1_TV):
+    """Combination (sum) of RidgeLogisticRegression, L1 and TotalVariation.
+    """
+    def __init__(self, X, y, k, l, g, A=None, mu=0.0, weights=None,
+                 penalty_start=0, mean=True):
+        """
+        Parameters
+        ----------
+        X : Numpy array. The X matrix (n-by-p) for the logistic regression.
+
+        y : Numpy array. The y vector for the logistic regression.
+
+        k : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, for the ridge penalty.
+
+        l : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, for the L1 penalty.
+
+        g : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, of the smoothed TV function.
+
+        A : Numpy array (usually sparse). The linear operator for the Nesterov
+                formulation for TV. May not be None!
+
+        mu : Non-negative float. The regularisation constant for the smoothing
+                of the TV function.
+
+        weights: List with n elements. The sample's weights.
+
+        penalty_start : Non-negative integer. The number of columns, variables
+                etc., to except from penalisation. Equivalently, the first
+                index to be penalised. Default is 0, all columns are included.
+        """
+        self.X = X
+        self.y = y
+
+        self.rr = RidgeLogisticRegression(X, y, k, weights=weights, mean=mean)
+        self.l1 = L1(l, penalty_start=penalty_start)
+        self.tv = TotalVariation(g, A=A, mu=mu, penalty_start=penalty_start)
+
+        self.reset()
+
+
+class RLR_L1_GL(RR_L1_GL):
+    """Combination (sum) of RidgeLogisticRegression, L1 and TotalVariation.
+    """
+    def __init__(self, X, y, k, l, g, A=None, mu=0.0, weights=None,
+                 penalty_start=0, mean=True):
+        """
+        Parameters
+        ----------
+        X : Numpy array. The X matrix (n-by-p) for the logistic regression.
+
+        y : Numpy array. The y vector for the logistic regression.
+
+        k : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, for the ridge penalty.
+
+        l : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, for the L1 penalty.
+
+        g : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, of the smoothed GL function.
+
+        A : Numpy array (usually sparse). The linear operator for the Nesterov
+                formulation for GL. May not be None!
+
+        mu : Non-negative float. The regularisation constant for the smoothing
+                of the GL function.
+
+        weights: List with n elements. The sample's weights.
+
+        penalty_start : Non-negative integer. The number of columns, variables
+                etc., to except from penalisation. Equivalently, the first
+                index to be penalised. Default is 0, all columns are included.
+        """
+        self.X = X
+        self.y = y
+
+        self.rr = RidgeLogisticRegression(X, y, k, weights=weights, mean=mean)
+        self.l1 = L1(l, penalty_start=penalty_start)
+        self.gl = GroupLassoOverlap(g, A=A, mu=mu, penalty_start=penalty_start)
+
+        self.reset()
+
+
 class RR_SmoothedL1TV(interfaces.CompositeFunction,
                       interfaces.LipschitzContinuousGradient,
                       nesterov_interfaces.NesterovFunction,
@@ -1035,7 +1080,7 @@ class PCA_L1_TV(interfaces.CompositeFunction,
                interfaces.Continuation,
                interfaces.DualFunction,
                interfaces.StronglyConvex):
-    """Combination (sum) of RidgeRegression, L1 and TotalVariation
+    """Combination (sum) of PCA (Variance), L1 and TotalVariation
     """
     def __init__(self, X, k, l, g, A=None, mu=0.0, penalty_start=0):
         """

@@ -14,6 +14,10 @@ import numpy as np
 from tests import TestCase
 import parsimony.utils.consts as consts
 
+# TODO: Test penalty_start and mean.
+
+# TODO: Test total variation.
+
 
 class TestLogisticRegression(TestCase):
 
@@ -21,15 +25,23 @@ class TestLogisticRegression(TestCase):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
 
         import parsimony.functions.losses as losses
+        import parsimony.functions.nesterov.tv as tv
         import parsimony.algorithms.explicit as explicit
         import parsimony.start_vectors as start_vectors
         import parsimony.utils.maths as maths
+        import parsimony.estimators as estimators
 
         np.random.seed(42)
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
 
-        n, p = 50, 100
+        px = 4
+        py = 4
+        pz = 4
+        shape = (pz, py, px)
+        n, p = 50, np.prod(shape)
+
+        A, _ = tv.A_from_shape(shape)
 
         alpha = 0.9
         Sigma = alpha * np.eye(p, p) \
@@ -97,20 +109,44 @@ class TestLogisticRegression(TestCase):
                      [0.84154014], [-0.27480962], [-0.95924936], [0.54482999],
                      [-1.41566245], [0.3111633], [-0.25463532], [0.8865664]])
 
+        mu = None
+        logreg_est = estimators.RidgeLogisticRegression_L1_TV(
+                       k=0.0, l=0.0, g=0.000001,
+                       A=A, weigths=None, mu=mu, output=False, mean=True,
+                       algorithm=explicit.ISTA(eps=eps, max_iter=max_iter))
+        logreg_est.fit(X, y)
+
         re = maths.norm(beta - beta_spams) / maths.norm(beta_spams)
 #        print "re:", re
-        assert_almost_equal(re, 0.063010,
+        assert_almost_equal(re, 0.029593,
                             msg="The found regression vector is not correct.",
                             places=5)
 
-        f_parsimony = lr.f(beta)
+        re = maths.norm(logreg_est.beta - beta_spams) / maths.norm(beta_spams)
+#        print "re:", re
+        assert_almost_equal(re, 0.044962,
+                            msg="The found regression vector is not correct.",
+                            places=5)
+
         f_spams = lr.f(beta_spams)
+        f_parsimony = lr.f(beta)
         if abs(f_spams) > consts.TOLERANCE:
             err = abs(f_parsimony - f_spams) / f_spams
         else:
             err = abs(f_parsimony - f_spams)
 #        print "err:", err
-        assert_almost_equal(err, 0.783121,
+        assert_almost_equal(err, 0.262961,
+                            msg="The found regression vector does not give " \
+                                "the correct function value.",
+                            places=5)
+
+        f_logreg = lr.f(logreg_est.beta)
+        if abs(f_spams) > consts.TOLERANCE:
+            err = abs(f_logreg - f_spams) / f_spams
+        else:
+            err = abs(f_logreg - f_spams)
+#        print "err:", err
+        assert_almost_equal(err, 0.311560,
                             msg="The found regression vector does not give " \
                                 "the correct function value.",
                             places=5)
@@ -124,12 +160,20 @@ class TestLogisticRegression(TestCase):
         import parsimony.algorithms.explicit as explicit
         import parsimony.start_vectors as start_vectors
         import parsimony.utils.maths as maths
+        import parsimony.estimators as estimators
+        import parsimony.functions.nesterov.tv as tv
 
         np.random.seed(42)
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
 
-        n, p = 50, 100
+        px = 4
+        py = 4
+        pz = 4
+        shape = (pz, py, px)
+        n, p = 50, np.prod(shape)
+
+        A, _ = tv.A_from_shape(shape)
 
         alpha = 0.9
         Sigma = alpha * np.eye(p, p) \
@@ -195,20 +239,44 @@ class TestLogisticRegression(TestCase):
                      [0.10385635], [0.], [0.], [0.], [0.13107728], [0.], [0.],
                      [0.32741694], [-1.52896011], [0.], [0.], [0.55867497]])
 
+        mu = None
+        logreg_est = estimators.RidgeLogisticRegression_L1_TV(
+                    k=k, l=l, g=0.000001,
+                    A=A, weigths=None, mu=mu, output=False,
+                    algorithm=explicit.ISTA(eps=eps, max_iter=max_iter))
+        logreg_est.fit(X, y)
+
         re = maths.norm(beta - beta_spams) / maths.norm(beta_spams)
 #        print "re:", re
-        assert_almost_equal(re, 0.070202,
+        assert_almost_equal(re, 0.019788,
                             msg="The found regression vector is not correct.",
                             places=5)
 
-        f_parsimony = function.f(beta)
+        re = maths.norm(logreg_est.beta - beta_spams) / maths.norm(beta_spams)
+#        print "re:", re
+        assert_almost_equal(re, 0.020964,
+                            msg="The found regression vector is not correct.",
+                            places=5)
+
         f_spams = function.f(beta_spams)
+        f_parsimony = function.f(beta)
         if abs(f_spams) > consts.TOLERANCE:
             err = abs(f_parsimony - f_spams) / f_spams
         else:
             err = abs(f_parsimony - f_spams)
 #        print "err:", err
-        assert_almost_equal(err, 0.001084,
+        assert_almost_equal(err, 0.000320,
+                            msg="The found regression vector does not give " \
+                                "the correct function value.",
+                            places=5)
+
+        f_logreg = function.f(logreg_est.beta)
+        if abs(f_spams) > consts.TOLERANCE:
+            err = abs(f_logreg - f_spams) / f_spams
+        else:
+            err = abs(f_logreg - f_spams)
+#        print "err:", err
+        assert_almost_equal(err, 0.000341,
                             msg="The found regression vector does not give " \
                                 "the correct function value.",
                             places=5)
@@ -222,12 +290,20 @@ class TestLogisticRegression(TestCase):
         import parsimony.algorithms.explicit as explicit
         import parsimony.start_vectors as start_vectors
         import parsimony.utils.maths as maths
+        import parsimony.estimators as estimators
+        import parsimony.functions.nesterov.tv as tv
 
         np.random.seed(42)
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
 
-        n, p = 50, 100
+        px = 4
+        py = 4
+        pz = 4
+        shape = (pz, py, px)
+        n, p = 50, np.prod(shape)
+
+        A, _ = tv.A_from_shape(shape)
 
         alpha = 0.9
         Sigma = alpha * np.eye(p, p) \
@@ -237,7 +313,7 @@ class TestLogisticRegression(TestCase):
         y = np.array(np.random.randint(0, 2, (n, 1)), dtype=X.dtype)
 
         eps = 1e-8
-        max_iter = 10000
+        max_iter = 1000
 
         l = 0.0
         k = 0.618
@@ -310,20 +386,44 @@ class TestLogisticRegression(TestCase):
                      [-6.96402195e-02], [1.73230866e-02], [1.90892359e-02],
                      [5.68265025e-02]])
 
+        mu = None
+        logreg_est = estimators.RidgeLogisticRegression_L1_TV(
+                    k=k, l=l, g=0.000001,
+                    A=A, weigths=None, mu=mu, output=False,
+                    algorithm=explicit.ISTA(eps=eps, max_iter=max_iter))
+        logreg_est.fit(X, y)
+
         re = maths.norm(beta - beta_spams) / maths.norm(beta_spams)
 #        print "re:", re
-        assert_almost_equal(re, 2.926735e-09,
+        assert_almost_equal(re, 1.188998e-08,
                             msg="The found regression vector is not correct.",
                             places=5)
 
-        f_parsimony = function.f(beta)
+        re = maths.norm(logreg_est.beta - beta_spams) / maths.norm(beta_spams)
+#        print "re:", re
+        assert_almost_equal(re, 2.303878e-05,
+                            msg="The found regression vector is not correct.",
+                            places=5)
+
         f_spams = function.f(beta_spams)
+        f_parsimony = function.f(beta)
         if abs(f_spams) > consts.TOLERANCE:
             err = abs(f_parsimony - f_spams) / f_spams
         else:
             err = abs(f_parsimony - f_spams)
 #        print "err:", err
-        assert_almost_equal(err, 0.0,
+        assert_almost_equal(err, 2.046041e-16,
+                            msg="The found regression vector does not give " \
+                                "the correct function value.",
+                            places=5)
+
+        f_logreg = function.f(logreg_est.beta)
+        if abs(f_spams) > consts.TOLERANCE:
+            err = abs(f_logreg - f_spams) / f_spams
+        else:
+            err = abs(f_logreg - f_spams)
+#        print "err:", err
+        assert_almost_equal(err, 1.230728e-10,
                             msg="The found regression vector does not give " \
                                 "the correct function value.",
                             places=5)
@@ -338,6 +438,7 @@ class TestLogisticRegression(TestCase):
         import parsimony.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.functions.nesterov.gl as gl
+        import parsimony.estimators as estimators
 
         np.random.seed(42)
 
@@ -426,9 +527,26 @@ class TestLogisticRegression(TestCase):
                      [0.5727723], [-0.24701453], [-0.73092213], [0.31178252],
                      [-1.05972579], [0.19986263], [-0.1638552], [0.6232789]])
 
+#        mu = None
+        logreg_est = estimators.RidgeLogisticRegression_L1_GL(k=k, l=l, g=g,
+                           A=A,
+                           weigths=None,
+                           mu=mu,
+                           output=False,
+                           algorithm=explicit.ISTA(eps=eps, max_iter=max_iter),
+                           penalty_start=0,
+                           mean=True)
+        logreg_est.fit(X, y)
+
         re = maths.norm(beta - beta_spams) / maths.norm(beta_spams)
 #        print "re:", re
         assert_almost_equal(re, 0.065260,
+                            msg="The found regression vector is not correct.",
+                            places=5)
+
+        re = maths.norm(logreg_est.beta - beta_spams) / maths.norm(beta_spams)
+#        print "re:", re
+        assert_almost_equal(re, 0.067752,
                             msg="The found regression vector is not correct.",
                             places=5)
 
@@ -444,6 +562,17 @@ class TestLogisticRegression(TestCase):
                                 "the correct function value.",
                             places=5)
 
+        f_logreg = function.f(logreg_est.beta)
+        if abs(f_spams) > consts.TOLERANCE:
+            err = abs(f_logreg - f_spams) / f_spams
+        else:
+            err = abs(f_logreg - f_spams)
+#        print "err:", err
+        assert_almost_equal(err, 0.003163,
+                            msg="The found regression vector does not give " \
+                                "the correct function value.",
+                            places=5)
+
     def test_logistic_regression_l1_l2(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
 
@@ -453,12 +582,20 @@ class TestLogisticRegression(TestCase):
         import parsimony.algorithms.explicit as explicit
         import parsimony.start_vectors as start_vectors
         import parsimony.utils.maths as maths
+        import parsimony.estimators as estimators
+        import parsimony.functions.nesterov.tv as tv
 
         np.random.seed(42)
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
 
-        n, p = 50, 100
+        px = 4
+        py = 4
+        pz = 4
+        shape = (pz, py, px)
+        n, p = 50, np.prod(shape)
+
+        A, _ = tv.A_from_shape(shape)
 
         alpha = 0.9
         Sigma = alpha * np.eye(p, p) \
@@ -468,7 +605,7 @@ class TestLogisticRegression(TestCase):
         y = np.array(np.random.randint(0, 2, (n, 1)), dtype=X.dtype)
 
         eps = 1e-8
-        max_iter = 10000
+        max_iter = 1000
 
         l = 0.0318
         k = 1.0 - l
@@ -532,20 +669,44 @@ class TestLogisticRegression(TestCase):
                      [0.], [0.02832135], [-0.01693505], [0.], [0.],
                      [0.02531008]])
 
+        mu = None
+        logreg_est = estimators.RidgeLogisticRegression_L1_TV(
+                    k=k, l=l, g=g,
+                    A=A, weigths=None, mu=mu, output=False,
+                    algorithm=explicit.ISTA(eps=eps, max_iter=max_iter))
+        logreg_est.fit(X, y)
+
         re = maths.norm(beta - beta_spams) / maths.norm(beta_spams)
 #        print "re:", re
-        assert_almost_equal(re, 1.143472e-08,
+        assert_almost_equal(re, 1.129260e-09,
                             msg="The found regression vector is not correct.",
                             places=5)
 
-        f_parsimony = function.f(beta)
+        re = maths.norm(logreg_est.beta - beta_spams) / maths.norm(beta_spams)
+#        print "re:", re
+        assert_almost_equal(re, 9.893653e-09,
+                            msg="The found regression vector is not correct.",
+                            places=5)
+
         f_spams = function.f(beta_spams)
+        f_parsimony = function.f(beta)
         if abs(f_spams) > consts.TOLERANCE:
             err = abs(f_parsimony - f_spams) / f_spams
         else:
             err = abs(f_parsimony - f_spams)
 #        print "err:", err
-        assert_almost_equal(err, 3.644088e-16,
+        assert_almost_equal(err, 1.737077e-16,
+                            msg="The found regression vector does not give " \
+                                "the correct function value.",
+                            places=5)
+
+        f_logreg = function.f(logreg_est.beta)
+        if abs(f_spams) > consts.TOLERANCE:
+            err = abs(f_logreg - f_spams) / f_spams
+        else:
+            err = abs(f_logreg - f_spams)
+#        print "err:", err
+        assert_almost_equal(err, 1.737077e-16,
                             msg="The found regression vector does not give " \
                                 "the correct function value.",
                             places=5)
@@ -560,6 +721,7 @@ class TestLogisticRegression(TestCase):
         import parsimony.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.functions.nesterov.gl as gl
+        import parsimony.estimators as estimators
 
         np.random.seed(42)
 
@@ -642,9 +804,29 @@ class TestLogisticRegression(TestCase):
                      [0.], [0.], [0.], [0.], [0.], [0.26739579], [-0.6467167],
                      [0.], [0.], [0.19439507]])
 
+#        mu = None
+        logreg_est = estimators.RidgeLogisticRegression_L1_GL(
+                           k=k,
+                           l=l,
+                           g=g,
+                           A=A,
+                           weigths=None,
+                           mu=mu,
+                           output=False,
+                           algorithm=explicit.ISTA(eps=eps, max_iter=max_iter),
+                           penalty_start=0,
+                           mean=True)
+        logreg_est.fit(X, y)
+
         re = maths.norm(beta - beta_spams) / maths.norm(beta_spams)
 #        print "re:", re
         assert_almost_equal(re, 0.000915,
+                            msg="The found regression vector is not correct.",
+                            places=5)
+
+        re = maths.norm(logreg_est.beta - beta_spams) / maths.norm(beta_spams)
+#        print "re:", re
+        assert_almost_equal(re, 0.000989,
                             msg="The found regression vector is not correct.",
                             places=5)
 
@@ -656,6 +838,17 @@ class TestLogisticRegression(TestCase):
             err = abs(f_parsimony - f_spams)
 #        print "err:", err
         assert_almost_equal(err, 5.848802e-08,
+                            msg="The found regression vector does not give " \
+                                "the correct function value.",
+                            places=5)
+
+        f_logreg = function.f(logreg_est.beta)
+        if abs(f_spams) > consts.TOLERANCE:
+            err = abs(f_logreg - f_spams) / f_spams
+        else:
+            err = abs(f_logreg - f_spams)
+#        print "err:", err
+        assert_almost_equal(err, 6.826259e-08,
                             msg="The found regression vector does not give " \
                                 "the correct function value.",
                             places=5)

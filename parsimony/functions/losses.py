@@ -28,6 +28,8 @@ __all__ = ["LinearRegression", "RidgeRegression",
            "LogisticRegression", "RidgeLogisticRegression",
            "LatentVariableVariance"]
 
+# TODO: Add penalty_start and mean to all of these!
+
 
 class LinearRegression(interfaces.CompositeFunction,
                        interfaces.Gradient,
@@ -475,7 +477,8 @@ class LogisticRegression(interfaces.AtomicFunction,
 
 class RidgeLogisticRegression(interfaces.CompositeFunction,
                               interfaces.Gradient,
-                              interfaces.LipschitzContinuousGradient):
+                              interfaces.LipschitzContinuousGradient,
+                              interfaces.StepSize):
     """The Logistic Regression loss function.
 
     Ridge (re-weighted) log-likelihood (cross-entropy):
@@ -488,7 +491,7 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
     wi: sample i weight
     [Hastie 2009, p.: 102, 119 and 161, Bishop 2006 p.: 206]
     """
-    def __init__(self, X, y, k=0.0, weights=None):
+    def __init__(self, X, y, k=0.0, weights=None, mean=True):
         """
         Parameters
         ----------
@@ -509,6 +512,7 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
             weights = np.ones(y.shape).reshape(y.shape)
         # TODO: Allow the weight vector to be a list.
         self.weights = weights
+        self.mean = bool(mean)
 
         self.reset()
 
@@ -517,7 +521,7 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
 
         From the interface "Function".
         """
-        self._lipschitz = None
+        self._L = None
 #        self._lambda_max = None
 #        self._lambda_min = None
 
@@ -531,9 +535,14 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
         """
         # TODO check the correctness of the re-weighted loglike
         Xbeta = np.dot(self.X, beta)
-        loglike = np.sum(self.weights *
-            ((self.y * Xbeta) - np.log(1 + np.exp(Xbeta))))
-        return -loglike + (self.k / 2.0) * np.sum(beta ** 2.0)
+        negloglike = -np.sum(self.weights *
+                             ((self.y * Xbeta) - np.log(1 + np.exp(Xbeta))))
+
+        if self.mean:
+            negloglike /= float(self.X.shape[0])
+
+        return negloglike + (self.k / 2.0) * np.sum(beta ** 2.0)
+
 #        n = self.X.shape[0]
 #        s = 0
 #        for i in xrange(n):
@@ -560,14 +569,32 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
         >>> y = np.random.rand(100, 1)
         >>> y[y < 0.5] = 0.0
         >>> y[y >= 0.5] = 1.0
-        >>> rr = RidgeLogisticRegression(X=X, y=y, k=2.71828182)
+        >>> rr = RidgeLogisticRegression(X=X, y=y, k=2.71828182, mean=True)
+        >>> beta = np.random.rand(150, 1)
+        >>> np.linalg.norm(rr.grad(beta) - rr.approx_grad(beta, eps=1e-4))
+        7.2558745551696618e-10
+        >>>
+        >>> np.random.seed(42)
+        >>> X = np.random.rand(100, 150)
+        >>> y = np.random.rand(100, 1)
+        >>> y[y < 0.5] = 0.0
+        >>> y[y >= 0.5] = 1.0
+        >>> rr = RidgeLogisticRegression(X=X, y=y, k=2.71828182, mean=False)
         >>> beta = np.random.rand(150, 1)
         >>> np.linalg.norm(rr.grad(beta) - rr.approx_grad(beta, eps=1e-4))
         3.5290185882784444e-08
         """
         Xbeta = np.dot(self.X, beta)
         pi = 1.0 / (1.0 + np.exp(-Xbeta))
-        return -np.dot(self.X.T, self.weights * (self.y - pi)) + self.k * beta
+
+        grad = -np.dot(self.X.T, self.weights * (self.y - pi))
+        if self.mean:
+            grad /= float(self.X.shape[0])
+
+        grad = grad + self.k * beta
+
+        return grad
+
 #        return -np.dot(self.X.T,
 #                       np.dot(self.W, (self.y - pi))) \
 #                       + self.k * beta
@@ -579,7 +606,7 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
 
         From the interface "LipschitzContinuousGradient".
         """
-        if self._lipschitz == None:
+        if self._L == None:
             # pi(x) * (1 - pi(x)) <= 0.25 = 0.5 * 0.5
             PWX = 0.5 * np.sqrt(self.weights) * self.X  # TODO: CHECK WITH FOUAD
             # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
@@ -587,8 +614,23 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
             #PWX = np.dot(PW, self.X)
             # TODO: Use FastSVD for speedup!
             s = np.linalg.svd(PWX, full_matrices=False, compute_uv=False)
-            self._lipschitz = np.max(s) ** 2.0 + self.k  # TODO: CHECK
-        return self._lipschitz
+            self._L = np.max(s) ** 2.0  # TODO: CHECK
+
+            if self.mean:
+                self._L /= float(self.X.shape[0])
+
+            self._L += self.k  # TODO: CHECK
+
+        return self._L
+
+    def step(self, beta, index=0):
+        """The step size to use in descent methods.
+
+        Parameters
+        ----------
+        beta : Numpy array. The point at which to determine the step size.
+        """
+        return 1.0 / self.L()
 
 
 class LatentVariableVariance(interfaces.Function,
