@@ -90,6 +90,7 @@ algorithm : ExplicitAlgorithm. The algorithm that be applied. Should be
             1. algorithms.StaticCONESTA()
             2. algorithms.DynamicCONESTA()
             3. algorithms.FISTA()
+            4. algorithms.ISTA()
 
 Examples
 --------
@@ -118,13 +119,13 @@ error =  4.70079220678
 &gt;&gt;&gt; res = ridge_l1_tv.fit(X, y)
 &gt;&gt;&gt; error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
 &gt;&gt;&gt; print &quot;error = &quot;, error
-error =  4.70096488794
+error =  4.70096544168
 &gt;&gt;&gt; ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
 ...                     algorithm=explicit.FISTA(max_iter=1000))
 &gt;&gt;&gt; res = ridge_l1_tv.fit(X, y)
 &gt;&gt;&gt; error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
 &gt;&gt;&gt; print &quot;error = &quot;, error
-error =  4.27776729699
+error =  4.24400179809
 
 </pre>
 
@@ -194,7 +195,8 @@ error =  4.27776729699
         <tr>
           <td><span class="summary-sig"><a href="parsimony.estimators.RidgeRegression_L1_TV-class.html#fit" class="summary-sig-name">fit</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">X</span>,
-        <span class="summary-sig-arg">y</span>)</span><br />
+        <span class="summary-sig-arg">y</span>,
+        <span class="summary-sig-arg">beta</span>=<span class="summary-sig-default">None</span>)</span><br />
       Fit the estimator to the data</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.estimators-pysrc.html#RidgeRegression_L1_TV.fit">source&nbsp;code</a></span>
@@ -205,11 +207,29 @@ error =  4.27776729699
       
     </td>
   </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="parsimony.estimators.RidgeRegression_L1_TV-class.html#score" class="summary-sig-name">score</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">X</span>,
+        <span class="summary-sig-arg">y</span>)</span><br />
+      Return the mean squared error of the estimator.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="parsimony.estimators-pysrc.html#RidgeRegression_L1_TV.score">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
   <tr>
     <td colspan="2" class="summary">
     <p class="indent-wrapped-lines"><b>Inherited from <code><a href="parsimony.estimators.RegressionEstimator-class.html">RegressionEstimator</a></code></b>:
-      <code><a href="parsimony.estimators.RegressionEstimator-class.html#predict">predict</a></code>,
-      <code><a href="parsimony.estimators.RegressionEstimator-class.html#score">score</a></code>
+      <code><a href="parsimony.estimators.RegressionEstimator-class.html#predict">predict</a></code>
       </p>
     <p class="indent-wrapped-lines"><b>Inherited from <code><a href="parsimony.estimators.BaseEstimator-class.html">BaseEstimator</a></code></b>:
       <code><a href="parsimony.estimators.BaseEstimator-class.html#set_params">set_params</a></code>
@@ -374,7 +394,8 @@ error =  4.27776729699
   <tr valign="top"><td>
   <h3 class="epydoc"><span class="sig"><span class="sig-name">fit</span>(<span class="sig-arg">self</span>,
         <span class="sig-arg">X</span>,
-        <span class="sig-arg">y</span>)</span>
+        <span class="sig-arg">y</span>,
+        <span class="sig-arg">beta</span>=<span class="sig-default">None</span>)</span>
   </h3>
   </td><td align="right" valign="top"
     ><span class="codelink"><a href="parsimony.estimators-pysrc.html#RidgeRegression_L1_TV.fit">source&nbsp;code</a></span>&nbsp;
@@ -385,6 +406,30 @@ error =  4.27776729699
   <dl class="fields">
     <dt>Overrides:
         <a href="parsimony.estimators.BaseEstimator-class.html#fit">BaseEstimator.fit</a>
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="score"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">score</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">X</span>,
+        <span class="sig-arg">y</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="parsimony.estimators-pysrc.html#RidgeRegression_L1_TV.score">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Return the mean squared error of the estimator.</p>
+  <dl class="fields">
+    <dt>Overrides:
+        <a href="parsimony.estimators.BaseEstimator-class.html#score">BaseEstimator.score</a>
     </dt>
   </dl>
 </td></tr></table>
@@ -416,7 +461,7 @@ error =  4.27776729699
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Feb 21 18:01:44 2014
+    Generated by Epydoc 3.0.1 on Fri Mar  7 10:53:22 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

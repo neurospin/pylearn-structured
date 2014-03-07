@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Welcome to ParsimonY’s documentation! &mdash; ParsimonY 0.1.2 documentation</title>
+    <title>Welcome to the documentation of Parsimony! &mdash; Parsimony 0.1.4 documentation</title>
     
     <link rel="stylesheet" href="static/default.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.1.2',
+        VERSION:     '0.1.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="static/jquery.js"></script>
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="ParsimonY 0.1.2 documentation" href="#" />
+    <link rel="top" title="Parsimony 0.1.4 documentation" href="#" />
     <link rel="next" title="General framework" href="tutorials.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="tutorials.html" title="General framework"
              accesskey="N">next</a> |</li>
-        <li><a href="#">ParsimonY 0.1.2 documentation</a> &raquo;</li> 
+        <li><a href="#">Parsimony 0.1.4 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -47,14 +47,16 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="welcome-to-parsimony-s-documentation">
-<span id="index"></span><h1>Welcome to ParsimonY&#8217;s documentation!<a class="headerlink" href="#welcome-to-parsimony-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p>ParsimonY provides structured and sparse penalties in machine learning:</p>
+  <div class="section" id="welcome-to-the-documentation-of-parsimony">
+<span id="index"></span><h1>Welcome to the documentation of Parsimony!<a class="headerlink" href="#welcome-to-the-documentation-of-parsimony" title="Permalink to this headline">¶</a></h1>
+<p>Parsimony provides structured and sparse modelling in machine learning.
+Parsimony currently contains:</p>
 <ul>
 <li><dl class="first docutils">
 <dt>Loss functions:</dt>
 <dd><ul class="first last simple">
-<li>OLS</li>
+<li>Linear regression</li>
+<li>Logistic regression</li>
 </ul>
 </dd>
 </dl>
@@ -64,9 +66,8 @@
 <dd><ul class="first last simple">
 <li>L1 (Lasso)</li>
 <li>L2 (Ridge)</li>
-<li>L1 + L2 (Elastic net)</li>
 <li>Total variation (TV)</li>
-<li>Any combination of the above</li>
+<li>Overlapping group lasso (GL)</li>
 </ul>
 </dd>
 </dl>
@@ -74,9 +75,10 @@
 <li><dl class="first docutils">
 <dt>Algorithms:</dt>
 <dd><ul class="first last simple">
-<li>Fast Iterative Soft-Thresholding Algorithm (fista)</li>
-<li>COntinuation of NESTsterov’s smoothing Algorithm (conesta)</li>
-<li>Excessive gap method</li>
+<li>Iterative Soft-Thresholding Algorithm (ISTA)</li>
+<li>Fast Iterative Soft-Thresholding Algorithm (FISTA)</li>
+<li>COntinuation of NESTsterov’s smoothing Algorithm (CONESTA)</li>
+<li>Excessive Gap Method</li>
 </ul>
 </dd>
 </dl>
@@ -88,7 +90,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">General framework</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html#build-simulated-dataset">Build Simulated Dataset</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials.html#ols-l1-l2-tv-functions">OLS + L1 + L2 + TV Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html#linear-regression-l1-l2-tv">Linear regression + L1 + L2 + TV</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html#algorithms">Algorithms</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorials.html#excessive-gap-method">Excessive gap method</a></li>
 </ul>
@@ -117,7 +119,7 @@
         <div class="sphinxsidebarwrapper">
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Welcome to ParsimonY&#8217;s documentation!</a><ul>
+<li><a class="reference internal" href="#">Welcome to the documentation of Parsimony!</a><ul>
 <li><a class="reference internal" href="#tutorials">Tutorials</a><ul>
 </ul>
 </li>
@@ -161,11 +163,11 @@
         <li class="right" >
           <a href="tutorials.html" title="General framework"
              >next</a> |</li>
-        <li><a href="#">ParsimonY 0.1.2 documentation</a> &raquo;</li> 
+        <li><a href="#">Parsimony 0.1.4 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2013, tommy.loefstedt etc.
+        &copy; Copyright 2013, Tommy Löfstedt et al..
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>

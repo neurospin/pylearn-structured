@@ -59,40 +59,44 @@
 <!-- ==================== CLASS DESCRIPTION ==================== -->
 <h1 class="epydoc">Class L2</h1><p class="nomargin-top"><span class="codelink"><a href="parsimony.functions.penalties-pysrc.html#L2">source&nbsp;code</a></span></p>
 <pre class="base-tree">
-               object --+        
-                        |        
-      <a href="parsimony.functions.interfaces.Function-class.html">interfaces.Function</a> --+    
-                            |    
-    <a href="parsimony.functions.interfaces.AtomicFunction-class.html">interfaces.AtomicFunction</a> --+
-                                |
-                   object --+   |
-                            |   |
-          <a href="parsimony.functions.interfaces.Gradient-class.html">interfaces.Gradient</a> --+
-                                |
-                   object --+   |
-                            |   |
-           <a href="parsimony.functions.interfaces.Penalty-class.html">interfaces.Penalty</a> --+
-                                |
-                   object --+   |
-                            |   |
-        <a href="parsimony.functions.interfaces.Constraint-class.html">interfaces.Constraint</a> --+
-                                |
-                   object --+   |
-                            |   |
-  <a href="parsimony.functions.interfaces.ProximalOperator-class.html">interfaces.ProximalOperator</a> --+
-                                |
-                   object --+   |
-                            |   |
-<a href="parsimony.functions.interfaces.ProjectionOperator-class.html">interfaces.ProjectionOperator</a> --+
-                                |
-                               <strong class="uidshort">L2</strong>
+                        object --+        
+                                 |        
+               <a href="parsimony.functions.interfaces.Function-class.html">interfaces.Function</a> --+    
+                                     |    
+             <a href="parsimony.functions.interfaces.AtomicFunction-class.html">interfaces.AtomicFunction</a> --+
+                                         |
+                            object --+   |
+                                     |   |
+                   <a href="parsimony.functions.interfaces.Gradient-class.html">interfaces.Gradient</a> --+
+                                         |
+                            object --+   |
+                                     |   |
+<a href="parsimony.functions.interfaces.LipschitzContinuousGradient-class.html">interfaces.LipschitzContinuousGradient</a> --+
+                                         |
+                            object --+   |
+                                     |   |
+                    <a href="parsimony.functions.interfaces.Penalty-class.html">interfaces.Penalty</a> --+
+                                         |
+                            object --+   |
+                                     |   |
+                 <a href="parsimony.functions.interfaces.Constraint-class.html">interfaces.Constraint</a> --+
+                                         |
+                            object --+   |
+                                     |   |
+           <a href="parsimony.functions.interfaces.ProximalOperator-class.html">interfaces.ProximalOperator</a> --+
+                                         |
+                            object --+   |
+                                     |   |
+         <a href="parsimony.functions.interfaces.ProjectionOperator-class.html">interfaces.ProjectionOperator</a> --+
+                                         |
+                                        <strong class="uidshort">L2</strong>
 </pre>
 
 <hr />
 <pre class="literalblock">
 The proximal operator of the L2 function with a penalty formulation
 
-    f(eta) = l * (||eta||&#178;_2 - c),
+    f(eta) = l * (0.5 * ||eta||&#178;_2 - c),
 
 where ||eta||&#178;_2 is the squared L2 loss function. The constrained
 version has the form
@@ -105,11 +109,11 @@ l : Non-negative float. The Lagrange multiplier, or regularisation
         constant, of the function.
 
 c : Float. The limit of the constraint. The function is feasible if
-        ||eta||&#178;_2 &lt;= c. The default value is c=0, i.e. the default is a
-        regularisation formulation.
+        0.5 * ||eta||&#178;_2 &lt;= c. The default value is c=0, i.e. the
+        default is a regularised formulation.
 
 penalty_start : Non-negative integer. The number of columns, variables
-        etc., to except from penalisation. Equivalently, the first index
+        etc., to be exempt from penalisation. Equivalently, the first index
         to be penalised. Default is 0, all columns are included.
 
 </pre>
@@ -193,6 +197,23 @@ penalty_start : Non-negative integer. The number of columns, variables
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
+          <td><span class="summary-sig"><a href="parsimony.functions.penalties.L2-class.html#L" class="summary-sig-name">L</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Lipschitz constant of the gradient.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="parsimony.functions.penalties-pysrc.html#L2.L">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
           <td><span class="summary-sig"><a href="parsimony.functions.penalties.L2-class.html#prox" class="summary-sig-name">prox</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">beta</span>,
         <span class="summary-sig-arg">factor</span>=<span class="summary-sig-default">1.0</span>)</span><br />
@@ -250,6 +271,9 @@ penalty_start : Non-negative integer. The number of columns, variables
       </p>
     <p class="indent-wrapped-lines"><b>Inherited from <code><a href="parsimony.functions.interfaces.Gradient-class.html">interfaces.Gradient</a></code></b>:
       <code><a href="parsimony.functions.interfaces.Gradient-class.html#approx_grad">approx_grad</a></code>
+      </p>
+    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="parsimony.functions.interfaces.LipschitzContinuousGradient-class.html">interfaces.LipschitzContinuousGradient</a></code></b>:
+      <code><a href="parsimony.functions.interfaces.LipschitzContinuousGradient-class.html#approx_L">approx_L</a></code>
       </p>
     <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
       <code>__delattr__</code>,
@@ -429,16 +453,38 @@ Example
 &gt;&gt;&gt; beta = np.random.rand(100, 1)
 &gt;&gt;&gt; l2 = L2(l=3.14159, c=2.71828)
 &gt;&gt;&gt; np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
-5.8179830878866391e-10
+1.3549757024941964e-10
 &gt;&gt;&gt;
 &gt;&gt;&gt; l2 = L2(l=3.14159, c=2.71828, penalty_start=5)
 &gt;&gt;&gt; np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
-5.0187970725495645e-10
+2.1291553983770027e-10
 
 </pre>
   <dl class="fields">
     <dt>Overrides:
         <a href="parsimony.functions.interfaces.Gradient-class.html#grad">interfaces.Gradient.grad</a>
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="L"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">L</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="parsimony.functions.penalties-pysrc.html#L2.L">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Lipschitz constant of the gradient.</p>
+  <dl class="fields">
+    <dt>Overrides:
+        <a href="parsimony.functions.interfaces.LipschitzContinuousGradient-class.html#L">interfaces.LipschitzContinuousGradient.L</a>
     </dt>
   </dl>
 </td></tr></table>
@@ -495,7 +541,7 @@ Examples
 &gt;&gt;&gt; np.random.seed(42)
 &gt;&gt;&gt; l2 = L2(c=0.3183098861837907)
 &gt;&gt;&gt; y1 = l2.proj(np.random.rand(100, 1) * 2.0 - 1.0)
-&gt;&gt;&gt; np.linalg.norm(y1) ** 2.0
+&gt;&gt;&gt; 0.5 * np.linalg.norm(y1) ** 2.0
 0.31830988618379052
 &gt;&gt;&gt; y2 = np.random.rand(100, 1) * 2.0 - 1.0
 &gt;&gt;&gt; l2.feasible(y2)
@@ -526,22 +572,32 @@ True
     </td>
   </tr></table>
   
-  <p>Feasibility of the constraint.</p>
-  <p>From the interface &quot;Constraint&quot;.</p>
-<pre class="py-doctest">
-<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">import</span> numpy <span class="py-keyword">as</span> np
-<span class="py-prompt">&gt;&gt;&gt; </span><span class="py-keyword">from</span> parsimony.functions.penalties <span class="py-keyword">import</span> L2
-<span class="py-prompt">&gt;&gt;&gt; </span>np.random.seed(42)
-<span class="py-prompt">&gt;&gt;&gt; </span>l2 = L2(c=0.3183098861837907)
-<span class="py-prompt">&gt;&gt;&gt; </span>y1 = 0.1 * (np.random.rand(50, 1) * 2.0 - 1.0)
-<span class="py-prompt">&gt;&gt;&gt; </span>l2.feasible(y1)
-<span class="py-output">True</span>
-<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span>y2 = 10.0 * (np.random.rand(50, 1) * 2.0 - 1.0)
-<span class="py-prompt">&gt;&gt;&gt; </span>l2.feasible(y2)
-<span class="py-output">False</span>
-<span class="py-output"></span><span class="py-prompt">&gt;&gt;&gt; </span>y3 = l2.proj(50.0 * np.random.rand(100, 1) * 2.0 - 1.0)
-<span class="py-prompt">&gt;&gt;&gt; </span>l2.feasible(y3)
-<span class="py-output">True</span></pre>
+  <pre class="literalblock">
+Feasibility of the constraint.
+
+From the interface &quot;Constraint&quot;.
+
+Parameters
+----------
+beta : Numpy array. The variable to check for feasibility.
+
+Examples
+--------
+&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from parsimony.functions.penalties import L2
+&gt;&gt;&gt; np.random.seed(42)
+&gt;&gt;&gt; l2 = L2(c=0.3183098861837907)
+&gt;&gt;&gt; y1 = 0.1 * (np.random.rand(50, 1) * 2.0 - 1.0)
+&gt;&gt;&gt; l2.feasible(y1)
+True
+&gt;&gt;&gt; y2 = 10.0 * (np.random.rand(50, 1) * 2.0 - 1.0)
+&gt;&gt;&gt; l2.feasible(y2)
+False
+&gt;&gt;&gt; y3 = l2.proj(50.0 * np.random.rand(100, 1) * 2.0 - 1.0)
+&gt;&gt;&gt; l2.feasible(y3)
+True
+
+</pre>
   <dl class="fields">
     <dt>Overrides:
         <a href="parsimony.functions.interfaces.Constraint-class.html#feasible">interfaces.Constraint.feasible</a>
@@ -576,7 +632,7 @@ True
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Feb 21 18:01:45 2014
+    Generated by Epydoc 3.0.1 on Fri Mar  7 10:53:23 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

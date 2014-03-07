@@ -1,23 +1,25 @@
 .. _index: 
 
-=====================================
-Welcome to ParsimonY's documentation!
-=====================================
+==========================================
+Welcome to the documentation of Parsimony!
+==========================================
 
-ParsimonY provides structured and sparse penalties in machine learning:
+Parsimony provides structured and sparse modelling in machine learning.
+Parsimony currently contains:
 
 - Loss functions:
-    - OLS
+    - Linear regression
+    - Logistic regression
 - Penalties:
     - L1 (Lasso)
     - L2 (Ridge)
-    - L1 + L2 (Elastic net)
     - Total variation (TV)
-    - Any combination of the above
+    - Overlapping group lasso (GL)
 - Algorithms:
-    - Fast Iterative Soft-Thresholding Algorithm (fista)
-    - COntinuation of NESTsterov’s smoothing Algorithm (conesta)
-    - Excessive gap method
+    - Iterative Soft-Thresholding Algorithm (ISTA)
+    - Fast Iterative Soft-Thresholding Algorithm (FISTA)
+    - COntinuation of NESTsterov’s smoothing Algorithm (CONESTA)
+    - Excessive Gap Method
 
 Tutorials
 =========
@@ -27,7 +29,7 @@ Tutorials
    tutorials.rst
 
 API
-====
+===
 
 API_
    
@@ -38,4 +40,3 @@ Indices and tables
 ==================
 
 * :ref:`search`
-

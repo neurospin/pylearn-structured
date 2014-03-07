@@ -57,11 +57,81 @@
 <ul class="nomargin-top">
     <li> <strong class="uidlink"><a href="parsimony.tests.spamsdata.SpamsGenerator-class.html">parsimony.tests.spamsdata.SpamsGenerator</a></strong>
     </li>
+    <li> <strong class="uidlink"><a href="parsimony.tests.test_regression.TestLinearRegression-class.html">parsimony.tests.test_regression.TestLinearRegression</a></strong>
+    </li>
     <li> <strong class="uidlink">object</strong>:
       <em class="summary">The most base type</em>
     <ul>
     <li> <strong class="uidlink"><a href="parsimony.utils.utils.AnonymousClass-class.html">parsimony.utils.utils.AnonymousClass</a></strong>:
       <em class="summary">Used to create anonymous classes.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.BaseAlgorithm-class.html">parsimony._algorithms.BaseAlgorithm</a></strong>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.ExplicitAlgorithm-class.html">parsimony._algorithms.ExplicitAlgorithm</a></strong>:
+      <em class="summary">Explicit algorithms are algorithms that minimises a given function 
+        explicitly from properties of the function.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.BacktrackingLineSearch-class.html">parsimony._algorithms.BacktrackingLineSearch</a></strong>:
+      <em class="summary">Finds a step length a that fulfills a given descent criterion.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.Bisection-class.html">parsimony._algorithms.Bisection</a></strong>:
+      <em class="summary">Finds a root of the function assumed to be on the line between two
+points.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.CONESTA-class.html">parsimony._algorithms.CONESTA</a></strong>:
+      <em class="summary">COntinuation with NEsterov smoothing in a Soft-Thresholding Algorithm,
+or CONESTA for short.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.DynamicCONESTA-class.html">parsimony._algorithms.DynamicCONESTA</a></strong>:
+      <em class="summary">COntinuation with NEsterov smoothing in a Soft-Thresholding 
+        Algorithm, or CONESTA for short, with a dynamically decreasing \mu.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.StaticCONESTA-class.html">parsimony._algorithms.StaticCONESTA</a></strong>:
+      <em class="summary">COntinuation with NEsterov smoothing in a Soft-Thresholding 
+        Algorithm, or CONESTA for short, with a statically decreasing \mu.</em>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.DykstrasProjectionAlgorithm-class.html">parsimony._algorithms.DykstrasProjectionAlgorithm</a></strong>:
+      <em class="summary">Dykstra's projection algorithm.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.ExcessiveGapMethod-class.html">parsimony._algorithms.ExcessiveGapMethod</a></strong>:
+      <em class="summary">Nesterov's excessive gap method for strongly convex functions.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.FISTA-class.html">parsimony._algorithms.FISTA</a></strong>:
+      <em class="summary">The fast iterative shrinkage threshold algorithm.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.ISTA-class.html">parsimony._algorithms.ISTA</a></strong>:
+      <em class="summary">The iterative shrinkage-thresholding algorithm.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.MultiblockProjectedGradientMethod-class.html">parsimony._algorithms.MultiblockProjectedGradientMethod</a></strong>:
+      <em class="summary">The projected gradient algorithm with alternating minimisations in 
+        a multiblock setting.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.ParallelDykstrasProjectionAlgorithm-class.html">parsimony._algorithms.ParallelDykstrasProjectionAlgorithm</a></strong>:
+      <em class="summary">Dykstra's projection algorithm for two or more functions.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.ProjectionADMM-class.html">parsimony._algorithms.ProjectionADMM</a></strong>:
+      <em class="summary">The Alternating direction method of multipliers, where the 
+        functions have projection operators onto the corresponding convex 
+        sets.</em>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.ImplicitAlgorithm-class.html">parsimony._algorithms.ImplicitAlgorithm</a></strong>:
+      <em class="summary">Implicit algorithms are algorithms that do not use a loss function, but
+instead minimise or maximise some underlying function implicitly, from the
+data.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.FastSVD-class.html">parsimony._algorithms.FastSVD</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.FastSVDProduct-class.html">parsimony._algorithms.FastSVDProduct</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony._algorithms.FastSparseSVD-class.html">parsimony._algorithms.FastSparseSVD</a></strong>
+    </li>
+    </ul>
+    </li>
+    </ul>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.algorithms.bases.BaseAlgorithm-class.html">parsimony.algorithms.bases.BaseAlgorithm</a></strong>
     <ul>
@@ -134,80 +204,15 @@ data.</em>
     </li>
     </ul>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.BaseAlgorithm-class.html">parsimony._algorithms.BaseAlgorithm</a></strong>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.ExplicitAlgorithm-class.html">parsimony._algorithms.ExplicitAlgorithm</a></strong>:
-      <em class="summary">Explicit algorithms are algorithms that minimises a given function 
-        explicitly from properties of the function.</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.BacktrackingLineSearch-class.html">parsimony._algorithms.BacktrackingLineSearch</a></strong>:
-      <em class="summary">Finds a step length a that fulfills a given descent criterion.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.Bisection-class.html">parsimony._algorithms.Bisection</a></strong>:
-      <em class="summary">Finds a root of the function assumed to be on the line between two
-points.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.CONESTA-class.html">parsimony._algorithms.CONESTA</a></strong>:
-      <em class="summary">COntinuation with NEsterov smoothing in a Soft-Thresholding Algorithm,
-or CONESTA for short.</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.DynamicCONESTA-class.html">parsimony._algorithms.DynamicCONESTA</a></strong>:
-      <em class="summary">COntinuation with NEsterov smoothing in a Soft-Thresholding 
-        Algorithm, or CONESTA for short, with a dynamically decreasing \mu.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.StaticCONESTA-class.html">parsimony._algorithms.StaticCONESTA</a></strong>:
-      <em class="summary">COntinuation with NEsterov smoothing in a Soft-Thresholding 
-        Algorithm, or CONESTA for short, with a statically decreasing \mu.</em>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.DykstrasProjectionAlgorithm-class.html">parsimony._algorithms.DykstrasProjectionAlgorithm</a></strong>:
-      <em class="summary">Dykstra's projection algorithm.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.ExcessiveGapMethod-class.html">parsimony._algorithms.ExcessiveGapMethod</a></strong>:
-      <em class="summary">Nesterov's excessive gap method for strongly convex functions.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.FISTA-class.html">parsimony._algorithms.FISTA</a></strong>:
-      <em class="summary">The fast iterative shrinkage threshold algorithm.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.ISTA-class.html">parsimony._algorithms.ISTA</a></strong>:
-      <em class="summary">The iterative shrinkage-thresholding algorithm.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.MultiblockProjectedGradientMethod-class.html">parsimony._algorithms.MultiblockProjectedGradientMethod</a></strong>:
-      <em class="summary">The projected gradient algorithm with alternating minimisations in 
-        a multiblock setting.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.ParallelDykstrasProjectionAlgorithm-class.html">parsimony._algorithms.ParallelDykstrasProjectionAlgorithm</a></strong>:
-      <em class="summary">Dykstra's projection algorithm for two or more functions.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.ProjectionADMM-class.html">parsimony._algorithms.ProjectionADMM</a></strong>:
-      <em class="summary">The Alternating direction method of multipliers, where the 
-        functions have projection operators onto the corresponding convex 
-        sets.</em>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.ImplicitAlgorithm-class.html">parsimony._algorithms.ImplicitAlgorithm</a></strong>:
-      <em class="summary">Implicit algorithms are algorithms that do not use a loss function, but
-instead minimise or maximise some underlying function implicitly, from the
-data.</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.FastSVD-class.html">parsimony._algorithms.FastSVD</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.FastSVDProduct-class.html">parsimony._algorithms.FastSVDProduct</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony._algorithms.FastSparseSVD-class.html">parsimony._algorithms.FastSparseSVD</a></strong>
-    </li>
-    </ul>
-    </li>
-    </ul>
-    </li>
     <li> <strong class="uidlink"><a href="parsimony.estimators.BaseEstimator-class.html">parsimony.estimators.BaseEstimator</a></strong>:
-      <em class="summary">Base estimator for all kinds of estimation</em>
+      <em class="summary">Base class for estimators.</em>
     <ul>
     <li> <strong class="uidlink"><a href="parsimony.estimators.LogisticRegressionEstimator-class.html" onclick="show_private();">parsimony.estimators.LogisticRegressionEstimator</a></strong>:
       <em class="summary">Base estimator for logistic regression estimation</em>
     <ul>
+    <li> <strong class="uidlink"><a href="parsimony.estimators.RidgeLogisticRegression_L1_GL-class.html" onclick="show_private();">parsimony.estimators.RidgeLogisticRegression_L1_GL</a></strong>:
+      <em class="summary">Minimises RidgeLogisticRegression (re-weighted log-likelihood aka.</em>
+    </li>
     <li> <strong class="uidlink"><a href="parsimony.estimators.RidgeLogisticRegression_L1_TV-class.html">parsimony.estimators.RidgeLogisticRegression_L1_TV</a></strong>:
       <em class="summary">Minimize RidgeLogisticRegression (re-weighted log-likelihood
 aka cross-entropy) with L1 and TV penalties:
@@ -222,8 +227,13 @@ weight</em>
     </ul>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.estimators.RegressionEstimator-class.html">parsimony.estimators.RegressionEstimator</a></strong>:
-      <em class="summary">Base estimator for regression estimation</em>
+      <em class="summary">Base estimator for regression estimation.</em>
     <ul>
+    <li> <strong class="uidlink"><a href="parsimony.estimators.LinearRegression_L1_L2_TV-class.html">parsimony.estimators.LinearRegression_L1_L2_TV</a></strong>:
+      <em class="summary">Parameters
+----------
+l : Non-negative float.</em>
+    </li>
     <li> <strong class="uidlink"><a href="parsimony.estimators.RidgeRegression_L1_TV-class.html">parsimony.estimators.RidgeRegression_L1_TV</a></strong>:
       <em class="summary">Parameters
 ----------
@@ -302,6 +312,9 @@ l : Non-negative float.</em>
     <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.gl.GroupLassoOverlap-class.html">parsimony.functions.nesterov.gl.GroupLassoOverlap</a></strong>:
       <em class="summary">Group L1-L2 function, with overlapping groups.</em>
     </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L0-class.html">parsimony.functions.penalties.L0</a></strong>:
+      <em class="summary">The proximal operator of the &quot;pseudo&quot; L0 function</em>
+    </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.L1.L1-class.html">parsimony.functions.nesterov.L1.L1</a></strong>:
       <em class="summary">The proximal operator of the smoothed L1 function</em>
     </li>
@@ -310,6 +323,9 @@ l : Non-negative float.</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L2-class.html">parsimony.functions.penalties.L2</a></strong>:
       <em class="summary">The proximal operator of the L2 function with a penalty formulation</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.LInf-class.html">parsimony.functions.penalties.LInf</a></strong>:
+      <em class="summary">The proximal operator of the L-infinity function</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.penalties.QuadraticConstraint-class.html">parsimony.functions.penalties.QuadraticConstraint</a></strong>:
       <em class="summary">The proximal operator of the quadratic function</em>
@@ -345,8 +361,33 @@ l : Non-negative float.</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.Continuation-class.html">parsimony.functions.interfaces.Continuation</a></strong>
     <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.PCA_L1_TV-class.html">parsimony.functions.combinedfunctions.PCA_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of PCA (Variance), L1 and TotalVariation</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.PCA_L1_TV-class.html">parsimony.functions.functions.PCA_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of PCA (Variance), L1 and TotalVariation</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_L1_TV-class.html">parsimony.functions.combinedfunctions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RLR_L1_TV-class.html">parsimony.functions.combinedfunctions.RLR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_L1_GL-class.html">parsimony.functions.combinedfunctions.RR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
+        Lasso.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RLR_L1_GL-class.html">parsimony.functions.combinedfunctions.RLR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    </ul>
+    </li>
+    </ul>
+    </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_TV-class.html">parsimony.functions.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation.</em>
     <ul>
     <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_TV-class.html">parsimony.functions.functions.RLR_L1_TV</a></strong>:
       <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
@@ -355,19 +396,12 @@ l : Non-negative float.</em>
     <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_GL-class.html">parsimony.functions.functions.RR_L1_GL</a></strong>:
       <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
         Lasso.</em>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_L1_TV-class.html">parsimony.functions.objectives.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
     <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RLR_L1_TV-class.html">parsimony.functions.objectives.functions.RLR_L1_TV</a></strong>:
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_GL-class.html">parsimony.functions.functions.RLR_L1_GL</a></strong>:
       <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
         TotalVariation.</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_L1_GL-class.html">parsimony.functions.objectives.functions.RR_L1_GL</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
-        Lasso.</em>
+    </ul>
     </li>
     </ul>
     </li>
@@ -388,21 +422,14 @@ l : Non-negative float.</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.DualFunction-class.html">parsimony.functions.interfaces.DualFunction</a></strong>
     <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_L1_TV-class.html">parsimony.functions._objectives.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RLR_L1_TV-class.html">parsimony.functions._objectives.functions.RLR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
-        TotalVariation.</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.PCA_L1_TV-class.html">parsimony.functions.combinedfunctions.PCA_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of PCA (Variance), L1 and TotalVariation</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_L1_GL-class.html">parsimony.functions._objectives.functions.RR_L1_GL</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
-        Lasso.</em>
-    </li>
-    </ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.PCA_L1_TV-class.html">parsimony.functions.functions.PCA_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of PCA (Variance), L1 and TotalVariation</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_TV-class.html">parsimony.functions.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation.</em>
     <ul>
     <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_TV-class.html">parsimony.functions.functions.RLR_L1_TV</a></strong>:
       <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
@@ -411,17 +438,42 @@ l : Non-negative float.</em>
     <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_GL-class.html">parsimony.functions.functions.RR_L1_GL</a></strong>:
       <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
         Lasso.</em>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_L1_TV-class.html">parsimony.functions.objectives.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
     <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RLR_L1_TV-class.html">parsimony.functions.objectives.functions.RLR_L1_TV</a></strong>:
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_GL-class.html">parsimony.functions.functions.RLR_L1_GL</a></strong>:
       <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
         TotalVariation.</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_L1_GL-class.html">parsimony.functions.objectives.functions.RR_L1_GL</a></strong>:
+    </ul>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_L1_TV-class.html">parsimony.functions.combinedfunctions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RLR_L1_TV-class.html">parsimony.functions.combinedfunctions.RLR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_L1_GL-class.html">parsimony.functions.combinedfunctions.RR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
+        Lasso.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RLR_L1_GL-class.html">parsimony.functions.combinedfunctions.RLR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    </ul>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_L1_TV-class.html">parsimony.functions._objectives.functions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RLR_L1_TV-class.html">parsimony.functions._objectives.functions.RLR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_L1_GL-class.html">parsimony.functions._objectives.functions.RR_L1_GL</a></strong>:
       <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
         Lasso.</em>
     </li>
@@ -437,7 +489,7 @@ X : Numpy array.</em>
 ----------
 X : Numpy array.</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_SmoothedL1TV-class.html">parsimony.functions.objectives.functions.RR_SmoothedL1TV</a></strong>:
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_SmoothedL1TV-class.html">parsimony.functions.combinedfunctions.RR_SmoothedL1TV</a></strong>:
       <em class="summary">Parameters
 ----------
 X : Numpy array.</em>
@@ -474,7 +526,7 @@ l : Non-negative float.</em>
     <li> <strong class="uidlink"><a href="parsimony.functions.multiblock.losses.LatentVariableCovariance-class.html">parsimony.functions.multiblock.losses.LatentVariableCovariance</a></strong>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.losses.RidgeRegression-class.html">parsimony.functions.losses.RidgeRegression</a></strong>:
-      <em class="summary">The Ridge Regression function</em>
+      <em class="summary">The Ridge Regression function, i.e.</em>
     </li>
     </ul>
     </li>
@@ -489,6 +541,168 @@ l : Non-negative float.</em>
       <em class="summary">Parameters
 ----------
 l : L1 parameter.</em>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.Function-class.html">parsimony.functions.interfaces.Function</a></strong>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.AtomicFunction-class.html">parsimony.functions.interfaces.AtomicFunction</a></strong>:
+      <em class="summary">This is a function that is not in general supposed to be minimised 
+        by itself.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.gl.GroupLassoOverlap-class.html">parsimony.functions.nesterov.gl.GroupLassoOverlap</a></strong>:
+      <em class="summary">Group L1-L2 function, with overlapping groups.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L0-class.html">parsimony.functions.penalties.L0</a></strong>:
+      <em class="summary">The proximal operator of the &quot;pseudo&quot; L0 function</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L1-class.html">parsimony.functions.penalties.L1</a></strong>:
+      <em class="summary">The proximal operator of the L1 function with a penalty formulation</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.L1.L1-class.html">parsimony.functions.nesterov.L1.L1</a></strong>:
+      <em class="summary">The proximal operator of the smoothed L1 function</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.L1TV.L1TV-class.html">parsimony.functions.nesterov.L1TV.L1TV</a></strong>:
+      <em class="summary">Parameters:
+----------
+l : Non-negative float.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L2-class.html">parsimony.functions.penalties.L2</a></strong>:
+      <em class="summary">The proximal operator of the L2 function with a penalty formulation</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.LInf-class.html">parsimony.functions.penalties.LInf</a></strong>:
+      <em class="summary">The proximal operator of the L-infinity function</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.losses.LogisticRegression-class.html">parsimony.functions.losses.LogisticRegression</a></strong>:
+      <em class="summary">The Logistic Regression loss function.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.QuadraticConstraint-class.html">parsimony.functions.penalties.QuadraticConstraint</a></strong>:
+      <em class="summary">The proximal operator of the quadratic function</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.RGCCAConstraint-class.html">parsimony.functions.penalties.RGCCAConstraint</a></strong>:
+      <em class="summary">The proximal operator of the quadratic function</em>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.tv.TotalVariation-class.html">parsimony.functions.nesterov.tv.TotalVariation</a></strong>:
+      <em class="summary">The smoothed Total variation (TV) function</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.ZeroFunction-class.html">parsimony.functions.penalties.ZeroFunction</a></strong>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.CombinedProjectionOperator-class.html">parsimony.functions.interfaces.CombinedProjectionOperator</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.CompositeFunction-class.html">parsimony.functions.interfaces.CompositeFunction</a></strong>:
+      <em class="summary">This is a function that is the combination (e.g.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.CombinedFunction-class.html">parsimony.functions._objectives.functions.CombinedFunction</a></strong>:
+      <em class="summary">Combines one or more loss functions, any number of penalties and zero
+or one proximal operator.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.CombinedFunction-class.html">parsimony.functions.combinedfunctions.CombinedFunction</a></strong>:
+      <em class="summary">Combines one or more loss functions, any number of penalties and zero
+or one proximal operator.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.CombinedFunction-class.html">parsimony.functions.functions.CombinedFunction</a></strong>:
+      <em class="summary">Combines one or more loss functions, any number of penalties and zero
+or one proximal operator.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.losses.LinearRegression-class.html">parsimony.functions.losses.LinearRegression</a></strong>:
+      <em class="summary">The Linear regression loss function.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.multiblock.interfaces.MultiblockFunction-class.html">parsimony.functions.multiblock.interfaces.MultiblockFunction</a></strong>:
+      <em class="summary">This is a function that is the combination (i.e.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.multiblock.losses.GeneralisedMultiblock-class.html" onclick="show_private();">parsimony.functions.multiblock.losses.GeneralisedMultiblock</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.multiblock.losses.LatentVariableCovariance-class.html">parsimony.functions.multiblock.losses.LatentVariableCovariance</a></strong>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.PCA_L1_TV-class.html">parsimony.functions.combinedfunctions.PCA_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of PCA (Variance), L1 and TotalVariation</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.PCA_L1_TV-class.html">parsimony.functions.functions.PCA_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of PCA (Variance), L1 and TotalVariation</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_L1_TV-class.html">parsimony.functions._objectives.functions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RLR_L1_TV-class.html">parsimony.functions._objectives.functions.RLR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_L1_GL-class.html">parsimony.functions._objectives.functions.RR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
+        Lasso.</em>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_L1_TV-class.html">parsimony.functions.combinedfunctions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RLR_L1_TV-class.html">parsimony.functions.combinedfunctions.RLR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_L1_GL-class.html">parsimony.functions.combinedfunctions.RR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
+        Lasso.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RLR_L1_GL-class.html">parsimony.functions.combinedfunctions.RLR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    </ul>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_TV-class.html">parsimony.functions.functions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_TV-class.html">parsimony.functions.functions.RLR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_GL-class.html">parsimony.functions.functions.RR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
+        Lasso.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_GL-class.html">parsimony.functions.functions.RLR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    </ul>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_SmoothedL1TV-class.html">parsimony.functions.functions.RR_SmoothedL1TV</a></strong>:
+      <em class="summary">Parameters
+----------
+X : Numpy array.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_SmoothedL1TV-class.html">parsimony.functions._objectives.functions.RR_SmoothedL1TV</a></strong>:
+      <em class="summary">Parameters
+----------
+X : Numpy array.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_SmoothedL1TV-class.html">parsimony.functions.combinedfunctions.RR_SmoothedL1TV</a></strong>:
+      <em class="summary">Parameters
+----------
+X : Numpy array.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.losses.RidgeLogisticRegression-class.html">parsimony.functions.losses.RidgeLogisticRegression</a></strong>:
+      <em class="summary">The Logistic Regression loss function.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.losses.RidgeRegression-class.html">parsimony.functions.losses.RidgeRegression</a></strong>:
+      <em class="summary">The Ridge Regression function, i.e.</em>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.losses.LatentVariableVariance-class.html">parsimony.functions.losses.LatentVariableVariance</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.SufficientDescentCondition-class.html">parsimony.functions.penalties.SufficientDescentCondition</a></strong>
     </li>
     </ul>
     </li>
@@ -568,146 +782,13 @@ X : Ridge Regression parameter.</em>
     </li>
     </ul>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.Function-class.html">parsimony.functions.interfaces.Function</a></strong>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.AtomicFunction-class.html">parsimony.functions.interfaces.AtomicFunction</a></strong>:
-      <em class="summary">This is a function that is not in general supposed to be minimised 
-        by itself.</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.gl.GroupLassoOverlap-class.html">parsimony.functions.nesterov.gl.GroupLassoOverlap</a></strong>:
-      <em class="summary">Group L1-L2 function, with overlapping groups.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.L1.L1-class.html">parsimony.functions.nesterov.L1.L1</a></strong>:
-      <em class="summary">The proximal operator of the smoothed L1 function</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L1-class.html">parsimony.functions.penalties.L1</a></strong>:
-      <em class="summary">The proximal operator of the L1 function with a penalty formulation</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.L1TV.L1TV-class.html">parsimony.functions.nesterov.L1TV.L1TV</a></strong>:
-      <em class="summary">Parameters:
-----------
-l : Non-negative float.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L2-class.html">parsimony.functions.penalties.L2</a></strong>:
-      <em class="summary">The proximal operator of the L2 function with a penalty formulation</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.QuadraticConstraint-class.html">parsimony.functions.penalties.QuadraticConstraint</a></strong>:
-      <em class="summary">The proximal operator of the quadratic function</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.RGCCAConstraint-class.html">parsimony.functions.penalties.RGCCAConstraint</a></strong>:
-      <em class="summary">The proximal operator of the quadratic function</em>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.tv.TotalVariation-class.html">parsimony.functions.nesterov.tv.TotalVariation</a></strong>:
-      <em class="summary">The smoothed Total variation (TV) function</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.ZeroFunction-class.html">parsimony.functions.penalties.ZeroFunction</a></strong>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.CombinedProjectionOperator-class.html">parsimony.functions.interfaces.CombinedProjectionOperator</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.CompositeFunction-class.html">parsimony.functions.interfaces.CompositeFunction</a></strong>:
-      <em class="summary">This is a function that is the combination (e.g.</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.CombinedFunction-class.html">parsimony.functions._objectives.functions.CombinedFunction</a></strong>:
-      <em class="summary">Combines one or more loss functions, any number of penalties and zero
-or one proximal operator.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.functions.CombinedFunction-class.html">parsimony.functions.functions.CombinedFunction</a></strong>:
-      <em class="summary">Combines one or more loss functions, any number of penalties and zero
-or one proximal operator.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.CombinedFunction-class.html">parsimony.functions.objectives.functions.CombinedFunction</a></strong>:
-      <em class="summary">Combines one or more loss functions, any number of penalties and zero
-or one proximal operator.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.losses.LinearRegression-class.html">parsimony.functions.losses.LinearRegression</a></strong>:
-      <em class="summary">The Linear regression loss function.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.multiblock.interfaces.MultiblockFunction-class.html">parsimony.functions.multiblock.interfaces.MultiblockFunction</a></strong>:
-      <em class="summary">This is a function that is the combination (i.e.</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.multiblock.losses.GeneralisedMultiblock-class.html" onclick="show_private();">parsimony.functions.multiblock.losses.GeneralisedMultiblock</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.multiblock.losses.LatentVariableCovariance-class.html">parsimony.functions.multiblock.losses.LatentVariableCovariance</a></strong>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_TV-class.html">parsimony.functions.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_TV-class.html">parsimony.functions.functions.RLR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
-        TotalVariation.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_GL-class.html">parsimony.functions.functions.RR_L1_GL</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
-        Lasso.</em>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_L1_TV-class.html">parsimony.functions._objectives.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RLR_L1_TV-class.html">parsimony.functions._objectives.functions.RLR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
-        TotalVariation.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_L1_GL-class.html">parsimony.functions._objectives.functions.RR_L1_GL</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
-        Lasso.</em>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_L1_TV-class.html">parsimony.functions.objectives.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RLR_L1_TV-class.html">parsimony.functions.objectives.functions.RLR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
-        TotalVariation.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_L1_GL-class.html">parsimony.functions.objectives.functions.RR_L1_GL</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
-        Lasso.</em>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_SmoothedL1TV-class.html">parsimony.functions.functions.RR_SmoothedL1TV</a></strong>:
-      <em class="summary">Parameters
-----------
-X : Numpy array.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_SmoothedL1TV-class.html">parsimony.functions._objectives.functions.RR_SmoothedL1TV</a></strong>:
-      <em class="summary">Parameters
-----------
-X : Numpy array.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_SmoothedL1TV-class.html">parsimony.functions.objectives.functions.RR_SmoothedL1TV</a></strong>:
-      <em class="summary">Parameters
-----------
-X : Numpy array.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.losses.RidgeLogisticRegression-class.html">parsimony.functions.losses.RidgeLogisticRegression</a></strong>:
-      <em class="summary">The Logistic Regression loss function.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.losses.RidgeRegression-class.html">parsimony.functions.losses.RidgeRegression</a></strong>:
-      <em class="summary">The Ridge Regression function</em>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.SufficientDescentCondition-class.html">parsimony.functions.penalties.SufficientDescentCondition</a></strong>
-    </li>
-    </ul>
-    </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.Gradient-class.html">parsimony.functions.interfaces.Gradient</a></strong>
     <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.CombinedFunction-class.html">parsimony.functions.objectives.functions.CombinedFunction</a></strong>:
+    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.CombinedFunction-class.html">parsimony.functions._objectives.functions.CombinedFunction</a></strong>:
       <em class="summary">Combines one or more loss functions, any number of penalties and zero
 or one proximal operator.</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.CombinedFunction-class.html">parsimony.functions._objectives.functions.CombinedFunction</a></strong>:
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.CombinedFunction-class.html">parsimony.functions.combinedfunctions.CombinedFunction</a></strong>:
       <em class="summary">Combines one or more loss functions, any number of penalties and zero
 or one proximal operator.</em>
     </li>
@@ -724,8 +805,19 @@ or one proximal operator.</em>
     <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L2-class.html">parsimony.functions.penalties.L2</a></strong>:
       <em class="summary">The proximal operator of the L2 function with a penalty formulation</em>
     </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.losses.LatentVariableVariance-class.html">parsimony.functions.losses.LatentVariableVariance</a></strong>
+    </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.losses.LinearRegression-class.html">parsimony.functions.losses.LinearRegression</a></strong>:
       <em class="summary">The Linear regression loss function.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.losses.LogisticRegression-class.html">parsimony.functions.losses.LogisticRegression</a></strong>:
+      <em class="summary">The Logistic Regression loss function.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.PCA_L1_TV-class.html">parsimony.functions.combinedfunctions.PCA_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of PCA (Variance), L1 and TotalVariation</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.PCA_L1_TV-class.html">parsimony.functions.functions.PCA_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of PCA (Variance), L1 and TotalVariation</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.penalties.QuadraticConstraint-class.html">parsimony.functions.penalties.QuadraticConstraint</a></strong>:
       <em class="summary">The proximal operator of the quadratic function</em>
@@ -735,8 +827,27 @@ or one proximal operator.</em>
     </li>
     </ul>
     </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_L1_TV-class.html">parsimony.functions.combinedfunctions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RLR_L1_TV-class.html">parsimony.functions.combinedfunctions.RLR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_L1_GL-class.html">parsimony.functions.combinedfunctions.RR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
+        Lasso.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RLR_L1_GL-class.html">parsimony.functions.combinedfunctions.RLR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    </ul>
+    </li>
+    </ul>
+    </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_TV-class.html">parsimony.functions.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation.</em>
     <ul>
     <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_TV-class.html">parsimony.functions.functions.RLR_L1_TV</a></strong>:
       <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
@@ -745,6 +856,12 @@ or one proximal operator.</em>
     <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_GL-class.html">parsimony.functions.functions.RR_L1_GL</a></strong>:
       <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
         Lasso.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_GL-class.html">parsimony.functions.functions.RLR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    </ul>
     </li>
     </ul>
     </li>
@@ -761,24 +878,11 @@ or one proximal operator.</em>
     </li>
     </ul>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_L1_TV-class.html">parsimony.functions.objectives.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RLR_L1_TV-class.html">parsimony.functions.objectives.functions.RLR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
-        TotalVariation.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_L1_GL-class.html">parsimony.functions.objectives.functions.RR_L1_GL</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
-        Lasso.</em>
-    </li>
-    </ul>
-    </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.losses.RidgeLogisticRegression-class.html">parsimony.functions.losses.RidgeLogisticRegression</a></strong>:
       <em class="summary">The Logistic Regression loss function.</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.losses.RidgeRegression-class.html">parsimony.functions.losses.RidgeRegression</a></strong>:
-      <em class="summary">The Ridge Regression function</em>
+      <em class="summary">The Ridge Regression function, i.e.</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.tv.TotalVariation-class.html">parsimony.functions.nesterov.tv.TotalVariation</a></strong>:
       <em class="summary">The smoothed Total variation (TV) function</em>
@@ -826,12 +930,12 @@ or one proximal operator.</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.GradientMap-class.html">parsimony.functions.interfaces.GradientMap</a></strong>
     <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_SmoothedL1TV-class.html">parsimony.functions.functions.RR_SmoothedL1TV</a></strong>:
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_SmoothedL1TV-class.html">parsimony.functions.combinedfunctions.RR_SmoothedL1TV</a></strong>:
       <em class="summary">Parameters
 ----------
 X : Numpy array.</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_SmoothedL1TV-class.html">parsimony.functions.objectives.functions.RR_SmoothedL1TV</a></strong>:
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_SmoothedL1TV-class.html">parsimony.functions.functions.RR_SmoothedL1TV</a></strong>:
       <em class="summary">Parameters
 ----------
 X : Numpy array.</em>
@@ -858,9 +962,111 @@ X : Ridge Regression parameter.</em>
     </li>
     </ul>
     </li>
+    <li> <strong class="uidlink"><a href="parsimony._functions.Hessian-class.html" onclick="show_private();">parsimony._functions.Hessian</a></strong>
+    </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.Hessian-class.html">parsimony.functions.interfaces.Hessian</a></strong>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony._functions.Hessian-class.html" onclick="show_private();">parsimony._functions.Hessian</a></strong>
+    <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.LipschitzContinuousGradient-class.html">parsimony.functions.interfaces.LipschitzContinuousGradient</a></strong>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.gl.GroupLassoOverlap-class.html">parsimony.functions.nesterov.gl.GroupLassoOverlap</a></strong>:
+      <em class="summary">Group L1-L2 function, with overlapping groups.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.L1.L1-class.html">parsimony.functions.nesterov.L1.L1</a></strong>:
+      <em class="summary">The proximal operator of the smoothed L1 function</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L2-class.html">parsimony.functions.penalties.L2</a></strong>:
+      <em class="summary">The proximal operator of the L2 function with a penalty formulation</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.losses.LatentVariableVariance-class.html">parsimony.functions.losses.LatentVariableVariance</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.losses.LinearRegression-class.html">parsimony.functions.losses.LinearRegression</a></strong>:
+      <em class="summary">The Linear regression loss function.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.losses.LogisticRegression-class.html">parsimony.functions.losses.LogisticRegression</a></strong>:
+      <em class="summary">The Logistic Regression loss function.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.PCA_L1_TV-class.html">parsimony.functions.combinedfunctions.PCA_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of PCA (Variance), L1 and TotalVariation</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.PCA_L1_TV-class.html">parsimony.functions.functions.PCA_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of PCA (Variance), L1 and TotalVariation</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_L1_TV-class.html">parsimony.functions.combinedfunctions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RLR_L1_TV-class.html">parsimony.functions.combinedfunctions.RLR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_L1_GL-class.html">parsimony.functions.combinedfunctions.RR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
+        Lasso.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RLR_L1_GL-class.html">parsimony.functions.combinedfunctions.RLR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    </ul>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_TV-class.html">parsimony.functions.functions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_TV-class.html">parsimony.functions.functions.RLR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_GL-class.html">parsimony.functions.functions.RR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
+        Lasso.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_GL-class.html">parsimony.functions.functions.RLR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    </ul>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_L1_TV-class.html">parsimony.functions._objectives.functions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RLR_L1_TV-class.html">parsimony.functions._objectives.functions.RLR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_L1_GL-class.html">parsimony.functions._objectives.functions.RR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
+        Lasso.</em>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_SmoothedL1TV-class.html">parsimony.functions.functions.RR_SmoothedL1TV</a></strong>:
+      <em class="summary">Parameters
+----------
+X : Numpy array.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_SmoothedL1TV-class.html">parsimony.functions._objectives.functions.RR_SmoothedL1TV</a></strong>:
+      <em class="summary">Parameters
+----------
+X : Numpy array.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_SmoothedL1TV-class.html">parsimony.functions.combinedfunctions.RR_SmoothedL1TV</a></strong>:
+      <em class="summary">Parameters
+----------
+X : Numpy array.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.losses.RidgeLogisticRegression-class.html">parsimony.functions.losses.RidgeLogisticRegression</a></strong>:
+      <em class="summary">The Logistic Regression loss function.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.losses.RidgeRegression-class.html">parsimony.functions.losses.RidgeRegression</a></strong>:
+      <em class="summary">The Ridge Regression function, i.e.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.tv.TotalVariation-class.html">parsimony.functions.nesterov.tv.TotalVariation</a></strong>:
+      <em class="summary">The smoothed Total variation (TV) function</em>
+    </li>
+    </ul>
     </li>
     <li> <strong class="uidlink"><a href="parsimony._functions.LipschitzContinuousGradient-class.html" onclick="show_private();">parsimony._functions.LipschitzContinuousGradient</a></strong>
     <ul>
@@ -896,79 +1102,11 @@ X : Ridge Regression parameter.</em>
     </li>
     </ul>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.LipschitzContinuousGradient-class.html">parsimony.functions.interfaces.LipschitzContinuousGradient</a></strong>
+    <li> <strong class="uidlink"><a href="parsimony._functions.MultiblockGradient-class.html" onclick="show_private();">parsimony._functions.MultiblockGradient</a></strong>
     <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.gl.GroupLassoOverlap-class.html">parsimony.functions.nesterov.gl.GroupLassoOverlap</a></strong>:
-      <em class="summary">Group L1-L2 function, with overlapping groups.</em>
+    <li> <strong class="uidlink"><a href="parsimony._functions.GeneralisedMultiblock-class.html" onclick="show_private();">parsimony._functions.GeneralisedMultiblock</a></strong>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.L1.L1-class.html">parsimony.functions.nesterov.L1.L1</a></strong>:
-      <em class="summary">The proximal operator of the smoothed L1 function</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.losses.LinearRegression-class.html">parsimony.functions.losses.LinearRegression</a></strong>:
-      <em class="summary">The Linear regression loss function.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_TV-class.html">parsimony.functions.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_TV-class.html">parsimony.functions.functions.RLR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
-        TotalVariation.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_GL-class.html">parsimony.functions.functions.RR_L1_GL</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
-        Lasso.</em>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_L1_TV-class.html">parsimony.functions._objectives.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RLR_L1_TV-class.html">parsimony.functions._objectives.functions.RLR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
-        TotalVariation.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_L1_GL-class.html">parsimony.functions._objectives.functions.RR_L1_GL</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
-        Lasso.</em>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_L1_TV-class.html">parsimony.functions.objectives.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RLR_L1_TV-class.html">parsimony.functions.objectives.functions.RLR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
-        TotalVariation.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_L1_GL-class.html">parsimony.functions.objectives.functions.RR_L1_GL</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
-        Lasso.</em>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_SmoothedL1TV-class.html">parsimony.functions.functions.RR_SmoothedL1TV</a></strong>:
-      <em class="summary">Parameters
-----------
-X : Numpy array.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_SmoothedL1TV-class.html">parsimony.functions._objectives.functions.RR_SmoothedL1TV</a></strong>:
-      <em class="summary">Parameters
-----------
-X : Numpy array.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_SmoothedL1TV-class.html">parsimony.functions.objectives.functions.RR_SmoothedL1TV</a></strong>:
-      <em class="summary">Parameters
-----------
-X : Numpy array.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.losses.RidgeLogisticRegression-class.html">parsimony.functions.losses.RidgeLogisticRegression</a></strong>:
-      <em class="summary">The Logistic Regression loss function.</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.losses.RidgeRegression-class.html">parsimony.functions.losses.RidgeRegression</a></strong>:
-      <em class="summary">The Ridge Regression function</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.tv.TotalVariation-class.html">parsimony.functions.nesterov.tv.TotalVariation</a></strong>:
-      <em class="summary">The smoothed Total variation (TV) function</em>
+    <li> <strong class="uidlink"><a href="parsimony._functions.LatentVariableCovariance-class.html" onclick="show_private();">parsimony._functions.LatentVariableCovariance</a></strong>
     </li>
     </ul>
     </li>
@@ -980,10 +1118,8 @@ X : Numpy array.</em>
     </li>
     </ul>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony._functions.MultiblockGradient-class.html" onclick="show_private();">parsimony._functions.MultiblockGradient</a></strong>
+    <li> <strong class="uidlink"><a href="parsimony._functions.MultiblockLipschitzContinuousGradient-class.html" onclick="show_private();">parsimony._functions.MultiblockLipschitzContinuousGradient</a></strong>
     <ul>
-    <li> <strong class="uidlink"><a href="parsimony._functions.GeneralisedMultiblock-class.html" onclick="show_private();">parsimony._functions.GeneralisedMultiblock</a></strong>
-    </li>
     <li> <strong class="uidlink"><a href="parsimony._functions.LatentVariableCovariance-class.html" onclick="show_private();">parsimony._functions.LatentVariableCovariance</a></strong>
     </li>
     </ul>
@@ -994,21 +1130,15 @@ X : Numpy array.</em>
     </li>
     </ul>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony._functions.MultiblockLipschitzContinuousGradient-class.html" onclick="show_private();">parsimony._functions.MultiblockLipschitzContinuousGradient</a></strong>
+    <li> <strong class="uidlink"><a href="parsimony._functions.MultiblockProjectionOperator-class.html" onclick="show_private();">parsimony._functions.MultiblockProjectionOperator</a></strong>
     <ul>
-    <li> <strong class="uidlink"><a href="parsimony._functions.LatentVariableCovariance-class.html" onclick="show_private();">parsimony._functions.LatentVariableCovariance</a></strong>
+    <li> <strong class="uidlink"><a href="parsimony._functions.GeneralisedMultiblock-class.html" onclick="show_private();">parsimony._functions.GeneralisedMultiblock</a></strong>
     </li>
     </ul>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.multiblock.interfaces.MultiblockProjectionOperator-class.html">parsimony.functions.multiblock.interfaces.MultiblockProjectionOperator</a></strong>
     <ul>
     <li> <strong class="uidlink"><a href="parsimony.functions.multiblock.losses.GeneralisedMultiblock-class.html" onclick="show_private();">parsimony.functions.multiblock.losses.GeneralisedMultiblock</a></strong>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony._functions.MultiblockProjectionOperator-class.html" onclick="show_private();">parsimony._functions.MultiblockProjectionOperator</a></strong>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony._functions.GeneralisedMultiblock-class.html" onclick="show_private();">parsimony._functions.GeneralisedMultiblock</a></strong>
     </li>
     </ul>
     </li>
@@ -1070,21 +1200,14 @@ l : L1 parameter.</em>
 ----------
 l : Non-negative float.</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_L1_TV-class.html">parsimony.functions.objectives.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RLR_L1_TV-class.html">parsimony.functions.objectives.functions.RLR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
-        TotalVariation.</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.PCA_L1_TV-class.html">parsimony.functions.combinedfunctions.PCA_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of PCA (Variance), L1 and TotalVariation</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_L1_GL-class.html">parsimony.functions.objectives.functions.RR_L1_GL</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
-        Lasso.</em>
-    </li>
-    </ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.PCA_L1_TV-class.html">parsimony.functions.functions.PCA_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of PCA (Variance), L1 and TotalVariation</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_TV-class.html">parsimony.functions.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation.</em>
     <ul>
     <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_TV-class.html">parsimony.functions.functions.RLR_L1_TV</a></strong>:
       <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
@@ -1093,6 +1216,31 @@ l : Non-negative float.</em>
     <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_GL-class.html">parsimony.functions.functions.RR_L1_GL</a></strong>:
       <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
         Lasso.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_GL-class.html">parsimony.functions.functions.RLR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    </ul>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_L1_TV-class.html">parsimony.functions.combinedfunctions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RLR_L1_TV-class.html">parsimony.functions.combinedfunctions.RLR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_L1_GL-class.html">parsimony.functions.combinedfunctions.RR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
+        Lasso.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RLR_L1_GL-class.html">parsimony.functions.combinedfunctions.RLR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    </ul>
     </li>
     </ul>
     </li>
@@ -1119,7 +1267,7 @@ X : Numpy array.</em>
 ----------
 X : Numpy array.</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_SmoothedL1TV-class.html">parsimony.functions.objectives.functions.RR_SmoothedL1TV</a></strong>:
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_SmoothedL1TV-class.html">parsimony.functions.combinedfunctions.RR_SmoothedL1TV</a></strong>:
       <em class="summary">Parameters
 ----------
 X : Numpy array.</em>
@@ -1148,6 +1296,9 @@ mask: ???</em>
     <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.gl.GroupLassoOverlap-class.html">parsimony.functions.nesterov.gl.GroupLassoOverlap</a></strong>:
       <em class="summary">Group L1-L2 function, with overlapping groups.</em>
     </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L0-class.html">parsimony.functions.penalties.L0</a></strong>:
+      <em class="summary">The proximal operator of the &quot;pseudo&quot; L0 function</em>
+    </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.L1.L1-class.html">parsimony.functions.nesterov.L1.L1</a></strong>:
       <em class="summary">The proximal operator of the smoothed L1 function</em>
     </li>
@@ -1161,6 +1312,9 @@ l : Non-negative float.</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L2-class.html">parsimony.functions.penalties.L2</a></strong>:
       <em class="summary">The proximal operator of the L2 function with a penalty formulation</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.LInf-class.html">parsimony.functions.penalties.LInf</a></strong>:
+      <em class="summary">The proximal operator of the L-infinity function</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.penalties.QuadraticConstraint-class.html">parsimony.functions.penalties.QuadraticConstraint</a></strong>:
       <em class="summary">The proximal operator of the quadratic function</em>
@@ -1177,6 +1331,37 @@ l : Non-negative float.</em>
     </li>
     </ul>
     </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.ProjectionOperator-class.html">parsimony.functions.interfaces.ProjectionOperator</a></strong>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.CombinedFunction-class.html">parsimony.functions.combinedfunctions.CombinedFunction</a></strong>:
+      <em class="summary">Combines one or more loss functions, any number of penalties and zero
+or one proximal operator.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.CombinedFunction-class.html">parsimony.functions.functions.CombinedFunction</a></strong>:
+      <em class="summary">Combines one or more loss functions, any number of penalties and zero
+or one proximal operator.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.CombinedProjectionOperator-class.html">parsimony.functions.interfaces.CombinedProjectionOperator</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L0-class.html">parsimony.functions.penalties.L0</a></strong>:
+      <em class="summary">The proximal operator of the &quot;pseudo&quot; L0 function</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L1-class.html">parsimony.functions.penalties.L1</a></strong>:
+      <em class="summary">The proximal operator of the L1 function with a penalty formulation</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L2-class.html">parsimony.functions.penalties.L2</a></strong>:
+      <em class="summary">The proximal operator of the L2 function with a penalty formulation</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.LInf-class.html">parsimony.functions.penalties.LInf</a></strong>:
+      <em class="summary">The proximal operator of the L-infinity function</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.RGCCAConstraint-class.html">parsimony.functions.penalties.RGCCAConstraint</a></strong>:
+      <em class="summary">The proximal operator of the quadratic function</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.ZeroFunction-class.html">parsimony.functions.penalties.ZeroFunction</a></strong>
+    </li>
+    </ul>
+    </li>
     <li> <strong class="uidlink"><a href="parsimony._functions.ProjectionOperator-class.html" onclick="show_private();">parsimony._functions.ProjectionOperator</a></strong>
     <ul>
     <li> <strong class="uidlink"><a href="parsimony._functions.CombinedProjectionOperator-class.html" onclick="show_private();">parsimony._functions.CombinedProjectionOperator</a></strong>
@@ -1186,23 +1371,6 @@ l : Non-negative float.</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony._functions.RGCCAConstraint-class.html" onclick="show_private();">parsimony._functions.RGCCAConstraint</a></strong>:
       <em class="summary">The proximal operator of the quadratic function</em>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.ProjectionOperator-class.html">parsimony.functions.interfaces.ProjectionOperator</a></strong>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.CombinedProjectionOperator-class.html">parsimony.functions.interfaces.CombinedProjectionOperator</a></strong>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L1-class.html">parsimony.functions.penalties.L1</a></strong>:
-      <em class="summary">The proximal operator of the L1 function with a penalty formulation</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L2-class.html">parsimony.functions.penalties.L2</a></strong>:
-      <em class="summary">The proximal operator of the L2 function with a penalty formulation</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.RGCCAConstraint-class.html">parsimony.functions.penalties.RGCCAConstraint</a></strong>:
-      <em class="summary">The proximal operator of the quadratic function</em>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.ZeroFunction-class.html">parsimony.functions.penalties.ZeroFunction</a></strong>
     </li>
     </ul>
     </li>
@@ -1226,11 +1394,11 @@ l : Non-negative float.</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.ProximalOperator-class.html">parsimony.functions.interfaces.ProximalOperator</a></strong>
     <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.CombinedFunction-class.html">parsimony.functions.objectives.functions.CombinedFunction</a></strong>:
+    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.CombinedFunction-class.html">parsimony.functions._objectives.functions.CombinedFunction</a></strong>:
       <em class="summary">Combines one or more loss functions, any number of penalties and zero
 or one proximal operator.</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.CombinedFunction-class.html">parsimony.functions._objectives.functions.CombinedFunction</a></strong>:
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.CombinedFunction-class.html">parsimony.functions.combinedfunctions.CombinedFunction</a></strong>:
       <em class="summary">Combines one or more loss functions, any number of penalties and zero
 or one proximal operator.</em>
     </li>
@@ -1238,24 +1406,23 @@ or one proximal operator.</em>
       <em class="summary">Combines one or more loss functions, any number of penalties and zero
 or one proximal operator.</em>
     </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L0-class.html">parsimony.functions.penalties.L0</a></strong>:
+      <em class="summary">The proximal operator of the &quot;pseudo&quot; L0 function</em>
+    </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L1-class.html">parsimony.functions.penalties.L1</a></strong>:
       <em class="summary">The proximal operator of the L1 function with a penalty formulation</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.penalties.L2-class.html">parsimony.functions.penalties.L2</a></strong>:
       <em class="summary">The proximal operator of the L2 function with a penalty formulation</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_TV-class.html">parsimony.functions.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_TV-class.html">parsimony.functions.functions.RLR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
-        TotalVariation.</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.penalties.LInf-class.html">parsimony.functions.penalties.LInf</a></strong>:
+      <em class="summary">The proximal operator of the L-infinity function</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_GL-class.html">parsimony.functions.functions.RR_L1_GL</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
-        Lasso.</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.PCA_L1_TV-class.html">parsimony.functions.combinedfunctions.PCA_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of PCA (Variance), L1 and TotalVariation</em>
     </li>
-    </ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.PCA_L1_TV-class.html">parsimony.functions.functions.PCA_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of PCA (Variance), L1 and TotalVariation</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_L1_TV-class.html">parsimony.functions._objectives.functions.RR_L1_TV</a></strong>:
       <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
@@ -1270,16 +1437,41 @@ or one proximal operator.</em>
     </li>
     </ul>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_L1_TV-class.html">parsimony.functions.objectives.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_L1_TV-class.html">parsimony.functions.combinedfunctions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation.</em>
     <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RLR_L1_TV-class.html">parsimony.functions.objectives.functions.RLR_L1_TV</a></strong>:
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RLR_L1_TV-class.html">parsimony.functions.combinedfunctions.RLR_L1_TV</a></strong>:
       <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
         TotalVariation.</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_L1_GL-class.html">parsimony.functions.objectives.functions.RR_L1_GL</a></strong>:
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_L1_GL-class.html">parsimony.functions.combinedfunctions.RR_L1_GL</a></strong>:
       <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
         Lasso.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RLR_L1_GL-class.html">parsimony.functions.combinedfunctions.RLR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    </ul>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_TV-class.html">parsimony.functions.functions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_TV-class.html">parsimony.functions.functions.RLR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_GL-class.html">parsimony.functions.functions.RR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
+        Lasso.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_GL-class.html">parsimony.functions.functions.RLR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    </ul>
     </li>
     </ul>
     </li>
@@ -1304,42 +1496,43 @@ l : L1 parameter.</em>
       <em class="summary">Combines one or more loss functions, any number of penalties and zero
 or one proximal operator.</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.functions.CombinedFunction-class.html">parsimony.functions.functions.CombinedFunction</a></strong>:
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.CombinedFunction-class.html">parsimony.functions.combinedfunctions.CombinedFunction</a></strong>:
       <em class="summary">Combines one or more loss functions, any number of penalties and zero
 or one proximal operator.</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.CombinedFunction-class.html">parsimony.functions.objectives.functions.CombinedFunction</a></strong>:
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.CombinedFunction-class.html">parsimony.functions.functions.CombinedFunction</a></strong>:
       <em class="summary">Combines one or more loss functions, any number of penalties and zero
 or one proximal operator.</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.multiblock.losses.GeneralisedMultiblock-class.html" onclick="show_private();">parsimony.functions.multiblock.losses.GeneralisedMultiblock</a></strong>
     </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.losses.LatentVariableVariance-class.html">parsimony.functions.losses.LatentVariableVariance</a></strong>
+    </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.losses.LinearRegression-class.html">parsimony.functions.losses.LinearRegression</a></strong>:
       <em class="summary">The Linear regression loss function.</em>
     </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.losses.LogisticRegression-class.html">parsimony.functions.losses.LogisticRegression</a></strong>:
+      <em class="summary">The Logistic Regression loss function.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.losses.RidgeLogisticRegression-class.html">parsimony.functions.losses.RidgeLogisticRegression</a></strong>:
+      <em class="summary">The Logistic Regression loss function.</em>
+    </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.losses.RidgeRegression-class.html">parsimony.functions.losses.RidgeRegression</a></strong>:
-      <em class="summary">The Ridge Regression function</em>
+      <em class="summary">The Ridge Regression function, i.e.</em>
     </li>
     </ul>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.interfaces.StronglyConvex-class.html">parsimony.functions.interfaces.StronglyConvex</a></strong>:
       <em class="summary">Represents strongly convex functions.</em>
     <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_L1_TV-class.html">parsimony.functions._objectives.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
-    <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RLR_L1_TV-class.html">parsimony.functions._objectives.functions.RLR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
-        TotalVariation.</em>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.PCA_L1_TV-class.html">parsimony.functions.combinedfunctions.PCA_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of PCA (Variance), L1 and TotalVariation</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_L1_GL-class.html">parsimony.functions._objectives.functions.RR_L1_GL</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
-        Lasso.</em>
-    </li>
-    </ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.PCA_L1_TV-class.html">parsimony.functions.functions.PCA_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of PCA (Variance), L1 and TotalVariation</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_TV-class.html">parsimony.functions.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation.</em>
     <ul>
     <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_TV-class.html">parsimony.functions.functions.RLR_L1_TV</a></strong>:
       <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
@@ -1348,17 +1541,42 @@ or one proximal operator.</em>
     <li> <strong class="uidlink"><a href="parsimony.functions.functions.RR_L1_GL-class.html">parsimony.functions.functions.RR_L1_GL</a></strong>:
       <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
         Lasso.</em>
-    </li>
-    </ul>
-    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_L1_TV-class.html">parsimony.functions.objectives.functions.RR_L1_TV</a></strong>:
-      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
     <ul>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RLR_L1_TV-class.html">parsimony.functions.objectives.functions.RLR_L1_TV</a></strong>:
+    <li> <strong class="uidlink"><a href="parsimony.functions.functions.RLR_L1_GL-class.html">parsimony.functions.functions.RLR_L1_GL</a></strong>:
       <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
         TotalVariation.</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_L1_GL-class.html">parsimony.functions.objectives.functions.RR_L1_GL</a></strong>:
+    </ul>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_L1_TV-class.html">parsimony.functions.combinedfunctions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RLR_L1_TV-class.html">parsimony.functions.combinedfunctions.RLR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_L1_GL-class.html">parsimony.functions.combinedfunctions.RR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
+        Lasso.</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RLR_L1_GL-class.html">parsimony.functions.combinedfunctions.RLR_L1_GL</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    </ul>
+    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_L1_TV-class.html">parsimony.functions._objectives.functions.RR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeRegression, L1 and TotalVariation</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RLR_L1_TV-class.html">parsimony.functions._objectives.functions.RLR_L1_TV</a></strong>:
+      <em class="summary">Combination (sum) of RidgeLogisticRegression, L1 and 
+        TotalVariation.</em>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions._objectives.functions.RR_L1_GL-class.html">parsimony.functions._objectives.functions.RR_L1_GL</a></strong>:
       <em class="summary">Combination (sum) of RidgeRegression, L1 and Overlapping Group 
         Lasso.</em>
     </li>
@@ -1374,13 +1592,13 @@ X : Numpy array.</em>
 ----------
 X : Numpy array.</em>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions.objectives.functions.RR_SmoothedL1TV-class.html">parsimony.functions.objectives.functions.RR_SmoothedL1TV</a></strong>:
+    <li> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions.RR_SmoothedL1TV-class.html">parsimony.functions.combinedfunctions.RR_SmoothedL1TV</a></strong>:
       <em class="summary">Parameters
 ----------
 X : Numpy array.</em>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.losses.RidgeRegression-class.html">parsimony.functions.losses.RidgeRegression</a></strong>:
-      <em class="summary">The Ridge Regression function</em>
+      <em class="summary">The Ridge Regression function, i.e.</em>
     </li>
     </ul>
     </li>
@@ -1393,6 +1611,14 @@ X : Numpy array.</em>
     <li> <strong class="uidlink"><a href="parsimony.tests.test_algorithms.TestAlgorithms-class.html">parsimony.tests.test_algorithms.TestAlgorithms</a></strong>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.tests.test_functions.TestFunctions-class.html">parsimony.tests.test_functions.TestFunctions</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.tests.test_group_lasso.TestGroupLasso-class.html">parsimony.tests.test_group_lasso.TestGroupLasso</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.tests.test_logistic_regression.TestLogisticRegression-class.html">parsimony.tests.test_logistic_regression.TestLogisticRegression</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.tests.test_simulations.TestSimulations-class.html">parsimony.tests.test_simulations.TestSimulations</a></strong>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.tests.test_total_variation.TestTotalVariation-class.html">parsimony.tests.test_total_variation.TestTotalVariation</a></strong>
     </li>
     </ul>
     </li>
@@ -1438,7 +1664,7 @@ X : Numpy array.</em>
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Feb 21 18:01:43 2014
+    Generated by Epydoc 3.0.1 on Fri Mar  7 10:53:21 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

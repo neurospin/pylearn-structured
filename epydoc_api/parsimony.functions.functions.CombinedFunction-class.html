@@ -39,7 +39,7 @@
       <span class="breadcrumbs">
         <a href="parsimony-module.html">Package&nbsp;parsimony</a> ::
         <a href="parsimony.functions-module.html" onclick="show_private();">Package&nbsp;functions</a> ::
-        <a href="parsimony.functions.functions-module.html" onclick="show_private();">Module&nbsp;functions</a> ::
+        <a href="parsimony.functions.functions-module.html">Module&nbsp;functions</a> ::
         Class&nbsp;CombinedFunction
       </span>
     </td>
@@ -57,27 +57,31 @@
   </tr>
 </table>
 <!-- ==================== CLASS DESCRIPTION ==================== -->
-<h1 class="epydoc">Class CombinedFunction</h1><p class="nomargin-top"><span class="codelink"><a href="parsimony.functions.functions-pysrc.html#CombinedFunction">source&nbsp;code</a></span></p>
+<h1 class="epydoc">Class CombinedFunction</h1><p class="nomargin-top"></p>
 <pre class="base-tree">
-              object --+        
-                       |        
-     <a href="parsimony.functions.interfaces.Function-class.html">interfaces.Function</a> --+    
-                           |    
-<a href="parsimony.functions.interfaces.CompositeFunction-class.html">interfaces.CompositeFunction</a> --+
-                               |
-                  object --+   |
-                           |   |
-         <a href="parsimony.functions.interfaces.Gradient-class.html">interfaces.Gradient</a> --+
-                               |
-                  object --+   |
-                           |   |
- <a href="parsimony.functions.interfaces.ProximalOperator-class.html">interfaces.ProximalOperator</a> --+
-                               |
-                  object --+   |
-                           |   |
-         <a href="parsimony.functions.interfaces.StepSize-class.html">interfaces.StepSize</a> --+
-                               |
-                              <strong class="uidshort">CombinedFunction</strong>
+               object --+        
+                        |        
+      <a href="parsimony.functions.interfaces.Function-class.html">interfaces.Function</a> --+    
+                            |    
+ <a href="parsimony.functions.interfaces.CompositeFunction-class.html">interfaces.CompositeFunction</a> --+
+                                |
+                   object --+   |
+                            |   |
+          <a href="parsimony.functions.interfaces.Gradient-class.html">interfaces.Gradient</a> --+
+                                |
+                   object --+   |
+                            |   |
+  <a href="parsimony.functions.interfaces.ProximalOperator-class.html">interfaces.ProximalOperator</a> --+
+                                |
+                   object --+   |
+                            |   |
+<a href="parsimony.functions.interfaces.ProjectionOperator-class.html">interfaces.ProjectionOperator</a> --+
+                                |
+                   object --+   |
+                            |   |
+          <a href="parsimony.functions.interfaces.StepSize-class.html">interfaces.StepSize</a> --+
+                                |
+                               <strong class="uidshort">CombinedFunction</strong>
 </pre>
 
 <hr />
@@ -89,11 +93,15 @@ This function thus represents
 
     f(x) = f_1(x) [ + f_2(x) ... ] [ + p_1(x) ... ] [ + P(x)],
 
+subject to [ C_1(x) &lt;= c_1,
+             C_2(x) &lt;= c_2,
+             ... ],
+
 where f_i are differentiable Functions, p_j are differentiable penalties
 and P is a ProximalOperator. All functions and penalties must thus be
 Gradient, unless it is a ProximalOperator.
 
-If ProximalOperator is not given, then prox is the identity.
+If no ProximalOperator is given, then prox is the identity.
 
 </pre>
 
@@ -120,10 +128,14 @@ If ProximalOperator is not given, then prox is the identity.
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a href="parsimony.functions.functions.CombinedFunction-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>)</span><br />
+          <td><span class="summary-sig"><a href="parsimony.functions.functions.CombinedFunction-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">functions</span>=<span class="summary-sig-default"><code class="variable-group">[</code><code class="variable-group">]</code></span>,
+        <span class="summary-sig-arg">penalties</span>=<span class="summary-sig-default"><code class="variable-group">[</code><code class="variable-group">]</code></span>,
+        <span class="summary-sig-arg">prox</span>=<span class="summary-sig-default"><code class="variable-group">[</code><code class="variable-group">]</code></span>,
+        <span class="summary-sig-arg">constraints</span>=<span class="summary-sig-default"><code class="variable-group">[</code><code class="variable-group">]</code></span>)</span><br />
       x.__init__(...) initializes x; see help(type(x)) for signature</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.functions.functions-pysrc.html#CombinedFunction.__init__">source&nbsp;code</a></span>
+            
             
           </td>
         </tr>
@@ -137,9 +149,10 @@ If ProximalOperator is not given, then prox is the identity.
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a href="parsimony.functions.functions.CombinedFunction-class.html#reset" class="summary-sig-name">reset</a>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td><span class="summary-sig"><a name="add_constraint"></a><span class="summary-sig-name">add_constraint</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">constraint</span>)</span></td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.functions.functions-pysrc.html#CombinedFunction.reset">source&nbsp;code</a></span>
+            
             
           </td>
         </tr>
@@ -156,7 +169,7 @@ If ProximalOperator is not given, then prox is the identity.
           <td><span class="summary-sig"><a name="add_function"></a><span class="summary-sig-name">add_function</span>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">function</span>)</span></td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.functions.functions-pysrc.html#CombinedFunction.add_function">source&nbsp;code</a></span>
+            
             
           </td>
         </tr>
@@ -171,10 +184,26 @@ If ProximalOperator is not given, then prox is the identity.
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a name="add_penalty"></a><span class="summary-sig-name">add_penalty</span>(<span class="summary-sig-arg">self</span>,
-        <span class="summary-sig-arg">penalty</span>,
-        <span class="summary-sig-arg">proximal_operator</span>=<span class="summary-sig-default">False</span>)</span></td>
+        <span class="summary-sig-arg">penalty</span>)</span></td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.functions.functions-pysrc.html#CombinedFunction.add_penalty">source&nbsp;code</a></span>
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="add_prox"></a><span class="summary-sig-name">add_prox</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">penalty</span>)</span></td>
+          <td align="right" valign="top">
+            
             
           </td>
         </tr>
@@ -192,7 +221,7 @@ If ProximalOperator is not given, then prox is the identity.
         <span class="summary-sig-arg">x</span>)</span><br />
       Function value.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.functions.functions-pysrc.html#CombinedFunction.f">source&nbsp;code</a></span>
+            
             
           </td>
         </tr>
@@ -210,7 +239,25 @@ If ProximalOperator is not given, then prox is the identity.
         <span class="summary-sig-arg">x</span>)</span><br />
       Gradient of the differentiable part of the function.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.functions.functions-pysrc.html#CombinedFunction.grad">source&nbsp;code</a></span>
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="parsimony.functions.functions.CombinedFunction-class.html#proj" class="summary-sig-name">proj</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">x</span>)</span><br />
+      The projection operator corresponding to the function.</td>
+          <td align="right" valign="top">
+            
             
           </td>
         </tr>
@@ -229,7 +276,24 @@ If ProximalOperator is not given, then prox is the identity.
         <span class="summary-sig-arg">factor</span>=<span class="summary-sig-default">1.0</span>)</span><br />
       The proximal operator of the non-differentiable part of the function.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.functions.functions-pysrc.html#CombinedFunction.prox">source&nbsp;code</a></span>
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="parsimony.functions.functions.CombinedFunction-class.html#reset" class="summary-sig-name">reset</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Free any cached computations from previous use of this Function.</td>
+          <td align="right" valign="top">
+            
             
           </td>
         </tr>
@@ -247,7 +311,7 @@ If ProximalOperator is not given, then prox is the identity.
         <span class="summary-sig-arg">x</span>)</span><br />
       The step size to use in descent methods.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.functions.functions-pysrc.html#CombinedFunction.step">source&nbsp;code</a></span>
+            
             
           </td>
         </tr>
@@ -368,11 +432,15 @@ If ProximalOperator is not given, then prox is the identity.
 <tr><td>
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>)</span>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">functions</span>=<span class="sig-default"><code class="variable-group">[</code><code class="variable-group">]</code></span>,
+        <span class="sig-arg">penalties</span>=<span class="sig-default"><code class="variable-group">[</code><code class="variable-group">]</code></span>,
+        <span class="sig-arg">prox</span>=<span class="sig-default"><code class="variable-group">[</code><code class="variable-group">]</code></span>,
+        <span class="sig-arg">constraints</span>=<span class="sig-default"><code class="variable-group">[</code><code class="variable-group">]</code></span>)</span>
     <br /><em class="fname">(Constructor)</em>
   </h3>
   </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.functions.functions-pysrc.html#CombinedFunction.__init__">source&nbsp;code</a></span>&nbsp;
+    >&nbsp;
     </td>
   </tr></table>
   
@@ -381,28 +449,6 @@ If ProximalOperator is not given, then prox is the identity.
     <dt>Overrides:
         object.__init__
         <dd><em class="note">(inherited documentation)</em></dd>
-    </dt>
-  </dl>
-</td></tr></table>
-</div>
-<a name="reset"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">reset</span>(<span class="sig-arg">self</span>)</span>
-  </h3>
-  </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.functions.functions-pysrc.html#CombinedFunction.reset">source&nbsp;code</a></span>&nbsp;
-    </td>
-  </tr></table>
-  
-  
-  <dl class="fields">
-    <dt>Overrides:
-        <a href="parsimony.functions.interfaces.Function-class.html#reset">interfaces.Function.reset</a>
     </dt>
   </dl>
 </td></tr></table>
@@ -418,7 +464,7 @@ If ProximalOperator is not given, then prox is the identity.
         <span class="sig-arg">x</span>)</span>
   </h3>
   </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.functions.functions-pysrc.html#CombinedFunction.f">source&nbsp;code</a></span>&nbsp;
+    >&nbsp;
     </td>
   </tr></table>
   
@@ -441,7 +487,7 @@ If ProximalOperator is not given, then prox is the identity.
         <span class="sig-arg">x</span>)</span>
   </h3>
   </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.functions.functions-pysrc.html#CombinedFunction.grad">source&nbsp;code</a></span>&nbsp;
+    >&nbsp;
     </td>
   </tr></table>
   
@@ -450,6 +496,30 @@ If ProximalOperator is not given, then prox is the identity.
   <dl class="fields">
     <dt>Overrides:
         <a href="parsimony.functions.interfaces.Gradient-class.html#grad">interfaces.Gradient.grad</a>
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="proj"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">proj</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">x</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>The projection operator corresponding to the function.</p>
+  <dl class="fields">
+    <dt>Overrides:
+        <a href="parsimony.functions.interfaces.ProjectionOperator-class.html#proj">interfaces.ProjectionOperator.proj</a>
+        <dd><em class="note">(inherited documentation)</em></dd>
     </dt>
   </dl>
 </td></tr></table>
@@ -466,7 +536,7 @@ If ProximalOperator is not given, then prox is the identity.
         <span class="sig-arg">factor</span>=<span class="sig-default">1.0</span>)</span>
   </h3>
   </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.functions.functions-pysrc.html#CombinedFunction.prox">source&nbsp;code</a></span>&nbsp;
+    >&nbsp;
     </td>
   </tr></table>
   
@@ -476,6 +546,29 @@ If ProximalOperator is not given, then prox is the identity.
   <dl class="fields">
     <dt>Overrides:
         <a href="parsimony.functions.interfaces.ProximalOperator-class.html#prox">interfaces.ProximalOperator.prox</a>
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="reset"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">reset</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Free any cached computations from previous use of this Function.</p>
+  <dl class="fields">
+    <dt>Overrides:
+        <a href="parsimony.functions.interfaces.Function-class.html#reset">interfaces.Function.reset</a>
+        <dd><em class="note">(inherited documentation)</em></dd>
     </dt>
   </dl>
 </td></tr></table>
@@ -491,7 +584,7 @@ If ProximalOperator is not given, then prox is the identity.
         <span class="sig-arg">x</span>)</span>
   </h3>
   </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.functions.functions-pysrc.html#CombinedFunction.step">source&nbsp;code</a></span>&nbsp;
+    >&nbsp;
     </td>
   </tr></table>
   
@@ -539,7 +632,7 @@ x : Numpy array. The point at which to evaluate the step size.
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Fri Feb 21 18:01:44 2014
+    Generated by Epydoc 3.0.1 on Fri Mar  7 10:53:23 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"
