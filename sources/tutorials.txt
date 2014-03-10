@@ -8,12 +8,16 @@ Parsimony comprise three principal parts: **algorithms**, **functions** and
 **estimators**.
 
 * **functions** defines the loss functions and penalties, and combination of
-those, that are to be minimised.
+those, that are to be minimised. These represent the underlying mathematical
+problem formulations.
 * **algorithms** defines minimising algorithms (e.g., Fast Iterative
 Shrinkage-Thresholding Algorithm (FISTA) [FISTA2009]_, COntinuation of
 NESTerov's smoothing Algorithm (CONESTA), Excessive Gap Method, etc.) that
-will be used to minimise a given function.
-* **estimators** defines a combination of functions and an algorithm.
+are used to minimise a given function.
+* **estimators** defines a combination of functions and an algorithm. This is
+the higher-level entry-point for the user. Estimators combine a function (loss
+function plus penalties) with one or more algorithms that can be used to
+minimise the given function.
 
 Parsimony currently comprise the following parts:
 
@@ -49,7 +53,8 @@ Parsimony currently comprise the following parts:
 Build Simulated Dataset
 =======================
 
-We build a simple simulated dataset as :math:`y = X \beta + noise`:
+We build a simple simulated dataset for the regression problems as
+:math:`y = X \beta + noise`:
 
 .. code-block:: python
 
@@ -71,19 +76,38 @@ We build a simple simulated dataset as :math:`y = X \beta + noise`:
     # Define y by adding noise
     y = np.dot(X, beta) + 0.1 * np.random.randn(num_samples, 1)
 
+Or in the discrimination case:
+
+.. code-block:: python
+
+    import numpy as np
+    np.random.seed(1)
+    # Three-dimensional matrix is defined as:
+    shape = (4, 4, 4)
+    # The number of samples is defined as:
+    num_samples = 50
+    # The number of features per sample is defined as:
+    num_ft = shape[0] * shape[1] * shape[2]
+    # Define X randomly as simulated data
+    X_raw = np.random.random((num_samples, shape[0], shape[1], shape[2]))
+    X = np.reshape(X_raw, (num_samples, num_ft))
+    # Define y as zeros or ones
+    y = np.random.randint(0, 2, (num_ft, 1))
+
 In later sessions, we want to discover :math:`\beta` using different loss
 functions.
 
-Linear regression + L1 + L2 + TV
-================================
+Linear regression + L1 + L2 + TV or + GL
+========================================
 
 Knowing :math:`X` and :math:`y`, we want to find :math:`\beta` by
-minimizing the OLS loss function by FISTA:
+minimizing the OLS loss function
 
 .. math::
 
    \min \|y - X\beta\|^2_2
 
+using FISTA.
 
 .. code-block:: python
 
@@ -92,7 +116,7 @@ minimizing the OLS loss function by FISTA:
     import parsimony.functions.nesterov.tv as tv
     k = 0.0  # l2 ridge regression coefficient
     l = 0.0  # l1 lasso coefficient
-    g = 0.0  # tv coefficient
+    g = 0.0  # Nesterov function coefficient
     A, n_compacts = tv.A_from_shape(shape)  # Memory allocation for TV
     ols_estimator = estimators.RidgeRegression_L1_TV(
                         k, l, g, A,
@@ -100,13 +124,12 @@ minimizing the OLS loss function by FISTA:
     res = ols_estimator.fit(X, y)
     print "Estimated beta error =", np.linalg.norm(ols_estimator.beta - beta)
 
-
 We add an :math:`\ell_2` constraint with ridge regression coefficient
-:math:`k=0.1`.
+:math:`k=0.1` and minimise
 
 .. math::
 
-   \min\left(\frac{1}{2}\|y - X\beta\|_2^2 + \frac{k}{2}\|\beta\|_2^2 + l\|\beta\|_1 + g\cdot TV(\beta)\right)
+   \min\left(\frac{1}{2}\|y - X\beta\|_2^2 + \frac{k}{2}\|\beta\|_2^2\right)
 
 where the :math:`q`-norm is defined as
 
@@ -121,7 +144,7 @@ where the :math:`q`-norm is defined as
     import parsimony.functions.nesterov.tv as tv
     k = 0.1  # l2 ridge regression coefficient
     l = 0.0  # l1 lasso coefficient
-    g = 0.0  # tv coefficient
+    g = 0.0  # Nesterov function coefficient
     A, n_compacts = tv.A_from_shape(shape)
     ridge_estimator = estimators.RidgeRegression_L1_TV(
                         k, l, g, A,
@@ -129,8 +152,13 @@ where the :math:`q`-norm is defined as
     res = ridge_estimator.fit(X, y)
     print "Estimated beta error =", np.linalg.norm(ridge_estimator.beta - beta)
 
-Similarly, you can add an :math:`\ell_1` constraint and a TV constraint with
-coefficients :math:`l=0.1` and :math:`g=0.1`
+Similarly, you can add an :math:`\ell_1` constraint and a :math:`\mathrm{TV}`
+constraint with coefficients :math:`l=0.1` and :math:`g=0.1` and instead
+minimise
+
+.. math::
+
+   \min\left(\frac{1}{2}\|y - X\beta\|_2^2 + \frac{k}{2}\|\beta\|_2^2 + l\|\beta\|_1 + g\cdot TV(\beta)\right)
 
 .. code-block:: python
 
@@ -146,6 +174,124 @@ coefficients :math:`l=0.1` and :math:`g=0.1`
                         algorithm=algorithms.FISTA(max_iter=1000))
     res = estimator.fit(X, y)
     print "Estimated beta error =", np.linalg.norm(estimator.beta - beta)
+
+We change the :math:`\mathrm{TV}` constraint to an overlapping group lasso
+constraint and instead minimise
+
+.. math::
+
+   \min\left(\frac{1}{2}\|y - X\beta\|_2^2 + \frac{k}{2}\|\beta\|_2^2 + l\|\beta\|_1 + g\cdot GL(\beta)\right)
+
+.. code-block:: python
+
+    import parsimony.estimators as estimators
+    import parsimony.algorithms.explicit as algorithms
+    import parsimony.functions.nesterov.gl as gl
+    k = 0.0  # l2 ridge regression coefficient
+    l = 0.1  # l1 lasso coefficient
+    g = 0.1  # group lasso coefficient
+    groups = [range(0, 2 * num_ft / 3), range(num_ft/ 3, num_ft)]
+    A = gl.A_from_groups(num_ft, groups)
+    estimator = estimators.RidgeRegression_L1_GL(
+                        k, l, g, A,
+                        algorithm=algorithms.FISTA(max_iter=1000))
+    res = estimator.fit(X, y)
+    print "Estimated beta error =", np.linalg.norm(estimator.beta - beta)
+
+Logistic regression + L1 + L2 + TV or + GL
+==========================================
+
+Knowing :math:`X` and :math:`y`, we want to find :math:`\beta` by
+minimizing the logistic regression loss function
+
+.. math::
+
+   \min \frac{1}{n}\sum_{i=1}^n\log(1 + e^{-y_i(\beta^Tx_i)})
+
+using FISTA.
+
+.. code-block:: python
+
+    import parsimony.estimators as estimators
+    import parsimony.algorithms.explicit as algorithms
+    import parsimony.functions.nesterov.tv as tv
+    k = 0.0  # l2 ridge coefficient
+    l = 0.0  # l1 lasso coefficient
+    g = 0.0  # tv coefficient
+    A, n_compacts = tv.A_from_shape(shape)  # Memory allocation for TV
+    estimator = estimators.RidgeLogisticRegression_L1_TV(
+                        k, l, g, A,
+                        algorithm=algorithms.FISTA(max_iter=1000))
+    res = estimator.fit(X, y)
+    print "Estimated prediction rate =", estimator.score(X, y)
+
+We add an :math:`\ell_2` constraint with ridge coefficient :math:`k=0.1` and
+minimise
+
+.. math::
+
+   \min\left(\frac{1}{n}\sum_{i=1}^n\log(1 + e^{-y_i(\beta^Tx_i)}) + \frac{k}{2}\|\beta\|_2^2\right).
+
+.. code-block:: python
+
+    import parsimony.estimators as estimators
+    import parsimony.algorithms.explicit as algorithms
+    import parsimony.functions.nesterov.tv as tv
+    k = 0.1  # l2 ridge regression coefficient
+    l = 0.0  # l1 lasso coefficient
+    g = 0.0  # tv coefficient
+    A, n_compacts = tv.A_from_shape(shape)
+    estimator = estimators.RidgeLogisticRegression_L1_TV(
+                        k, l, g, A,
+                        algorithm=algorithms.FISTA(max_iter=1000))
+    res = estimator.fit(X, y)
+    print "Estimated prediction rate =", estimator.score(X, y)
+
+Similarly, you can add an :math:`\ell_1` constraint and a :math:`\mathrm{TV}`
+constraint with coefficients :math:`l=0.1` and :math:`g=0.1` and instead
+minimise
+
+.. math::
+
+   \min\left(\frac{1}{n}\sum_{i=1}^n\log(1 + e^{-y_i(\beta^Tx_i)}) + \frac{k}{2}\|\beta\|_2^2 + l\|\beta\|_1 + g\cdot TV(\beta)\right).
+
+.. code-block:: python
+
+    import parsimony.estimators as estimators
+    import parsimony.algorithms.explicit as algorithms
+    import parsimony.functions.nesterov.tv as tv
+    k = 0.0  # l2 ridge coefficient
+    l = 0.1  # l1 lasso coefficient
+    g = 0.1  # tv coefficient
+    A, n_compacts = tv.A_from_shape(shape)
+    estimator = estimators.RidgeLogisticRegression_L1_TV(
+                        k, l, g, A,
+                        algorithm=algorithms.FISTA(max_iter=1000))
+    res = estimator.fit(X, y)
+    print "Estimated prediction rate =", estimator.score(X, y)
+
+We change the :math:`\mathrm{TV}` constraint to an overlapping group lasso
+constraint and instead minimise
+
+.. math::
+
+   \min\left(\frac{1}{n}\sum_{i=1}^n\log(1 + e^{-y_i(\beta^Tx_i)}) + \frac{k}{2}\|\beta\|_2^2 + l\|\beta\|_1 + g\cdot GL(\beta)\right)
+
+.. code-block:: python
+
+    import parsimony.estimators as estimators
+    import parsimony.algorithms.explicit as algorithms
+    import parsimony.functions.nesterov.gl as gl
+    k = 0.0  # l2 ridge regression coefficient
+    l = 0.1  # l1 lasso coefficient
+    g = 0.1  # group lasso coefficient
+    groups = [range(0, 2 * num_ft / 3), range(num_ft/ 3, num_ft)]
+    A = gl.A_from_groups(num_ft, groups)
+    estimator = estimators.RidgeLogisticRegression_L1_GL(
+                        k, l, g, A,
+                        algorithm=algorithms.FISTA(max_iter=1000))
+    res = estimator.fit(X, y)
+    print "Estimated prediction rate =", estimator.score(X, y)
 
 Algorithms
 ==========
