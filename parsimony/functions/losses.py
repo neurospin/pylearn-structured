@@ -468,14 +468,31 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
     """The Logistic Regression loss function.
 
     Ridge (re-weighted) log-likelihood (cross-entropy):
-    * f(beta) = -Sum wi (yi log(pi) + (1 − yi) log(1 − pi)) + k/2 ||beta||^2_2
-              = -Sum wi (yi xi' beta − log(1 + e(xi' beta))) + k/2 ||beta||^2_2
+    * f(beta) = -loglik + k/2 * ||beta||^2_2
+              = -Sum wi (yi log(pi) + (1 − yi) log(1 − pi)) + k/2*||beta||^2_2
+              = -Sum wi (yi xi' beta − log(1 + e(xi' beta))) + k/2*||beta||^2_2
 
     * grad f(beta) = -Sum wi[ xi (yi - pi)] + k beta
 
     pi = p(y=1|xi, beta) = 1 / (1 + exp(-xi' beta))
     wi: sample i weight
     [Hastie 2009, p.: 102, 119 and 161, Bishop 2006 p.: 206]
+
+    Parameters
+    ----------
+    X : array, shape (n_samples, n_features)
+        Training vectors, where n_samples is the number of samples
+        and n_features is the number of features.
+
+    y : array, shape (n_samples,)
+        Target values (class labels in classification)
+
+    mean : boolean
+        if True function is: -loglik/nobs + k/2*penalty
+        if False function is: -loglik + k/2*penalty
+
+    sample_weight : array-like, shape (n_samples, 1)
+        Per-sample weights.
     """
     def __init__(self, X, y, k=0.0, weights=None, mean=True):
         """
@@ -493,7 +510,7 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
         self.y = y
         self.k = float(k)
         if weights is None:
-            weights = np.ones(y.shape).reshape(y.shape)
+            weights = np.ones(y.shape)#.reshape(y.shape)
         self.weights = weights
         self.mean = bool(mean)
 
