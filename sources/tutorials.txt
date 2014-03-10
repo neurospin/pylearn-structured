@@ -106,7 +106,7 @@ We add an :math:`\ell_2` constraint with ridge regression coefficient
 
 .. math::
 
-   \min(\frac{1}{2}\|y - X\beta\|_2 + \frac{k}{2}\|\beta\|_2 + l\|\beta\|_1 + g\cdot TV(\beta))
+   \min\left(\frac{1}{2}\|y - X\beta\|_2^2 + \frac{k}{2}\|\beta\|_2^2 + l\|\beta\|_1 + g\cdot TV(\beta)\right)
 
 where the :math:`q`-norm is defined as
 
