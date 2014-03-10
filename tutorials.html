@@ -52,22 +52,10 @@
 <p>Parsimony comprise three principal parts: <strong>algorithms</strong>, <strong>functions</strong> and
 <strong>estimators</strong>.</p>
 <ul class="simple">
-<li><strong>functions</strong> defines the loss functions and penalties, and combination of</li>
+<li><strong>functions</strong> define the loss functions and penalties, and combination of those, that are to be minimised. These represent the underlying mathematical problem formulations.</li>
+<li><strong>algorithms</strong> define minimising algorithms (e.g., Fast Iterative Shrinkage-Thresholding Algorithm (FISTA) <a class="reference internal" href="#fista2009">[FISTA2009]</a>, COntinuation of NESTerov&#8217;s smoothing Algorithm (CONESTA), Excessive Gap Method, etc.) that are used to minimise a given function.</li>
+<li><strong>estimators</strong> define a combination of functions and an algorithm. This is the higher-level entry-point for the user. Estimators combine a function (loss function plus penalties) with one or more algorithms that can be used to minimise the given function.</li>
 </ul>
-<p>those, that are to be minimised. These represent the underlying mathematical
-problem formulations.</p>
-<ul class="simple">
-<li><strong>algorithms</strong> defines minimising algorithms (e.g., Fast Iterative</li>
-</ul>
-<p>Shrinkage-Thresholding Algorithm (FISTA) <a class="reference internal" href="#fista2009">[FISTA2009]</a>, COntinuation of
-NESTerov&#8217;s smoothing Algorithm (CONESTA), Excessive Gap Method, etc.) that
-are used to minimise a given function.</p>
-<ul class="simple">
-<li><strong>estimators</strong> defines a combination of functions and an algorithm. This is</li>
-</ul>
-<p>the higher-level entry-point for the user. Estimators combine a function (loss
-function plus penalties) with one or more algorithms that can be used to
-minimise the given function.</p>
 <p>Parsimony currently comprise the following parts:</p>
 <ul class="simple">
 <li>Functions<ul>
