@@ -19,6 +19,7 @@ import parsimony.functions.nesterov.tv as tv
 import parsimony.algorithms.explicit as explicit
 import parsimony.start_vectors as start_vectors
 from parsimony.utils import check_arrays
+from parsimony.utils import class_weight_to_sample_weight, check_labels
 
 __all__ = ["BaseEstimator", "RegressionEstimator",
 
@@ -138,14 +139,21 @@ class LogisticRegressionEstimator(BaseEstimator):
     output : Boolean. Whether or not to return extra output information.
 
     start_vector : Numpy array. Generates the start vector that will be used.
+
+    class_weight : {dict, ‘auto’}, optional
+    Set the parameter weight of sample belonging to class i toclass_weight[i].
+    If not given, all classes are supposed to have weight one.
+    The ‘auto’ mode uses the values of y to automatically adjust weights
+    inversely proportional to class frequencies.
     """
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, algorithm, output=False,
-                 start_vector=start_vectors.RandomStartVector()):
+                 start_vector=start_vectors.RandomStartVector(), class_weight=None):
 
         self.output = output
         self.start_vector = start_vector
+        self.class_weight = class_weight
 
         super(LogisticRegressionEstimator, self).__init__(algorithm=algorithm)
 
@@ -460,8 +468,9 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
     Examples
     --------
     """
-    def __init__(self, k, l, g, A, weigths=None, mu=None, output=False,
-                 algorithm=explicit.StaticCONESTA(), mean=True):
+    def __init__(self, k, l, g, A, mu=None, output=False,
+                 algorithm=explicit.StaticCONESTA(), mean=True,
+                 class_weight=None):
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
         self.k = float(k)
@@ -471,7 +480,7 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
                 and self.g < consts.TOLERANCE:
             warnings.warn("The GL parameter should be positive.")
         self.A = A
-        self.weigths = weigths
+        #self.weigths = weigths
         try:
             self.mu = float(mu)
         except (ValueError, TypeError):
@@ -480,20 +489,27 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
         self.mean = bool(mean)
 
         super(RidgeLogisticRegression_L1_TV,
-              self).__init__(algorithm=algorithm, output=output)
+              self).__init__(algorithm=algorithm, output=output,
+                            class_weight=class_weight)
 
     def get_params(self):
         """Return a dictionary containing all the estimator's parameters
         """
         return {"k": self.k, "l": self.l, "g": self.g,
-                "A": self.A, "mu": self.mu, "weigths": self.weigths}
+                "A": self.A, "mu": self.mu, "class_weight": self.class_weight}
 
-    def fit(self, X, y):
+    def fit(self, X, y,  sample_weight=None):
         """Fit the estimator to the data
         """
-        X, y = check_arrays(X, y)
+        X, y = check_arrays(X, check_labels(y))
+        if sample_weight is None:
+            sample_weight = class_weight_to_sample_weight(self.class_weight, y)
+        else:
+            y, sample_weight = check_arrays(y, sample_weight)
+            sample_weight = sample_weight.ravel()
+
         function = functions.RLR_L1_TV(X, y, self.k, self.l, self.g,
-                                           A=self.A, weights=self.weigths,
+                                           A=self.A, weights=sample_weight,
                                            mean=self.mean)
         self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)
@@ -559,7 +575,7 @@ class RidgeLogisticRegression_L1_GL(LogisticRegressionEstimator):
     """
     def __init__(self, k, l, g, A, weigths=None, mu=None, output=False,
                  algorithm=explicit.StaticCONESTA(), penalty_start=0,
-                 mean=True):
+                 mean=True, class_weight=None):
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
         self.k = float(k)
@@ -569,7 +585,7 @@ class RidgeLogisticRegression_L1_GL(LogisticRegressionEstimator):
                 and self.g < consts.TOLERANCE:
             warnings.warn("The GL parameter should be positive.")
         self.A = A
-        self.weigths = weigths
+        self.class_weight = class_weight
         try:
             self.mu = float(mu)
         except (ValueError, TypeError):
@@ -585,15 +601,20 @@ class RidgeLogisticRegression_L1_GL(LogisticRegressionEstimator):
         """Returns a dictionary containing all the estimator's own parameters.
         """
         return {"k": self.k, "l": self.l, "g": self.g,
-                "A": self.A, "mu": self.mu, "weigths": self.weigths}
+                "A": self.A, "mu": self.mu, "class_weight": self.class_weight}
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weight=None):
         """Fit the estimator to the data.
         """
-        X, y = check_arrays(X, y)
+        X, y = check_arrays(X, check_labels(y))
+        if sample_weight is None:
+            sample_weight = class_weight_to_sample_weight(self.class_weight, y)
+        else:
+            y, sample_weight = check_arrays(y, sample_weight)
+            sample_weight = sample_weight.ravel()
         function = functions.RLR_L1_GL(X, y, self.k, self.l, self.g,
                                             A=self.A,
-                                            weights=self.weigths,
+                                            weights=sample_weight,
                                             penalty_start=self.penalty_start,
                                             mean=self.mean)
         self.algorithm.check_compatibility(function,
