@@ -55,13 +55,17 @@
 <li><strong>functions</strong> defines the loss functions and penalties, and combination of</li>
 </ul>
 <p>those, that are to be minimised. These represent the underlying mathematical
-problem formulations.
-* <strong>algorithms</strong> defines minimising algorithms (e.g., Fast Iterative
-Shrinkage-Thresholding Algorithm (FISTA) <a class="reference internal" href="#fista2009">[FISTA2009]</a>, COntinuation of
+problem formulations.</p>
+<ul class="simple">
+<li><strong>algorithms</strong> defines minimising algorithms (e.g., Fast Iterative</li>
+</ul>
+<p>Shrinkage-Thresholding Algorithm (FISTA) <a class="reference internal" href="#fista2009">[FISTA2009]</a>, COntinuation of
 NESTerov&#8217;s smoothing Algorithm (CONESTA), Excessive Gap Method, etc.) that
-are used to minimise a given function.
-* <strong>estimators</strong> defines a combination of functions and an algorithm. This is
-the higher-level entry-point for the user. Estimators combine a function (loss
+are used to minimise a given function.</p>
+<ul class="simple">
+<li><strong>estimators</strong> defines a combination of functions and an algorithm. This is</li>
+</ul>
+<p>the higher-level entry-point for the user. Estimators combine a function (loss
 function plus penalties) with one or more algorithms that can be used to
 minimise the given function.</p>
 <p>Parsimony currently comprise the following parts:</p>
@@ -186,7 +190,7 @@ minimizing the OLS loss function</p>
 constraint with coefficients <img class="math" src="images/math/b7b1886aab59119d24824e218afebf7c97bdaa54.png" alt="l=0.1"/> and <img class="math" src="images/math/c75425378b134b7023f0d34b7b00983fb4277865.png" alt="g=0.1"/> and instead
 minimise</p>
 <div class="math">
-<p><img src="images/math/a90f46b40fd0d8b1e59d53b87cf812ec2e662659.png" alt="\min\left(\frac{1}{2}\|y - X\beta\|_2^2 + \frac{k}{2}\|\beta\|_2^2 + l\|\beta\|_1 + g\cdot TV(\beta)\right)"/></p>
+<p><img src="images/math/6bc09284173cef318c83b6d569cf0e9dac78bb12.png" alt="\min\left(\frac{1}{2}\|y - X\beta\|_2^2 + \frac{k}{2}\|\beta\|_2^2 + l\|\beta\|_1 + g\cdot TV(\beta)\right)."/></p>
 </div><div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">parsimony.estimators</span> <span class="kn">as</span> <span class="nn">estimators</span>
 <span class="kn">import</span> <span class="nn">parsimony.algorithms.explicit</span> <span class="kn">as</span> <span class="nn">algorithms</span>
 <span class="kn">import</span> <span class="nn">parsimony.functions.nesterov.tv</span> <span class="kn">as</span> <span class="nn">tv</span>
@@ -204,7 +208,7 @@ minimise</p>
 <p>We change the <img class="math" src="images/math/d85aaa3e973094493169db1bf4efee3a877afc09.png" alt="\mathrm{TV}"/> constraint to an overlapping group lasso
 constraint and instead minimise</p>
 <div class="math">
-<p><img src="images/math/50b75daa993f261487aad9518db527bdfa503764.png" alt="\min\left(\frac{1}{2}\|y - X\beta\|_2^2 + \frac{k}{2}\|\beta\|_2^2 + l\|\beta\|_1 + g\cdot GL(\beta)\right)"/></p>
+<p><img src="images/math/013dd8f1afe0c3036601a07fc7197481dce27445.png" alt="\min\left(\frac{1}{2}\|y - X\beta\|_2^2 + \frac{k}{2}\|\beta\|_2^2 + l\|\beta\|_1 + g\cdot GL(\beta)\right)."/></p>
 </div><div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">parsimony.estimators</span> <span class="kn">as</span> <span class="nn">estimators</span>
 <span class="kn">import</span> <span class="nn">parsimony.algorithms.explicit</span> <span class="kn">as</span> <span class="nn">algorithms</span>
 <span class="kn">import</span> <span class="nn">parsimony.functions.nesterov.gl</span> <span class="kn">as</span> <span class="nn">gl</span>
@@ -223,8 +227,8 @@ constraint and instead minimise</p>
 </div>
 <div class="section" id="logistic-regression-l1-l2-tv-or-gl">
 <h1>Logistic regression + L1 + L2 + TV or + GL<a class="headerlink" href="#logistic-regression-l1-l2-tv-or-gl" title="Permalink to this headline">¶</a></h1>
-<p>Knowing <img class="math" src="images/math/6a47ca0fe7cb276abc022af6ac88ddae1a9d6894.png" alt="X"/> and <img class="math" src="images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y"/>, we want to find <img class="math" src="images/math/fdb63b9e51abe6bbb16acfb5d7b773ddbb5bf4a8.png" alt="\beta"/> by
-minimizing the logistic regression loss function</p>
+<p>Knowing <img class="math" src="images/math/6a47ca0fe7cb276abc022af6ac88ddae1a9d6894.png" alt="X"/> and <img class="math" src="images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y"/>, we want to find the weight vector
+<img class="math" src="images/math/fdb63b9e51abe6bbb16acfb5d7b773ddbb5bf4a8.png" alt="\beta"/> by minimizing the logistic regression loss function</p>
 <div class="math">
 <p><img src="images/math/f37e36ec4bf673f1ae085dd78249c02211d34d21.png" alt="\min \frac{1}{n}\sum_{i=1}^n\log(1 + e^{-y_i(\beta^Tx_i)})"/></p>
 </div><p>using FISTA.</p>

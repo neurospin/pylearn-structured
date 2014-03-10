@@ -10,10 +10,12 @@ Parsimony comprise three principal parts: **algorithms**, **functions** and
 * **functions** defines the loss functions and penalties, and combination of
 those, that are to be minimised. These represent the underlying mathematical
 problem formulations.
+
 * **algorithms** defines minimising algorithms (e.g., Fast Iterative
 Shrinkage-Thresholding Algorithm (FISTA) [FISTA2009]_, COntinuation of
 NESTerov's smoothing Algorithm (CONESTA), Excessive Gap Method, etc.) that
 are used to minimise a given function.
+
 * **estimators** defines a combination of functions and an algorithm. This is
 the higher-level entry-point for the user. Estimators combine a function (loss
 function plus penalties) with one or more algorithms that can be used to
@@ -158,7 +160,7 @@ minimise
 
 .. math::
 
-   \min\left(\frac{1}{2}\|y - X\beta\|_2^2 + \frac{k}{2}\|\beta\|_2^2 + l\|\beta\|_1 + g\cdot TV(\beta)\right)
+   \min\left(\frac{1}{2}\|y - X\beta\|_2^2 + \frac{k}{2}\|\beta\|_2^2 + l\|\beta\|_1 + g\cdot TV(\beta)\right).
 
 .. code-block:: python
 
@@ -180,7 +182,7 @@ constraint and instead minimise
 
 .. math::
 
-   \min\left(\frac{1}{2}\|y - X\beta\|_2^2 + \frac{k}{2}\|\beta\|_2^2 + l\|\beta\|_1 + g\cdot GL(\beta)\right)
+   \min\left(\frac{1}{2}\|y - X\beta\|_2^2 + \frac{k}{2}\|\beta\|_2^2 + l\|\beta\|_1 + g\cdot GL(\beta)\right).
 
 .. code-block:: python
 
@@ -201,8 +203,8 @@ constraint and instead minimise
 Logistic regression + L1 + L2 + TV or + GL
 ==========================================
 
-Knowing :math:`X` and :math:`y`, we want to find :math:`\beta` by
-minimizing the logistic regression loss function
+Knowing :math:`X` and :math:`y`, we want to find the weight vector
+:math:`\beta` by minimizing the logistic regression loss function
 
 .. math::
 
