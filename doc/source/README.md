@@ -1,3 +1,13 @@
+Required Softwares
+------------------
+Make sure the below softwares have been installed on your machine:
+
+* http://sphinx-doc.org/latest/install.html
+* https://pypi.python.org/pypi/sphinxtogithub
+* Latex (for example $ sudo apt-get install texlive-full)
+* dvipng which is usually included in latex package
+
+
 Build pages
 -----------
 
