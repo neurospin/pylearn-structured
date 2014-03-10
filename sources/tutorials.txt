@@ -18,23 +18,28 @@ will be used to minimise a given function.
 Parsimony currently comprise the following parts:
 
 * Functions
+
   * Loss functions
+
     * Linear regression
     * Logistic regression
 
   * Penalties
+
     * L1 (Lasso)
     * L2 (Ridge)
     * Total Variation (TV)
     * Overlapping group lasso (GL)
 
 * Algorithms
+
   * Iterative Shrinkage-Thresholding Algorithm (ISTA)
   * Fast Iterative Shrinkage-Thresholding Algorithm (FISTA)
   * COntinuation of NESTerov's smoothing Algorithm (CONESTA)
   * Excessive Gap Method
 
 * Estimators
+
   * LinearRegression_L1_L2_TV
   * RidgeRegression_L1_TV
   * RidgeLogisticRegression_L1_TV

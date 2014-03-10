@@ -61,41 +61,42 @@ NESTerov&#8217;s smoothing Algorithm (CONESTA), Excessive Gap Method, etc.) that
 will be used to minimise a given function.
 * <strong>estimators</strong> defines a combination of functions and an algorithm.</p>
 <p>Parsimony currently comprise the following parts:</p>
-<ul>
-<li><p class="first">Functions
-* Loss functions</p>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
+<li>Functions<ul>
+<li>Loss functions<ul>
 <li>Linear regression</li>
 <li>Logistic regression</li>
 </ul>
-</div></blockquote>
-<ul class="simple">
-<li>Penalties
-* L1 (Lasso)
-* L2 (Ridge)
-* Total Variation (TV)
-* Overlapping group lasso (GL)</li>
+</li>
+<li>Penalties<ul>
+<li>L1 (Lasso)</li>
+<li>L2 (Ridge)</li>
+<li>Total Variation (TV)</li>
+<li>Overlapping group lasso (GL)</li>
 </ul>
 </li>
-<li><p class="first">Algorithms
-* Iterative Shrinkage-Thresholding Algorithm (ISTA)
-* Fast Iterative Shrinkage-Thresholding Algorithm (FISTA)
-* COntinuation of NESTerov&#8217;s smoothing Algorithm (CONESTA)
-* Excessive Gap Method</p>
+</ul>
 </li>
-<li><p class="first">Estimators
-* LinearRegression_L1_L2_TV
-* RidgeRegression_L1_TV
-* RidgeLogisticRegression_L1_TV
-* RidgeLogisticRegression_L1_GL
-* RidgeRegression_SmoothedL1TV</p>
+<li>Algorithms<ul>
+<li>Iterative Shrinkage-Thresholding Algorithm (ISTA)</li>
+<li>Fast Iterative Shrinkage-Thresholding Algorithm (FISTA)</li>
+<li>COntinuation of NESTerov&#8217;s smoothing Algorithm (CONESTA)</li>
+<li>Excessive Gap Method</li>
+</ul>
+</li>
+<li>Estimators<ul>
+<li>LinearRegression_L1_L2_TV</li>
+<li>RidgeRegression_L1_TV</li>
+<li>RidgeLogisticRegression_L1_TV</li>
+<li>RidgeLogisticRegression_L1_GL</li>
+<li>RidgeRegression_SmoothedL1TV</li>
+</ul>
 </li>
 </ul>
 </div>
 <div class="section" id="build-simulated-dataset">
 <h1>Build Simulated Dataset<a class="headerlink" href="#build-simulated-dataset" title="Permalink to this headline">¶</a></h1>
-<p>We build a simple simulated dataset as <span class="math">y = X \beta + noise</span>:</p>
+<p>We build a simple simulated dataset as <img class="math" src="images/math/7b092047e27618310678effd4c689969a8a3d878.png" alt="y = X \beta + noise"/>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="c"># Three-dimensional matrix is defined as:</span>
@@ -115,15 +116,15 @@ will be used to minimise a given function.
 <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>In later sessions, we want to discover <span class="math">\beta</span> using different loss
+<p>In later sessions, we want to discover <img class="math" src="images/math/fdb63b9e51abe6bbb16acfb5d7b773ddbb5bf4a8.png" alt="\beta"/> using different loss
 functions.</p>
 </div>
 <div class="section" id="linear-regression-l1-l2-tv">
 <h1>Linear regression + L1 + L2 + TV<a class="headerlink" href="#linear-regression-l1-l2-tv" title="Permalink to this headline">¶</a></h1>
-<p>Knowing <span class="math">X</span> and <span class="math">y</span>, we want to find <span class="math">\beta</span> by
+<p>Knowing <img class="math" src="images/math/6a47ca0fe7cb276abc022af6ac88ddae1a9d6894.png" alt="X"/> and <img class="math" src="images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y"/>, we want to find <img class="math" src="images/math/fdb63b9e51abe6bbb16acfb5d7b773ddbb5bf4a8.png" alt="\beta"/> by
 minimizing the OLS loss function by FISTA:</p>
 <div class="math">
-<p><span class="math">\min \|y - X\beta\|^2_2</span></p>
+<p><img src="images/math/cb46b4b6b2a67e62f30e54d4add2134e79c62032.png" alt="\min \|y - X\beta\|^2_2"/></p>
 </div><div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">parsimony.estimators</span> <span class="kn">as</span> <span class="nn">estimators</span>
 <span class="kn">import</span> <span class="nn">parsimony.algorithms.explicit</span> <span class="kn">as</span> <span class="nn">algorithms</span>
 <span class="kn">import</span> <span class="nn">parsimony.functions.nesterov.tv</span> <span class="kn">as</span> <span class="nn">tv</span>
@@ -138,13 +139,13 @@ minimizing the OLS loss function by FISTA:</p>
 <span class="k">print</span> <span class="s">&quot;Estimated beta error =&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">ols_estimator</span><span class="o">.</span><span class="n">beta</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>We add an <span class="math">\ell_2</span> constraint with ridge regression coefficient
-<span class="math">k=0.1</span>.</p>
+<p>We add an <img class="math" src="images/math/970a3f7a0a3b548d0684d391994a6366f8d71ce9.png" alt="\ell_2"/> constraint with ridge regression coefficient
+<img class="math" src="images/math/e8ab85a216538e94fde8811872ea934ad9a209a2.png" alt="k=0.1"/>.</p>
 <div class="math">
-<p><span class="math">\min(\frac{1}{2}\|y - X\beta\|_2 + \frac{k}{2}\|\beta\|_2 + l\|\beta\|_1 + g\cdot TV(\beta))</span></p>
-</div><p>where the <span class="math">q</span>-norm is defined as</p>
+<p><img src="images/math/91fbb2f902b5ab563074e670b721588fc7e47673.png" alt="\min(\frac{1}{2}\|y - X\beta\|_2 + \frac{k}{2}\|\beta\|_2 + l\|\beta\|_1 + g\cdot TV(\beta))"/></p>
+</div><p>where the <img class="math" src="images/math/0615acc3725de21025457e7d6f7694dab8e2f758.png" alt="q"/>-norm is defined as</p>
 <div class="math">
-<p><span class="math">\|v\|_q = \left(\sum_{i=1}^p |v_i|^q\right)^{\frac{1}{q}}</span></p>
+<p><img src="images/math/fbb9c2f7e68c1021a73d6ae242aa599ea923dc43.png" alt="\|v\|_q = \left(\sum_{i=1}^p |v_i|^q\right)^{\frac{1}{q}}"/></p>
 </div><div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">parsimony.estimators</span> <span class="kn">as</span> <span class="nn">estimators</span>
 <span class="kn">import</span> <span class="nn">parsimony.algorithms.explicit</span> <span class="kn">as</span> <span class="nn">algorithms</span>
 <span class="kn">import</span> <span class="nn">parsimony.functions.nesterov.tv</span> <span class="kn">as</span> <span class="nn">tv</span>
@@ -159,8 +160,8 @@ minimizing the OLS loss function by FISTA:</p>
 <span class="k">print</span> <span class="s">&quot;Estimated beta error =&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">ridge_estimator</span><span class="o">.</span><span class="n">beta</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Similarly, you can add an <span class="math">\ell_1</span> constraint and a TV constraint with
-coefficients <span class="math">l=0.1</span> and <span class="math">g=0.1</span></p>
+<p>Similarly, you can add an <img class="math" src="images/math/3ff9d2add1273f7f294d4f0318b0ed4340c07768.png" alt="\ell_1"/> constraint and a TV constraint with
+coefficients <img class="math" src="images/math/b7b1886aab59119d24824e218afebf7c97bdaa54.png" alt="l=0.1"/> and <img class="math" src="images/math/c75425378b134b7023f0d34b7b00983fb4277865.png" alt="g=0.1"/></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">parsimony.estimators</span> <span class="kn">as</span> <span class="nn">estimators</span>
 <span class="kn">import</span> <span class="nn">parsimony.algorithms.explicit</span> <span class="kn">as</span> <span class="nn">algorithms</span>
 <span class="kn">import</span> <span class="nn">parsimony.functions.nesterov.tv</span> <span class="kn">as</span> <span class="nn">tv</span>
@@ -202,7 +203,7 @@ switch to Dynamic CONESTA and Static CONESTA to minimise the function.</p>
 <div class="section" id="excessive-gap-method">
 <h2>Excessive gap method<a class="headerlink" href="#excessive-gap-method" title="Permalink to this headline">¶</a></h2>
 <p>The Excessive Gap Method currently only works with the function
-&#8220;RidgeRegression_SmoothedL1TV&#8221;. For this algorithm to work, <span class="math">k</span> must be
+&#8220;RidgeRegression_SmoothedL1TV&#8221;. For this algorithm to work, <img class="math" src="images/math/8c325612684d41304b9751c175df7bcc0f61f64f.png" alt="k"/> must be
 positive.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">scipy.sparse</span> <span class="kn">as</span> <span class="nn">sparse</span>
 <span class="n">Atv</span><span class="p">,</span> <span class="n">n_compacts</span> <span class="o">=</span> <span class="n">tv</span><span class="o">.</span><span class="n">A_from_shape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
