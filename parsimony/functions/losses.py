@@ -360,7 +360,6 @@ class LogisticRegression(interfaces.AtomicFunction,
         beta : Numpy array. Regression coefficient vector. The point at which
                 to evaluate the function.
         """
-        # TODO check the correctness of the re-weighted loglike.
         Xbeta = np.dot(self.X, beta)
         negloglike = -np.sum(self.weights *
                                 ((self.y * Xbeta) - np.log(1 + np.exp(Xbeta))))
@@ -369,13 +368,6 @@ class LogisticRegression(interfaces.AtomicFunction,
             negloglike /= float(self.X.shape[0])
 
         return negloglike
-
-#        n = self.X.shape[0]
-#        s = 0
-#        for i in xrange(n):
-#            s = s + self.W[i, i] * (self.y[i, 0] * Xbeta[i, 0] \
-#                                    - np.log(1 + np.exp(Xbeta[i, 0])))
-#        return -s  + (self.k / 2.0) * np.sum(beta ** 2.0) ## TOCHECK
 
     def grad(self, beta):
         """Gradient of the function at beta.
@@ -417,9 +409,6 @@ class LogisticRegression(interfaces.AtomicFunction,
 
         return grad
 
-#        return -np.dot(self.X.T,
-#                       np.dot(self.W, (self.y - pi)))
-
     def L(self):
         """Lipschitz constant of the gradient.
 
@@ -452,10 +441,7 @@ class LogisticRegression(interfaces.AtomicFunction,
         """
         if self._L == None:
             # pi(x) * (1 - pi(x)) <= 0.25 = 0.5 * 0.5
-            PWX = 0.5 * np.sqrt(self.weights) * self.X  # TODO: CHECK WITH FOUAD
-            # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
-            #PW = 0.5 * np.sqrt(self.W)
-            #PWX = np.dot(PW, self.X)
+            PWX = 0.5 * np.sqrt(self.weights) * self.X
             # TODO: Use FastSVD for speedup!
             s = np.linalg.svd(PWX, full_matrices=False, compute_uv=False)
             self._L = np.max(s) ** 2.0  # TODO: CHECK
@@ -507,10 +493,7 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
         self.y = y
         self.k = float(k)
         if weights is None:
-            # TODO: Make the weights sparse.
-            #weights = np.eye(self.X.shape[0])
             weights = np.ones(y.shape).reshape(y.shape)
-        # TODO: Allow the weight vector to be a list.
         self.weights = weights
         self.mean = bool(mean)
 
@@ -522,8 +505,6 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
         From the interface "Function".
         """
         self._L = None
-#        self._lambda_max = None
-#        self._lambda_min = None
 
     def f(self, beta):
         """Function value of Logistic regression at beta.
@@ -543,12 +524,6 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
 
         return negloglike + (self.k / 2.0) * np.sum(beta ** 2.0)
 
-#        n = self.X.shape[0]
-#        s = 0
-#        for i in xrange(n):
-#            s = s + self.W[i, i] * (self.y[i, 0] * Xbeta[i, 0] \
-#                                    - np.log(1 + np.exp(Xbeta[i, 0])))
-#        return -s  + (self.k / 2.0) * np.sum(beta ** 2.0) ## TOCHECK
 
     def grad(self, beta):
         """Gradient of the function at beta.

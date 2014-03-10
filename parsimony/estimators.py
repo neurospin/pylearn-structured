@@ -267,30 +267,30 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
         """Fit the estimator to the data.
         """
         X, y = check_arrays(X, y)
-        self.function = functions.CombinedFunction()
-        self.function.add_function(losses.LinearRegression(X, y, mean=False))
+        function = functions.CombinedFunction()
+        function.add_function(losses.LinearRegression(X, y, mean=False))
         if self.k > 0:
-            self.function.add_penalty(penalties.L2(self.k))
+            function.add_penalty(penalties.L2(self.k))
         if self.g > 0:
-            self.function.add_penalty(tv.TotalVariation(self.g, A=self.A,
+            function.add_penalty(tv.TotalVariation(self.g, A=self.A,
                                                         mu=self.mu))
         if self.l > 0:
-            self.function.add_prox(penalties.L1(self.l))
+            function.add_prox(penalties.L1(self.l))
 
-        self.algorithm.check_compatibility(self.function,
+        self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)
 
         # TODO: Should we use a seed here so that we get deterministic results?
         if beta is None:
             beta = self.start_vector.get_vector((X.shape[1], 1))
 
-#        self.function.set_params(mu=self.mu)
+#        function.set_params(mu=self.mu)
         self.algorithm.set_params(output=self.output)
 
         if self.output:
-            (self.beta, self.info) = self.algorithm.run(self.function, beta)
+            (self.beta, self.info) = self.algorithm.run(function, beta)
         else:
-            self.beta = self.algorithm.run(self.function, beta)
+            self.beta = self.algorithm.run(function, beta)
 
         return self
 
@@ -389,9 +389,9 @@ class RidgeRegression_L1_TV(RegressionEstimator):
         """Fit the estimator to the data
         """
         X, y = check_arrays(X, y)
-        self.function = functions.RR_L1_TV(X, y, self.k, self.l, self.g,
+        function = functions.RR_L1_TV(X, y, self.k, self.l, self.g,
                                            A=self.A)
-        self.algorithm.check_compatibility(self.function,
+        self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)
 
         # TODO: Should we use a seed here so that we get deterministic results?
@@ -399,17 +399,17 @@ class RidgeRegression_L1_TV(RegressionEstimator):
             beta = self.start_vector.get_vector((X.shape[1], 1))
 
         if self.mu is None:
-            self.mu = self.function.estimate_mu(beta)
+            self.mu = function.estimate_mu(beta)
         else:
             self.mu = float(self.mu)
 
-        self.function.set_params(mu=self.mu)
+        function.set_params(mu=self.mu)
         self.algorithm.set_params(output=self.output)
 
         if self.output:
-            (self.beta, self.info) = self.algorithm.run(self.function, beta)
+            (self.beta, self.info) = self.algorithm.run(function, beta)
         else:
-            self.beta = self.algorithm.run(self.function, beta)
+            self.beta = self.algorithm.run(function, beta)
 
         return self
 
@@ -492,27 +492,27 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
         """Fit the estimator to the data
         """
         X, y = check_arrays(X, y)
-        self.function = functions.RLR_L1_TV(X, y, self.k, self.l, self.g,
+        function = functions.RLR_L1_TV(X, y, self.k, self.l, self.g,
                                            A=self.A, weights=self.weigths,
                                            mean=self.mean)
-        self.algorithm.check_compatibility(self.function,
+        self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)
 
         # TODO: Should we use a seed here so that we get deterministic results?
         beta = self.start_vector.get_vector((X.shape[1], 1))
 
         if self.mu is None:
-            self.mu = 0.9 * self.function.estimate_mu(beta)
+            self.mu = 0.9 * function.estimate_mu(beta)
         else:
             self.mu = float(self.mu)
 
-        self.function.set_params(mu=self.mu)
+        function.set_params(mu=self.mu)
         self.algorithm.set_params(output=self.output)
 
         if self.output:
-            (self.beta, self.info) = self.algorithm.run(self.function, beta)
+            (self.beta, self.info) = self.algorithm.run(function, beta)
         else:
-            self.beta = self.algorithm.run(self.function, beta)
+            self.beta = self.algorithm.run(function, beta)
 
         return self
 
@@ -591,29 +591,29 @@ class RidgeLogisticRegression_L1_GL(LogisticRegressionEstimator):
         """Fit the estimator to the data.
         """
         X, y = check_arrays(X, y)
-        self.function = functions.RLR_L1_GL(X, y, self.k, self.l, self.g,
+        function = functions.RLR_L1_GL(X, y, self.k, self.l, self.g,
                                             A=self.A,
                                             weights=self.weigths,
                                             penalty_start=self.penalty_start,
                                             mean=self.mean)
-        self.algorithm.check_compatibility(self.function,
+        self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)
 
         # TODO: Should we use a seed here so that we get deterministic results?
         beta = self.start_vector.get_vector((X.shape[1], 1))
 
         if self.mu is None:
-            self.mu = 0.9 * self.function.estimate_mu(beta)
+            self.mu = 0.9 * function.estimate_mu(beta)
         else:
             self.mu = float(self.mu)
 
-        self.function.set_params(mu=self.mu)
+        function.set_params(mu=self.mu)
         self.algorithm.set_params(output=self.output)
 
         if self.output:
-            (self.beta, self.info) = self.algorithm.run(self.function, beta)
+            (self.beta, self.info) = self.algorithm.run(function, beta)
         else:
-            self.beta = self.algorithm.run(self.function, beta)
+            self.beta = self.algorithm.run(function, beta)
 
         return self
 
@@ -694,18 +694,18 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
         """Fit the estimator to the data
         """
         X, y = check_arrays(X, y)
-        self.function = functions.RR_SmoothedL1TV(X, y,
+        function = functions.RR_SmoothedL1TV(X, y,
                                                   self.k, self.l, self.g,
                                                   Atv=self.Atv, Al1=self.Al1)
 
-        self.algorithm.check_compatibility(self.function,
+        self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)
 
         self.algorithm.set_params(output=self.output)
         if self.output:
-            (self.beta, self.info) = self.algorithm.run(self.function)
+            (self.beta, self.info) = self.algorithm.run(function)
         else:
-            self.beta = self.algorithm.run(self.function)
+            self.beta = self.algorithm.run(function)
 
         return self
 
