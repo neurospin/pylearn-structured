@@ -11,6 +11,6 @@ from . import algorithms
 from . import estimators
 from . import start_vectors
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 
 __all__ = ["algorithms", "estimators", "start_vectors"]
