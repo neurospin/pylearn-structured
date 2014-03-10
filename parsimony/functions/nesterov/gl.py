@@ -211,12 +211,12 @@ class GroupLassoOverlap(interfaces.AtomicFunction,
         else:
             beta_ = beta
 
-        SS = 0
+        SS = 0.0
         A = self.A()
         for i in xrange(len(A)):
-            SS += A[i].dot(beta_) ** 2.0
+            SS = max(SS, maths.norm(A[i].dot(beta_)))
 
-        return np.max(np.sqrt(SS))
+        return SS
 
 
 def A_from_groups(num_variables, groups, weights=None):

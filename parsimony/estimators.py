@@ -24,7 +24,9 @@ from parsimony.utils import class_weight_to_sample_weight, check_labels
 __all__ = ["BaseEstimator", "RegressionEstimator",
 
            "LinearRegression_L1_L2_TV",
-           "RidgeRegression_L1_TV", "RidgeLogisticRegression_L1_TV",
+           "RidgeRegression_L1_TV", "RidgeRegression_L1_GL",
+
+           "RidgeLogisticRegression_L1_TV", "RidgeLogisticRegression_L1_GL",
 
            "RidgeRegression_SmoothedL1TV"]
 
@@ -418,6 +420,125 @@ class RidgeRegression_L1_TV(RegressionEstimator):
             (self.beta, self.info) = self.algorithm.run(function, beta)
         else:
             self.beta = self.algorithm.run(function, beta)
+
+        return self
+
+    def score(self, X, y):
+        """Return the mean squared error of the estimator.
+        """
+        X, y = check_arrays(X, y)
+        n, p = X.shape
+        y_hat = np.dot(X, self.beta)
+        return np.sum((y_hat - y) ** 2.0) / float(n)
+
+
+class RidgeRegression_L1_GL(RegressionEstimator):
+    """
+    Parameters
+    ----------
+    l : Non-negative float. The L1 regularisation parameter.
+
+    k : Non-negative float. The L2 regularisation parameter.
+
+    g : Non-negative float. The Group lasso regularisation parameter.
+
+    A : Numpy or (usually) scipy.sparse array. The linear operator for the
+            smoothed group lasso Nesterov function.
+
+    mu : Non-negative float. The regularisation constant for the smoothing.
+
+    output : Boolean. Whether or not to return extra output information.
+
+    algorithm : ExplicitAlgorithm. The algorithm that should be applied.
+            Should be one of:
+                1. algorithms.StaticCONESTA()
+                2. algorithms.DynamicCONESTA()
+                3. algorithms.FISTA()
+                4. algorithms.ISTA()
+
+    Examples
+    --------
+#    >>> import numpy as np
+#    >>> import parsimony.estimators as estimators
+#    >>> import parsimony.algorithms.explicit as explicit
+#    >>> import parsimony.functions.nesterov.tv as tv
+#    >>> shape = (1, 4, 4)
+#    >>> num_samples = 10
+#    >>> num_ft = shape[0] * shape[1] * shape[2]
+#    >>> np.random.seed(seed=1)
+#    >>> X = np.random.random((num_samples, num_ft))
+#    >>> y = np.random.randint(0, 2, (num_samples, 1))
+#    >>> k = 0.9  # ridge regression coefficient
+#    >>> l = 0.1  # l1 coefficient
+#    >>> g = 1.0  # tv coefficient
+#    >>> A, n_compacts = tv.A_from_shape(shape)
+#    >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
+#    ...                     algorithm=explicit.StaticCONESTA(max_iter=1000))
+#    >>> res = ridge_l1_tv.fit(X, y)
+#    >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
+#    >>> print "error = ", error
+#    error =  4.70079220678
+#    >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
+#    ...                     algorithm=explicit.DynamicCONESTA(max_iter=1000))
+#    >>> res = ridge_l1_tv.fit(X, y)
+#    >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
+#    >>> print "error = ", error
+#    error =  4.70096544168
+#    >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
+#    ...                     algorithm=explicit.FISTA(max_iter=1000))
+#    >>> res = ridge_l1_tv.fit(X, y)
+#    >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
+#    >>> print "error = ", error
+#    error =  4.24400179809
+    """
+    def __init__(self, k, l, g, A, mu=None, output=False,
+                 algorithm=explicit.StaticCONESTA()):
+#                 algorithm=algorithms.DynamicCONESTA()):
+#                 algorithm=algorithms.FISTA()):
+
+        self.k = float(k)
+        self.l = float(l)
+        self.g = float(g)
+        self.A = A
+        try:
+            self.mu = float(mu)
+        except (ValueError, TypeError):
+            self.mu = None
+
+        super(RidgeRegression_L1_GL, self).__init__(algorithm=algorithm,
+                                                    output=output)
+
+    def get_params(self):
+        """Return a dictionary containing all the estimator's parameters.
+        """
+        return {"k": self.k, "l": self.l, "g": self.g,
+                "A": self.A, "mu": self.mu}
+
+    def fit(self, X, y, beta=None):
+        """Fit the estimator to the data
+        """
+        X, y = check_arrays(X, y)
+        self.function = functions.RR_L1_GL(X, y, self.k, self.l, self.g,
+                                           A=self.A)
+        self.algorithm.check_compatibility(self.function,
+                                           self.algorithm.INTERFACES)
+
+        # TODO: Should we use a seed here so that we get deterministic results?
+        if beta is None:
+            beta = self.start_vector.get_vector((X.shape[1], 1))
+
+        if self.mu is None:
+            self.mu = self.function.estimate_mu(beta)
+        else:
+            self.mu = float(self.mu)
+
+        self.function.set_params(mu=self.mu)
+        self.algorithm.set_params(output=self.output)
+
+        if self.output:
+            (self.beta, self.info) = self.algorithm.run(self.function, beta)
+        else:
+            self.beta = self.algorithm.run(self.function, beta)
 
         return self
 
