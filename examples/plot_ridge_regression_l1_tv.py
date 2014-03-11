@@ -49,6 +49,10 @@ A, n_compacts = tv.A_from_shape(shape)
 #functions.RR_L1_TV(X, y, k, l, g, A=A)
 enettv = RidgeRegression_L1_TV(k, l, g, A, algorithm=StaticCONESTA(max_iter=500))
 yte_pred_enettv = enettv.fit(Xtr, ytr).predict(Xte)
+
+
+self = enettv
+
 ###########################################################################
 ## Plot
 
