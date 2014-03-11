@@ -175,7 +175,6 @@ class LinearRegression(interfaces.CompositeFunction,
 class RidgeRegression(interfaces.CompositeFunction,
                       interfaces.Gradient,
                       interfaces.LipschitzContinuousGradient,
-                      interfaces.Eigenvalues,
                       interfaces.StronglyConvex,
                       interfaces.StepSize):
     """The Ridge Regression function, i.e. a representation of
@@ -184,19 +183,26 @@ class RidgeRegression(interfaces.CompositeFunction,
 
     where ||.||²_2 is the L2 norm.
 
-    Parameters
-    ----------
-    X : Numpy array (n-by-p). The regressor matrix.
-
-    y : Numpy array (n-by-1). The regressand vector.
-
-    k : Non-negative float. The ridge parameter.
     """
-    def __init__(self, X, y, k):
+    # TODO: Inherit from LinearRegression and add an L2 constraint instead!
+    def __init__(self, X, y, k, penalty_start=0):
+        """
+        Parameters
+        ----------
+        X : Numpy array (n-by-p). The regressor matrix.
 
+        y : Numpy array (n-by-1). The regressand vector.
+
+        k : Non-negative float. The ridge parameter.
+
+        penalty_start : Non-negative integer. The number of columns, variables
+                etc., to except from penalisation. Equivalently, the first
+                index to be penalised. Default is 0, all columns are included.
+        """
         self.X = X
         self.y = y
         self.k = float(k)
+        self.penalty_start = int(penalty_start)
 
         self.reset()
 
@@ -215,10 +221,16 @@ class RidgeRegression(interfaces.CompositeFunction,
 
         Parameters
         ----------
-        beta : Regression coefficient vector
+        beta : Numpy array. Regression coefficient vector. The point at which
+                to evaluate the function.
         """
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
         return (1.0 / 2.0) * np.sum((np.dot(self.X, beta) - self.y) ** 2.0) \
-             + (self.k / 2.0) * np.sum(beta ** 2.0)
+             + (self.k / 2.0) * np.sum(beta_ ** 2.0)
 
     def grad(self, beta):
         """Gradient of the function at beta.
@@ -242,20 +254,19 @@ class RidgeRegression(interfaces.CompositeFunction,
         >>> np.linalg.norm(rr.grad(beta) - rr.approx_grad(beta, eps=1e-4))
         1.3403176569860683e-06
         """
+        if self.penalty_start > 0:
+            gradL2 = np.vstack((np.zeros((self.penalty_start, 1)),
+                                self.k * beta[self.penalty_start:, :]))
+        else:
+            gradL2 = self.k * beta
+
         return np.dot((np.dot(self.X, beta) - self.y).T, self.X).T \
-             + self.k * beta
+             + gradL2
 
     def L(self):
         """Lipschitz constant of the gradient.
 
         From the interface "LipschitzContinuousGradient".
-        """
-        return self.lambda_max()
-
-    def lambda_max(self):
-        """Largest eigenvalue of the corresponding covariance matrix.
-
-        From the interface "Eigenvalues".
         """
         if self._lambda_max is None:
             s = np.linalg.svd(self.X, full_matrices=False, compute_uv=False)

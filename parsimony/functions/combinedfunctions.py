@@ -244,7 +244,7 @@ class RR_L1_TV(interfaces.CompositeFunction,
         self.X = X
         self.y = y
 
-        self.rr = RidgeRegression(X, y, k)
+        self.rr = RidgeRegression(X, y, k, penalty_start=penalty_start)
         self.l1 = L1(l, penalty_start=penalty_start)
         self.tv = TotalVariation(g, A=A, mu=mu, penalty_start=penalty_start)
 
@@ -521,7 +521,7 @@ class RR_L1_GL(RR_L1_TV):
         self.X = X
         self.y = y
 
-        self.rr = RidgeRegression(X, y, k)
+        self.rr = RidgeRegression(X, y, k, penalty_start=penalty_start)
         self.l1 = L1(l, penalty_start=penalty_start)
         self.gl = GroupLassoOverlap(g, A=A, mu=mu, penalty_start=penalty_start)
 

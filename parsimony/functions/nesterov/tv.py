@@ -18,6 +18,7 @@ import numpy as np
 from .interfaces import NesterovFunction
 from .. import interfaces
 import parsimony.utils.consts as consts
+import parsimony.utils.maths as maths
 
 __all__ = ["TotalVariation", "A_from_mask", "A_from_shape"]
 
@@ -30,12 +31,12 @@ class TotalVariation(interfaces.AtomicFunction,
                      interfaces.LipschitzContinuousGradient):
     """The smoothed Total variation (TV) function
 
-        f(\beta) = l * (TV(\beta) - c),
+        f(beta) = l * (TV(beta) - c),
 
     where TV(beta) is the smoothed L1 function. The constrained version has the
     form
 
-        TV(\beta) <= c.
+        TV(beta) <= c.
     """
     def __init__(self, l, c=0.0, A=None, mu=0.0, penalty_start=0):
         """
@@ -45,7 +46,7 @@ class TotalVariation(interfaces.AtomicFunction,
                 constant, of the function.
 
         c : Float. The limit of the constraint. The function is feasible if
-                TV(\beta) <= c. The default value is c=0, i.e. the default is a
+                TV(beta) <= c. The default value is c=0, i.e. the default is a
                 regularisation formulation.
 
         A : Numpy array (usually sparse). The linear operator for the Nesterov
@@ -224,14 +225,14 @@ class TotalVariation(interfaces.AtomicFunction,
         """ The maximum value of the regularisation of the dual variable. We
         have
 
-            M = max_{\alpha \in K} 0.5*|\alpha|²_2.
+            M = max_{alpha in K} 0.5*|alpha|²_2.
 
         From the interface "NesterovFunction".
         """
         return self._A[0].shape[0] / 2.0
 
     def estimate_mu(self, beta):
-        """ Computes a "good" value of \mu with respect to the given \beta.
+        """ Computes a "good" value of mu with respect to the given beta.
 
         From the interface "NesterovFunction".
         """
@@ -240,10 +241,10 @@ class TotalVariation(interfaces.AtomicFunction,
         else:
             beta_ = beta
 
-        SS = 0
+        SS = 0.0
         A = self.A()
         for i in xrange(len(A)):
-            SS += A[i].dot(beta_) ** 2.0
+            SS = max(SS, maths.norm(A[i].dot(beta_)))
 
         return np.max(np.sqrt(SS))
 
@@ -318,7 +319,7 @@ def A_from_shape(shape):
     p = nx * ny * nz
     ind = np.arange(p).reshape((nz, ny, nx))
     if nx > 1:
-        Ax = sparse.eye(p, p, 1, format='csr') -\
+        Ax = sparse.eye(p, p, 1, format='csr') - \
              sparse.eye(p, p)
         zind = ind[:, :, -1].ravel()
         for i in zind:
@@ -328,7 +329,7 @@ def A_from_shape(shape):
     else:
         Ax = sparse.csc_matrix((p, p), dtype=float)
     if ny > 1:
-        Ay = sparse.eye(p, p, nx, format='csr') -\
+        Ay = sparse.eye(p, p, nx, format='csr') - \
              sparse.eye(p, p)
         yind = ind[:, -1, :].ravel()
         for i in yind:
@@ -338,7 +339,7 @@ def A_from_shape(shape):
     else:
         Ay = sparse.csc_matrix((p, p), dtype=float)
     if nz > 1:
-        Az = (sparse.eye(p, p, ny * nx, format='csr') -\
+        Az = (sparse.eye(p, p, ny * nx, format='csr') - \
               sparse.eye(p, p))
         xind = ind[-1, :, :].ravel()
         for i in xind:

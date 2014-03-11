@@ -30,9 +30,9 @@ class GroupLassoOverlap(interfaces.AtomicFunction,
     """Group L1-L2 function, with overlapping groups. Represents the
     function
 
-        GL(x) = l * (\sum_{g=1}^G \|x_g\|_2 - c),
+        GL(x) = l * (sum_{g=1}^G ||x_g||_2 - c),
 
-    where \|.\|_2 is the L2-norm. The coinstrained version has the form
+    where ||.||_2 is the L2-norm. The coinstrained version has the form
 
         GL(x) <= c.
 
@@ -42,7 +42,7 @@ class GroupLassoOverlap(interfaces.AtomicFunction,
             constant, of the function.
 
     c : Float. The limit of the constraint. The function is feasible if
-            GL(\beta) <= c. The default value is c=0, i.e. the default is a
+            GL(beta) <= c. The default value is c=0, i.e. the default is a
             regularised formulation.
 
     mu : Float. The Nesterov function regularisation constant for the
@@ -60,7 +60,7 @@ class GroupLassoOverlap(interfaces.AtomicFunction,
                 constant, of the function.
 
         c : Float. The limit of the constraint. The function is feasible if
-                GL(\beta) <= c. The default value is c=0, i.e. the default is
+                GL(beta) <= c. The default value is c=0, i.e. the default is
                 a regularised formulation.
 
         A : Numpy array. A (usually sparse) matrix. The linear operator for
@@ -190,7 +190,7 @@ class GroupLassoOverlap(interfaces.AtomicFunction,
         """ The maximum value of the regularisation of the dual variable. We
         have
 
-            M = max_{\alpha \in K} 0.5*|\alpha|²_2.
+            M = max_{alpha in K} 0.5*||alpha||²_2.
 
         Since each group may have at most L2-norm 1, M may not exceed the
         number of groups, i.e. the number of groups divided by two is the
@@ -200,7 +200,7 @@ class GroupLassoOverlap(interfaces.AtomicFunction,
         """
         return float(len(self.A())) / 2.0
 
-    """ Computes a "good" value of \mu with respect to the given \beta.
+    """ Computes a "good" value of mu with respect to the given beta.
 
     From the interface "NesterovFunction".
     """

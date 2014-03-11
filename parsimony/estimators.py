@@ -307,28 +307,6 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
 
 class RidgeRegression_L1_TV(RegressionEstimator):
     """
-    Parameters
-    ----------
-    l : Non-negative float. The L1 regularization parameter.
-
-    k : Non-negative float. The L2 regularization parameter.
-
-    g : Non-negative float. The total variation regularization parameter.
-
-    A : Numpy or (usually) scipy.sparse array. The linear operator for the
-            smoothed total variation Nesterov function.
-
-    mu : Non-negative float. The regularisation constant for the smoothing.
-
-    output : Boolean. Whether or not to return extra output information.
-
-    algorithm : ExplicitAlgorithm. The algorithm that be applied. Should be
-            one of:
-                1. algorithms.StaticCONESTA()
-                2. algorithms.DynamicCONESTA()
-                3. algorithms.FISTA()
-                4. algorithms.ISTA()
-
     Examples
     --------
     >>> import numpy as np
@@ -350,25 +328,52 @@ class RidgeRegression_L1_TV(RegressionEstimator):
     >>> res = ridge_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
     >>> print "error = ", error
-    error =  4.70079220678
+    error =  4.70079219833
     >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
     ...                     algorithm=explicit.DynamicCONESTA(max_iter=1000))
     >>> res = ridge_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
     >>> print "error = ", error
-    error =  4.70096544168
+    error =  4.70069909262
     >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
     ...                     algorithm=explicit.FISTA(max_iter=1000))
     >>> res = ridge_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
     >>> print "error = ", error
-    error =  4.24400179809
+    error =  3.9603518627
     """
     def __init__(self, k, l, g, A, mu=None, output=False,
-                 algorithm=explicit.StaticCONESTA()):
+                 algorithm=explicit.StaticCONESTA(),
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
+                 penalty_start=0):
+        """
+        Parameters
+        ----------
+        l : Non-negative float. The L1 regularization parameter.
 
+        k : Non-negative float. The L2 regularization parameter.
+
+        g : Non-negative float. The total variation regularization parameter.
+
+        A : Numpy or (usually) scipy.sparse array. The linear operator for the
+                smoothed total variation Nesterov function.
+
+        mu : Non-negative float. The regularisation constant for the smoothing.
+
+        output : Boolean. Whether or not to return extra output information.
+
+        algorithm : ExplicitAlgorithm. The algorithm that be applied. Should be
+                one of:
+                    1. algorithms.StaticCONESTA()
+                    2. algorithms.DynamicCONESTA()
+                    3. algorithms.FISTA()
+                    4. algorithms.ISTA()
+
+        penalty_start : Non-negative integer. The number of columns, variables
+                etc., to be exempt from penalisation. Equivalently, the first
+                index to be penalised. Default is 0, all columns are included.
+        """
         self.k = float(k)
         self.l = float(l)
         self.g = float(g)
@@ -377,6 +382,7 @@ class RidgeRegression_L1_TV(RegressionEstimator):
             self.mu = float(mu)
         except (ValueError, TypeError):
             self.mu = None
+        self.penalty_start = int(penalty_start)
 
         super(RidgeRegression_L1_TV, self).__init__(algorithm=algorithm,
                                                     output=output)
@@ -385,14 +391,16 @@ class RidgeRegression_L1_TV(RegressionEstimator):
         """Return a dictionary containing all the estimator's parameters
         """
         return {"k": self.k, "l": self.l, "g": self.g,
-                "A": self.A, "mu": self.mu}
+                "A": self.A, "mu": self.mu,
+                "penalty_start": self.penalty_start}
 
     def fit(self, X, y, beta=None):
-        """Fit the estimator to the data
+        """Fit the estimator to the data.
         """
         X, y = check_arrays(X, y)
         function = functions.RR_L1_TV(X, y, self.k, self.l, self.g,
-                                           A=self.A)
+                                           A=self.A,
+                                           penalty_start=self.penalty_start)
         self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)
 
@@ -426,28 +434,6 @@ class RidgeRegression_L1_TV(RegressionEstimator):
 
 class RidgeRegression_L1_GL(RegressionEstimator):
     """
-    Parameters
-    ----------
-    l : Non-negative float. The L1 regularisation parameter.
-
-    k : Non-negative float. The L2 regularisation parameter.
-
-    g : Non-negative float. The Group lasso regularisation parameter.
-
-    A : Numpy or (usually) scipy.sparse array. The linear operator for the
-            smoothed group lasso Nesterov function.
-
-    mu : Non-negative float. The regularisation constant for the smoothing.
-
-    output : Boolean. Whether or not to return extra output information.
-
-    algorithm : ExplicitAlgorithm. The algorithm that should be applied.
-            Should be one of:
-                1. algorithms.StaticCONESTA()
-                2. algorithms.DynamicCONESTA()
-                3. algorithms.FISTA()
-                4. algorithms.ISTA()
-
     Examples
     --------
 #    >>> import numpy as np
@@ -484,10 +470,37 @@ class RidgeRegression_L1_GL(RegressionEstimator):
 #    error =  4.24400179809
     """
     def __init__(self, k, l, g, A, mu=None, output=False,
-                 algorithm=explicit.StaticCONESTA()):
+                 algorithm=explicit.StaticCONESTA(),
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
+                 penalty_start=0):
+        """
+        Parameters
+        ----------
+        l : Non-negative float. The L1 regularisation parameter.
+    
+        k : Non-negative float. The L2 regularisation parameter.
+    
+        g : Non-negative float. The Group lasso regularisation parameter.
+    
+        A : Numpy or (usually) scipy.sparse array. The linear operator for the
+                smoothed group lasso Nesterov function.
+    
+        mu : Non-negative float. The regularisation constant for the smoothing.
+    
+        output : Boolean. Whether or not to return extra output information.
+    
+        algorithm : ExplicitAlgorithm. The algorithm that should be applied.
+                Should be one of:
+                    1. algorithms.StaticCONESTA()
+                    2. algorithms.DynamicCONESTA()
+                    3. algorithms.FISTA()
+                    4. algorithms.ISTA()
 
+        penalty_start : Non-negative integer. The number of columns, variables
+                etc., to be exempt from penalisation. Equivalently, the first
+                index to be penalised. Default is 0, all columns are included.
+        """
         self.k = float(k)
         self.l = float(l)
         self.g = float(g)
@@ -496,6 +509,7 @@ class RidgeRegression_L1_GL(RegressionEstimator):
             self.mu = float(mu)
         except (ValueError, TypeError):
             self.mu = None
+        self.penalty_start = int(penalty_start)
 
         super(RidgeRegression_L1_GL, self).__init__(algorithm=algorithm,
                                                     output=output)
@@ -504,14 +518,16 @@ class RidgeRegression_L1_GL(RegressionEstimator):
         """Return a dictionary containing all the estimator's parameters.
         """
         return {"k": self.k, "l": self.l, "g": self.g,
-                "A": self.A, "mu": self.mu}
+                "A": self.A, "mu": self.mu,
+                "penalty_start": self.penalty_start}
 
     def fit(self, X, y, beta=None):
         """Fit the estimator to the data
         """
         X, y = check_arrays(X, y)
         self.function = functions.RR_L1_GL(X, y, self.k, self.l, self.g,
-                                           A=self.A)
+                                           A=self.A,
+                                           penalty_start=self.penalty_start)
         self.algorithm.check_compatibility(self.function,
                                            self.algorithm.INTERFACES)
 
