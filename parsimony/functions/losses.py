@@ -488,40 +488,29 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
     pi = p(y=1|xi, beta) = 1 / (1 + exp(-xi' beta))
     wi: sample i weight
     [Hastie 2009, p.: 102, 119 and 161, Bishop 2006 p.: 206]
-
-    Parameters
-    ----------
-    X : array, shape (n_samples, n_features)
-        Training vectors, where n_samples is the number of samples
-        and n_features is the number of features.
-
-    y : array, shape (n_samples,)
-        Target values (class labels in classification)
-
-    mean : boolean
-        if True function is: -loglik/nobs + k/2*penalty
-        if False function is: -loglik + k/2*penalty
-
-    sample_weight : array-like, shape (n_samples, 1)
-        Per-sample weights.
     """
     def __init__(self, X, y, k=0.0, weights=None, mean=True):
         """
         Parameters
         ----------
-        X : Numpy array (n-by-p). The regressor matrix.
+        X : Numpy array (n-by-p). The regressor matrix. Training vectors, where
+                n is the number of samples and p is the number of features.
 
-        y : Numpy array (n-by-1). The regressand vector.
+        y : Numpy array (n-by-1). The regressand vector. Target values (class
+                labels in classification).
 
         k : Non-negative float. The ridge parameter.
 
         weights: Numpy array (n-by-1). The sample's weights.
+
+        mean : Boolean. Whether to compute the mean loss or not. Default is
+                True, the mean loss is computed.
         """
         self.X = X
         self.y = y
         self.k = float(k)
         if weights is None:
-            weights = np.ones(y.shape)#.reshape(y.shape)
+            weights = np.ones(y.shape)  # .reshape(y.shape)
         self.weights = weights
         self.mean = bool(mean)
 
