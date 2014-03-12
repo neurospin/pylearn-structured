@@ -791,11 +791,17 @@ class RLR_L1_TV(RR_L1_TV):
         penalty_start : Non-negative integer. The number of columns, variables
                 etc., to except from penalisation. Equivalently, the first
                 index to be penalised. Default is 0, all columns are included.
+
+        mean : Boolean. Whether to compute the squared loss or the mean
+                squared loss. Default is True, the mean squared loss.
         """
         self.X = X
         self.y = y
 
-        self.rr = RidgeLogisticRegression(X, y, k, weights=weights, mean=mean)
+        self.rr = RidgeLogisticRegression(X, y, k,
+                                          weights=weights,
+                                          penalty_start=penalty_start,
+                                          mean=mean)
         self.l1 = L1(l, penalty_start=penalty_start)
         self.tv = TotalVariation(g, A=A, mu=mu, penalty_start=penalty_start)
 

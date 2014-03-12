@@ -489,7 +489,7 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
     wi: sample i weight
     [Hastie 2009, p.: 102, 119 and 161, Bishop 2006 p.: 206]
     """
-    def __init__(self, X, y, k=0.0, weights=None, mean=True):
+    def __init__(self, X, y, k=0.0, weights=None, penalty_start=0, mean=True):
         """
         Parameters
         ----------
@@ -503,6 +503,10 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
 
         weights: Numpy array (n-by-1). The sample's weights.
 
+        penalty_start : Non-negative integer. The number of columns, variables
+                etc., to except from penalisation. Equivalently, the first
+                index to be penalised. Default is 0, all columns are included.
+
         mean : Boolean. Whether to compute the mean loss or not. Default is
                 True, the mean loss is computed.
         """
@@ -512,6 +516,7 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
         if weights is None:
             weights = np.ones(y.shape)  # .reshape(y.shape)
         self.weights = weights
+        self.penalty_start = int(penalty_start)
         self.mean = bool(mean)
 
         self.reset()
@@ -539,8 +544,12 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
         if self.mean:
             negloglike /= float(self.X.shape[0])
 
-        return negloglike + (self.k / 2.0) * np.sum(beta ** 2.0)
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
 
+        return negloglike + (self.k / 2.0) * np.sum(beta_ ** 2.0)
 
     def grad(self, beta):
         """Gradient of the function at beta.
@@ -583,7 +592,13 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
         if self.mean:
             grad /= float(self.X.shape[0])
 
-        grad = grad + self.k * beta
+        if self.penalty_start > 0:
+            gradL2 = np.vstack((np.zeros((self.penalty_start, 1)),
+                                self.k * beta[self.penalty_start:, :]))
+        else:
+            gradL2 = self.k * beta
+
+        grad = grad + gradL2
 
         return grad
 

@@ -592,42 +592,50 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
     With pi = p(y=1|xi, beta) = 1 / (1 + exp(-xi' beta)) and wi: sample i
     weight
 
-    Parameters
-    ----------
-    l : Non-negative float. The L1 regularization parameter.
-
-    k : Non-negative float. The L2 regularization parameter.
-
-    g : Non-negative float. The total variation regularization parameter.
-
-    A : Numpy or (usually) scipy.sparse array. The linear operator for the
-            smoothed total variation Nesterov function.
-
-    class_weight : dict, 'auto' or None
-        If 'auto', class weights will be given inverse proportional
-        to the frequency of the class in the data.
-        If a dictionary is given, keys are classes and values
-        are corresponding class weights.
-        If None is given, the class weights will be uniform.
-
-    mu : Non-negative float. The regularisation constant for the smoothing.
-
-    output : Boolean. Whether or not to return extra output information.
-
-    algorithm : ExplicitAlgorithm. The algorithm that will be run. Should be
-            one of:
-                1. algorithms.StaticCONESTA()
-                2. algorithms.DynamicCONESTA()
-                3. algorithms.FISTA()
-
     Examples
     --------
     """
     def __init__(self, k, l, g, A, mu=None, output=False,
-                 algorithm=explicit.StaticCONESTA(), mean=True,
-                 class_weight=None):
+                 algorithm=explicit.StaticCONESTA(),
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
+                 class_weight=None, penalty_start=0, mean=True):
+        """
+        Parameters
+        ----------
+        l : Non-negative float. The L1 regularization parameter.
+
+        k : Non-negative float. The L2 regularization parameter.
+
+        g : Non-negative float. The total variation regularization parameter.
+
+        A : Numpy or (usually) scipy.sparse array. The linear operator for the
+                smoothed total variation Nesterov function.
+
+        mu : Non-negative float. The regularisation constant for the smoothing.
+
+        output : Boolean. Whether or not to return extra output information.
+
+        algorithm : ExplicitAlgorithm. The algorithm that will be run. Should
+                be one of:
+                    1. algorithms.StaticCONESTA()
+                    2. algorithms.DynamicCONESTA()
+                    3. algorithms.FISTA()
+                    4. algorithms.ISTA()
+
+        class_weight : Dict, 'auto' or None. If 'auto', class weights will be
+                given inverse proportional to the frequency of the class in
+                the data. If a dictionary is given, keys are classes and values
+                are corresponding class weights. If None is given, the class
+                weights will be uniform.
+
+        penalty_start : Non-negative integer. The number of columns, variables
+                etc., to be exempt from penalisation. Equivalently, the first
+                index to be penalised. Default is 0, all columns are included.
+
+        mean : Boolean. Whether to compute the squared loss or the mean
+                squared loss. Default is True, the mean squared loss.
+        """
         self.k = float(k)
         self.l = float(l)
         self.g = float(g)
@@ -641,6 +649,7 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
         except (ValueError, TypeError):
             self.mu = None
 
+        self.penalty_start = int(penalty_start)
         self.mean = bool(mean)
 
         super(RidgeLogisticRegression_L1_TV,
@@ -648,13 +657,14 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
                             class_weight=class_weight)
 
     def get_params(self):
-        """Return a dictionary containing all the estimator's parameters
+        """Return a dictionary containing all the estimator's parameters.
         """
         return {"k": self.k, "l": self.l, "g": self.g,
-                "A": self.A, "mu": self.mu, "class_weight": self.class_weight}
+                "A": self.A, "mu": self.mu, "class_weight": self.class_weight,
+                "penalty_start": self.penalty_start, "mean": self.mean}
 
-    def fit(self, X, y,  sample_weight=None):
-        """Fit the estimator to the data
+    def fit(self, X, y, sample_weight=None):
+        """Fit the estimator to the data.
         """
         X, y = check_arrays(X, check_labels(y))
         if sample_weight is None:
@@ -662,9 +672,12 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
         y, sample_weight = check_arrays(y, sample_weight)
             #sample_weight = sample_weight.ravel()
 
-        function = functions.RLR_L1_TV(X, y, self.k, self.l, self.g,
-                                           A=self.A, weights=sample_weight,
-                                           mean=self.mean)
+        function = functions.RLR_L1_TV(X, y,
+                                       self.k, self.l, self.g,
+                                       A=self.A,
+                                       weights=sample_weight,
+                                       penalty_start=self.penalty_start,
+                                       mean=self.mean)
         self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)
 

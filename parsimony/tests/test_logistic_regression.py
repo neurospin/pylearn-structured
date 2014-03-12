@@ -7,7 +7,7 @@ Created on Tue Mar  4 10:33:40 2014
 @license: BSD 3-clause.
 """
 import unittest
-from nose.tools import assert_equal, assert_almost_equal
+from nose.tools import assert_less, assert_equal, assert_almost_equal
 
 import numpy as np
 
@@ -19,7 +19,7 @@ import parsimony.utils.consts as consts
 # TODO: Test total variation.
 
 
-class TestLogisticRegression(TestCase):
+class TestLogisticRegression():#TestCase):
 
     def test_logistic_regression(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
@@ -790,6 +790,125 @@ class TestLogisticRegression(TestCase):
                                 "the correct function value.",
                             places=5)
 
+    def test_logistic_regression_l1_l2_intercept(self):
+        # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
+
+        from parsimony.functions import CombinedFunction
+        import parsimony.functions.losses as losses
+        import parsimony.functions.penalties as penalties
+        import parsimony.algorithms.explicit as explicit
+        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.maths as maths
+        import parsimony.estimators as estimators
+        import parsimony.functions.nesterov.tv as tv
+
+        np.random.seed(42)
+
+        start_vector = start_vectors.RandomStartVector(normalise=True)
+
+        px = 4
+        py = 4
+        pz = 4
+        shape = (pz, py, px)
+        n, p = 50, np.prod(shape) + 1
+
+        A, _ = tv.A_from_shape(shape)
+
+        alpha = 0.9
+        Sigma = alpha * np.eye(p - 1, p - 1) \
+              + (1.0 - alpha) * np.random.randn(p - 1, p - 1)
+        mean = np.zeros(p - 1)
+        X0 = np.random.multivariate_normal(mean, Sigma, n)
+        X_parsimony = np.hstack((np.ones((n, 1)), X0))
+        X_spams = np.hstack((X0, np.ones((n, 1))))
+        y = np.array(np.random.randint(0, 2, (n, 1)), dtype=X0.dtype)
+
+        eps = 1e-8
+        max_iter = 1000
+
+        l = 0.0318
+        k = 1.0 - l
+        g = 0.0
+
+        algorithm = explicit.ISTA(eps=eps, max_iter=max_iter)
+        function = CombinedFunction()
+        logreg = losses.LogisticRegression(X_parsimony, y, mean=True)
+        function.add_function(logreg)
+        function.add_penalty(penalties.L2(k, penalty_start=1))
+        function.add_prox(penalties.L1(l, penalty_start=1))
+        beta_start = start_vector.get_vector((p, 1))
+
+        beta = algorithm.run(function, beta_start)
+
+        try:
+            import spams
+
+            params = {"loss": "logistic",
+                      "regul": "elastic-net",
+                      "lambda1": l,
+                      "lambda2": k,
+                      "max_it": max_iter,
+                      "tol": eps,
+                      "ista": True,
+                      "numThreads": -1,
+                      "intercept": True,
+                     }
+
+            y_ = y.copy()
+            y_[y_ == 0.0] = -1.0
+            beta_spams, optim_info = \
+                    spams.fistaFlat(Y=np.asfortranarray(y_),
+                                    X=np.asfortranarray(X_spams),
+                                    W0=np.asfortranarray(beta_start),
+                                    return_optim_info=True,
+                                    **params)
+
+#            print beta_spams
+
+        except ImportError:
+            beta_spams = np.asarray(
+                    )
+
+        beta_spams = np.vstack((beta_spams[p - 1, :],
+                                beta_spams[0:p - 1, :]))
+
+        mu = None
+        logreg_est = estimators.RidgeLogisticRegression_L1_TV(
+                          k=k, l=l, g=g,
+                          A=A, mu=mu, output=False,
+                          algorithm=explicit.ISTA(eps=eps, max_iter=max_iter),
+                          class_weight=None, penalty_start=1, mean=True)
+        logreg_est.fit(X_parsimony, y)
+
+        re = maths.norm(beta - beta_spams)
+#        print "re:", re
+        assert_less(re, 1e-8,
+                    msg="The found regression vector is not correct.")
+
+        re = maths.norm(logreg_est.beta - beta_spams)
+#        print "re:", re
+        assert_less(re, 1e-8,
+                    msg="The found regression vector is not correct.")
+
+        re = maths.norm(logreg_est.beta - beta)
+#        print "re:", re
+        assert_less(re, 5e-10,
+                    msg="The found regression vector is not correct.")
+
+        f_spams = function.f(beta_spams)
+
+        f_parsimony = function.f(beta)
+        err = abs(f_parsimony - f_spams)
+#        print "err:", err
+        assert_less(err, 1e-15, msg="The found regression vector does not " \
+                                    "give the correct function value.")
+
+        f_logreg = function.f(logreg_est.beta)
+        err = abs(f_logreg - f_spams)
+#        print "err:", err
+        assert_less(err, 1e-15, msg="The found regression vector does not " \
+                                    "give the correct function value.")
+
     def test_logistic_regression_l1_gl(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
 
@@ -931,6 +1050,134 @@ class TestLogisticRegression(TestCase):
                             msg="The found regression vector does not give " \
                                 "the correct function value.",
                             places=5)
+
+#    def test_logistic_regression_l1_gl_intercept(self):
+#        # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
+#
+#        from parsimony.functions import CombinedFunction
+#        import parsimony.functions.losses as losses
+#        import parsimony.functions.penalties as penalties
+#        import parsimony.algorithms.explicit as explicit
+#        import parsimony.start_vectors as start_vectors
+#        import parsimony.utils.maths as maths
+#        import parsimony.functions.nesterov.gl as gl
+#        import parsimony.estimators as estimators
+#
+#        np.random.seed(42)
+#
+#        start_vector = start_vectors.RandomStartVector(normalise=True)
+#
+#        # Note that p must be even!
+#        n, p = 50, 100 + 1
+#        groups = [range(0, p / 2), range(p / 2, p - 1)]
+#
+#        A = gl.A_from_groups(p - 1, groups=groups)
+#
+#        alpha = 0.9
+#        Sigma = alpha * np.eye(p - 1, p - 1) \
+#              + (1.0 - alpha) * np.random.randn(p - 1, p - 1)
+#        mean = np.zeros(p - 1)
+#        X0 = np.random.multivariate_normal(mean, Sigma, n)
+#        X_parsimony = np.hstack((np.ones((n, 1)), X0))
+#        X_spams = np.hstack((X0, np.ones((n, 1))))
+#        y = np.array(np.random.randint(0, 2, (n, 1)), dtype=X0.dtype)
+#
+#        eps = 1e-8
+#        max_iter = 20000
+#
+#        l = 0.01
+#        k = 0.0
+#        g = 0.001
+#        mus = [5e-2, 5e-4, 5e-6, 5e-8]
+#        mu = mus[-1]
+#
+#        algorithm = explicit.ISTA(eps=eps, max_iter=max_iter)
+#
+#        beta_start = start_vector.get_vector((p, 1))
+#        beta = beta_start
+#        for mu in mus:
+#            function = CombinedFunction()
+#            function.add_function(losses.LogisticRegression(X_parsimony, y,
+#                                                            mean=True))
+#            function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
+#                                                      penalty_start=1))
+#            function.add_prox(penalties.L1(l, penalty_start=1))
+#
+#            beta = algorithm.run(function, beta)
+#
+#        try:
+#            import spams
+#
+#            gr = np.array([1] * (p / 2) + [2] * ((p / 2) + 1), dtype=np.int32)
+#            params = {"loss": "logistic",
+#                      "regul": "sparse-group-lasso-l2",
+#                      "groups": gr,
+#                      "lambda1": g,
+#                      "lambda2": l,
+#                      "max_it": max_iter,
+#                      "tol": eps,
+#                      "ista": True,
+#                      "numThreads": -1,
+#                      "intercept": True,
+#                     }
+#
+#            y_ = y.copy()
+#            y_[y_ == 0.0] = -1.0
+#            beta_spams, optim_info = \
+#                    spams.fistaFlat(Y=np.asfortranarray(y_),
+#                                    X=np.asfortranarray(X_spams),
+#                                    W0=np.asfortranarray(beta_start),
+#                                    return_optim_info=True,
+#                                    **params)
+#
+#        except ImportError:
+#            beta_spams = np.asarray(
+#                    )
+#
+#        beta_spams = np.vstack((beta_spams[p - 1, :],
+#                                beta_spams[0:p - 1, :]))
+#
+##        mu = None
+#        logreg_est = estimators.RidgeLogisticRegression_L1_GL(
+#                           k=k,
+#                           l=l,
+#                           g=g,
+#                           A=A,
+#                           class_weight=None,
+#                           mu=mu,
+#                           output=False,
+#                           algorithm=explicit.ISTA(eps=eps, max_iter=max_iter),
+#                           penalty_start=1,
+#                           mean=True)
+#        logreg_est.fit(X_parsimony, y)
+#
+#        re = maths.norm(beta - beta_spams)
+#        print "re:", re
+##        assert_less(re, 1e-8,
+##                    msg="The found regression vector is not correct.")
+#
+#        re = maths.norm(logreg_est.beta - beta_spams)
+#        print "re:", re
+##        assert_less(re, 1e-8,
+##                    msg="The found regression vector is not correct.")
+#
+#        re = maths.norm(logreg_est.beta - beta)
+#        print "re:", re
+##        assert_less(re, 1e-8,
+##                    msg="The found regression vector is not correct.")
+#
+#        f_parsimony = function.f(beta)
+#        f_spams = function.f(beta_spams)
+#        err = abs(f_parsimony - f_spams)
+#        print "err:", err
+##        assert_less(re, 1e-8,
+##                    msg="The found regression vector is not correct.")
+#
+#        f_logreg = function.f(logreg_est.beta)
+#        err = abs(f_logreg - f_spams)
+#        print "err:", err
+##        assert_less(re, 1e-8,
+##                    msg="The found regression vector is not correct.")
 
     def test_logistic_regression_large(self):
 
