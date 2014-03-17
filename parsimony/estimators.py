@@ -214,26 +214,6 @@ class LogisticRegressionEstimator(BaseEstimator):
 
 class LinearRegression_L1_L2_TV(RegressionEstimator):
     """
-    Parameters
-    ----------
-    l : Non-negative float. The L1 regularization parameter.
-
-    k : Non-negative float. The L2 regularization parameter.
-
-    g : Non-negative float. The total variation regularization parameter.
-
-    A : Numpy or (usually) scipy.sparse array. The linear operator for the
-            smoothed total variation Nesterov function.
-
-    mu : Non-negative float. The regularisation constant for the smoothing.
-
-    output : Boolean. Whether or not to return extra output information.
-
-    algorithm : ExplicitAlgorithm. The algorithm that should be applied. Should
-            be one of:
-                3. algorithms.FISTA()
-                4. algorithms.ISTA()
-
     Examples
     --------
     >>> import numpy as np
@@ -265,15 +245,45 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
     error =  1.07391299463
     """
     def __init__(self, l, k, g, A, mu=consts.TOLERANCE, output=False,
-                 algorithm=explicit.StaticCONESTA()):
+                 algorithm=explicit.StaticCONESTA(),
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
+                 penalty_start=0, mean=True):
+        """
+        Parameters
+        ----------
+        l : Non-negative float. The L1 regularization parameter.
 
+        k : Non-negative float. The L2 regularization parameter.
+
+        g : Non-negative float. The total variation regularization parameter.
+
+        A : Numpy or (usually) scipy.sparse array. The linear operator for the
+                smoothed total variation Nesterov function.
+
+        mu : Non-negative float. The regularisation constant for the smoothing.
+
+        output : Boolean. Whether or not to return extra output information.
+
+        algorithm : ExplicitAlgorithm. The algorithm that should be applied.
+                Should be one of:
+                    3. algorithms.FISTA()
+                    4. algorithms.ISTA()
+
+        penalty_start : Non-negative integer. The number of columns, variables
+                etc., to be exempt from penalisation. Equivalently, the first
+                index to be penalised. Default is 0, all columns are included.
+
+        mean : Boolean. Whether to compute the squared loss or the mean squared
+                loss. Default is True, the mean squared loss.
+        """
         self.l = float(l)
         self.k = float(k)
         self.g = float(g)
         self.A = A
         self.mu = float(mu)
+        self.penalty_start = int(penalty_start)
+        self.mean = bool(mean)
 
         super(LinearRegression_L1_L2_TV, self).__init__(algorithm=algorithm,
                                                         output=output)
@@ -282,22 +292,18 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
         """Return a dictionary containing all the estimator's parameters
         """
         return {"k": self.k, "l": self.l, "g": self.g,
-                "A": self.A, "mu": self.mu}
+                "A": self.A, "mu": self.mu,
+                "penalty_start": self.penalty_start, "mean": self.mean}
 
     def fit(self, X, y, beta=None):
         """Fit the estimator to the data.
         """
         X, y = check_arrays(X, y)
-        function = functions.CombinedFunction()
-        function.add_function(losses.LinearRegression(X, y, mean=False))
-        if self.k > 0:
-            function.add_penalty(penalties.L2(self.k))
-        if self.g > 0:
-            function.add_penalty(tv.TotalVariation(self.g, A=self.A,
-                                                        mu=self.mu))
-        if self.l > 0:
-            function.add_prox(penalties.L1(self.l))
 
+        function = functions.RR_L1_TV(X, y, self.k, self.l, self.g,
+                                           A=self.A,
+                                           penalty_start=self.penalty_start,
+                                           mean=self.mean)
         self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)
 
@@ -365,7 +371,7 @@ class RidgeRegression_L1_TV(RegressionEstimator):
                  algorithm=explicit.StaticCONESTA(),
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
-                 penalty_start=0):
+                 penalty_start=0, mean=True):
         """
         Parameters
         ----------
@@ -392,6 +398,9 @@ class RidgeRegression_L1_TV(RegressionEstimator):
         penalty_start : Non-negative integer. The number of columns, variables
                 etc., to be exempt from penalisation. Equivalently, the first
                 index to be penalised. Default is 0, all columns are included.
+
+        mean : Boolean. Whether to compute the squared loss or the mean
+                squared loss. Default is True, the mean squared loss.
         """
         self.k = float(k)
         self.l = float(l)
@@ -402,6 +411,7 @@ class RidgeRegression_L1_TV(RegressionEstimator):
         except (ValueError, TypeError):
             self.mu = None
         self.penalty_start = int(penalty_start)
+        self.mean = bool(mean)
 
         super(RidgeRegression_L1_TV, self).__init__(algorithm=algorithm,
                                                     output=output)
@@ -419,7 +429,8 @@ class RidgeRegression_L1_TV(RegressionEstimator):
         X, y = check_arrays(X, y)
         function = functions.RR_L1_TV(X, y, self.k, self.l, self.g,
                                            A=self.A,
-                                           penalty_start=self.penalty_start)
+                                           penalty_start=self.penalty_start,
+                                           mean=self.mean)
         self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)
 
@@ -492,7 +503,7 @@ class RidgeRegression_L1_GL(RegressionEstimator):
                  algorithm=explicit.StaticCONESTA(),
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
-                 penalty_start=0):
+                 penalty_start=0, mean=True):
         """
         Parameters
         ----------
@@ -519,6 +530,9 @@ class RidgeRegression_L1_GL(RegressionEstimator):
         penalty_start : Non-negative integer. The number of columns, variables
                 etc., to be exempt from penalisation. Equivalently, the first
                 index to be penalised. Default is 0, all columns are included.
+
+        mean : Boolean. Whether to compute the squared loss or the mean
+                squared loss. Default is True, the mean squared loss.
         """
         self.k = float(k)
         self.l = float(l)
@@ -529,6 +543,7 @@ class RidgeRegression_L1_GL(RegressionEstimator):
         except (ValueError, TypeError):
             self.mu = None
         self.penalty_start = int(penalty_start)
+        self.mean = bool(mean)
 
         super(RidgeRegression_L1_GL, self).__init__(algorithm=algorithm,
                                                     output=output)
@@ -538,7 +553,8 @@ class RidgeRegression_L1_GL(RegressionEstimator):
         """
         return {"k": self.k, "l": self.l, "g": self.g,
                 "A": self.A, "mu": self.mu,
-                "penalty_start": self.penalty_start}
+                "penalty_start": self.penalty_start,
+                "mean": self.mean}
 
     def fit(self, X, y, beta=None):
         """Fit the estimator to the data
@@ -546,7 +562,8 @@ class RidgeRegression_L1_GL(RegressionEstimator):
         X, y = check_arrays(X, y)
         self.function = functions.RR_L1_GL(X, y, self.k, self.l, self.g,
                                            A=self.A,
-                                           penalty_start=self.penalty_start)
+                                           penalty_start=self.penalty_start,
+                                           mean=self.mean)
         self.algorithm.check_compatibility(self.function,
                                            self.algorithm.INTERFACES)
 

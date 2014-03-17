@@ -3,11 +3,19 @@
 
 ./parsimony/estimators.py:
 -------------------------
-65: # TODO: Is this a good name?
+41: # TODO: Add penalty_start and mean to all of these!
 
-267: # TODO: Should we use a seed here so that we get deterministic results?
+81: # TODO: Is this a good name?
 
-356: # TODO: Should we use a seed here so that we get deterministic results?
+304: # TODO: Should we use a seed here so that we get deterministic results?
+
+426: # TODO: Should we use a seed here so that we get deterministic results?
+
+553: # TODO: Should we use a seed here so that we get deterministic results?
+
+684: # TODO: Should we use a seed here so that we get deterministic results?
+
+793: # TODO: Should we use a seed here so that we get deterministic results?
 
 ./parsimony/algorithms/explicit.py:
 ----------------------------------
@@ -70,52 +78,66 @@
 
 ./parsimony/functions/interfaces.py:
 -----------------------------------
-94: # TODO: Should all constraints have the projection operator?
+96: # TODO: Should all constraints have the projection operator?
 
-176: # TODO: This should be in the NesterovFunction interface, right?
+178: # TODO: This should be in the NesterovFunction interface, right?
 
-285: # TODO: L should by default take a weight vector as argument.
+287: # TODO: Should L by default take a weight vector as argument?
 
 ./parsimony/functions/losses.py:
 -------------------------------
-316: # TODO: Make the weights sparse.
-317: #weights = np.eye(self.X.shape[0])
+31: # TODO: Add penalty_start and mean to all of these!
 
-319: # TODO: Allow the weight vector to be a list.
+187: # TODO: Inherit from LinearRegression and add an L2 constraint instead!
 
-391: PWX = 0.5 * np.sqrt(self.weights) * self.X  # TODO: CHECK WITH FOUAD
-392: # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
-393: #PW = 0.5 * np.sqrt(self.W)
-394: #PWX = np.dot(PW, self.X)
-395: # TODO: Use FastSVD for speedup!
+348: # TODO: Make the weights sparse.
+349: #weights = np.eye(self.X.shape[0])
 
-397: self._lipschitz = np.max(s) ** 2.0 + self.k  # TODO: CHECK
+351: # TODO: Allow the weight vector to be a list.
+
+456: # TODO: Use FastSVD for speedup!
+
+458: self._L = np.max(s) ** 2.0  # TODO: CHECK
+
+618: PWX = 0.5 * np.sqrt(self.weights) * self.X  # TODO: CHECK WITH FOUAD
+619: # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
+620: #PW = 0.5 * np.sqrt(self.W)
+621: #PWX = np.dot(PW, self.X)
+622: # TODO: Use FastSVD for speedup!
+
+624: self._L = np.max(s) ** 2.0  # TODO: CHECK
+
+629: self._L += self.k  # TODO: CHECK
 
 ./parsimony/functions/penalties.py:
 ----------------------------------
-1062: # TODO: Tweak these magic numbers on real data. Or even better,
-1063: # find theoretical bounds. Convergence is faster if these bounds
-1064: # are close to accurate when we start the bisection algorithm.
+513: # TODO: Check if this is correct!
 
-1179: # TODO: Tweak these magic numbers on real data. Or even better,
-1180: # find theoretical bounds. Convergence is faster if these bounds
-1181: # are close to accurate when we start the bisection algorithm.
+1065: # TODO: Tweak these magic numbers on real data. Or even better,
+1066: # find theoretical bounds. Convergence is faster if these bounds
+1067: # are close to accurate when we start the bisection algorithm.
 
-./parsimony/functions/functions.py:
-----------------------------------
-102: # TODO: We currently only allow one proximal operator. Fix this!
+1182: # TODO: Tweak these magic numbers on real data. Or even better,
+1183: # find theoretical bounds. Convergence is faster if these bounds
+1184: # are close to accurate when we start the bisection algorithm.
 
-155: # TODO: We currently only allow one proximal operator. Fix this!
+./parsimony/functions/combinedfunctions.py:
+------------------------------------------
+32: # TODO: Add penalty_start and mean to all of these!
 
-583: # TODO: This is not good. Solve this better!
+104: # TODO: We currently only allow one proximal operator. Fix this!
 
-868: # TODO: This is not good. Solve this better!
+157: # TODO: We currently only allow one proximal operator. Fix this!
 
-917: # TODO: Use max_iter here!!
+542: # TODO: This is not good. Solve this better!
 
-960: # TODO: Kernelise this function! See how I did in RR_L1_TV._beta_hat.
+919: # TODO: This is not good. Solve this better!
 
-1002: # TODO: Add this function or refactor API!
+968: # TODO: Use max_iter here!!
+
+1011: # TODO: Kernelise this function! See how I did in RR_L1_TV._beta_hat.
+
+1053: # TODO: Add this function or refactor API!
 
 ./parsimony/functions/_objectives/functions.py:
 ----------------------------------------------
@@ -144,14 +166,39 @@
 
 ./parsimony/functions/nesterov/tv.py:
 ------------------------------------
-147: # TODO: Instead of p, this should really be the number of non-zero
-148: # rows of A.
+146: # TODO: This only work if the elements of self._A are scipy.sparse. We
+147: # should allow dense matrices as well.
 
-158: # TODO: Add max_iter here!
+150: # TODO: Instead of p, this should really be the number of non-zero
+151: # rows of A.
+
+161: # TODO: Add max_iter here!
+
+./parsimony/tests/test_simulations.py:
+-------------------------------------
+118: # TODO: Note done. Add more!!
 
 ./parsimony/tests/tests.py:
 --------------------------
-70: # TODO: Is there a better way to do this?
+91: # TODO: Wait for Nose issue #732: https://github.com/nose-devs/nose/issues/732
+92: #    @nottest
+93: #    def runTest(self):
+94: #        """Runs all unit tests.
+95: #
+96: #        From baseclass "unittest.TestCase".
+97: #        """
+98: #        RE_TEST = re.compile("[Tt]est[-_]")
+99: #        for attr in dir(self):
+100: #            if callable(getattr(self, attr)) and RE_TEST.match(attr):
+101: #                getattr(self, attr)()
+
+108: # TODO: There is a better way to do this!
+
+./parsimony/tests/test_logistic_regression.py:
+---------------------------------------------
+17: # TODO: Test penalty_start and mean.
+
+19: # TODO: Test total variation.
 
 ./parsimony/tests/test_algorithms.py:
 ------------------------------------

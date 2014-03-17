@@ -154,9 +154,11 @@ class L1(interfaces.AtomicFunction,
             beta_ = beta[self.penalty_start:, :]
         else:
             beta_ = beta
+
         prox = (np.abs(beta_) > l) * (beta_ - l * np.sign(beta_ - l))
 
-        prox = np.vstack((beta[:self.penalty_start, :], prox))
+        if self.penalty_start > 0:
+            prox = np.vstack((beta[:self.penalty_start, :], prox))
 
         return prox
 

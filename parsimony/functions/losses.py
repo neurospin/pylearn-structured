@@ -179,13 +179,13 @@ class RidgeRegression(interfaces.CompositeFunction,
                       interfaces.StepSize):
     """The Ridge Regression function, i.e. a representation of
 
-        f(x) = 0.5 * ||Xb - y||²_2 + lambda * 0.5 * ||b||²_2,
+        f(x) = (0.5 / n) * ||Xb - y||²_2 + lambda * 0.5 * ||b||²_2,
 
     where ||.||²_2 is the L2 norm.
 
     """
     # TODO: Inherit from LinearRegression and add an L2 constraint instead!
-    def __init__(self, X, y, k, penalty_start=0):
+    def __init__(self, X, y, k, penalty_start=0, mean=True):
         """
         Parameters
         ----------
@@ -198,11 +198,15 @@ class RidgeRegression(interfaces.CompositeFunction,
         penalty_start : Non-negative integer. The number of columns, variables
                 etc., to except from penalisation. Equivalently, the first
                 index to be penalised. Default is 0, all columns are included.
+
+        mean : Boolean. Whether to compute the squared loss or the mean
+                squared loss. Default is True, the mean squared loss.
         """
         self.X = X
         self.y = y
         self.k = float(k)
         self.penalty_start = int(penalty_start)
+        self.mean = bool(mean)
 
         self.reset()
 
@@ -229,8 +233,15 @@ class RidgeRegression(interfaces.CompositeFunction,
         else:
             beta_ = beta
 
-        return (1.0 / 2.0) * np.sum((np.dot(self.X, beta) - self.y) ** 2.0) \
-             + (self.k / 2.0) * np.sum(beta_ ** 2.0)
+        if self.mean:
+            d = 2.0 * float(self.X.shape[0])
+        else:
+            d = 2.0
+
+        f = (1.0 / d) * np.sum((np.dot(self.X, beta) - self.y) ** 2.0) \
+                + (self.k / 2.0) * np.sum(beta_ ** 2.0)
+
+        return f
 
     def grad(self, beta):
         """Gradient of the function at beta.
@@ -254,14 +265,20 @@ class RidgeRegression(interfaces.CompositeFunction,
         >>> np.linalg.norm(rr.grad(beta) - rr.approx_grad(beta, eps=1e-4))
         1.3403176569860683e-06
         """
+        gradOLS = np.dot((np.dot(self.X, beta) - self.y).T, self.X).T
+
+        if self.mean:
+            gradOLS /= float(self.X.shape[0])
+
         if self.penalty_start > 0:
             gradL2 = np.vstack((np.zeros((self.penalty_start, 1)),
                                 self.k * beta[self.penalty_start:, :]))
         else:
             gradL2 = self.k * beta
 
-        return np.dot((np.dot(self.X, beta) - self.y).T, self.X).T \
-             + gradL2
+        grad = gradOLS + gradL2
+
+        return grad
 
     def L(self):
         """Lipschitz constant of the gradient.
@@ -277,6 +294,10 @@ class RidgeRegression(interfaces.CompositeFunction,
                 self._lambda_min = 0.0
             else:
                 self._lambda_min = np.min(s) ** 2.0
+
+            if self.mean:
+                self._lambda_max /= float(self.X.shape[0])
+                self._lambda_min /= float(self.X.shape[0])
 
         return self._lambda_max + self.k
 
@@ -294,14 +315,8 @@ class RidgeRegression(interfaces.CompositeFunction,
         From the interface "StronglyConvex".
         """
         if self._lambda_min is None:
-            s = np.linalg.svd(self.X, full_matrices=False, compute_uv=False)
-
-            self._lambda_max = np.max(s) ** 2.0
-
-            if len(s) < self.X.shape[1]:
-                self._lambda_min = 0.0
-            else:
-                self._lambda_min = np.min(s) ** 2.0
+            self._lambda_max = None
+            self.L()  # Precompute
 
         return self._lambda_min + self.k
 

@@ -15,7 +15,7 @@ from tests import TestCase
 import parsimony.utils.consts as consts
 
 
-class TestLinearRegression(TestCase):
+class TestLinearRegression():#TestCase):
 
     def test_linear_regression_overdetermined(self):
 
@@ -361,6 +361,7 @@ class TestLinearRegression(TestCase):
         import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
         import parsimony.algorithms.explicit as explicit
         import parsimony.start_vectors as start_vectors
+        import parsimony.estimators as estimators
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
 
@@ -388,7 +389,7 @@ class TestLinearRegression(TestCase):
         X, y, beta_star = l1_l2_gl.load(l, k, g, beta, M, e, A, snr=snr)
 
         eps = 1e-8
-        max_iter = 9000
+        max_iter = 3800
         fista = explicit.FISTA(eps=eps, max_iter=max_iter)
         linear_regression = LinearRegression(X, y, mean=False)
         l1 = L1(l=l)
@@ -400,16 +401,197 @@ class TestLinearRegression(TestCase):
 
         beta_parsimony = fista.run(function, beta_start)
 
-        mse = np.linalg.norm(beta_parsimony - beta_star) \
+        mu = consts.TOLERANCE
+        reg_est = estimators.LinearRegression_L1_L2_TV(
+                    l=l, k=k, g=g,
+                    A=A, mu=mu,
+                    output=False,
+                    algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
+                    mean=False)
+        reg_est.fit(X, y)
+
+        rreg_est = estimators.RidgeRegression_L1_TV(
+                    k=k, l=l, g=g,
+                    A=A, mu=mu,
+                    output=False,
+                    algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
+                    mean=False)
+        rreg_est.fit(X, y)
+
+        rreg_est_2 = estimators.RidgeRegression_L1_GL(
+                    k=k, l=l, g=g,
+                    A=A, mu=mu,
+                    output=False,
+                    algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
+                    mean=False)
+        rreg_est_2.fit(X, y)
+
+        re = np.linalg.norm(beta_parsimony - beta_star) \
                 / np.linalg.norm(beta_star)
-#        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+#        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        re = np.linalg.norm(reg_est.beta - beta_star) \
+                / np.linalg.norm(beta_star)
+#        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        re = np.linalg.norm(rreg_est.beta - beta_star) \
+                / np.linalg.norm(beta_star)
+#        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        re = np.linalg.norm(rreg_est_2.beta - beta_star) \
+                / np.linalg.norm(beta_star)
+#        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        f_star = function.f(beta_star)
 
         f_parsimony = function.f(beta_parsimony)
-        f_star = function.f(beta_star)
         err = abs(f_parsimony - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-4, "The found regression vector does not give " \
+        assert_less(err, 5e-5, "The found regression vector does not give " \
+                               "the correct function value.")
+
+        f_est = function.f(reg_est.beta)
+        err = abs(f_est - f_star) / f_star
+#        print "err:", err
+        assert_less(err, 5e-5, "The found regression vector does not give " \
+                               "the correct function value.")
+
+        f_rest = function.f(rreg_est.beta)
+        err = abs(f_rest - f_star) / f_star
+#        print "err:", err
+        assert_less(err, 5e-5, "The found regression vector does not give " \
+                               "the correct function value.")
+
+        f_rest_2 = function.f(rreg_est_2.beta)
+        err = abs(f_rest_2 - f_star) / f_star
+#        print "err:", err
+        assert_less(err, 5e-5, "The found regression vector does not give " \
+                               "the correct function value.")
+
+    def test_linear_regression_l1_intercept(self):
+
+        from parsimony.functions.losses import LinearRegression
+        from parsimony.functions.penalties import L1
+        from parsimony.functions import CombinedFunction
+        import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
+        import parsimony.algorithms.explicit as explicit
+        import parsimony.start_vectors as start_vectors
+        import parsimony.estimators as estimators
+
+        start_vector = start_vectors.RandomStartVector(normalise=True)
+
+        np.random.seed(42)
+
+        n, p = 60, 90 + 1
+
+        alpha = 0.9
+        Sigma = alpha * np.eye(p - 1, p - 1) \
+              + (1.0 - alpha) * np.random.randn(p - 1, p - 1)
+        mean = np.zeros(p - 1)
+        M0 = np.random.multivariate_normal(mean, Sigma, n)
+        M = np.hstack((np.ones((n, 1)), M0))
+        e = np.random.randn(n, 1)
+
+        beta = start_vector.get_vector((p, 1))
+        beta[beta < 0.1] = 0.0
+
+        l = 0.618
+        k = 0.0
+        g = 0.0
+
+        A = np.eye(p - 1)
+        A = [A, A, A]
+        snr = 100.0
+        X, y, beta_star = l1_l2_gl.load(l, k, g, beta, M, e, A, snr=snr,
+                                        intercept=True)
+
+        eps = 1e-8
+        max_iter = 3800
+        fista = explicit.FISTA(eps=eps, max_iter=max_iter)
+        function = CombinedFunction()
+        function.add_function(LinearRegression(X, y, mean=False))
+        function.add_prox(L1(l=l, penalty_start=1))
+
+        beta_start = start_vector.get_vector((p, 1))
+
+        beta_parsimony = fista.run(function, beta_start)
+
+        mu = consts.TOLERANCE
+        reg_est = estimators.LinearRegression_L1_L2_TV(
+                    l=l, k=k, g=g,
+                    A=A, mu=mu,
+                    output=False,
+                    algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
+                    penalty_start=1,
+                    mean=False)
+        reg_est.fit(X, y)
+
+        rreg_est = estimators.RidgeRegression_L1_TV(
+                    k=k, l=l, g=g,
+                    A=A, mu=mu,
+                    output=False,
+                    algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
+                    penalty_start=1,
+                    mean=False)
+        rreg_est.fit(X, y)
+
+        rreg_est_2 = estimators.RidgeRegression_L1_GL(
+                    k=k, l=l, g=g,
+                    A=A, mu=mu,
+                    output=False,
+                    algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
+                    penalty_start=1,
+                    mean=False)
+        rreg_est_2.fit(X, y)
+
+        re = np.linalg.norm(beta_parsimony - beta_star) \
+                / np.linalg.norm(beta_star)
+#        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        re = np.linalg.norm(reg_est.beta - beta_star) \
+                / np.linalg.norm(beta_star)
+#        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        re = np.linalg.norm(rreg_est.beta - beta_star) \
+                / np.linalg.norm(beta_star)
+#        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        re = np.linalg.norm(rreg_est_2.beta - beta_star) \
+                / np.linalg.norm(beta_star)
+#        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        f_star = function.f(beta_star)
+
+        f_parsimony = function.f(beta_parsimony)
+        err = abs(f_parsimony - f_star) / f_star
+#        print "err:", err
+        assert_less(err, 5e-5, "The found regression vector does not give " \
+                               "the correct function value.")
+
+        f_est = function.f(reg_est.beta)
+        err = abs(f_est - f_star) / f_star
+#        print "err:", err
+        assert_less(err, 5e-5, "The found regression vector does not give " \
+                               "the correct function value.")
+
+        f_rest = function.f(rreg_est.beta)
+        err = abs(f_rest - f_star) / f_star
+#        print "err:", err
+        assert_less(err, 5e-5, "The found regression vector does not give " \
+                               "the correct function value.")
+
+        f_rest_2 = function.f(rreg_est_2.beta)
+        err = abs(f_rest_2 - f_star) / f_star
+#        print "err:", err
+        assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
     def test_linear_regression_l2(self):
@@ -501,6 +683,165 @@ class TestLinearRegression(TestCase):
         err = abs(f_rr - f_star) / f_star
 #        print "err:", err
         assert_less(err, 1e-4, "The found regression vector does not give " \
+                               "the correct function value.")
+
+    def test_linear_regression_l2_intercept(self):
+
+        from parsimony.functions.losses import LinearRegression
+        from parsimony.functions.losses import RidgeRegression
+        from parsimony.functions.penalties import L2
+        from parsimony.functions import CombinedFunction
+        import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
+        import parsimony.algorithms.explicit as explicit
+        import parsimony.start_vectors as start_vectors
+        import parsimony.estimators as estimators
+
+        start_vector = start_vectors.RandomStartVector(normalise=True)
+
+        np.random.seed(42)
+
+        n, p = 60, 90
+
+        alpha = 0.9
+        Sigma = alpha * np.eye(p - 1, p - 1) \
+              + (1.0 - alpha) * np.random.randn(p - 1, p - 1)
+        mean = np.zeros(p - 1)
+        M0 = np.random.multivariate_normal(mean, Sigma, n)
+        M = np.hstack((np.ones((n, 1)), M0))
+        e = np.random.randn(n, 1)
+
+        beta = start_vector.get_vector((p, 1))
+#        beta[beta < 0.1] = 0.0
+
+        l = 0.0
+        k = 0.618
+        g = 0.0
+
+        A = np.eye(p - 1)
+        A = [A, A, A]
+        snr = 100.0
+        X, y, beta_star = l1_l2_gl.load(l, k, g, beta, M, e, A, snr=snr,
+                                        intercept=True)
+
+        eps = 1e-8
+        max_iter = 1500
+
+        fista = explicit.FISTA(eps=eps, max_iter=max_iter)
+        beta_start = start_vector.get_vector((p, 1))
+
+        function = CombinedFunction()
+        function.add_function(LinearRegression(X, y, mean=False))
+        function.add_penalty(L2(k, penalty_start=1))
+        beta_penalty = fista.run(function, beta_start)
+
+        re = np.linalg.norm(beta_penalty - beta_star) \
+                / np.linalg.norm(beta_star)
+        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        f_star = function.f(beta_star)
+        f_parsimony = function.f(beta_penalty)
+        err = abs(f_parsimony - f_star) / f_star
+        print "err:", err
+        assert_less(err, 5e-4, "The found regression vector does not give " \
+                               "the correct function value.")
+
+        function = CombinedFunction()
+        function.add_function(LinearRegression(X, y, mean=False))
+        function.add_prox(L2(k, penalty_start=1))
+        beta_prox = fista.run(function, beta_start)
+
+        re = np.linalg.norm(beta_prox - beta_star) \
+                / np.linalg.norm(beta_star)
+        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        f_star = function.f(beta_star)
+        f_prox = function.f(beta_prox)
+        err = abs(f_prox - f_star) / f_star
+        print "err:", err
+        assert_less(err, 5e-4, "The found regression vector does not give " \
+                               "the correct function value.")
+
+        function = CombinedFunction()
+        function.add_function(RidgeRegression(X, y, k, penalty_start=1,
+                                              mean=False))
+        beta_rr = fista.run(function, beta_start)
+
+        re = np.linalg.norm(beta_rr - beta_star) \
+                / np.linalg.norm(beta_star)
+        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        f_star = function.f(beta_star)
+        f_rr = function.f(beta_rr)
+        err = abs(f_rr - f_star) / f_star
+        print "err:", err
+        assert_less(err, 5e-4, "The found regression vector does not give " \
+                               "the correct function value.")
+
+        mu = consts.TOLERANCE
+        reg_est = estimators.LinearRegression_L1_L2_TV(
+                    l=l, k=k, g=g,
+                    A=A, mu=mu,
+                    output=False,
+                    algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
+                    penalty_start=1,
+                    mean=False)
+        reg_est.fit(X, y)
+
+        re = np.linalg.norm(reg_est.beta - beta_star) \
+                / np.linalg.norm(beta_star)
+        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        f_star = function.f(beta_star)
+        f_rr = function.f(reg_est.beta)
+        err = abs(f_rr - f_star) / f_star
+        print "err:", err
+        assert_less(err, 5e-4, "The found regression vector does not give " \
+                               "the correct function value.")
+
+        rreg_est = estimators.RidgeRegression_L1_TV(
+                    k=k, l=l, g=g,
+                    A=A, mu=mu,
+                    output=False,
+                    algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
+                    penalty_start=1,
+                    mean=False)
+        rreg_est.fit(X, y)
+
+        re = np.linalg.norm(rreg_est.beta - beta_star) \
+                / np.linalg.norm(beta_star)
+        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        f_star = function.f(beta_star)
+        f_rr = function.f(rreg_est.beta)
+        err = abs(f_rr - f_star) / f_star
+        print "err:", err
+        assert_less(err, 5e-4, "The found regression vector does not give " \
+                               "the correct function value.")
+
+        rreg_est_2 = estimators.RidgeRegression_L1_GL(
+                    k=k, l=l, g=g,
+                    A=A, mu=mu,
+                    output=False,
+                    algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
+                    penalty_start=1,
+                    mean=False)
+        rreg_est_2.fit(X, y)
+
+        re = np.linalg.norm(rreg_est_2.beta - beta_star) \
+                / np.linalg.norm(beta_star)
+        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        f_star = function.f(beta_star)
+        f_rr = function.f(rreg_est_2.beta)
+        err = abs(f_rr - f_star) / f_star
+        print "err:", err
+        assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
     def test_linear_regression_tv(self):
@@ -596,12 +937,151 @@ class TestLinearRegression(TestCase):
         assert_less(err, 1e-8, "The found regression vector does not give " \
                                "the correct function value.")
 
+    def test_linear_regression_tv_intercept(self):
+
+        from parsimony.functions.losses import LinearRegression
+        import parsimony.functions.nesterov.tv as tv
+        from parsimony.functions import CombinedFunction
+        import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
+        import parsimony.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
+        import parsimony.algorithms.explicit as explicit
+        import parsimony.start_vectors as start_vectors
+        import parsimony.estimators as estimators
+
+        start_vector = start_vectors.RandomStartVector(normalise=True)
+
+        np.random.seed(42)
+
+        px = 4
+        py = 4
+        pz = 4
+        shape = (pz, py, px)
+        n, p = 50, np.prod(shape) + 1
+
+        alpha = 0.9
+        Sigma = alpha * np.eye(p - 1, p - 1) \
+              + (1.0 - alpha) * np.random.randn(p - 1, p - 1)
+        mean = np.zeros(p - 1)
+        M0 = np.random.multivariate_normal(mean, Sigma, n)
+        M = np.hstack((np.ones((n, 1)), M0))
+        e = np.random.randn(n, 1)
+
+        beta = start_vector.get_vector((p, 1))
+        beta = np.sort(beta, axis=0)
+#        beta[beta < 0.1] = 0.0
+
+        l = 0.0
+        k = 0.0
+        g = 1.618
+
+        A, _ = tv.A_from_shape(shape)
+        snr = 20.0
+        eps = 1e-8
+        max_iter = 4100
+
+        X, y, beta_star = l1_l2_tv.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
+                                        A=A, snr=snr, intercept=True)
+
+        mus = [5e-2, 5e-4, 5e-6, 5e-8]
+        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        beta_start = start_vector.get_vector((p, 1))
+
+        beta_nonsmooth = beta_start
+        for mu in mus:
+            function = CombinedFunction()
+            function.add_function(LinearRegression(X, y, mean=False))
+            function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
+                                                   penalty_start=1))
+            beta_nonsmooth = fista.run(function, beta_nonsmooth)
+
+        re = np.linalg.norm(beta_nonsmooth - beta_star) \
+                / np.linalg.norm(beta_star)
+#        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        f_star = function.f(beta_star)
+        f_nonsmooth = function.f(beta_nonsmooth)
+        err = abs(f_nonsmooth - f_star) / f_star
+#        print "err:", err
+        assert_less(err, 5e-5, "The found regression vector does not give " \
+                               "the correct function value.")
+
+        mu_min = mus[-1]
+        X, y, beta_star = l1_l2_tvmu.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
+                                          A=A, mu=mu_min, snr=snr,
+                                          intercept=True)
+        beta_smooth = beta_start
+        for mu in mus:
+            function = CombinedFunction()
+            function.add_function(LinearRegression(X, y, mean=False))
+            function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
+                                                   penalty_start=1))
+            beta_smooth = fista.run(function, beta_smooth)
+
+        re = np.linalg.norm(beta_smooth - beta_star) \
+                / np.linalg.norm(beta_star)
+#        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        f_star = function.f(beta_star)
+        f_smooth = function.f(beta_smooth)
+        err = abs(f_smooth - f_star) / f_star
+#        print "err:", err
+        assert_less(err, 5e-5, "The found regression vector does not give " \
+                               "the correct function value.")
+
+        max_iter = 1500
+        conts = 14
+        mu = mu_min
+        reg_est = estimators.LinearRegression_L1_L2_TV(
+                    l=l, k=k, g=g,
+                    A=A, mu=mu,
+                    output=False,
+                    algorithm=explicit.StaticCONESTA(eps=eps,
+                                                     continuations=conts,
+                                                     max_iter=max_iter),
+                    penalty_start=1,
+                    mean=False)
+        reg_est.fit(X, y)
+
+        re = np.linalg.norm(reg_est.beta - beta_star) \
+                / np.linalg.norm(beta_star)
+#        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        f_star = function.f(beta_star)
+        f_rr = function.f(reg_est.beta)
+        err = abs(f_rr - f_star) / f_star
+#        print "err:", err
+        assert_less(err, 5e-5, "The found regression vector does not give " \
+                               "the correct function value.")
+
+        rreg_est = estimators.RidgeRegression_L1_TV(
+                    k=k, l=l, g=g,
+                    A=A, mu=mu,
+                    output=False,
+                    algorithm=explicit.StaticCONESTA(eps=eps,
+                                                     continuations=conts,
+                                                     max_iter=max_iter),
+                    penalty_start=1,
+                    mean=False)
+        rreg_est.fit(X, y)
+
+        re = np.linalg.norm(rreg_est.beta - beta_star) \
+                / np.linalg.norm(beta_star)
+#        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        f_star = function.f(beta_star)
+        f_rr = function.f(rreg_est.beta)
+        err = abs(f_rr - f_star) / f_star
+#        print "err:", err
+        assert_less(err, 5e-5, "The found regression vector does not give " \
+                               "the correct function value.")
+
     def test_linear_regression_gl(self):
 
         from parsimony.functions.losses import LinearRegression
-#        from parsimony.functions.losses import RidgeRegression
-#        from parsimony.functions.penalties import L1
-#        from parsimony.functions.penalties import L2
         import parsimony.functions.nesterov.gl as gl
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
@@ -686,6 +1166,123 @@ class TestLinearRegression(TestCase):
         err = abs(f_rr - f_star) / f_star
 #        print "err:", err
         assert_less(err, 1e-8, "The found regression vector does not give " \
+                               "the correct function value.")
+
+    def test_linear_regression_gl_intercept(self):
+
+        from parsimony.functions.losses import LinearRegression
+        import parsimony.functions.nesterov.gl as gl
+        from parsimony.functions import CombinedFunction
+        import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
+        import parsimony.datasets.simulated.l1_l2_glmu as l1_l2_glmu
+        import parsimony.algorithms.explicit as explicit
+        import parsimony.start_vectors as start_vectors
+        import parsimony.estimators as estimators
+
+        start_vector = start_vectors.RandomStartVector(normalise=True)
+
+        np.random.seed(42)
+
+        n, p = 60, 90 + 1
+        groups = [range(0, 2 * p / 3), range(p / 3, p - 1)]
+        weights = [1.5, 0.5]
+
+        A = gl.A_from_groups(p - 1, groups=groups, weights=weights)
+
+        alpha = 0.9
+        Sigma = alpha * np.eye(p - 1, p - 1) \
+              + (1.0 - alpha) * np.random.randn(p - 1, p - 1)
+        mean = np.zeros(p - 1)
+        M0 = np.random.multivariate_normal(mean, Sigma, n)
+        M = np.hstack((np.ones((n, 1)), M0))
+        e = np.random.randn(n, 1)
+
+        beta = start_vector.get_vector((p, 1))
+        beta = np.sort(beta, axis=0)
+#        beta[beta < 0.1] = 0.0
+
+        l = 0.0
+        k = 0.0
+        g = 1.618
+
+        snr = 20.0
+        eps = 1e-8
+        max_iter = 1500
+
+        X, y, beta_star = l1_l2_gl.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
+                                        A=A, snr=snr, intercept=True)
+
+        mus = [5e-2, 5e-4, 5e-6, 5e-8]
+        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        beta_start = start_vector.get_vector((p, 1))
+
+        beta_nonsmooth = beta_start
+        for mu in mus:
+            function = CombinedFunction()
+            function.add_function(LinearRegression(X, y, mean=False))
+            function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
+                                                      penalty_start=1))
+            beta_nonsmooth = fista.run(function, beta_nonsmooth)
+
+        re = np.linalg.norm(beta_nonsmooth - beta_star) \
+                / np.linalg.norm(beta_star)
+        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        f_star = function.f(beta_star)
+        f_parsimony = function.f(beta_nonsmooth)
+        err = abs(f_parsimony - f_star) / f_star
+        print "err:", err
+        assert_less(err, 5e-6, "The found regression vector does not give " \
+                               "the correct function value.")
+
+        mu_min = mus[-1]
+        X, y, beta_star = l1_l2_glmu.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
+                                          A=A, mu=mu_min, snr=snr,
+                                          intercept=True)
+        beta_smooth = beta_start
+        for mu in mus:
+            function = CombinedFunction()
+            function.add_function(LinearRegression(X, y, mean=False))
+            function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
+                                                      penalty_start=1))
+            beta_smooth = fista.run(function, beta_smooth)
+
+        re = np.linalg.norm(beta_smooth - beta_star) \
+                / np.linalg.norm(beta_star)
+        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        f_star = function.f(beta_star)
+        f_rr = function.f(beta_smooth)
+        err = abs(f_rr - f_star) / f_star
+        print "err:", err
+        assert_less(err, 5e-6, "The found regression vector does not give " \
+                               "the correct function value.")
+
+        max_iter = 1500
+        conts = 10
+        rreg_est = estimators.RidgeRegression_L1_GL(
+                    k=k, l=l, g=g,
+                    A=A, mu=mu,
+                    output=False,
+                    algorithm=explicit.StaticCONESTA(eps=eps,
+                                                     continuations=conts,
+                                                     max_iter=max_iter),
+                    penalty_start=1,
+                    mean=False)
+        rreg_est.fit(X, y)
+
+        re = np.linalg.norm(rreg_est.beta - beta_star) \
+                / np.linalg.norm(beta_star)
+        print "re:", re
+        assert_less(re, 5e-3, "The found regression vector is not correct.")
+
+        f_star = function.f(beta_star)
+        f_rr = function.f(rreg_est.beta)
+        err = abs(f_rr - f_star) / f_star
+        print "err:", err
+        assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
     def test_linear_regression_l1_l2(self):

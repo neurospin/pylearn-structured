@@ -214,7 +214,8 @@ class RR_L1_TV(interfaces.CompositeFunction,
                interfaces.StronglyConvex):
     """Combination (sum) of RidgeRegression, L1 and TotalVariation.
     """
-    def __init__(self, X, y, k, l, g, A=None, mu=0.0, penalty_start=0):
+    def __init__(self, X, y, k, l, g, A=None, mu=0.0, penalty_start=0,
+                 mean=True):
         """
         Parameters:
         ----------
@@ -240,11 +241,15 @@ class RR_L1_TV(interfaces.CompositeFunction,
         penalty_start : Non-negative integer. The number of columns, variables
                 etc., to except from penalisation. Equivalently, the first
                 index to be penalised. Default is 0, all columns are included.
+
+        mean : Boolean. Whether to compute the squared loss or the mean
+                squared loss. Default is True, the mean squared loss.
         """
         self.X = X
         self.y = y
 
-        self.rr = RidgeRegression(X, y, k, penalty_start=penalty_start)
+        self.rr = RidgeRegression(X, y, k, penalty_start=penalty_start,
+                                  mean=mean)
         self.l1 = L1(l, penalty_start=penalty_start)
         self.tv = TotalVariation(g, A=A, mu=mu, penalty_start=penalty_start)
 
@@ -491,7 +496,8 @@ class RR_L1_TV(interfaces.CompositeFunction,
 class RR_L1_GL(RR_L1_TV):
     """Combination (sum) of RidgeRegression, L1 and Overlapping Group Lasso.
     """
-    def __init__(self, X, y, k, l, g, A=None, mu=0.0, penalty_start=0):
+    def __init__(self, X, y, k, l, g, A=None, mu=0.0, penalty_start=0,
+                 mean=True):
         """
         Parameters:
         ----------
@@ -517,11 +523,15 @@ class RR_L1_GL(RR_L1_TV):
         penalty_start : Non-negative integer. The number of columns, variables
                 etc., to except from penalisation. Equivalently, the first
                 index to be penalised. Default is 0, all columns are included.
+
+        mean : Boolean. Whether to compute the squared loss or the mean
+                squared loss. Default is True, the mean squared loss.
         """
         self.X = X
         self.y = y
 
-        self.rr = RidgeRegression(X, y, k, penalty_start=penalty_start)
+        self.rr = RidgeRegression(X, y, k, penalty_start=penalty_start,
+                                  mean=mean)
         self.l1 = L1(l, penalty_start=penalty_start)
         self.gl = GroupLassoOverlap(g, A=A, mu=mu, penalty_start=penalty_start)
 
