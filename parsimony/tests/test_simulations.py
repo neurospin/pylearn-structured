@@ -362,7 +362,8 @@ class TestSimulations(TestCase):
             for mu in mus:
                 function = CombinedFunction()
                 function.add_function(RidgeRegression(X, y, L,
-                                                      penalty_start=1))
+                                                      penalty_start=1,
+                                                      mean=False))
                 function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
                                                        penalty_start=1))
                 function.add_prox(L1(l, penalty_start=1))
@@ -454,7 +455,8 @@ class TestSimulations(TestCase):
                      A, mu=mu,
                      output=False,
                      algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
-                     penalty_start=1)
+                     penalty_start=1,
+                     mean=False)
         estimator.fit(X, y)
         function = RR_L1_TV(X, y, k, l, g, A=A, mu=estimator.mu,
                             penalty_start=1)
@@ -640,7 +642,8 @@ class TestSimulations(TestCase):
             for mu in mus:
                 function = CombinedFunction()
                 function.add_function(RidgeRegression(X, y, L,
-                                                      penalty_start=1))
+                                                      penalty_start=1,
+                                                      mean=False))
                 function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
                                                           penalty_start=1))
                 function.add_prox(L1(l, penalty_start=1))
@@ -732,7 +735,8 @@ class TestSimulations(TestCase):
                      A, mu=mu,
                      output=False,
                      algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
-                     penalty_start=1)
+                     penalty_start=1,
+                     mean=False)
         estimator.fit(X, y)
         function = RR_L1_GL(X, y, k, l, g, A=A, mu=estimator.mu,
                             penalty_start=1)

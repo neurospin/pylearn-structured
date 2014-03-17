@@ -263,7 +263,7 @@ class RidgeRegression(interfaces.CompositeFunction,
         >>> rr = RidgeRegression(X=X, y=y, k=3.14159265)
         >>> beta = np.random.rand(150, 1)
         >>> np.linalg.norm(rr.grad(beta) - rr.approx_grad(beta, eps=1e-4))
-        1.3403176569860683e-06
+        1.2951508180081868e-08
         """
         gradOLS = np.dot((np.dot(self.X, beta) - self.y).T, self.X).T
 

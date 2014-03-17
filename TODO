@@ -7,15 +7,15 @@
 
 81: # TODO: Is this a good name?
 
-304: # TODO: Should we use a seed here so that we get deterministic results?
+310: # TODO: Should we use a seed here so that we get deterministic results?
 
-426: # TODO: Should we use a seed here so that we get deterministic results?
+437: # TODO: Should we use a seed here so that we get deterministic results?
 
-553: # TODO: Should we use a seed here so that we get deterministic results?
+570: # TODO: Should we use a seed here so that we get deterministic results?
 
-684: # TODO: Should we use a seed here so that we get deterministic results?
+701: # TODO: Should we use a seed here so that we get deterministic results?
 
-793: # TODO: Should we use a seed here so that we get deterministic results?
+810: # TODO: Should we use a seed here so that we get deterministic results?
 
 ./parsimony/algorithms/explicit.py:
 ----------------------------------
@@ -90,24 +90,24 @@
 
 187: # TODO: Inherit from LinearRegression and add an L2 constraint instead!
 
-348: # TODO: Make the weights sparse.
-349: #weights = np.eye(self.X.shape[0])
+363: # TODO: Make the weights sparse.
+364: #weights = np.eye(self.X.shape[0])
 
-351: # TODO: Allow the weight vector to be a list.
+366: # TODO: Allow the weight vector to be a list.
 
-456: # TODO: Use FastSVD for speedup!
+471: # TODO: Use FastSVD for speedup!
 
-458: self._L = np.max(s) ** 2.0  # TODO: CHECK
+473: self._L = np.max(s) ** 2.0  # TODO: CHECK
 
-618: PWX = 0.5 * np.sqrt(self.weights) * self.X  # TODO: CHECK WITH FOUAD
-619: # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
-620: #PW = 0.5 * np.sqrt(self.W)
-621: #PWX = np.dot(PW, self.X)
-622: # TODO: Use FastSVD for speedup!
+633: PWX = 0.5 * np.sqrt(self.weights) * self.X  # TODO: CHECK WITH FOUAD
+634: # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
+635: #PW = 0.5 * np.sqrt(self.W)
+636: #PWX = np.dot(PW, self.X)
+637: # TODO: Use FastSVD for speedup!
 
-624: self._L = np.max(s) ** 2.0  # TODO: CHECK
+639: self._L = np.max(s) ** 2.0  # TODO: CHECK
 
-629: self._L += self.k  # TODO: CHECK
+644: self._L += self.k  # TODO: CHECK
 
 ./parsimony/functions/penalties.py:
 ----------------------------------
@@ -129,15 +129,15 @@
 
 157: # TODO: We currently only allow one proximal operator. Fix this!
 
-542: # TODO: This is not good. Solve this better!
+552: # TODO: This is not good. Solve this better!
 
-919: # TODO: This is not good. Solve this better!
+929: # TODO: This is not good. Solve this better!
 
-968: # TODO: Use max_iter here!!
+978: # TODO: Use max_iter here!!
 
-1011: # TODO: Kernelise this function! See how I did in RR_L1_TV._beta_hat.
+1021: # TODO: Kernelise this function! See how I did in RR_L1_TV._beta_hat.
 
-1053: # TODO: Add this function or refactor API!
+1063: # TODO: Add this function or refactor API!
 
 ./parsimony/functions/_objectives/functions.py:
 ----------------------------------------------

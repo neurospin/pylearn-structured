@@ -225,24 +225,26 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
     >>> num_ft = shape[0] * shape[1] * shape[2]
     >>>
     >>> np.random.seed(42)
-    >>> X = np.random.random((num_samples, num_ft))
-    >>> y = np.random.randint(0, 2, (num_samples, 1))
+    >>> X = np.random.rand(num_samples, num_ft)
+    >>> y = np.random.rand(num_samples, 1)
     >>> l = 0.1  # L1 coefficient
     >>> k = 0.9  # Ridge coefficient
     >>> g = 1.0  # TV coefficient
     >>> A, n_compacts = tv.A_from_shape(shape)
     >>> lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
-    ...                               algorithm=explicit.FISTA(max_iter=1000))
+    ...                               algorithm=explicit.FISTA(max_iter=1000),
+    ...                               mean=False)
     >>> lr = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
-    error =  0.87958672586
+    error =  1.3261562691
     >>> lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
-    ...                                algorithm=explicit.ISTA(max_iter=1000))
+    ...                                algorithm=explicit.ISTA(max_iter=1000),
+    ...                               mean=False)
     >>> lr = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
-    error =  1.07391299463
+    error =  1.45373582999
     """
     def __init__(self, l, k, g, A, mu=consts.TOLERANCE, output=False,
                  algorithm=explicit.StaticCONESTA(),
@@ -311,7 +313,12 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
         if beta is None:
             beta = self.start_vector.get_vector((X.shape[1], 1))
 
-#        function.set_params(mu=self.mu)
+        if self.mu is None:
+            self.mu = function.estimate_mu(beta)
+        else:
+            self.mu = float(self.mu)
+
+        function.set_params(mu=self.mu)
         self.algorithm.set_params(output=self.output)
 
         if self.output:
@@ -342,8 +349,8 @@ class RidgeRegression_L1_TV(RegressionEstimator):
     >>> num_samples = 10
     >>> num_ft = shape[0] * shape[1] * shape[2]
     >>> np.random.seed(seed=1)
-    >>> X = np.random.random((num_samples, num_ft))
-    >>> y = np.random.randint(0, 2, (num_samples, 1))
+    >>> X = np.random.rand(num_samples, num_ft)
+    >>> y = np.random.rand(num_samples, 1)
     >>> k = 0.9  # ridge regression coefficient
     >>> l = 0.1  # l1 coefficient
     >>> g = 1.0  # tv coefficient
@@ -353,19 +360,19 @@ class RidgeRegression_L1_TV(RegressionEstimator):
     >>> res = ridge_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
     >>> print "error = ", error
-    error =  4.70079219833
+    error =  3.1369738548
     >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
     ...                     algorithm=explicit.DynamicCONESTA(max_iter=1000))
     >>> res = ridge_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
     >>> print "error = ", error
-    error =  4.70069909262
+    error =  3.13697446847
     >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
     ...                     algorithm=explicit.FISTA(max_iter=1000))
     >>> res = ridge_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
     >>> print "error = ", error
-    error =  3.9603518627
+    error =  3.07185427305
     """
     def __init__(self, k, l, g, A, mu=None, output=False,
                  algorithm=explicit.StaticCONESTA(),
