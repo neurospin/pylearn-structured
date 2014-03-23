@@ -4,10 +4,11 @@ Created on Mon Jan  6 14:13:42 2014
 
 @author: edouard.duchesnay@cea.fr
 """
-import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_map2d(map2d, plot=None, title=None, limits=None, center_cmap=True):
+def plot_map2d(map2d, plot=None, title=None, limits=None, 
+               center_cmap=True):
+    import matplotlib.pyplot as plt
     if plot is None:
         plot = plt
     map2d = map2d.squeeze()

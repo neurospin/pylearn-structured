@@ -38,8 +38,6 @@ __all__ = ["BaseEstimator", "RegressionEstimator",
 
            "RidgeRegression_SmoothedL1TV"]
 
-# TODO: Add penalty_start and mean to all of these!
-
 
 class BaseEstimator(object):
     """Base class for estimators.
@@ -113,15 +111,6 @@ class RegressionEstimator(BaseEstimator):
         raise NotImplementedError('Abstract method "fit" must be '
                                   'specialised!')
 
-#        self.function.set_params(X=X, y=y)
-#        # TODO: Should we use a seed here so that we get deterministic
-#        # results?
-#        beta = self.start_vector.get_vector((X.shape[1], 1))
-#        if self.output:
-#            self.beta, self.output = self.algorithm(X, y, self.function, beta)
-#        else:
-#            self.beta = self.algorithm(X, y, self.function, beta)
-
     def predict(self, X):
         """Perform prediction using the fitted parameters.
         """
@@ -176,15 +165,6 @@ class LogisticRegressionEstimator(BaseEstimator):
         raise NotImplementedError('Abstract method "fit" must be '
                                   'specialised!')
 
-#        self.function.set_params(X=X, y=y)
-#        # TODO: Should we use a seed here so that we get deterministic
-#        # results?
-#        beta = self.start_vector.get_vector((X.shape[1], 1))
-#        if self.output:
-#            self.beta, self.output = self.algorithm(X, y, self.function, beta)
-#        else:
-#            self.beta = self.algorithm(X, y, self.function, beta)
-
     def predict(self, X):
         """Return a predicted y corresponding to the X given and the beta
         previously determined.
@@ -213,7 +193,39 @@ class LogisticRegressionEstimator(BaseEstimator):
 
 
 class LinearRegression_L1_L2_TV(RegressionEstimator):
-    """
+    """Minimize regression  with L1, L2 and TV penalties:
+
+    f(beta, X, y) = 1/2 ||Xbeta - y||²_2 / n_samples
+                    + k/2 * ||beta||²_2
+                    + l * ||beta||_1
+                    + g * TV(beta)
+    Parameters
+    ----------
+    k : Non-negative float. The L2 regularization parameter.
+
+    l : Non-negative float. The L1 regularization parameter.
+
+    g : Non-negative float. The total variation regularization parameter.
+
+    A : Numpy or (usually) scipy.sparse array. The linear operator for the
+            smoothed total variation Nesterov function.
+
+    mu : Non-negative float. The regularisation constant for the smoothing.
+
+    output : Boolean. Whether or not to return extra output information.
+
+    algorithm : ExplicitAlgorithm. The algorithm that should be applied.
+            Should be one of:
+                3. algorithms.FISTA()
+                4. algorithms.ISTA()
+
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to be exempt from penalisation. Equivalently, the first
+            index to be penalised. Default is 0, all columns are included.
+
+    mean : Boolean. Whether to compute the squared loss or the mean squared
+            loss. Default is True, the mean squared loss.
+
     Examples
     --------
     >>> import numpy as np
@@ -251,34 +263,6 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
                  penalty_start=0, mean=True):
-        """
-        Parameters
-        ----------
-        l : Non-negative float. The L1 regularization parameter.
-
-        k : Non-negative float. The L2 regularization parameter.
-
-        g : Non-negative float. The total variation regularization parameter.
-
-        A : Numpy or (usually) scipy.sparse array. The linear operator for the
-                smoothed total variation Nesterov function.
-
-        mu : Non-negative float. The regularisation constant for the smoothing.
-
-        output : Boolean. Whether or not to return extra output information.
-
-        algorithm : ExplicitAlgorithm. The algorithm that should be applied.
-                Should be one of:
-                    3. algorithms.FISTA()
-                    4. algorithms.ISTA()
-
-        penalty_start : Non-negative integer. The number of columns, variables
-                etc., to be exempt from penalisation. Equivalently, the first
-                index to be penalised. Default is 0, all columns are included.
-
-        mean : Boolean. Whether to compute the squared loss or the mean squared
-                loss. Default is True, the mean squared loss.
-        """
         self.l = float(l)
         self.k = float(k)
         self.g = float(g)
@@ -338,7 +322,42 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
 
 
 class RidgeRegression_L1_TV(RegressionEstimator):
-    """
+    """Minimize ridge regression  with L1 and TV penalties:
+
+    f(beta, X, y)   = 1/2 ||Xbeta - y||²_2 / n_samples
+                    + k/2 ||beta||²_2
+                    + l * ||beta||_1
+                    + g * TV(beta)
+
+    Parameters
+    ----------
+    k : Non-negative float. The L2 regularization parameter.
+
+    l : Non-negative float. The L1 regularization parameter.
+
+    g : Non-negative float. The total variation regularization parameter.
+
+    A : Numpy or (usually) scipy.sparse array. The linear operator for the
+            smoothed total variation Nesterov function.
+
+    mu : Non-negative float. The regularisation constant for the smoothing.
+
+    output : Boolean. Whether or not to return extra output information.
+
+    algorithm : ExplicitAlgorithm. The algorithm that be applied. Should be
+            one of:
+                1. algorithms.StaticCONESTA()
+                2. algorithms.DynamicCONESTA()
+                3. algorithms.FISTA()
+                4. algorithms.ISTA()
+
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to be exempt from penalisation. Equivalently, the first
+            index to be penalised. Default is 0, all columns are included.
+
+    mean : Boolean. Whether to compute the squared loss or the mean
+            squared loss. Default is True, the mean squared loss.
+
     Examples
     --------
     >>> import numpy as np
@@ -379,36 +398,6 @@ class RidgeRegression_L1_TV(RegressionEstimator):
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
                  penalty_start=0, mean=True):
-        """
-        Parameters
-        ----------
-        l : Non-negative float. The L1 regularization parameter.
-
-        k : Non-negative float. The L2 regularization parameter.
-
-        g : Non-negative float. The total variation regularization parameter.
-
-        A : Numpy or (usually) scipy.sparse array. The linear operator for the
-                smoothed total variation Nesterov function.
-
-        mu : Non-negative float. The regularisation constant for the smoothing.
-
-        output : Boolean. Whether or not to return extra output information.
-
-        algorithm : ExplicitAlgorithm. The algorithm that be applied. Should be
-                one of:
-                    1. algorithms.StaticCONESTA()
-                    2. algorithms.DynamicCONESTA()
-                    3. algorithms.FISTA()
-                    4. algorithms.ISTA()
-
-        penalty_start : Non-negative integer. The number of columns, variables
-                etc., to be exempt from penalisation. Equivalently, the first
-                index to be penalised. Default is 0, all columns are included.
-
-        mean : Boolean. Whether to compute the squared loss or the mean
-                squared loss. Default is True, the mean squared loss.
-        """
         self.k = float(k)
         self.l = float(l)
         self.g = float(g)
@@ -471,6 +460,35 @@ class RidgeRegression_L1_TV(RegressionEstimator):
 
 class RidgeRegression_L1_GL(RegressionEstimator):
     """
+    Parameters
+    ----------
+    k : Non-negative float. The L2 regularisation parameter.
+
+    l : Non-negative float. The L1 regularisation parameter.
+
+    g : Non-negative float. The Group lasso regularisation parameter.
+
+    A : Numpy or (usually) scipy.sparse array. The linear operator for the
+            smoothed group lasso Nesterov function.
+
+    mu : Non-negative float. The regularisation constant for the smoothing.
+
+    output : Boolean. Whether or not to return extra output information.
+
+    algorithm : ExplicitAlgorithm. The algorithm that should be applied.
+            Should be one of:
+                1. algorithms.StaticCONESTA()
+                2. algorithms.DynamicCONESTA()
+                3. algorithms.FISTA()
+                4. algorithms.ISTA()
+
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to be exempt from penalisation. Equivalently, the first
+            index to be penalised. Default is 0, all columns are included.
+
+    mean : Boolean. Whether to compute the squared loss or the mean
+            squared loss. Default is True, the mean squared loss.
+
     Examples
     --------
 #    >>> import numpy as np
@@ -511,36 +529,6 @@ class RidgeRegression_L1_GL(RegressionEstimator):
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
                  penalty_start=0, mean=True):
-        """
-        Parameters
-        ----------
-        l : Non-negative float. The L1 regularisation parameter.
-
-        k : Non-negative float. The L2 regularisation parameter.
-
-        g : Non-negative float. The Group lasso regularisation parameter.
-
-        A : Numpy or (usually) scipy.sparse array. The linear operator for the
-                smoothed group lasso Nesterov function.
-
-        mu : Non-negative float. The regularisation constant for the smoothing.
-
-        output : Boolean. Whether or not to return extra output information.
-
-        algorithm : ExplicitAlgorithm. The algorithm that should be applied.
-                Should be one of:
-                    1. algorithms.StaticCONESTA()
-                    2. algorithms.DynamicCONESTA()
-                    3. algorithms.FISTA()
-                    4. algorithms.ISTA()
-
-        penalty_start : Non-negative integer. The number of columns, variables
-                etc., to be exempt from penalisation. Equivalently, the first
-                index to be penalised. Default is 0, all columns are included.
-
-        mean : Boolean. Whether to compute the squared loss or the mean
-                squared loss. Default is True, the mean squared loss.
-        """
         self.k = float(k)
         self.l = float(l)
         self.g = float(g)
@@ -603,18 +591,52 @@ class RidgeRegression_L1_GL(RegressionEstimator):
 
 
 class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
-    """
-    Minimize RidgeLogisticRegression (re-weighted log-likelihood
+    """Minimize ridge logistic regression (re-weighted log-likelihood
     aka cross-entropy) with L1 and TV penalties:
-    Ridge (re-weighted) log-likelihood (cross-entropy):
 
-        f(beta, X, y) = - Sum wi * (yi * log(pi) + (1 − yi) * log(1 − pi))
-                        + k/2 * ||beta||^2_2
-                        + l * ||beta||_1
-                        + g * TV(beta)
+    f(beta, X, y) = - loglik/n_samples
+                    + k/2 ||beta||²_2
+                    + l   ||beta||_1
+                    + g   TV(beta)
+    With:
+        loglik = Sum wi * (yi * log(pi) + (1 − yi) * log(1 − pi))
+        pi = p(y=1|xi, beta) = 1 / (1 + exp(-xi' beta))
+        wi: sample i weight
 
-    With pi = p(y=1|xi, beta) = 1 / (1 + exp(-xi' beta)) and wi: sample i
-    weight
+    Parameters
+    ----------
+    k : Non-negative float. The L2 regularization parameter.
+
+    l : Non-negative float. The L1 regularization parameter.
+
+    g : Non-negative float. The total variation regularization parameter.
+
+    A : Numpy or (usually) scipy.sparse array. The linear operator for the
+            smoothed total variation Nesterov function.
+
+    mu : Non-negative float. The regularisation constant for the smoothing.
+
+    output : Boolean. Whether or not to return extra output information.
+
+    algorithm : ExplicitAlgorithm. The algorithm that will be run. Should
+            be one of:
+                1. algorithms.StaticCONESTA()
+                2. algorithms.DynamicCONESTA()
+                3. algorithms.FISTA()
+                4. algorithms.ISTA()
+
+    class_weight : Dict, 'auto' or None. If 'auto', class weights will be
+            given inverse proportional to the frequency of the class in
+            the data. If a dictionary is given, keys are classes and values
+            are corresponding class weights. If None is given, the class
+            weights will be uniform.
+
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to be exempt from penalisation. Equivalently, the first
+            index to be penalised. Default is 0, all columns are included.
+
+    mean : Boolean. Whether to compute the squared loss or the mean
+            squared loss. Default is True, the mean squared loss.
 
     Examples
     --------
@@ -624,48 +646,12 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
                  class_weight=None, penalty_start=0, mean=True):
-        """
-        Parameters
-        ----------
-        l : Non-negative float. The L1 regularization parameter.
-
-        k : Non-negative float. The L2 regularization parameter.
-
-        g : Non-negative float. The total variation regularization parameter.
-
-        A : Numpy or (usually) scipy.sparse array. The linear operator for the
-                smoothed total variation Nesterov function.
-
-        mu : Non-negative float. The regularisation constant for the smoothing.
-
-        output : Boolean. Whether or not to return extra output information.
-
-        algorithm : ExplicitAlgorithm. The algorithm that will be run. Should
-                be one of:
-                    1. algorithms.StaticCONESTA()
-                    2. algorithms.DynamicCONESTA()
-                    3. algorithms.FISTA()
-                    4. algorithms.ISTA()
-
-        class_weight : Dict, 'auto' or None. If 'auto', class weights will be
-                given inverse proportional to the frequency of the class in
-                the data. If a dictionary is given, keys are classes and values
-                are corresponding class weights. If None is given, the class
-                weights will be uniform.
-
-        penalty_start : Non-negative integer. The number of columns, variables
-                etc., to be exempt from penalisation. Equivalently, the first
-                index to be penalised. Default is 0, all columns are included.
-
-        mean : Boolean. Whether to compute the squared loss or the mean
-                squared loss. Default is True, the mean squared loss.
-        """
         self.k = float(k)
         self.l = float(l)
         self.g = float(g)
         if isinstance(algorithm, explicit.CONESTA) \
                 and self.g < consts.TOLERANCE:
-            warnings.warn("The GL parameter should be positive.")
+            warnings.warn("The TV parameter should be positive.")
         self.A = A
         #self.weigths = weigths
         try:
@@ -725,24 +711,23 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
 
 
 class RidgeLogisticRegression_L1_GL(LogisticRegressionEstimator):
-    """Minimises RidgeLogisticRegression (re-weighted log-likelihood aka.
-    cross-entropy) with L1 and group lasso penalties:
+    """Minimize ridge logistic regression (re-weighted log-likelihood
+    aka cross-entropy) with L1 and group lasso penalties:
 
-    Ridge (re-weighted) log-likelihood (cross-entropy):
-
-        f(beta, X, y) = - Sum wi * (yi * log(pi) + (1 − yi) * log(1 − pi))
-                        + k/2 * ||beta||^2_2
-                        + l * ||beta||_1
-                        + g * GL(beta)
-
-    With pi = p(y=1|xi, beta) = 1 / (1 + exp(-xi' beta)) and wi the weight of
-    sample i.
+    f(beta, X, y) = - loglik/n_samples
+                    + k/2 ||beta||²_2
+                    + l   ||beta||_1
+                    + g   GL(beta)
+    With:
+        loglik = Sum wi * (yi * log(pi) + (1 − yi) * log(1 − pi))
+        pi = p(y=1|xi, beta) = 1 / (1 + exp(-xi' beta))
+        wi: sample i weight
 
     Parameters
     ----------
-    l : Non-negative float. The L1 regularization parameter.
-
     k : Non-negative float. The L2 regularization parameter.
+
+    l : Non-negative float. The L1 regularization parameter.
 
     g : Non-negative float. The total variation regularization parameter.
 
@@ -834,12 +819,13 @@ class RidgeLogisticRegression_L1_GL(LogisticRegressionEstimator):
 
 
 class RidgeRegression_SmoothedL1TV(RegressionEstimator):
+    # TODO: Add penalty_start and mean to here!
     """
     Parameters
     ----------
-    l : Non-negative float. The L1 regularisation parameter.
-
     k : Non-negative float. The L2 regularisation parameter.
+
+    l : Non-negative float. The L1 regularisation parameter.
 
     g : Non-negative float. The total variation regularization parameter.
 
