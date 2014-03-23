@@ -171,7 +171,11 @@ class L1(interfaces.AtomicFunction,
             return beta
 
         from parsimony.algorithms.explicit import Bisection
-        bisection = Bisection(force_negative=True, eps=1e-8)
+        bisection = Bisection(force_negative=True,
+                              parameter_positive=True,
+                              parameter_negative=False,
+                              parameter_zero=False,
+                              eps=1e-8)
 
         class F(interfaces.Function):
             def __init__(self, beta, c):
@@ -927,15 +931,15 @@ class RGCCAConstraint(QuadraticConstraint,
 
     def reset(self):
 
-        self._VU = None
-        self._Pt = None
         self._UP = None
-
-#        self._Ip = None
-        self._M = None
+        self._PtVx = None
 
         self._D = None
         self._P = None
+
+        self._M = None
+        self._sqrtD = None
+        self._Ptx = None
 
     def f(self, beta):
         """Function value.
@@ -960,18 +964,19 @@ class RGCCAConstraint(QuadraticConstraint,
             beta_ = beta
 
         if self.unbiased:
-            n = self.X.shape[0] - 1.0
+            n = float(self.X.shape[0] - 1.0)
         else:
-            n = self.X.shape[0]
+            n = float(self.X.shape[0])
 
         if self.tau < 1.0:
             XtXbeta = np.dot(self.X.T, np.dot(self.X, beta_))
             grad = (self.tau * 2.0) * beta_ \
-                 + ((1.0 - self.tau) * 2.0 / float(n)) * XtXbeta
+                 + ((1.0 - self.tau) * 2.0 / n) * XtXbeta
         else:
             grad = (self.tau * 2.0) * beta_
 
-        grad = np.vstack(np.zeros((self.penalty_start, 1)), grad)
+        if self.penalty_start > 0:
+            grad = np.vstack(np.zeros((self.penalty_start, 1)), grad)
 
 #        approx_grad = utils.approx_grad(self.f, beta, eps=1e-4)
 #        print maths.norm(grad - approx_grad)
@@ -997,257 +1002,216 @@ class RGCCAConstraint(QuadraticConstraint,
 
         From the interface "ProjectionOperator".
         """
+        from parsimony.algorithms.explicit import Bisection
+        bisection = Bisection(force_negative=True,
+                              parameter_positive=True,
+                              parameter_negative=False,
+                              parameter_zero=False,
+                              eps=1e-5)
+
         if self.penalty_start > 0:
             beta_ = beta[self.penalty_start:, :]
+            X_ = self.X[:, self.penalty_start:]
         else:
             beta_ = beta
+            X_ = self.X
 
         xtMx = self._compute_value(beta_)
         if xtMx <= self.c:
-            return beta, beta
+            return beta
 
-        n, p = self.X.shape
-        if p > n:
-#            In = np.eye(n)                    # n-by-n
-            U = self.X.T                      # p-by-n
-#            V = self.X                        # n-by-p
-            Vx = np.dot(self.X, beta_)        # n-by-1
-            if self._VU is None:
-                self._VU = np.dot(self.X, U)  # XX', n-by-n
+        n, p = X_.shape
 
+        if self.unbiased:
+            n_ = float(n - 1.0)
+        else:
+            n_ = float(n)
+
+        class F(interfaces.Function):
+            def __init__(self, x, c, val, prox):
+                self.x = x
+                self.c = c
+                self.val = val
+                self.prox = prox
+                self.y = None
+
+            def f(self, l):
+                # We avoid one evaluation of prox by saving it here.
+                self.y = self.prox(self.x, l)
+
+                return self.val(self.y) - self.c
+
+        if self.tau == 1.0:
+
+#            def prox_1(x, l):
+#                return x / (1.0 + 2.0 * l)
+#
+#            func = F(beta_, self.c, self._compute_value, prox_1)
+#
+#            l = bisection.run(func, [0.0, 1.0])
+#
+#            y = func.y
+
+            sqnorm = maths.norm(beta_) ** 2.0
+            eps = consts.FLOAT_EPSILON
+            y = beta_ * np.sqrt((self.c - eps) / sqnorm)
+
+        elif p > n and self.tau == 0.0:
+
+            U = X_.T                       # p-by-n
+            V = X_                         # n-by-p
+            Vx = np.dot(V, beta_)          # n-by-1
+
+            if self._D is None:
+                VU = np.dot(V, U)    # n-by-n, VU = XX'
 #                self._P, self._D, self._Pt = np.linalg.svd(self._VU)
-                self._D, self._P = np.linalg.eig(self._VU)
-#                self._Pt = np.linalg.pinv(self._P)
-                self._Pt = self._P.T
-                self._UP = np.dot(U, self._P)
+                self._D, P = np.linalg.eig(VU)
 
-            if self.unbiased:
-                n_ = float(n - 1.0)
-            else:
-                n_ = float(n)
+                self._UP = np.dot(U, P)
+#                np.linalg.pinv(P)
+                self._PtVx = np.dot(P.T, Vx)
 
-            def prox(x, l):
-                k = 0.5 * l * self.tau + 1.0
-                m = 0.5 * l * ((1.0 - self.tau) / n_)
+            def prox_2(x, l):
+                k = n_ / (2.0 * l)
 
-#                invIVU = np.linalg.inv((k / m) * In + self._VU)
-#                invIVU = np.dot(self._P * np.reciprocal(self._D + (k / m)), self._Pt)
-
-                PtinvIVU = (np.reciprocal(self._D + (k / m)) * self._Pt.T).T
-#                invIMx = (x - np.dot(U, np.dot(invIVU, Vx))) / k
-                invIMx = (x - np.dot(self._UP, np.dot(PtinvIVU, Vx))) / k
+                invIMx = x - np.dot(self._UP,
+                                (np.reciprocal(k + self._D) * self._PtVx.T).T)
 
                 return invIMx
 
-            from parsimony.algorithms import Bisection
-            bisection = Bisection(force_negative=True,
-                                  parameter_positive=True,
-                                  parameter_negative=False,
-                                  parameter_zero=False,
-                                  eps=1e-6)
+            func = F(beta_, self.c, self._compute_value, prox_2)
 
-            class F(interfaces.Function):
-                def __init__(self, x, c, val):
-                    self.x = x
-                    self.c = c
-                    self.val = val
-                    self.y = None
+#            l, low_start, high_start = bisection.run(func, [low, high])
+            l = bisection.run(func, [consts.TOLERANCE, 1.0])
 
-                def f(self, l):
+            y = func.y
 
-                    # We avoid one evaluation of prox by saving it here.
-                    self.y = prox(self.x, l)
+        elif p > n:
+            U = X_.T                           # p-by-n
+            V = X_                             # n-by-p
+            Vx = np.dot(V, beta_)              # n-by-1
 
-                    return self.val(self.y) - self.c
+            if self._D is None:
+                VU = np.dot(V, U)              # n-by-n, VU = XX'
+#                self._P, self._D, self._Pt = np.linalg.svd(self._VU)
+                self._D, P = np.linalg.eig(VU)
+                self._UP = np.dot(U, P)  # p-by-n
 
-            func = F(beta_, self.c, self._compute_value)
+#                np.linalg.pinv(P)
+                self._PtVx = np.dot(P.T, Vx)
 
-            # TODO: Tweak these magic numbers on real data. Or even better,
-            # find theoretical bounds. Convergence is faster if these bounds
-            # are close to accurate when we start the bisection algorithm.
-            if p >= 600000:
-                low = (p / 100.0) - np.log10(n) * 5.0
-                high = (p / 80.0) - np.log10(n) * 5.0
-            elif p >= 500000:
-                low = p / 85.71
-                high = (p / 76.9) - np.log10(n) * 5.0
-            elif p >= 400000:
-                low = p / 78.125
-                high = (p / 68.97) - np.log10(n) * 5.0
-            elif p >= 300000:
-                low = p / 70.17
-                high = (p / 59.4) - np.log10(n) * 5.0
-            elif p >= 200000:
-                low = p / 61.22
-                high = (p / 48.78) - np.log10(n) * 5.0
-            elif p >= 150000:
-                low = p / 50.0
-                high = (p / 41.66) - np.log10(n) * 5.0  # ^^
-            elif p >= 100000:
-                low = p / 42.86
-                high = (p / 34.5) - np.log10(n) * 6.0  # !
-            elif p >= 75000:
-                low = p / 35.71
-                high = (p / 29.9) - np.log10(n) * 6.0  # !
-            elif p >= 50000:
-                low = p / 31.25
-                high = (p / 23.81) - np.log10(n) * 6.0  # !
-            elif p >= 25000:
-                low = p / 25.0
-                high = (p / 16.67) - np.log10(n) * 7.0  # !
-            elif p >= 10000:
-                low = p / 17.86
-                high = (p / 10.87) - np.log10(n) * 7.0  # !
-            elif p >= 5000:
-                low = p / 11.63
-                high = (p / 7.69) - np.log10(n) * 7.0  # !
-            elif p >= 1000:
-                low = p / 8.62
-                high = (p / 3.45) - np.log10(n) * 8.0  # !
-            else:
-                low = p / 4.75
-                high = p / 2.25
+            def prox_3(x, l):
+                k = l * self.tau + 1.0
+                m = l * ((1.0 - self.tau) / n_)
 
-            l = bisection(func, [low, high])
+#                PtinvIVU = (np.reciprocal(self._D + (k / m)) * self._Pt.T).T
+#                invIMx = (x - np.dot(self._UP, np.dot(PtinvIVU, Vx))) / k
+                PtinvIVUPtVx = (np.reciprocal(self._D + (k / m)) * self._PtVx.T).T
+                invIMx = (x - np.dot(self._UP, PtinvIVUPtVx)) / k
+
+                return invIMx
+
+            func = F(beta_, self.c, self._compute_value, prox_3)
+
+#            l, low_start, high_start = bisection.run(func, [low, high])
+            l = bisection.run(func, [consts.TOLERANCE, p])
 
             y = func.y
 
         else:  # The case when: p <= n
 
-#            if self._Ip is None:
-#                self._Ip = np.eye(p)  # p-by-p
-
             if self._M is None:
-                XtX = np.dot(self.X.T, self.X)
-
-                if self.unbiased:
-                    n_ = float(n - 1.0)
-                else:
-                    n_ = float(n)
-
                 Ip = np.eye(p)
+                XtX = np.dot(X_.T, X_)
+
                 self._M = self.tau * Ip + \
                           ((1.0 - self.tau) / n_) * XtX
 
+            if self._D is None or self._P is None:
                 self._D, self._P = np.linalg.eig(self._M)
 
-            def prox2(x, l):
+                self._sqrtD = np.sqrt(self._D)
+                self._Ptx = np.dot(self._P.T, beta_)
 
-#                y = np.dot(np.linalg.inv(self._Ip + (0.5 * l) * self._M), x)
+            def prox_4(x, l):
 
-#                invIM = np.linalg.inv(self._Ip + (0.5 * l) * self._M)
-#                print maths.norm(np.linalg.inv(self._Ip + (0.5 * l) * self._M) - \
-#                                  np.dot(self._P * np.reciprocal(0.5 * l * self._D + 1.0),
-#                                         self._P.T))
-#                print maths.norm(self._M - np.dot(self._P, np.dot(np.diag(self._D), self._P.T)))
-#                print maths.norm((self._Ip + (0.5 * l) * self._M) - \
-#                                  np.dot(self._P,
-#                                         np.dot(np.diag(self._D + 1.0 + 0.5 * l),
-#                                                self._P.T)))
-
-#                invIM = np.linalg.inv(self._Ip + (0.5 * l) * self._M)
                 invIM = np.dot(self._P * \
-                                   np.reciprocal(0.5 * l * self._D + 1.0),
+                               np.reciprocal(1.0 + (2.0 * l) * self._D),
                                self._P.T)
                 y = np.dot(invIM, x)
 
-#                print "err:", maths.norm(y - yd)
-
                 return y
 
-            from parsimony.algorithms import Bisection
-            bisection = Bisection(force_negative=True,
-                                  parameter_positive=True,
-                                  parameter_negative=False,
-                                  parameter_zero=False,
-                                  eps=1e-6,
-                                  max_iter=100)
+#            func = F(beta_, self.c, self._compute_value, prox_4)
+#            l = bisection.run(func, [consts.TOLERANCE, 1.0])
+#
+#            y = func.y
 
             class F(interfaces.Function):
-                def __init__(self, x, c, val):
-                    self.x = x
+                def __init__(self, c, D, sqrtD, Ptx):
                     self.c = c
-                    self.val = val
-                    self.y = None
+                    self.D = D
+                    self.sqrtD = sqrtD
+                    self.Ptx = Ptx
 
                 def f(self, l):
 
-                    # We avoid one evaluation of prox by saving it here.
-                    self.y = prox2(self.x, l)
+                    K = np.reciprocal(1.0 + (2.0 * l) * self.D)
+                    sqrtDK = self.sqrtD * K  # Slightly faster than np.multiply
+                    c = maths.norm((sqrtDK * self.Ptx.T).T) ** 2.0
 
-                    return self.val(self.y) - self.c
+                    return c - self.c
 
-            func = F(beta_, self.c, self._compute_value)
+            func = F(self.c, self._D, self._sqrtD, self._Ptx)
+            l = bisection.run(func, [consts.TOLERANCE, 1.0])
+            y = prox_4(beta_, l)
 
-            # TODO: Tweak these magic numbers on real data. Or even better,
-            # find theoretical bounds. Convergence is faster if these bounds
-            # are close to accurate when we start the bisection algorithm.
-            if p >= 950:
-                low = p / 5.25
-                high = (p / 4.50) - np.log10(n)  # !
-            elif p >= 850:
-                low = p / 4.65
-                high = (p / 4.25) - np.log10(n)  # !
-            elif p >= 750:
-                low = p / 4.45
-                high = (p / 4.00) - np.log10(n)  # !
-            elif p >= 650:
-                low = p / 4.28
-                high = (p / 3.70) - np.log10(n)  # !
-            elif p >= 550:
-                low = p / 4.10
-                high = (p / 3.40) - np.log10(n)  # !
-            elif p >= 450:
-                low = p / 3.85
-                high = (p / 3.05) - np.log10(n)  # !
-            elif p >= 350:
-                low = p / 3.59
-                high = (p / 2.82) - np.log10(n)  # !
-            elif p >= 250:
-                low = p / 3.16
-                high = (p / 2.42) - np.log10(n)  # !
-            elif p >= 150:
-                low = p / 2.7
-                high = (p / 1.85) - np.log10(n)  # !
-            elif p >= 50:
-                low = p / 2.23
-                high = (p / 1.23) - np.log10(n)  # !
-            else:
-                low = p / 1.1
-                high = p / 0.8  # !
+#        else:
+#            a = self.tau
+#            b = (1.0 - self.tau) / n_
+##            _, S, _ = np.linalg.svd(np.sqrt(b) * X_)
+##            S **= 2.0
+##            S = np.hstack((S, np.zeros(max(n, p) - min(n, p))))
+##            S += a
+#            XtX = np.dot(X_.T, X_)
+#            I = np.eye(*XtX.shape)
+#            M = a * I + b * XtX
+#            S, P = np.linalg.eig(M)
+#            S = np.reshape(S.real, beta_.shape)
+#            P = P.real
+#            invP = np.linalg.inv(P)
+#
+#            y0 = np.dot(invP, beta_)
+#
+#            def f(mu, l):
+#                x2l = np.multiply(y0 ** 2.0, l)
+#                mul2 = (1.0 + 2.0 * mu * l) ** 2.0
+#                return np.sum(np.divide(x2l, mul2)) - self.c
+#
+#            def df(mu, l):
+#                x2l = np.multiply(y0 ** 2.0, l ** 2.0)
+#                mul3 = (1.0 + 2.0 * mu * l) ** 3.0
+#                return -4.0 * np.sum(np.divide(x2l, mul3))
+#
+#            mu_ = 0.0
+#            for i in xrange(100):
+#                mu = mu_ - f(mu_, S) / df(mu_, S)
+#                print mu, f(mu_, S)
+#                if abs(mu - mu_) < 5e-16:
+#                    break
+#                mu_ = mu
+#
+##            y = np.dot(np.linalg.inv(P),
+##                       np.dot(np.linalg.inv(I + 2.0 * mu * M), np.dot(P, beta_)))
+##            y = np.dot(np.linalg.inv(I + 2.0 * mu * M), np.dot(P, beta_))
+##            y = np.dot(np.linalg.inv(I + 2.0 * mu * M), beta_)
+#            y = np.dot(P, np.divide(y0, 1.0 + 2.0 * mu * S))
 
-            l = bisection(func, [low, high])
+        if self.penalty_start > 0:
+            y = np.vstack((beta[:self.penalty_start, :], y))
 
-            y = func.y
-
-#        print low, ", ", high
-#        print l
-
-        _Ip = np.eye(p)  # p-by-p
-
-        XtX = np.dot(self.X.T, self.X)
-        _M = self.tau * _Ip + ((1.0 - self.tau) / float(n - 1)) * XtX
-        _D, _P = np.linalg.eig(_M)
-
-#        l = 2.0 * max(0.0, np.sqrt(xtMx) - self.c)
-        y_ = np.dot(np.linalg.inv(_Ip + (0.5 * l) * _M), beta_)
-
-        sqrtD = np.sqrt(_D)
-        K = np.reciprocal(1.0 + (0.5 * l) * _D)
-        sqrtDK = sqrtD * K  # Slightly faster than np.multiply.
-        Ptx = np.dot(_P.T, beta)
-        c = maths.norm((sqrtDK * Ptx.T).T) ** 2.0
-        print "c:", c
-        c = maths.norm(np.dot(np.diag(sqrtDK), Ptx)) ** 2.0
-        print "c:", c
-        print "y'My:", np.dot(y.T, np.dot(_M, y))
-        print "y_'My_:", np.dot(y_.T, np.dot(_M, y_))
-
-#        if maths.norm(beta_ - (beta_ / np.sqrt(xtMx))) < maths.norm(beta_ - y):
-#            print maths.norm(beta_ - (beta_ / np.sqrt(xtMx)))
-#            print maths.norm(beta_ - y)
-
-        return y#, y_
+        return y
+#        return y, low_start, high_start
 
     def _compute_value(self, beta):
         """Helper function to compute the function value.
@@ -1256,13 +1220,13 @@ class RGCCAConstraint(QuadraticConstraint,
         """
 
         if self.unbiased:
-            n = self.X.shape[0] - 1.0
+            n = float(self.X.shape[0] - 1.0)
         else:
-            n = self.X.shape[0]
+            n = float(self.X.shape[0])
 
         Xbeta = np.dot(self.X, beta)
         val = self.tau * np.dot(beta.T, beta) \
-            + ((1.0 - self.tau) / float(n)) * np.dot(Xbeta.T, Xbeta)
+            + ((1.0 - self.tau) / n) * np.dot(Xbeta.T, Xbeta)
 
         return val[0, 0]
 

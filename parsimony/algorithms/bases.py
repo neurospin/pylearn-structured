@@ -25,16 +25,22 @@ Created on Thu Feb 20 17:42:16 2014
 """
 import abc
 
+import parsimony.functions.interfaces as interfaces
+
 __all__ = ["BaseAlgorithm", "ImplicitAlgorithm", "ExplicitAlgorithm"]
 
 
 class BaseAlgorithm(object):
 
-    def check_compatibility(self, function, interfaces):
-        """Check if the function considered implements the given interfaces
+    def check_compatibility(self, function, required_interfaces):
+        """Check if the function considered implements the given interfaces.
         """
-        for interface in interfaces:
-            if not isinstance(function, interface):
+        for interface in required_interfaces:
+            if isinstance(interface, interfaces.OR):
+                if not interface.evaluate(function):
+                    raise ValueError("%s does not implement interfaces %s" %
+                                    (str(function), str(interface)))
+            elif not isinstance(function, interface):
                 raise ValueError("%s does not implement interface %s" %
                                 (str(function), str(interface)))
 

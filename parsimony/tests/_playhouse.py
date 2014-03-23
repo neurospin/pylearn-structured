@@ -6,6 +6,33 @@ Created on Thu May 16 09:41:13 2013
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
+
+import numpy as np
+import cPickle as pickle
+from parsimony.functions.penalties import RGCCAConstraint
+
+np.random.seed(42)
+
+result = {}
+
+for n in [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]:
+    for p in [501, 1001, 5000, 10000, 50000, 100000, 250000, 500000]:
+        if p < n:
+            continue
+        for c in [0.1, 0.5, 1.0, 5.0, 10.0, 50.0]:
+            for tau in [0.1, 0.3, 0.5, 0.7, 0.9]:
+                for m in xrange(5):
+                    print n, p, c, tau
+                    X = np.random.rand(n, p)
+                    rgcca = RGCCAConstraint(c=c, tau=tau, X=X)
+                    x = np.random.rand(p, 1) * 2.0 * c - c
+                    y, low_start, high_start = rgcca.proj(x)
+                    result[(n, p, c, tau, m)] = (low_start, high_start)
+
+    with open("RGCCAproj_test.p", "wb") as pfile:
+        pickle.dump(result, pfile)
+
+
 #import time
 #import sys
 #
@@ -34,35 +61,35 @@ Created on Thu May 16 09:41:13 2013
 #seed = 42
 #np.random.seed(seed)
 
-
-import numpy as np
-import parsimony.estimators as estimators
-import parsimony.algorithms.explicit as explicit
-import parsimony.functions.nesterov.tv as tv
-shape = (1, 4, 4)
-num_samples = 10
-num_ft = shape[0] * shape[1] * shape[2]
-
-np.random.seed(42)
-X = np.random.rand(num_samples, num_ft)
-y = np.random.rand(num_samples, 1)
-l = 0.1  # L1 coefficient
-k = 0.9  # Ridge coefficient
-g = 1.0  # TV coefficient
-mu = 1e-5
-A, n_compacts = tv.A_from_shape(shape)
-lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A, mu=mu,
-                                      algorithm=explicit.FISTA(max_iter=1000))
-lr = lr.fit(X, y)
-error = lr.score(X, y)
-print "error = ", error
-#error =  0.87958672586
-lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A, mu=mu,
-                                       algorithm=explicit.ISTA(max_iter=1000))
-lr = lr.fit(X, y)
-error = lr.score(X, y)
-print "error = ", error
-#error =  1.07391299463
+#
+#import numpy as np
+#import parsimony.estimators as estimators
+#import parsimony.algorithms.explicit as explicit
+#import parsimony.functions.nesterov.tv as tv
+#shape = (1, 4, 4)
+#num_samples = 10
+#num_ft = shape[0] * shape[1] * shape[2]
+#
+#np.random.seed(42)
+#X = np.random.rand(num_samples, num_ft)
+#y = np.random.rand(num_samples, 1)
+#l = 0.1  # L1 coefficient
+#k = 0.9  # Ridge coefficient
+#g = 1.0  # TV coefficient
+#mu = 1e-5
+#A, n_compacts = tv.A_from_shape(shape)
+#lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A, mu=mu,
+#                                      algorithm=explicit.FISTA(max_iter=1000))
+#lr = lr.fit(X, y)
+#error = lr.score(X, y)
+#print "error = ", error
+##error =  0.87958672586
+#lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A, mu=mu,
+#                                       algorithm=explicit.ISTA(max_iter=1000))
+#lr = lr.fit(X, y)
+#error = lr.score(X, y)
+#print "error = ", error
+##error =  1.07391299463
 
 
 #eps = 0.001

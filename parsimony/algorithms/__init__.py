@@ -7,9 +7,10 @@ Created on Fri Feb 21 09:10:52 2014
 @license: BSD 3-clause.
 """
 from . import bases
+from . import deflation
 from . import explicit
 from . import implicit
 from . import multiblock
 from . import utils
 
-__all__ = ["bases", "explicit", "implicit", "multiblock", "utils"]
+__all__ = ["bases", "deflation", "explicit", "implicit", "multiblock", "utils"]

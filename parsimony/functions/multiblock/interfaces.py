@@ -17,7 +17,8 @@ from .. import interfaces
 
 __all__ = ["MultiblockFunction", "MultiblockGradient",
            "MultiblockLipschitzContinuousGradient",
-           "MultiblockProximalOperator", "MultiblockProjectionOperator"]
+           "MultiblockProximalOperator", "MultiblockProjectionOperator",
+           "MultiblockStepSize"]
 
 
 class MultiblockFunction(interfaces.CompositeFunction):
@@ -54,12 +55,15 @@ class MultiblockGradient(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def grad(self, beta, index):
+    def grad(self, w, index):
         """Gradient of the function.
 
         Parameters
         ----------
-        beta : The point at which to evaluate the gradient.
+        w : List of numpy arrays. The weight vectors, w[index] is the point at
+                which to evaluate the gradient.
+
+        index : Non-negative integer. Which variable the step is for.
         """
         raise NotImplementedError('Abstract method "grad" must be '
                                   'specialised!')
@@ -72,6 +76,14 @@ class MultiblockLipschitzContinuousGradient(object):
     @abc.abstractmethod
     def L(self, w, index):
         """Lipschitz constant of the gradient with given index.
+
+        Parameters
+        ----------
+        w : List of numpy arrays. The weight vectors, w[index] is the point at
+                which to evaluate the Lipschitz constant.
+
+        index : Non-negative integer. The variable for which the Lipschitz
+                constant should be evaluated.
         """
         raise NotImplementedError('Abstract method "L" must be '
                                   'specialised!')
@@ -82,9 +94,18 @@ class MultiblockProximalOperator(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def prox(self, beta, index, factor=1.0):
-        """The proximal operator corresponding to the function with the given
-        index.
+    def prox(self, w, index, factor=1.0):
+        """A proximal operator of the non-differentiable part of the function
+        with the given index.
+
+        Parameters
+        ----------
+        w : List of numpy arrays. The weight vectors.
+
+        index : Non-negative integer. Which variable the step is for.
+
+        factor : Positive float. A factor by which the Lagrange multiplier is
+                scaled. This is usually the step size.
         """
         raise NotImplementedError('Abstract method "prox" must be '
                                   'specialised!')
@@ -95,9 +116,33 @@ class MultiblockProjectionOperator(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def proj(self, beta, index):
-        """The projection operator corresponding to the function with the
-        given index.
+    def proj(self, w, index):
+        """The projection operator of a constraint that corresponds to the
+        function with the given index.
+
+        Parameters
+        ----------
+        w : List of numpy arrays. The weight vectors.
+
+        index : Non-negative integer. Which variable the step is for.
         """
         raise NotImplementedError('Abstract method "proj" must be '
+                                  'specialised!')
+
+
+class MultiblockStepSize(object):
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def step(self, w, index):
+        """The step size to use in descent methods.
+
+        Parameters
+        ----------
+        w : Numpy array. The point at which to determine the step size.
+
+        index : Non-negative integer. The variable which the step is for.
+        """
+        raise NotImplementedError('Abstract method "step" must be '
                                   'specialised!')

@@ -24,7 +24,8 @@ __all__ = ["Function", "AtomicFunction", "CompositeFunction",
            "CombinedProjectionOperator",
            "Continuation",
            "Gradient", "Hessian", "LipschitzContinuousGradient", "StepSize",
-           "GradientMap", "DualFunction", "Eigenvalues", "StronglyConvex"]
+           "GradientMap", "DualFunction", "Eigenvalues", "StronglyConvex",
+           "OR"]
 
 
 class Function(object):
@@ -124,6 +125,14 @@ class ProximalOperator(object):
     @abc.abstractmethod
     def prox(self, beta, factor=1.0):
         """The proximal operator corresponding to the function.
+
+        Parameters
+        ----------
+        beta : Numpy array (p-by-1). The point at which to apply the proximal
+                operator.
+
+        factor : Positive float. A factor by which the Lagrange multiplier is
+                scaled. This is usually the step size.
         """
         raise NotImplementedError('Abstract method "prox" must be '
                                   'specialised!')
@@ -151,7 +160,7 @@ class CombinedProjectionOperator(Function, ProjectionOperator):
 
 #        from algorithms import ProjectionADMM
 #        self.proj_op = ProjectionADMM()
-        from algorithms import DykstrasProjectionAlgorithm
+        from parsimony.algorithms.explicit import DykstrasProjectionAlgorithm
         self.proj_op = DykstrasProjectionAlgorithm()
 
     def f(self, x):
@@ -167,10 +176,7 @@ class CombinedProjectionOperator(Function, ProjectionOperator):
 
         From the interface "ProjectionOperator".
         """
-#        proj1 = self.proj_op(self.functions, x)
-        proj = self.proj_op(self.functions, x)
-
-#        print "diff:", np.linalg.norm(proj1 - proj2)
+        proj = self.proj_op.run(self.functions, x)
 
         return proj
 
@@ -212,7 +218,8 @@ class Gradient(object):
 
         Parameters
         ----------
-        beta : The point at which to evaluate the gradient.
+        beta : Numpy array (p-by-1). The point at which to evaluate the
+                gradient.
         """
         raise NotImplementedError('Abstract method "grad" must be '
                                   'specialised!')
@@ -222,10 +229,12 @@ class Gradient(object):
 
         Parameters
         ----------
-        beta : The point at which to evaluate the gradient.
+        beta : Numpy array (p-by-1). The point at which to evaluate the
+                gradient.
 
-        eps : The precision of the numerical solution. Smaller is better, but
-                too small may result in floating point precision errors.
+        eps : Positive integer. The precision of the numerical solution.
+                Smaller is better, but too small may result in floating point
+                precision errors.
         """
         p = x.shape[0]
         grad = np.zeros(x.shape)
@@ -405,3 +414,19 @@ class StronglyConvex(object):
         """
         raise NotImplementedError('Abstract method "parameter" is not '
                                   'implemented!')
+
+
+class OR(object):
+    def __init__(self, *classes):
+        self.classes = classes
+
+    def evaluate(self, function):
+        for c in self.classes:
+            if isinstance(function, c):
+                return True
+        return False
+
+    def __str__(self):
+        string = str(self.classes[0])
+        for i in xrange(1, len(self.classes)):
+            string = string + " OR " + str(self.classes[i])

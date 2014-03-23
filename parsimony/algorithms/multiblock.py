@@ -24,10 +24,12 @@ Created on Thu Feb 20 22:12:00 2014
 import copy
 
 from . import bases
+import parsimony.utils as utils
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
 import parsimony.functions.interfaces as interfaces
 import parsimony.functions.multiblock.interfaces as multiblock_interfaces
+import parsimony.functions.multiblock.losses as mb_losses
 
 __all__ = ["MultiblockProjectedGradientMethod"]
 
@@ -83,7 +85,7 @@ class MultiblockProjectedGradientMethod(bases.ExplicitAlgorithm):
     INTERFACES = [multiblock_interfaces.MultiblockFunction,
                   multiblock_interfaces.MultiblockGradient,
                   multiblock_interfaces.MultiblockProjectionOperator,
-                  interfaces.StepSize]
+                  multiblock_interfaces.MultiblockStepSize]
 
     def __init__(self, step=None, output=False,
                  eps=consts.TOLERANCE,
@@ -95,6 +97,13 @@ class MultiblockProjectedGradientMethod(bases.ExplicitAlgorithm):
         self.outer_iter = outer_iter
         self.max_iter = max_iter
         self.min_iter = min_iter
+
+        import parsimony.algorithms.explicit as algorithms
+        self.fista = algorithms.FISTA(step=self.step,
+                                      output=self.output,
+                                      eps=self.eps,
+                                      max_iter=self.max_iter,
+                                      min_iter=self.min_iter)
 
     def run(self, function, w):
 
@@ -108,92 +117,96 @@ class MultiblockProjectedGradientMethod(bases.ExplicitAlgorithm):
 
         if self.output:
             f = [function.f(w)]
+            print "f:", f[-1]
 
         t = [1.0] * len(w)
+
+        w_old = [0] * len(w)
 
         for it in xrange(self.outer_iter):  # TODO: Get number of iterations!
             all_converged = True
             for i in xrange(len(w)):
                 converged = False
                 print "it: %d, i: %d" % (it, i)
+
+#                func = mb_losses.MultiblockFunctionWrapper(function, w, i)
+
+#                if self.output:
+#                    w[i], output = self.fista.run(func, w[i])
+#
+#                    f = f + output["f"]
+#                else:
+#                    w[i] = self.fista.run(func, w[i])
+
+                for j in xrange(len(w)):
+                    w_old[j] = w[j]
+
                 for k in xrange(self.max_iter):
 #                    print "it: %d, i: %d, k: %d" % (it, i, k)
 
-#                    z = w[i] + ((k - 2.0) / (k + 1.0)) * (w[i] - w_old[i])
+#                    if i == 1:
+#                        print "w00t!?"
 
-                    w_old = copy.deepcopy(w)
+                    z = w[i] + ((k - 2.0) / (k + 1.0)) * (w[i] - w_old[i])
 
-#                    _t = time()
-                    t[i] = function.step(w_old, i)
-#                    print "t:", t[i]
-#                    print "step:", time() - _t
+#                    _t = utils.time_cpu()
+                    t[i] = function.step(w[:i] + [z] + w[i + 1:], i)
+#                    t[i] = func.step(z)
+#                    print "step:", utils.time_cpu() - _t
 
-#                    _t = time()
-                    grad = function.grad(w_old, i)
-                    w[i] = w_old[i] - t[i] * grad
+                    w_old[i] = w[i]
 
-#                    def fun(x):
-#                        w_ = [0, 0]
-#                        w_[i] = x
-#                        w_[1 - i] = w[1 - i]
-#                        return function.f(w_)
-#                    approx_grad = utils.approx_grad(fun, w[i], eps=1e-6)
-#                    diff = float(maths.norm(grad - approx_grad))
-#                    print "grad err: %e, lim: %e" % (diff, 5e-5)
-#                    if diff > 5e-4:
-#                        pass
+#                    _t = utils.time_cpu()
+                    grad = function.grad(w_old[:i] + [z] + w_old[i + 1:], i)
+#                    grad = func.grad(z)
+                    w[i] = z - t[i] * grad
+#                    print "grad:", utils.time_cpu() - _t
 
-#                    w[i] = z[i] - t[i] * function.grad(w_old[:i] +
-#                                                       [z] +
-#                                                       w_old[i + 1:], i)
-#                    print "grad:", time() - _t
-
-#                    _t = time()
-                    w = function.proj(w, i)
-#                    print "proj:", time() - _t
-
-#                    print "l0 :", maths.norm0(w[i]), \
-#                        ", l1 :", maths.norm1(w[i]), \
-#                        ", l2²:", maths.norm(w[i]) ** 2.0
+#                    _t = utils.time_cpu()
+                    w[i] = function.prox(w, i, t[i])
+#                    w[i] = func.prox(w[i], t[i])
+#                    print "proj:", utils.time_cpu() - _t
 
                     if self.output:
+#                        _t = utils.time_cpu()
                         f_ = function.f(w)
+#                        print "   f:", utils.time_cpu() - _t
 #                        print "f:", f_
-                        improvement = f_ - f[-1]
-                        if improvement > 0.0:
-                            # If this happens there are two possible reasons:
-                            if abs(improvement) <= consts.TOLERANCE:
-                                # 1. The function is actually converged, and
-                                #         the "increase" is because of
-                                #         precision errors. This happens
-                                #         sometimes.
-                                pass
-                            else:
-                                # 2. There is an error and the function
-                                #         actually increased. Does this
-                                #         happen? If so, we need to
-                                #         investigate! Possible errors are:
-                                #          * The gradient is wrong.
-                                #          * The step size is too large.
-                                #          * Other reasons?
-                                print "ERROR! Function increased!"
-
-                            # Either way, we stop and regroup if it happens.
-                            break
+#                        improvement = f_ - f[-1]
+#                        if improvement > 0.0:
+#                            print "INCREASE!!:", improvement
+#                            # If this happens there are two possible reasons:
+#                            if abs(improvement) <= consts.TOLERANCE:
+#                                # 1. The function is actually converged, and
+#                                #         the "increase" is because of
+#                                #         precision errors. This happens
+#                                #         sometimes.
+#                                pass
+#                            else:
+#                                # 2. There is an error and the function
+#                                #         actually increased. Does this
+#                                #         happen? If so, we need to
+#                                #         investigate! Possible errors are:
+#                                #          * The gradient is wrong.
+#                                #          * The step size is too large.
+#                                #          * Other reasons?
+#                                print "ERROR! Function increased!"
+#
+#                            # Either way, we stop and regroup if it happens.
+##                            break
 
                         f.append(f_)
 
-                    err = maths.norm(w_old[i] - w[i])
-#                    print "err: %.10f < %.10f * %.10f = %.10f" \
-#                        % (err, t[i], self.eps, t[i] * self.eps)
-                    if err <= t[i] * self.eps and k + 1 >= self.min_iter:
+                    err = maths.norm(z - w[i])
+                    if err < t[i] * self.eps and k + 1 >= self.min_iter:
                         converged = True
                         break
 
                 print "l0 :", maths.norm0(w[i]), \
                     ", l1 :", maths.norm1(w[i]), \
-                    ", l2²:", maths.norm(w[i]) ** 2.
-                print "f:", f[-1]
+                    ", l2²:", maths.norm(w[i]) ** 2.0
+                if self.output:
+                    print "f:", f[-1]
 
                 if not converged:
                     all_converged = False

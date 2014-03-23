@@ -1293,8 +1293,9 @@ class TestLogisticRegression(TestCase):
 
 #    def test_logistic_regression_l1_gl_intercept(self):
 #        # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
-#        # TODO: There is a bug in spams. Wait for updated version before
-#        # fixing this test!
+#
+#        # TODO: There is a bug in spams. Wait for fixed version before
+#        # updating this test!
 #
 #        from parsimony.functions import CombinedFunction
 #        import parsimony.functions.losses as losses

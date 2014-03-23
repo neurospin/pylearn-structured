@@ -4,19 +4,22 @@ ParsimonY: structured and sparse machine learning in Python
 ParsimonY contains the following features:
 * `parsimony` provides structured and sparse penalties in machine learning. It currently contains:
     * Loss functions:
-        * OLS
+        * Linear regression
+        * Logistic regression
     * Penalties:
         * L1 (Lasso)
         * L2 (Ridge)
-        * L1+L2 (Elastic net)
         * Total variation (TV)
+        * Overlapping Group LASSO (GL)
         * Any combination of the above
     * Algorithms:
+        * _I_terative _S_hrinkage-_T_hresholding _A_lgorithm (fista)
         * _F_ast _I_terative _S_hrinkage-_T_hresholding _A_lgorithm (fista)
         * _CO_ntinuation of _NEST_sterov’s smoothing _A_lgorithm (conesta)
         * Excessive gap method
     * Estimators
         * RidgeRegression_L1_TV
+        * RidgeRegression_L1_GL
         * RidgeRegression_SmoothedL1TV
 
 Installation
@@ -24,10 +27,10 @@ Installation
 Download pylearn-parsimony, and then goto the directory:
 
 ```
-$ sudo apt-get install python-numpy python-scipy python-matplotlib ipython ipython-notebook python-pandas python-sympy python-nose
+$ sudo apt-get install python-numpy python-scipy python-nose python-matplotlib
 $ sudo python setup.py install
 ```
-        
+
 Quick start
 -----------
 

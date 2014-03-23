@@ -837,12 +837,16 @@ class Bisection(bases.ExplicitAlgorithm):
 
                     raise ValueError("Parameter must be allowed to be real!")
 
+#        low_start = low
+#        high_start = high
+
         # Use the bisection method to find where |f(x)|_2 <= eps.
         neg_count = 0
 
         mid = (low + high) / 2.0
         f_mid = function.f(mid)
-        for i in xrange(self.max_iter):
+#        for i in xrange(self.max_iter):
+        while True:
             if np.sign(f_mid) == np.sign(f_low):
                 low = mid
                 f_low = f_mid
@@ -855,7 +859,8 @@ class Bisection(bases.ExplicitAlgorithm):
 #            print "i:", (i + 1), ", mid: ", mid, ", f_mid:", f_mid
 
 #            if np.sqrt(np.sum((high - low) ** 2.0)) <= self.eps:
-            if abs(f_high - f_low) <= self.eps and i + 1 >= self.min_iter:
+            if (abs(f_high - f_low) <= self.eps and i + 1 >= self.min_iter) \
+                    or i + 1 >= self.max_iter:
                 if self.force_negative and f_mid > 0.0:
                     if neg_count < self.max_iter:
                         neg_count += 1
@@ -863,7 +868,9 @@ class Bisection(bases.ExplicitAlgorithm):
                         break
                 else:
                     break
+            i += 1
 
+#        return mid, low_start, high_start
         return mid
 
 
@@ -928,21 +935,21 @@ class DykstrasProjectionAlgorithm(bases.ExplicitAlgorithm):
         self.max_iter = max_iter
         self.min_iter = min_iter
 
-    def run(self, function, r):
+    def run(self, function, x):
         """Finds the projection onto the intersection of two sets.
 
         Parameters
         ----------
         function : List or tuple with two Functions. The two functions.
 
-        r : Numpy array. The point that we wish to project.
+        x : Numpy array. The point that we wish to project.
         """
         self.check_compatibility(function[0], self.INTERFACES)
         self.check_compatibility(function[1], self.INTERFACES)
 
-        x_new = r
-        p_new = np.zeros(r.shape)
-        q_new = np.zeros(r.shape)
+        x_new = x
+        p_new = np.zeros(x.shape)
+        q_new = np.zeros(x.shape)
         for i in xrange(1, self.max_iter + 1):
 
             x_old = x_new
@@ -1020,6 +1027,91 @@ class ParallelDykstrasProjectionAlgorithm(bases.ExplicitAlgorithm):
                 x_new += weights[i] * p[i]
 
             for i in xrange(num):
+                z[i] = x + z[i] - p[i]
+
+            if maths.norm(x_new - x_old) / maths.norm(x_old) < self.eps \
+                    and i >= self.min_iter:
+                break
+
+        return x_new
+
+
+class ParallelDykstrasProximalAlgorithm(bases.ExplicitAlgorithm):
+    """Dykstra's projection algorithm for two or more functions. Computes the
+    proximal operator of a sum of functions. These functions may be indicator
+    functions for convex sets (ProjectionOperator) or ProximalOperators.
+
+    If all functions are ProjectionOperators, this algorithm finds the
+    projection onto the intersection of the convex sets.
+
+    The functions have projection operators (ProjectionOperator.proj) onto the
+    respective convex sets or proximal operators (ProximalOperator.prox).
+    """
+    INTERFACES = [interfaces.Function,
+                  interfaces.OR(interfaces.ProjectionOperator,
+                                interfaces.ProximalOperator)]
+
+    def __init__(self, output=False,
+                 eps=consts.TOLERANCE,
+                 max_iter=consts.MAX_ITER, min_iter=1):
+
+        self.output = output
+        self.eps = eps
+        self.max_iter = max_iter
+        self.min_iter = min_iter
+
+    def run(self, x, prox=[], proj=[], factor=1.0, weights=None):
+        """Finds the projection onto the intersection of two sets.
+
+        Parameters
+        ----------
+        prox : List or tuple with two or more elements. The functions that
+                are ProximalOperators. Either prox or proj must be non-empty.
+
+        proj : List or tuple with two or more elements. The functions that
+                are ProjectionOperators. Either proj or prox must be non-empty.
+
+        factor : Positive float. A factor by which the Lagrange multiplier is
+                scaled. This is usually the step size.
+
+        x : Numpy array. The point that we wish to project.
+
+        weights : List or tuple with floats. Weights for the functions.
+                Default is that they all have the same weight. The elements of
+                the list or tuple must sum to 1.
+        """
+        for f in prox:
+            self.check_compatibility(f, self.INTERFACES)
+
+        for f in proj:
+            self.check_compatibility(f, self.INTERFACES)
+
+        num_prox = len(prox)
+        num_proj = len(proj)
+#        num = num_proj + num_prox
+
+        if weights is None:
+            weights = [1. / float(num_prox + num_proj)] * (num_prox + num_proj)
+
+        x_new = x_old = x
+        p = [0.0] * (num_prox + num_proj)
+        z = [0.0] * (num_prox + num_proj)
+        for i in xrange(num_prox + num_proj):
+            z[i] = np.copy(x)
+
+        for i in xrange(1, self.max_iter + 1):
+
+            for i in xrange(num_prox):
+                p[i] = prox[i].prox(z[i], factor)
+            for i in xrange(num_prox, num_prox + num_proj):
+                p[i] = proj[i].proj(z[i])
+
+            x_old = x_new
+            x_new = np.zeros(x_old.shape)
+            for i in xrange(num_prox + num_proj):
+                x_new += weights[i] * p[i]
+
+            for i in xrange(num_prox + num_proj):
                 z[i] = x + z[i] - p[i]
 
             if maths.norm(x_new - x_old) / maths.norm(x_old) < self.eps \
