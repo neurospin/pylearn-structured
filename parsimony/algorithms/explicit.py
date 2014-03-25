@@ -837,8 +837,10 @@ class Bisection(bases.ExplicitAlgorithm):
 
                     raise ValueError("Parameter must be allowed to be real!")
 
-#        low_start = low
-#        high_start = high
+        low_start = low
+        high_start = high
+        print "low_start:", low_start
+        print "high_start:", high_start
 
         # Use the bisection method to find where |f(x)|_2 <= eps.
         neg_count = 0

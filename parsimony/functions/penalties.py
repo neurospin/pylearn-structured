@@ -932,7 +932,7 @@ class RGCCAConstraint(QuadraticConstraint,
     def reset(self):
 
         self._UP = None
-        self._PtVx = None
+        self._x_UPPtinvIVUPtVx = None
 
         self._D = None
         self._P = None
@@ -1043,78 +1043,72 @@ class RGCCAConstraint(QuadraticConstraint,
 
         if self.tau == 1.0:
 
-#            def prox_1(x, l):
-#                return x / (1.0 + 2.0 * l)
-#
-#            func = F(beta_, self.c, self._compute_value, prox_1)
-#
-#            l = bisection.run(func, [0.0, 1.0])
-#
-#            y = func.y
-
-            sqnorm = maths.norm(beta_) ** 2.0
+#            sqnorm = maths.norm(beta_) ** 2.0
+            sqnorm = np.dot(beta_.T, beta_)
             eps = consts.FLOAT_EPSILON
             y = beta_ * np.sqrt((self.c - eps) / sqnorm)
 
-        elif p > n and self.tau == 0.0:
-
-            U = X_.T                       # p-by-n
-            V = X_                         # n-by-p
-            Vx = np.dot(V, beta_)          # n-by-1
-
-            if self._D is None:
-                VU = np.dot(V, U)    # n-by-n, VU = XX'
-#                self._P, self._D, self._Pt = np.linalg.svd(self._VU)
-                self._D, P = np.linalg.eig(VU)
-
-                self._UP = np.dot(U, P)
-#                np.linalg.pinv(P)
-                self._PtVx = np.dot(P.T, Vx)
-
-            def prox_2(x, l):
-                k = n_ / (2.0 * l)
-
-                invIMx = x - np.dot(self._UP,
-                                (np.reciprocal(k + self._D) * self._PtVx.T).T)
-
-                return invIMx
-
-            func = F(beta_, self.c, self._compute_value, prox_2)
-
-#            l, low_start, high_start = bisection.run(func, [low, high])
-            l = bisection.run(func, [consts.TOLERANCE, 1.0])
-
-            y = func.y
+#        elif p > n and self.tau == 0.0:
+#
+#            U = X_.T                       # p-by-n
+#            V = X_                         # n-by-p
+#            Vx = np.dot(V, beta_)          # n-by-1
+#
+#            if self._D is None:
+#                VU = np.dot(V, U)    # n-by-n, VU = XX'
+#                self._D, P = np.linalg.eig(VU)
+#
+#                self._UP = np.dot(U, P)
+#                self._PtVx = np.dot(P.T, Vx)  # Pt = np.linalg.pinv(P)
+#
+#            def prox_2(x, l):
+#                k = n_ / (2.0 * l)
+#
+#                invIMx = x - np.dot(self._UP,
+#                                (np.reciprocal(k + self._D) * self._PtVx.T).T)
+#
+#                return invIMx
+#
+#            func = F(beta_, self.c, self._compute_value, prox_2)
+#
+##            l, low_start, high_start = bisection.run(func, [low, high])
+#            l = bisection.run(func, [consts.TOLERANCE, p])
+#
+#            y = func.y
 
         elif p > n:
             U = X_.T                           # p-by-n
             V = X_                             # n-by-p
             Vx = np.dot(V, beta_)              # n-by-1
 
-            if self._D is None:
-                VU = np.dot(V, U)              # n-by-n, VU = XX'
-#                self._P, self._D, self._Pt = np.linalg.svd(self._VU)
-                self._D, P = np.linalg.eig(VU)
-                self._UP = np.dot(U, P)  # p-by-n
+            k = self.tau + 1.0
+            m = ((1.0 - self.tau) / n_)
 
-#                np.linalg.pinv(P)
-                self._PtVx = np.dot(P.T, Vx)
+            if self._x_UPPtinvIVUPtVx is None:
+                VU = np.dot(V, U)              # n-by-n, VU = XX'
+                D, P = np.linalg.eig(VU)
+                PtVx = Vx  # np.dot(P.T, Vx)  # Pt = np.linalg.pinv(P)
+                UPPtinvIVUPtVx = np.dot(U,  # np.dot(U, P),
+                                     (np.reciprocal(D + (k / m)) * PtVx.T).T)
+                self._x_UPPtinvIVUPtVx = (beta_ - UPPtinvIVUPtVx) / k
 
             def prox_3(x, l):
-                k = l * self.tau + 1.0
-                m = l * ((1.0 - self.tau) / n_)
 
-#                PtinvIVU = (np.reciprocal(self._D + (k / m)) * self._Pt.T).T
-#                invIMx = (x - np.dot(self._UP, np.dot(PtinvIVU, Vx))) / k
-                PtinvIVUPtVx = (np.reciprocal(self._D + (k / m)) * self._PtVx.T).T
-                invIMx = (x - np.dot(self._UP, PtinvIVUPtVx)) / k
+                invIMx = self._x_UPPtinvIVUPtVx / l
 
                 return invIMx
 
             func = F(beta_, self.c, self._compute_value, prox_3)
 
 #            l, low_start, high_start = bisection.run(func, [low, high])
-            l = bisection.run(func, [consts.TOLERANCE, p])
+#            l = bisection.run(func, [consts.TOLERANCE, 1.0])
+            if p >= 10000 and n >= 500:
+                l = bisection.run(func, [p / 5, p])
+            elif p >= 1000 and n >= 100:
+                l = bisection.run(func, [p / 100, p / 10])
+            else:
+                l = bisection.run(func, [consts.TOLERANCE, 1.0])
+            print "l:", l
 
             y = func.y
 
@@ -1163,7 +1157,12 @@ class RGCCAConstraint(QuadraticConstraint,
                     return c - self.c
 
             func = F(self.c, self._D, self._sqrtD, self._Ptx)
-            l = bisection.run(func, [consts.TOLERANCE, 1.0])
+            low_start = consts.TOLERANCE
+            high_start = 1.0
+#            low_start = np.max((consts.TOLERANCE, np.log10(n)))
+#            high_start = np.max((1.0, 1.0 + np.log10(n) ** 2.0))
+            l = bisection.run(func, [low_start, high_start])
+#            print "l:", l
             y = prox_4(beta_, l)
 
 #        else:
