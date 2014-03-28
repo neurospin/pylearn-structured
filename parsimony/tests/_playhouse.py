@@ -6,31 +6,64 @@ Created on Thu May 16 09:41:13 2013
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
+import time
 
 import numpy as np
-import cPickle as pickle
+
 from parsimony.functions.penalties import RGCCAConstraint
 
-np.random.seed(42)
+np.random.seed(0)
 
-result = {}
+n = 100
+p = 1000
+tau = 0.5
+c = 1.5
 
-for n in [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]:
-    for p in [501, 1001, 5000, 10000, 50000, 100000, 250000, 500000]:
-        if p < n:
-            continue
-        for c in [0.1, 0.5, 1.0, 5.0, 10.0, 50.0]:
-            for tau in [0.1, 0.3, 0.5, 0.7, 0.9]:
-                for m in xrange(5):
-                    print n, p, c, tau
-                    X = np.random.rand(n, p)
-                    rgcca = RGCCAConstraint(c=c, tau=tau, X=X)
-                    x = np.random.rand(p, 1) * 2.0 * c - c
-                    y, low_start, high_start = rgcca.proj(x)
-                    result[(n, p, c, tau, m)] = (low_start, high_start)
+X = np.random.randn(n, p)
+x = np.random.rand(p, 1)
+c = RGCCAConstraint(c=c, tau=tau, X=X)
 
-    with open("RGCCAproj_test.p", "wb") as pfile:
-        pickle.dump(result, pfile)
+t = time.time()
+y = c.proj(x)
+print "time:", time.time() - t
+
+#n = 25
+#p = 500
+#tau = 0.5
+#c = 1.0
+#
+#X = np.loadtxt("X.txt", delimiter=',')
+#x = np.loadtxt("a.txt", delimiter=',').reshape((p, 1))
+#c = RGCCAConstraint(c=c, tau=tau, X=X)
+#
+#t = time.time()
+#y = c.proj(x)
+#print "time:", time.time() - t
+
+#import numpy as np
+#import cPickle as pickle
+#from parsimony.functions.penalties import RGCCAConstraint
+#
+#np.random.seed(42)
+#
+#result = {}
+#
+#for n in [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]:
+#    for p in [501, 1001, 5000, 10000, 50000, 100000, 250000, 500000]:
+#        if p < n:
+#            continue
+#        for c in [0.1, 0.5, 1.0, 5.0, 10.0, 50.0]:
+#            for tau in [0.1, 0.3, 0.5, 0.7, 0.9]:
+#                for m in xrange(5):
+#                    print n, p, c, tau
+#                    X = np.random.rand(n, p)
+#                    rgcca = RGCCAConstraint(c=c, tau=tau, X=X)
+#                    x = np.random.rand(p, 1) * 2.0 * c - c
+#                    y, low_start, high_start = rgcca.proj(x)
+#                    result[(n, p, c, tau, m)] = (low_start, high_start)
+#
+#    with open("RGCCAproj_test.p", "wb") as pfile:
+#        pickle.dump(result, pfile)
 
 
 #import time

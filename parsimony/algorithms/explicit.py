@@ -42,7 +42,7 @@ __all__ = ["GradientDescent",
            "CONESTA", "StaticCONESTA", "DynamicCONESTA",
            "ExcessiveGapMethod",
 
-           "Bisection",
+           "Bisection", "NewtonRaphson",
 
            "ProjectionADMM", "DykstrasProjectionAlgorithm",
            "ParallelDykstrasProjectionAlgorithm",
@@ -874,6 +874,99 @@ class Bisection(bases.ExplicitAlgorithm):
 
 #        return mid, low_start, high_start
         return mid
+
+
+class NewtonRaphson(bases.ExplicitAlgorithm):
+    """Finds a root of the function assumed to be in the vicinity of a given
+    point.
+
+    Newtons method is not guaranteed to converge, and may diverge from the
+    solution if e.g. the starting point is too far from the root.
+
+    Problems may also arise if the gradient is too small (e.g. at a stationary
+    point) on the path to the root.
+
+    Parameters
+    ----------
+    force_negative : Boolean. Default is False. Will try to make the result
+            negative. It may fail if the function does not behave "nicely"
+            around the found point.
+
+    eps : Positive float. A small value used as the stopping criterion. The
+            stopping criterion will be fulfilled if it converges in less than
+            max_iter iterations.
+
+    max_iter : Positive integer. Maximum allowed number of iterations.
+
+    min_iter : Positive integer. Minimum number of iterations. Default is 1.
+    """
+    INTERFACES = [interfaces.Function,
+                  interfaces.Gradient,
+                 ]
+
+    def __init__(self, force_negative=False,
+                 parameter_positive=True,
+                 parameter_negative=True,
+                 parameter_zero=True,
+                 eps=consts.TOLERANCE,
+                 max_iter=20, min_iter=1):
+
+        self.force_negative = force_negative
+        self.parameter_positive = parameter_positive
+        self.parameter_negative = parameter_negative
+        self.parameter_zero = parameter_zero
+        self.eps = eps
+        self.max_iter = max_iter
+        self.min_iter = min_iter
+
+    def run(self, function, x=None):
+        """
+        Parameters
+        ----------
+        function : Function. The function for which a root should be found.
+
+        x : Float. The starting point of the Newton-Raphson algorithm. Should
+                be "close" to the root.
+        """
+        if x is None:
+            if self.parameter_positive:
+                x = 1.0
+            elif self.parameter_negative:
+                x = -1.0
+            else:
+                x = 0.0
+
+        # Use the Newton-Raphson algorithm to find a root of f(x).
+        i = 0
+        while True:
+            x_ = x
+            f = function.f(x_)
+            df = function.grad(x_)
+            print "x:", x, ", f(x):", f
+            x = x_ - f / df
+
+            if (abs(x - x_) <= self.eps and i + 1 >= self.min_iter) \
+                    or i + 1 >= self.max_iter:
+                if self.force_negative:
+                    f = function.f(x)
+                    if f > 0.0:
+                        df = function.grad(x)
+                        print "f(x):", f
+                        # We assume that we are within |x_opt - x| < eps from
+                        # the root. I.e. that the root is within the interval
+                        # [x_opt - eps, x_opt + eps]. We are at x_opt + eps or
+                        # x_opt - eps. Then we go to x_opt - 0.5 * eps or
+                        # x_opt + 0.5 * eps, respectively.
+                        x -= 1.5 * (f / df)
+                        f = function.f(x)
+                        print "f(x):", f
+                break
+
+            i += 1
+
+        print "x:", x, ", f(x):", f
+
+        return x
 
 
 class ProjectionADMM(bases.ExplicitAlgorithm):

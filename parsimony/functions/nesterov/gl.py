@@ -20,6 +20,8 @@ import parsimony.utils.maths as maths
 
 __all__ = ["GroupLassoOverlap", "A_from_groups"]
 
+#TODO: Make the factories take a penalty_start parameter!
+
 
 class GroupLassoOverlap(interfaces.AtomicFunction,
                         NesterovFunction,

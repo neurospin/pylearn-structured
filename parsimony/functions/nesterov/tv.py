@@ -22,6 +22,8 @@ import parsimony.utils.maths as maths
 
 __all__ = ["TotalVariation", "A_from_mask", "A_from_shape"]
 
+#TODO: Make the factories take a penalty_start parameter!
+
 
 class TotalVariation(interfaces.AtomicFunction,
                      NesterovFunction,
