@@ -931,15 +931,9 @@ class RGCCAConstraint(QuadraticConstraint,
 
     def reset(self):
 
-        self._UP = None
-        self._x_UPPtinvIVUPtVx = None
-
-        self._D = None
-        self._P = None
-
-        self._M = None
-        self._sqrtD = None
-        self._Ptx = None
+        self._U = None
+        self._S = None
+        self._V = None
 
     def f(self, beta):
         """Function value.
@@ -1002,13 +996,6 @@ class RGCCAConstraint(QuadraticConstraint,
 
         From the interface "ProjectionOperator".
         """
-        from parsimony.algorithms.explicit import Bisection
-        bisection = Bisection(force_negative=True,
-                              parameter_positive=True,
-                              parameter_negative=False,
-                              parameter_zero=False,
-                              eps=1e-5)
-
         if self.penalty_start > 0:
             beta_ = beta[self.penalty_start:, :]
             X_ = self.X[:, self.penalty_start:]
@@ -1027,176 +1014,40 @@ class RGCCAConstraint(QuadraticConstraint,
         else:
             n_ = float(n)
 
-        class F(interfaces.Function):
-            def __init__(self, x, c, val, prox):
-                self.x = x
-                self.c = c
-                self.val = val
-                self.prox = prox
-                self.y = None
-
-            def f(self, l):
-                # We avoid one evaluation of prox by saving it here.
-                self.y = self.prox(self.x, l)
-
-                return self.val(self.y) - self.c
-
         if self.tau == 1.0:
 
-#            sqnorm = maths.norm(beta_) ** 2.0
             sqnorm = np.dot(beta_.T, beta_)
             eps = consts.FLOAT_EPSILON
             y = beta_ * np.sqrt((self.c - eps) / sqnorm)
 
-#        elif p > n and self.tau == 0.0:
-#
-#            U = X_.T                       # p-by-n
-#            V = X_                         # n-by-p
-#            Vx = np.dot(V, beta_)          # n-by-1
-#
-#            if self._D is None:
-#                VU = np.dot(V, U)    # n-by-n, VU = XX'
-#                self._D, P = np.linalg.eig(VU)
-#
-#                self._UP = np.dot(U, P)
-#                self._PtVx = np.dot(P.T, Vx)  # Pt = np.linalg.pinv(P)
-#
-#            def prox_2(x, l):
-#                k = n_ / (2.0 * l)
-#
-#                invIMx = x - np.dot(self._UP,
-#                                (np.reciprocal(k + self._D) * self._PtVx.T).T)
-#
-#                return invIMx
-#
-#            func = F(beta_, self.c, self._compute_value, prox_2)
-#
-##            l, low_start, high_start = bisection.run(func, [low, high])
-#            l = bisection.run(func, [consts.TOLERANCE, p])
-#
-#            y = func.y
-
-#        elif p > n:
-#            U = X_.T                           # p-by-n
-#            V = X_                             # n-by-p
-#            Vx = np.dot(V, beta_)              # n-by-1
-#
-#            k = self.tau + 1.0
-#            m = ((1.0 - self.tau) / n_)
-#
-#            if self._x_UPPtinvIVUPtVx is None:
-#                VU = np.dot(V, U)              # n-by-n, VU = XX'
-#                D, P = np.linalg.eig(VU)
-#                PtVx = Vx  # np.dot(P.T, Vx)  # Pt = np.linalg.pinv(P)
-#                UPPtinvIVUPtVx = np.dot(U,  # np.dot(U, P),
-#                                     (np.reciprocal(D + (k / m)) * PtVx.T).T)
-#                self._x_UPPtinvIVUPtVx = (beta_ - UPPtinvIVUPtVx) / k
-#
-#            def prox_3(x, l):
-#
-#                invIMx = self._x_UPPtinvIVUPtVx / l
-#
-#                return invIMx
-#
-#            func = F(beta_, self.c, self._compute_value, prox_3)
-#
-##            l, low_start, high_start = bisection.run(func, [low, high])
-##            l = bisection.run(func, [consts.TOLERANCE, 1.0])
-#            if p >= 10000 and n >= 500:
-#                l = bisection.run(func, [p / 5, p])
-#            elif p >= 1000 and n >= 100:
-#                l = bisection.run(func, [p / 100, p / 10])
-#            else:
-#                l = bisection.run(func, [consts.TOLERANCE, 1.0])
-#            print "l:", l
-#
-#            y = func.y
-#
-#        else:  # The case when: p <= n
-#
-#            if self._M is None:
-#                Ip = np.eye(p)
-#                XtX = np.dot(X_.T, X_)
-#
-#                self._M = self.tau * Ip + \
-#                          ((1.0 - self.tau) / n_) * XtX
-#
-#            if self._D is None or self._P is None:
-#                self._D, self._P = np.linalg.eig(self._M)
-#
-#                self._sqrtD = np.sqrt(self._D)
-#                self._Ptx = np.dot(self._P.T, beta_)
-#
-#            def prox_4(x, l):
-#
-#                invIM = np.dot(self._P * \
-#                               np.reciprocal(1.0 + (2.0 * l) * self._D),
-#                               self._P.T)
-#                y = np.dot(invIM, x)
-#
-#                return y
-#
-##            func = F(beta_, self.c, self._compute_value, prox_4)
-##            l = bisection.run(func, [consts.TOLERANCE, 1.0])
-##
-##            y = func.y
-#
-#            class F(interfaces.Function):
-#                def __init__(self, c, D, sqrtD, Ptx):
-#                    self.c = c
-#                    self.D = D
-#                    self.sqrtD = sqrtD
-#                    self.Ptx = Ptx
-#
-#                def f(self, l):
-#
-#                    K = np.reciprocal(1.0 + (2.0 * l) * self.D)
-#                    sqrtDK = self.sqrtD * K  # Slightly faster than np.multiply
-#                    c = maths.norm((sqrtDK * self.Ptx.T).T) ** 2.0
-#
-#                    return c - self.c
-#
-#            func = F(self.c, self._D, self._sqrtD, self._Ptx)
-#            low_start = consts.TOLERANCE
-#            high_start = 1.0
-##            low_start = np.max((consts.TOLERANCE, np.log10(n)))
-##            high_start = np.max((1.0, 1.0 + np.log10(n) ** 2.0))
-#            l = bisection.run(func, [low_start, high_start])
-##            print "l:", l
-#            y = prox_4(beta_, l)
-
         else:
-#            _, l, P = np.linalg.svd(np.sqrt((1.0 - self.tau) / n_) * X_, full_matrices=0)
-#            l **= 2.0
-#            l += self.tau
-            _, l, P = np.linalg.svd(X_, full_matrices=0)
-            l =  ((1.0 - self.tau) / n_) * (l ** 2.0) + self.tau
-            l = l.reshape((min(n, p), 1))
+            if self._U is None or self._S is None or self._V is None:
+                self._U, self._S, self._V = np.linalg.svd(X_, full_matrices=0)
+                self._S = ((1.0 - self.tau) / n_) * (self._S ** 2.0) + self.tau
+                self._S = self._S.reshape((min(n, p), 1))
 
-            def ssq(vec):
-                return np.sum(vec ** 2.0)
+            def ssq(v):
+                return np.dot(v.T, v)[0, 0]
 
-            atilde = np.dot(P, beta_)
-            ssdiff = np.sum(beta_ ** 2.0) - np.sum(atilde ** 2.0)
+            atilde = np.dot(self._V, beta_)
             atilde2 = atilde ** 2.0
-            atilde2lambdas = atilde2 * l
-            atilde2lambdas2 = atilde2 * l ** 2.0
+            ssdiff = np.sum(beta_ ** 2.0) - np.sum(atilde2)
+            atilde2lambdas = atilde2 * self._S
+#            atilde2lambdas2 = atilde2 * self._S ** 2.0
+            atilde2lambdas2 = atilde2lambdas * self._S
             tau2 = self.tau ** 2.0
 
             def f(mu):
                 term1 = (self.tau / ((1.0 + 2.0 * mu * self.tau) ** 2.0)) * ssdiff
-                term2 = np.sum(atilde2lambdas / ((1.0 + 2.0 * mu * l) ** 2.0))
+                term2 = np.sum(atilde2lambdas / ((1.0 + (2.0 * mu) * self._S) ** 2.0))
                 return term1 + term2 - self.c
 
             def df(mu):
                 term1 = -4.0 * tau2 / ((1.0 + 2.0 * mu * self.tau) ** 3.0) \
                             * ssdiff
                 term2 = -4.0 * np.sum(atilde2lambdas2 \
-                            / ((1.0 + 2.0 * mu * l) ** 3.0))
+                            / ((1.0 + (2.0 * mu) * self._S) ** 3.0))
                 return term1 + term2
-
-            print "f :", f(0.0)
-            print "df:", df(0.0)
 
             from parsimony.algorithms.explicit import NewtonRaphson
             newton = NewtonRaphson(force_negative=True,
@@ -1204,53 +1055,52 @@ class RGCCAConstraint(QuadraticConstraint,
                                    parameter_negative=False,
                                    parameter_zero=False,
                                    eps=consts.TOLERANCE)
+
             class F(interfaces.Function):
 
-                def f(self, x):    
+                def f(self, x):
                     return f(x)
 
                 def grad(self, x):
                     return df(x)
 
-            mu = newton.run(F(), 1.0)
+            start_mu = np.sqrt(p / 10.0)  # This seems to be a very good guess
+            mu = newton.run(F(), start_mu)
 
-            print "mu       :", mu
+            print "mu:", mu
 
             if p > n:
-                D, P = np.linalg.eig(np.dot(X_, X_.T))
+                l2 = ((self._S - self.tau) / ((1.0 - self.tau) / n_)).reshape((n,))
 
-                a = 1 + 2.0 * mu * self.tau
+                a = 1.0 + 2.0 * mu * self.tau
                 b = 2.0 * mu * (1.0 - self.tau) / n_
-                PtXbeta = np.dot(P.T, np.dot(X_, beta_))
-                y = (beta_ - np.dot(X_.T,
-                                    np.dot(np.reciprocal(D + (a / b)) * P,
-                                           PtXbeta))) / a
+                y = (beta_ - np.dot(X_.T, np.dot(self._U,
+                                    (np.reciprocal(l2 + (a / b)) \
+                                    * np.dot(self._U.T, np.dot(X_, beta_)).T).T))) / a
 
-                Ip = np.eye(p)
-                M = self.tau * Ip + ((1.0 - self.tau) / n_) * np.dot(X_.T, X_)
-                invIM = np.linalg.inv(Ip + (2.0 * mu) * M)
-                y_ = np.dot(invIM, beta_)
-                print "err:", np.linalg.norm(y - y_)
+#                Ip = np.eye(p)
+#                M = self.tau * Ip + ((1.0 - self.tau) / n_) * np.dot(X_.T, X_)
+#                invIM = np.linalg.inv(Ip + (2.0 * mu) * M)
+#                y_ = np.dot(invIM, beta_)
+#                print "err:", np.linalg.norm(y - y_)
+
+            else:  # The case when n >= p
+
+                l2 = ((self._S - self.tau) / ((1.0 - self.tau) / n_)).reshape((p,))
+
+                a = 1.0 + 2.0 * mu * self.tau
+                b = 2.0 * mu * (1.0 - self.tau) / n_
+                y = np.dot(self._V.T, (np.reciprocal(a + b * l2) \
+                            * atilde.T).T)
+
+#                Ip = np.eye(p)
+#                M = self.tau * Ip + ((1.0 - self.tau) / n_) * np.dot(X_.T, X_)
+#                invIM = np.linalg.inv(Ip + (2.0 * mu) * M)
+#                y_ = np.dot(invIM, beta_)
+#                print "err:", np.linalg.norm(y - y_)
+
 #            print "yMy      :", np.dot(y.T, np.dot(M, y))[0, 0]
-            print "f(beta_) :", self.f(y)
-
-#            class F(interfaces.Function):
-#                def __init__(self, c):
-#                    self.c = c
-#
-#                def f(self, mu):
-#
-#                    y = np.dot(np.linalg.inv(Ip + (2.0 * mu) * M), beta_)
-#
-#                    return np.dot(y.T, np.dot(M, y)) - self.c
-#
-#            func = F(self.c)
-#            low_start = consts.TOLERANCE
-#            high_start = 1.0
-#            mu = bisection.run(func, [low_start, high_start])
-#            print "mu       :", mu
-#            y = np.dot(np.linalg.inv(Ip + (2.0 * mu) * M), beta_)
-#            print "yMy      :", np.dot(y.T, np.dot(M, y))
+#            print "f(beta_) :", self.f(y)
 
         if self.penalty_start > 0:
             y = np.vstack((beta[:self.penalty_start, :], y))
