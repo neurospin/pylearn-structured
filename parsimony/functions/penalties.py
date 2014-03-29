@@ -369,8 +369,10 @@ class L0(interfaces.AtomicFunction,
         y = np.copy(x_)
         y[ind] = 0.0
 
-        y = np.vstack((x[:self.penalty_start, :],  # Unregularised variables.
-                       y))
+        if self.penalty_start > 0:
+            # Add the unregularised variables.
+            y = np.vstack((x[:self.penalty_start, :],
+                           y))
 
         return y
 
@@ -611,7 +613,7 @@ class L2(interfaces.AtomicFunction,
     where ||\beta||²_2 is the squared L2 loss function. The constrained
     version has the form
 
-        ||\beta||²_2 <= c.
+        0.5 * ||\beta||²_2 <= c.
 
     Parameters
     ----------
@@ -671,11 +673,11 @@ class L2(interfaces.AtomicFunction,
 
         if self.penalty_start > 0:
             beta_ = beta[self.penalty_start:, :]
+            grad = np.vstack((np.zeros((self.penalty_start, 1)),
+                              self.l * beta_))
         else:
             beta_ = beta
-
-        grad = np.vstack((np.zeros((self.penalty_start, 1)),
-                          self.l * beta_))
+            grad = self.l * beta_
 
 #        approx_grad = utils.approx_grad(self.f, beta, eps=1e-4)
 #        print maths.norm(grad - approx_grad)
@@ -698,8 +700,11 @@ class L2(interfaces.AtomicFunction,
         else:
             beta_ = beta
 
-        prox = np.vstack((beta[:self.penalty_start, :],
-                          beta_ / (1.0 + l)))
+        if self.penalty_start > 0:
+            prox = np.vstack((beta[:self.penalty_start, :],
+                              beta_ / (1.0 + l)))
+        else:
+            prox = beta_ / (1.0 + l)
 
         return prox
 
@@ -734,10 +739,14 @@ class L2(interfaces.AtomicFunction,
         if 0.5 * sqnorm <= self.c:
             return beta
 
-        # The correction by eps is to nudge the squared norm just below self.c.
+        # The correction by eps is to nudge the squared norm just below
+        # self.c.
         eps = consts.FLOAT_EPSILON
-        proj = np.vstack((beta[:self.penalty_start, :],
-                          beta_ * np.sqrt((2.0 * self.c - eps) / sqnorm)))
+        if self.penalty_start > 0:
+            proj = np.vstack((beta[:self.penalty_start, :],
+                              beta_ * np.sqrt((2.0 * self.c - eps) / sqnorm)))
+        else:
+            proj = beta_ * np.sqrt((2.0 * self.c - eps) / sqnorm)
 
         return proj
 
@@ -863,7 +872,8 @@ class QuadraticConstraint(interfaces.AtomicFunction,
         else:
             grad = (2.0 * self.l) * np.dot(self.M.T, np.dot(self.N, beta_))
 
-        grad = np.vstack(np.zeros((self.penalty_start, 1)), grad)
+        if self.penalty_start > 0:
+            grad = np.vstack(np.zeros((self.penalty_start, 1)), grad)
 
         return grad
 
@@ -889,12 +899,12 @@ class RGCCAConstraint(QuadraticConstraint,
                       interfaces.ProjectionOperator):
     """The proximal operator of the quadratic function
 
-        f(x) = l * (x'(\tau * I + ((1 - \tau) / n) * X'X)x - c),
+        f(x) = l * (x'(tau * I + ((1 - tau) / n) * X'X)x - c),
 
-    where \tau is a given regularisation constant. The constrained version has
+    where tau is a given regularisation constant. The constrained version has
     the form
 
-        x'(\tau * I + ((1 - \tau) / n) * X'X)x <= c.
+        x'(tau * I + ((1 - tau) / n) * X'X)x <= c.
 
     Parameters
     ----------
@@ -902,7 +912,7 @@ class RGCCAConstraint(QuadraticConstraint,
             constant, of the function.
 
     c : Float. The limit of the constraint. The function is feasible if
-            x'(\tau * I + ((1 - \tau) / n) * X'X)x <= c. The default value is
+            x'(tau * I + ((1 - tau) / n) * X'X)x <= c. The default value is
             c=0, i.e. the default is a regularisation formulation.
 
     tau : Non-negative float. The regularisation constant.
@@ -970,7 +980,8 @@ class RGCCAConstraint(QuadraticConstraint,
             grad = (self.tau * 2.0) * beta_
 
         if self.penalty_start > 0:
-            grad = np.vstack(np.zeros((self.penalty_start, 1)), grad)
+            grad = np.vstack(np.zeros((self.penalty_start, 1)),
+                             grad)
 
 #        approx_grad = utils.approx_grad(self.f, beta, eps=1e-4)
 #        print maths.norm(grad - approx_grad)
@@ -998,16 +1009,14 @@ class RGCCAConstraint(QuadraticConstraint,
         """
         if self.penalty_start > 0:
             beta_ = beta[self.penalty_start:, :]
-            X_ = self.X[:, self.penalty_start:]
         else:
             beta_ = beta
-            X_ = self.X
 
         xtMx = self._compute_value(beta_)
         if xtMx <= self.c:
             return beta
 
-        n, p = X_.shape
+        n, p = self.X.shape
 
         if self.unbiased:
             n_ = float(n - 1.0)
@@ -1021,99 +1030,97 @@ class RGCCAConstraint(QuadraticConstraint,
             y = beta_ * np.sqrt((self.c - eps) / sqnorm)
 
         else:
+
             if self._U is None or self._S is None or self._V is None:
-                self._U, self._S, self._V = np.linalg.svd(X_, full_matrices=0)
+#                self._U, self._S, self._V = np.linalg.svd(X_, full_matrices=0)
+                # numpy.linalg.svd runs faster on the transpose.
+                self._V, self._S, self._U = np.linalg.svd(self.X.T,
+                                                          full_matrices=0)
+                self._V = self._V.T
+                self._U = self._U.T
                 self._S = ((1.0 - self.tau) / n_) * (self._S ** 2.0) + self.tau
                 self._S = self._S.reshape((min(n, p), 1))
 
-            def ssq(v):
-                return np.dot(v.T, v)[0, 0]
-
             atilde = np.dot(self._V, beta_)
             atilde2 = atilde ** 2.0
-            ssdiff = np.sum(beta_ ** 2.0) - np.sum(atilde2)
+            ssdiff = np.dot(beta_.T, beta_)[0, 0] - np.sum(atilde2)
             atilde2lambdas = atilde2 * self._S
-#            atilde2lambdas2 = atilde2 * self._S ** 2.0
             atilde2lambdas2 = atilde2lambdas * self._S
             tau2 = self.tau ** 2.0
-
-            def f(mu):
-                term1 = (self.tau / ((1.0 + 2.0 * mu * self.tau) ** 2.0)) * ssdiff
-                term2 = np.sum(atilde2lambdas / ((1.0 + (2.0 * mu) * self._S) ** 2.0))
-                return term1 + term2 - self.c
-
-            def df(mu):
-                term1 = -4.0 * tau2 / ((1.0 + 2.0 * mu * self.tau) ** 3.0) \
-                            * ssdiff
-                term2 = -4.0 * np.sum(atilde2lambdas2 \
-                            / ((1.0 + (2.0 * mu) * self._S) ** 3.0))
-                return term1 + term2
 
             from parsimony.algorithms.explicit import NewtonRaphson
             newton = NewtonRaphson(force_negative=True,
                                    parameter_positive=True,
                                    parameter_negative=False,
-                                   parameter_zero=False,
-                                   eps=consts.TOLERANCE)
+                                   parameter_zero=True,
+                                   eps=consts.TOLERANCE,
+                                   max_iter=30)
 
             class F(interfaces.Function):
 
-                def f(self, x):
-                    return f(x)
+                def __init__(self, tau, S, c):
+                    self.tau = tau
+                    self.S = S
+                    self.c = c
 
-                def grad(self, x):
-                    return df(x)
+                def f(self, mu):
+                    term1 = (self.tau \
+                            / ((1.0 + 2.0 * mu * self.tau) ** 2.0)) * ssdiff
+                    term2 = np.sum(atilde2lambdas \
+                            / ((1.0 + (2.0 * mu) * self.S) ** 2.0))
+                    return term1 + term2 - self.c
 
-            start_mu = np.sqrt(p / 10.0)  # This seems to be a very good guess
-            mu = newton.run(F(), start_mu)
+                def grad(self, mu):
+                    term1 = -4.0 * tau2 \
+                                / ((1.0 + 2.0 * mu * self.tau) ** 3.0) * ssdiff
+                    term2 = -4.0 * np.sum(atilde2lambdas2 \
+                                / ((1.0 + (2.0 * mu) * self.S) ** 3.0))
+                    return term1 + term2
 
-            print "mu:", mu
+            if max(n, p) >= 1000:
+                # A rough heuristic for finding a start value. Works well in
+                # many cases, and when it does not work we have only lost one
+                # iteration and restart at 0.0.
+                start_mu = np.sqrt(min(n, p)) \
+                        / max(1.0, self.c) \
+                        / max(0.1, self.tau)
+            elif max(n, p) >= 100:
+                start_mu = 1.0
+            else:
+                start_mu = 0.0
+            mu = newton.run(F(self.tau, self._S, self.c), start_mu)
 
             if p > n:
-                l2 = ((self._S - self.tau) / ((1.0 - self.tau) / n_)).reshape((n,))
+                l2 = ((self._S - self.tau) \
+                        / ((1.0 - self.tau) / n_)).reshape((n,))
 
                 a = 1.0 + 2.0 * mu * self.tau
                 b = 2.0 * mu * (1.0 - self.tau) / n_
-                y = (beta_ - np.dot(X_.T, np.dot(self._U,
-                                    (np.reciprocal(l2 + (a / b)) \
-                                    * np.dot(self._U.T, np.dot(X_, beta_)).T).T))) / a
-
-#                Ip = np.eye(p)
-#                M = self.tau * Ip + ((1.0 - self.tau) / n_) * np.dot(X_.T, X_)
-#                invIM = np.linalg.inv(Ip + (2.0 * mu) * M)
-#                y_ = np.dot(invIM, beta_)
-#                print "err:", np.linalg.norm(y - y_)
+                y = (beta_ - np.dot(self.X.T, np.dot(self._U,
+                             (np.reciprocal(l2 + (a / b)) \
+                             * np.dot(self._U.T,
+                                      np.dot(self.X, beta_)).T).T))) / a
 
             else:  # The case when n >= p
-
-                l2 = ((self._S - self.tau) / ((1.0 - self.tau) / n_)).reshape((p,))
+                l2 = ((self._S - self.tau) \
+                        / ((1.0 - self.tau) / n_)).reshape((p,))
 
                 a = 1.0 + 2.0 * mu * self.tau
                 b = 2.0 * mu * (1.0 - self.tau) / n_
                 y = np.dot(self._V.T, (np.reciprocal(a + b * l2) \
                             * atilde.T).T)
 
-#                Ip = np.eye(p)
-#                M = self.tau * Ip + ((1.0 - self.tau) / n_) * np.dot(X_.T, X_)
-#                invIM = np.linalg.inv(Ip + (2.0 * mu) * M)
-#                y_ = np.dot(invIM, beta_)
-#                print "err:", np.linalg.norm(y - y_)
-
-#            print "yMy      :", np.dot(y.T, np.dot(M, y))[0, 0]
-#            print "f(beta_) :", self.f(y)
-
         if self.penalty_start > 0:
-            y = np.vstack((beta[:self.penalty_start, :], y))
+            y = np.vstack((beta[:self.penalty_start, :],
+                           y))
 
         return y
-#        return y, low_start, high_start
 
     def _compute_value(self, beta):
         """Helper function to compute the function value.
 
         Note that beta must already be sliced!
         """
-
         if self.unbiased:
             n = float(self.X.shape[0] - 1.0)
         else:
@@ -1160,7 +1167,8 @@ class SufficientDescentCondition(interfaces.Function,
         f_x_ap = self.function.f(x + a * self.p)
         f_x = self.function.f(x)
         grad_p = np.dot(self.function.grad(x).T, self.p)[0, 0]
-#        print "f_x_ap = %.10f, f_x = %.10f, grad_p = %.10f, feas = %.10f" % (f_x_ap, f_x, grad_p, f_x + self.c * a * grad_p)
+#        print "f_x_ap = %.10f, f_x = %.10f, grad_p = %.10f, feas = %.10f" \
+#                % (f_x_ap, f_x, grad_p, f_x + self.c * a * grad_p)
 #        if grad_p >= 0.0:
 #            pass
         feasible = f_x_ap <= f_x + self.c * a * grad_p

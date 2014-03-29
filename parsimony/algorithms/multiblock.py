@@ -144,9 +144,6 @@ class MultiblockProjectedGradientMethod(bases.ExplicitAlgorithm):
                 for k in xrange(self.max_iter):
 #                    print "it: %d, i: %d, k: %d" % (it, i, k)
 
-#                    if i == 1:
-#                        print "w00t!?"
-
                     z = w[i] + ((k - 2.0) / (k + 1.0)) * (w[i] - w_old[i])
 
 #                    _t = utils.time_cpu()

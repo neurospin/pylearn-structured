@@ -837,10 +837,10 @@ class Bisection(bases.ExplicitAlgorithm):
 
                     raise ValueError("Parameter must be allowed to be real!")
 
-        low_start = low
-        high_start = high
-        print "low_start:", low_start
-        print "high_start:", high_start
+#        low_start = low
+#        high_start = high
+#        print "low_start:", low_start
+#        print "high_start:", high_start
 
         # Use the bisection method to find where |f(x)|_2 <= eps.
         neg_count = 0
@@ -941,9 +941,22 @@ class NewtonRaphson(bases.ExplicitAlgorithm):
         while True:
             x_ = x
             f = function.f(x_)
+#            print "f:", f
             df = function.grad(x_)
-            print "x:", x, ", f(x):", f
+#            print "df:", df
+#            print "x:", x, ", f(x):", f
             x = x_ - f / df
+            # TODO: Handle the other cases!
+            if not self.parameter_negative \
+                and not self.parameter_zero \
+                and self.parameter_positive \
+                and x < consts.TOLERANCE:
+                x = consts.TOLERANCE
+            elif not self.parameter_negative \
+                and self.parameter_zero \
+                and self.parameter_positive \
+                and x < 0.0:
+                x = 0.0
 
             if (abs(x - x_) <= self.eps and i + 1 >= self.min_iter) \
                     or i + 1 >= self.max_iter:
@@ -951,7 +964,7 @@ class NewtonRaphson(bases.ExplicitAlgorithm):
                     f = function.f(x)
                     if f > 0.0:
                         df = function.grad(x)
-                        print "f(x):", f
+#                        print "f(x):", f
                         # We assume that we are within |x_opt - x| < eps from
                         # the root. I.e. that the root is within the interval
                         # [x_opt - eps, x_opt + eps]. We are at x_opt + eps or
@@ -959,12 +972,12 @@ class NewtonRaphson(bases.ExplicitAlgorithm):
                         # x_opt + 0.5 * eps, respectively.
                         x -= 1.5 * (f / df)
                         f = function.f(x)
-                        print "f(x):", f
+#                        print "f(x):", f
                 break
 
             i += 1
 
-        print "x:", x, ", f(x):", f
+#        print "x:", x, ", f(x):", f
 
         return x
 
