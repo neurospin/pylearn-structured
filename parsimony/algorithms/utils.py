@@ -15,7 +15,7 @@ from parsimony.utils import Enum
 __all__ = ["AlgorithmInfo",
            "Info"]
 
-Info = Enum("Info", "ok", "t", "f", "converged")
+Info = Enum("Info", "ok", "t", "f", "gap", "mu", "converged")
 
 
 class AlgorithmInfo(collections.MutableMapping):
@@ -29,7 +29,17 @@ class AlgorithmInfo(collections.MutableMapping):
     keys : A sequence of allowed keys. The set of keys that are allowed.
     """
     def __init__(self, *keys):
-        self.__keys = list(keys)
+        if (len(keys) == 1 and isinstance(keys[0], collections.Sequence) \
+                and len(keys[0]) == 0) or len(keys) == 0:
+            self.__keys = list()
+
+        elif (len(keys) == 1 and isinstance(keys[0], collections.Sequence) \
+                and len(keys[0]) == 1):
+            self.__keys = list(keys[0])
+
+        else:
+            self.__keys = list(keys)
+
         self.__dict = dict()
 
     def add_key(self, key):
@@ -46,6 +56,9 @@ class AlgorithmInfo(collections.MutableMapping):
 
     def allows(self, key):
         return key in self.__keys
+
+    def allowed_keys(self):
+        return self.__keys[:]
 
     def __len__(self):
         return len(self.__dict)
@@ -81,7 +94,7 @@ class AlgorithmInfo(collections.MutableMapping):
         self.__dict.clear()
 
     def copy(self):
-        info = AlgorithmInfo(self.__keys.copy())
+        info = AlgorithmInfo(self.__keys[:])
         info.__dict = self.__dict.copy()
 
         return info

@@ -211,7 +211,8 @@ class RR_L1_TV(interfaces.CompositeFunction,
                interfaces.ProximalOperator,
                interfaces.Continuation,
                interfaces.DualFunction,
-               interfaces.StronglyConvex):
+               interfaces.StronglyConvex,
+               interfaces.StepSize):
     """Combination (sum) of RidgeRegression, L1 and TotalVariation.
     """
     def __init__(self, X, y, k, l, g, A=None, mu=0.0, penalty_start=0,
@@ -359,7 +360,7 @@ class RR_L1_TV(interfaces.CompositeFunction,
         return self.tv.M()
 
     def mu_opt(self, eps):
-        """The optimal value of \mu given \epsilon.
+        """The optimal value of mu given epsilon.
 
         From the interface "Continuation".
         """
@@ -378,7 +379,7 @@ class RR_L1_TV(interfaces.CompositeFunction,
              / (gM * Lg)
 
     def eps_opt(self, mu):
-        """The optimal value of \epsilon given \mu.
+        """The optimal value of epsilon given mu.
 
         From the interface "Continuation".
         """
@@ -397,7 +398,7 @@ class RR_L1_TV(interfaces.CompositeFunction,
              / gA2
 
     def eps_max(self, mu):
-        """The maximum value of \epsilon.
+        """The maximum value of epsilon.
 
         From the interface "Continuation".
         """
@@ -491,6 +492,17 @@ class RR_L1_TV(interfaces.CompositeFunction,
         From the interface "StronglyConvex".
         """
         return self.rr.k
+
+    def step(self, x):
+        """The step size to use in descent methods.
+
+        From the interface "StepSize".
+
+        Parameters
+        ----------
+        x : Numpy array. The point at which to evaluate the step size.
+        """
+        return 1.0 / self.L()
 
 
 class RR_L1_GL(RR_L1_TV):
@@ -767,6 +779,17 @@ class RR_L1_GL(RR_L1_TV):
         From the interface "NesterovFunction".
         """
         return self.gl.project(a)
+
+    def step(self, x):
+        """The step size to use in descent methods.
+
+        From the interface "StepSize".
+
+        Parameters
+        ----------
+        x : Numpy array. The point at which to evaluate the step size.
+        """
+        return 1.0 / self.L()
 
 
 class RLR_L1_TV(RR_L1_TV):
@@ -1095,7 +1118,8 @@ class PCA_L1_TV(interfaces.CompositeFunction,
                interfaces.ProximalOperator,
                interfaces.Continuation,
                interfaces.DualFunction,
-               interfaces.StronglyConvex):
+               interfaces.StronglyConvex,
+               interfaces.StepSize):
     """Combination (sum) of PCA (Variance), L1 and TotalVariation
     """
     def __init__(self, X, k, l, g, A=None, mu=0.0, penalty_start=0):
@@ -1370,3 +1394,14 @@ class PCA_L1_TV(interfaces.CompositeFunction,
         From the interface "StronglyConvex".
         """
         return self.rr.k
+
+    def step(self, x):
+        """The step size to use in descent methods.
+
+        From the interface "StepSize".
+
+        Parameters
+        ----------
+        x : Numpy array. The point at which to evaluate the step size.
+        """
+        return 1.0 / self.L()

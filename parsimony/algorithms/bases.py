@@ -12,7 +12,7 @@ There are currently two main types of algorithms: implicit and explicit. The
 difference is whether they run directly on the data (implicit) or if they have
 an actual loss function than is minimised (explicit). Implicit algorithms take
 the data as input, and then run on the data. Explicit algorithms take a loss
-function and possibly a startinf point as input, and then minimise the function
+function and possibly a starting point as input, and then minimise the function
 value starting from the point of the start vector.
 
 Algorithms that don't fit well in either category should go in utils instead.
