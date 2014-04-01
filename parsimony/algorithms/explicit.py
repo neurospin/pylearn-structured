@@ -28,7 +28,9 @@ import numpy as np
 try:
     from . import bases  # Only works when imported as a package.
 except ValueError:
-    import parsimony.algorithms.bases as bases  # When run as a program
+    import parsimony.algorithms.bases as bases  # When run as a program.
+from .utils import Info
+from parsimony.algorithms.utils import Info
 import parsimony.utils as utils
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
@@ -50,7 +52,9 @@ __all__ = ["GradientDescent",
            "BacktrackingLineSearch"]
 
 
-class GradientDescent(bases.ExplicitAlgorithm):
+class GradientDescent(bases.ExplicitAlgorithm,
+                      bases.IterativeAlgorithm,
+                      bases.InformationAlgorithm):
     """The gradient descent algorithm.
 
     Examples
@@ -73,33 +77,33 @@ class GradientDescent(bases.ExplicitAlgorithm):
                   interfaces.StepSize,
                  ]
 
-    def __init__(self, step=None, output=False,
-                 eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
+    PROVIDED_INFO = [Info.ok,
+                     Info.t,
+                     Info.f,
+                     Info.converged]
+
+    def __init__(self, eps=consts.TOLERANCE,
+                 info=None, max_iter=consts.MAX_ITER, min_iter=1):
         """
         Parameters
         ----------
-        step : Non-negative float. The step-size to use in each iteration.
-                This is usually not provided, and StepSize.step is used
-                instead.
-
-        output : Boolean. Whether or not to return extra output information.
-                If output is True, running the algorithm will return a tuple
-                with two elements. The first element is the found regression
-                vector, and the second is the extra output information.
-
         eps : Positive float. Tolerance for the stopping criterion.
+
+        info : Information. If, and if so what, extra run information should be
+                returned. Default is None, which is replaced by Information(),
+                which means that no run information is computed nor returned.
 
         max_iter : Positive integer. Maximum allowed number of iterations.
 
         min_iter : Positive integer. Minimum number of iterations.
         """
-        self.step = step
-        self.output = output
-        self.eps = eps
-        self.max_iter = max_iter
-        self.min_iter = min_iter
+        super(GradientDescent, self).__init__(info=info,
+                                              max_iter=max_iter,
+                                              min_iter=min_iter)
 
+        self.eps = eps
+
+    @bases.check_compatibility
     def run(self, function, beta):
         """Find the minimiser of the given function, starting at beta.
 
@@ -109,44 +113,55 @@ class GradientDescent(bases.ExplicitAlgorithm):
 
         beta : Numpy array. The start vector.
         """
-        self.check_compatibility(function, self.INTERFACES)
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = False
 
-        if self.step is None:
-            step = function.step(beta)
-        else:
-            step = self.step
+        step = function.step(beta)
 
         betanew = betaold = beta
 
-        if self.output:
+        if self.info.allows(Info.t):
             t = []
+        if self.info.allows(Info.f):
             f = []
+        if self.info.allows(Info.converged):
+            self.info[Info.converged] = False
+
         for i in xrange(1, self.max_iter + 1):
-            if self.output:
+            if self.info.allows(Info.t):
                 tm = utils.time_cpu()
 
-            if self.step is None:
-                step = function.step(betanew)
+            step = function.step(betanew)
 
             betaold = betanew
             betanew = betaold - step * function.grad(betaold)
 
-            if self.output:
+            if self.info.allows(Info.t):
                 t.append(utils.time_cpu() - tm)
+            if self.info.allows(Info.f):
                 f.append(function.f(betanew))
 
             if maths.norm(betanew - betaold) < self.eps \
                     and i >= self.min_iter:
+
+                if self.info.allows(Info.converged):
+                    self.info[Info.converged] = True
+
                 break
 
-        if self.output:
-            output = {"t": t, "f": f}
-            return betanew, output
-        else:
-            return betanew
+        if self.info.allows(Info.t):
+            self.info[Info.f] = t
+        if self.info.allows(Info.f):
+            self.info[Info.f] = f
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = True
+
+        return betanew
 
 
-class ISTA(bases.ExplicitAlgorithm):
+class ISTA(bases.ExplicitAlgorithm,
+           bases.IterativeAlgorithm,
+           bases.InformationAlgorithm):
     """The iterative shrinkage-thresholding algorithm.
 
     Examples
@@ -184,42 +199,38 @@ class ISTA(bases.ExplicitAlgorithm):
     """
     INTERFACES = [interfaces.Function,
                   interfaces.Gradient,
-                  # TODO: We should use a step size here instead of the
-                  # Lipschitz constant. All functions don't have L, but will
-                  # still run in FISTA with a small enough step size.
-                  # Updated: Use StepSize instead!!
-                  # interfaces.LipschitzContinuousGradient,
+                  interfaces.StepSize,
                   interfaces.ProximalOperator,
                  ]
 
-    def __init__(self, step=None, output=False,
-                 eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
+    PROVIDED_INFO = [Info.ok,
+                     Info.t,
+                     Info.f,
+                     Info.converged]
+
+    def __init__(self, eps=consts.TOLERANCE,
+                 info=None, max_iter=consts.MAX_ITER, min_iter=1):
         """
         Parameters
         ----------
-        step : Non-negative float. The step-size to use in each iteration.
-                This is usually not provided.
-
-        output : Boolean. Whether or not to return output information. If
-                output is True, running the algorithm will return a tuple with
-                two elements. The first element is the found regression vector,
-                and the second is the extra output information.
-
         eps : Positive float. Tolerance for the stopping criterion.
+
+        info : Information. If, and if so what, extra run information should be
+                returned. Default is None, which is replaced by Information(),
+                which means that no run information is computed nor returned.
 
         max_iter : Positive integer. Maximum allowed number of iterations.
 
         min_iter : Positive integer. Minimum number of iterations.
         """
-        self.step = step
-        self.output = output
+        super(ISTA, self).__init__(info=info,
+                                   max_iter=max_iter,
+                                   min_iter=min_iter)
         self.eps = eps
-        self.max_iter = max_iter
-        self.min_iter = min_iter
 
+    @bases.check_compatibility
     def run(self, function, beta):
-        """Call this object to obtain the variable that gives the minimum.
+        """Find the minimiser of the given function, starting at beta.
 
         Parameters
         ----------
@@ -227,47 +238,51 @@ class ISTA(bases.ExplicitAlgorithm):
 
         beta : Numpy array. The start vector.
         """
-        self.check_compatibility(function, self.INTERFACES)
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = False
+
+        step = function.step(beta)
 
         betanew = betaold = beta
 
-        # TODO: Change the functions so that we can use the StepSize API here.
-        has_step = False
-        if self.step is None:
-            if isinstance(function, interfaces.StepSize):
-                self.step = function.step(beta)
-                has_step = True
-            else:
-                self.step = 1.0 / function.L()
-
-        if self.output:
+        if self.info.allows(Info.t):
             t = []
+        if self.info.allows(Info.f):
             f = []
+        if self.info.allows(Info.converged):
+            self.info[Info.converged] = False
+
         for i in xrange(1, self.max_iter + 1):
-            if self.output:
+            if self.info.allows(Info.t):
                 tm = utils.time_cpu()
 
-            if has_step:
-                self.step = function.step(betanew)
+            step = function.step(betanew)
 
             betaold = betanew
-            betanew = function.prox(betaold -
-                                    self.step * function.grad(betaold),
-                                    self.step)
+            betanew = function.prox(betaold - step * function.grad(betaold),
+                                    step)
 
-            if self.output:
+            if self.info.allows(Info.t):
                 t.append(utils.time_cpu() - tm)
+            if self.info.allows(Info.f):
                 f.append(function.f(betanew))
 
-            if (1.0 / self.step) * maths.norm(betanew - betaold) < self.eps \
+            if (1.0 / step) * maths.norm(betanew - betaold) < self.eps \
                     and i >= self.min_iter:
+
+                if self.info.allows(Info.converged):
+                    self.info[Info.converged] = True
+
                 break
 
-        if self.output:
-            output = {"t": t, "f": f}
-            return betanew, output
-        else:
-            return betanew
+        if self.info.allows(Info.t):
+            self.info[Info.f] = t
+        if self.info.allows(Info.f):
+            self.info[Info.f] = f
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = True
+
+        return betanew
 
 
 class FISTA(bases.ExplicitAlgorithm):

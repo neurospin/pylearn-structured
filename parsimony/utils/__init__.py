@@ -10,7 +10,7 @@ import maths
 import consts
 
 from .utils import time_cpu, time_wall, deprecated, approx_grad
-from .utils import AnonymousClass, optimal_shrinkage
+from .utils import optimal_shrinkage, AnonymousClass, Enum
 from .check_arrays import check_arrays
 from .plot import plot_map2d
 from .classif_label import class_weight_to_sample_weight, check_labels
@@ -19,6 +19,7 @@ from .classif_label import class_weight_to_sample_weight, check_labels
 __all__ = ["maths", "consts",
            "time_cpu", "time_wall", "deprecated", "approx_grad",
            "check_arrays",
-           "AnonymousClass", "optimal_shrinkage", "plot_map2d",
+           "optimal_shrinkage", "AnonymousClass", "Enum",
+           "plot_map2d",
            "class_weight_to_sample_weight", "check_labels"
            ]
