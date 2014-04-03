@@ -149,7 +149,7 @@ class GradientDescent(bases.ExplicitAlgorithm,
                 break
 
         if self.info.allows(Info.t):
-            self.info[Info.f] = t
+            self.info[Info.t] = t
         if self.info.allows(Info.f):
             self.info[Info.f] = f
         if self.info.allows(Info.ok):
@@ -274,7 +274,7 @@ class ISTA(bases.ExplicitAlgorithm,
                 break
 
         if self.info.allows(Info.t):
-            self.info[Info.f] = t
+            self.info[Info.t] = t
         if self.info.allows(Info.f):
             self.info[Info.f] = f
         if self.info.allows(Info.ok):
@@ -401,7 +401,7 @@ class FISTA(bases.ExplicitAlgorithm,
                 break
 
         if self.info.allows(Info.t):
-            self.info[Info.f] = t
+            self.info[Info.t] = t
         if self.info.allows(Info.f):
             self.info[Info.f] = f
         if self.info.allows(Info.ok):
@@ -585,7 +585,7 @@ class CONESTA(bases.ExplicitAlgorithm,
             i = i + 1
 
         if self.info.allows(Info.t):
-            self.info[Info.f] = t
+            self.info[Info.t] = t
         if self.info.allows(Info.f):
             self.info[Info.f] = f
         if self.info.allows(Info.gap):

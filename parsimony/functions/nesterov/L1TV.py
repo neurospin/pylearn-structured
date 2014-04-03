@@ -19,37 +19,44 @@ from .interfaces import NesterovFunction
 from .. import interfaces
 import parsimony.utils.consts as consts
 import parsimony.utils.maths as maths
+import tv
+import L1
 
-__all__ = ["L1TV"]
+__all__ = ["L1TV", "A_from_mask", "A_from_shape"]
 
 
 class L1TV(interfaces.AtomicFunction,
            NesterovFunction,
            interfaces.Penalty,
            interfaces.Eigenvalues):
-    """
-    Parameters:
-    ----------
-    l : Non-negative float. The Lagrange multiplier, or regularisation
-            constant, of the smoothed L1 part of the function.
+    """The proximal operator of the smoothed sum of the TV and L1 functions
 
-    g : Non-negative float. The Lagrange multiplier, or regularisation
-            constant, of the smoothed total variation part of the function.
+        f(beta) = (l * L1(beta) + g * TV(beta))_mu,
 
-    Atv : A (usually sparse) matrix. The linear operator for the smoothed total
-            variation part. May not be None.
-
-    Al1 : A (usually sparse) matrix. The linear operator for the smoothed L1
-            part. May not be None.
-
-    mu : Non-negative float. The regularisation constant for the smoothing.
-
-    penalty_start : Non-negative integer. The number of columns, variables
-            etc., to except from penalisation. Equivalently, the first index
-            to be penalised. Default is 0, all columns are included.
+    where (...)_mu means that what's within parentheses is smoothed.
     """
     def __init__(self, l, g, Atv=None, Al1=None, mu=0.0, penalty_start=0):
+        """
+        Parameters
+        ----------
+        l : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, of the smoothed L1 part of the function.
 
+        g : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, of the smoothed total variation part of the function.
+
+        Atv : A (usually sparse) matrix. The linear operator for the smoothed
+                total variation part. May not be None.
+
+        Al1 : A (usually sparse) matrix. The linear operator for the smoothed
+                L1 part. May not be None.
+
+        mu : Non-negative float. The regularisation constant for the smoothing.
+
+        penalty_start : Non-negative integer. The number of columns, variables
+                etc., to exempt from penalisation. Equivalently, the first
+                index to be penalised. Default is 0, all columns are included.
+        """
         self.g = float(g)
 
         # WARNING: Number of non-zero rows may differ from p.
@@ -226,7 +233,7 @@ class L1TV(interfaces.AtomicFunction,
         return [al1, ax, ay, az]
 
     def estimate_mu(self, beta):
-        """Computes a "good" value of \mu with respect to the given \beta.
+        """Computes a "good" value of mu with respect to the given beta.
 
         From the interface "NesterovFunction".
         """
@@ -236,7 +243,7 @@ class L1TV(interfaces.AtomicFunction,
         """ The maximum value of the regularisation of the dual variable. We
         have
 
-            M = max_{\alpha \in K} 0.5*|\alpha|²_2.
+            M = max_{alpha in K} 0.5*|alpha|²_2.
 
         From the interface "NesterovFunction".
         """
@@ -244,3 +251,49 @@ class L1TV(interfaces.AtomicFunction,
 
         return (A[0].shape[0] / 2.0) \
              + (A[1].shape[0] / 2.0)
+
+
+def A_from_mask(mask, num_variables, penalty_start=0):
+    """Generates the linear operator for the total variation Nesterov function
+    from a mask for a 3D image.
+
+    Parameters
+    ----------
+    mask : Numpy array. The mask. The mask does not involve any intercept
+            variables.
+
+    num_variables : Positive integer. The total number of variables, including
+            the intercept variable(s).
+
+    penalty_start : Non-negative integer. The number of variables to exempt
+            from penalisation. Equivalently, the first index to be penalised.
+            Default is 0, all variables are included.
+    """
+    Atv = tv.A_from_mask(mask)
+    Al1 = L1.A_from_variables(num_variables, penalty_start=penalty_start)
+
+    return Atv, Al1
+
+
+def A_from_shape(shape, num_variables, penalty_start=0):
+    """Generates the linear operator for the total variation Nesterov function
+    from the shape of a 3D image.
+
+    Parameters
+    ----------
+    shape : List or tuple with 1, 2 or 3 elements. The shape of the 1D, 2D or
+            3D image. shape has the form (Z, Y, X), where Z is the number of
+            "layers", Y is the number of rows and X is the number of columns.
+            The shape does not involve any intercept variables.
+
+    num_variables : Positive integer. The total number of variables, including
+            the intercept variable(s).
+
+    penalty_start : Non-negative integer. The number of variables to exempt
+            from penalisation. Equivalently, the first index to be penalised.
+            Default is 0, all variables are included.
+    """
+    Atv = tv.A_from_shape(shape)
+    Al1 = L1.A_from_variables(num_variables, penalty_start=penalty_start)
+
+    return Atv, Al1
