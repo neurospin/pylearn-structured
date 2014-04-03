@@ -663,6 +663,10 @@ class ExcessiveGapMethod(bases.ExplicitAlgorithm,
 
         eps : Positive float. Tolerance for the stopping criterion.
 
+        info : Information. If, and if so what, extra run information should be
+                returned. Default is None, which is replaced by Information(),
+                which means that no run information is computed nor returned.
+
         max_iter : Positive integer. Maximum allowed number of iterations.
 
         min_iter : Positive integer. Minimum allowed number of iterations.
@@ -777,43 +781,58 @@ class ExcessiveGapMethod(bases.ExplicitAlgorithm,
         return beta
 
 
-class Bisection(bases.ExplicitAlgorithm):
+class Bisection(bases.ExplicitAlgorithm,
+                bases.IterativeAlgorithm,
+                bases.InformationAlgorithm):
     """Finds a root of the function assumed to be on the line between two
     points.
 
     Assumes a function f(x) such that |f(x)|_2 < -eps if x is too small,
     |f(x)|_2 > eps if x is too large and |f(x)|_2 <= eps if x is just right.
-
-    Parameters
-    ----------
-    force_negative : Boolean. Default is False. Will try, by running more
-            iterations, to make the result negative. It may fail, but that is
-            unlikely.
-
-    eps : Positive float. A value such that |f(x)|_2 <= eps. Only guaranteed
-            if |f(x)|_2 <= eps in less than max_iter iterations.
-
-    max_iter : Positive integer. Maximum allowed number of iterations.
-
-    min_iter : Positive integer. Minimum number of iterations.
     """
     INTERFACES = [interfaces.Function]
+
+    PROVIDED_INFO = [Info.ok,
+                     Info.num_iter,
+                     Info.converged]
 
     def __init__(self, force_negative=False,
                  parameter_positive=True,
                  parameter_negative=True,
                  parameter_zero=True,
+
                  eps=consts.TOLERANCE,
-                 max_iter=30, min_iter=1):
+                 info=None, max_iter=30, min_iter=1):
+        """
+        Parameters
+        ----------
+        force_negative : Boolean. Default is False. Will try, by running more
+                iterations, to make the result negative. It may fail, but that
+                is unlikely.
+
+        eps : Positive float. A value such that |f(x)|_2 <= eps. Only
+                guaranteed if |f(x)|_2 <= eps in less than max_iter iterations.
+
+        info : Information. If, and if so what, extra run information should be
+                returned. Default is None, which is replaced by Information(),
+                which means that no run information is computed nor returned.
+
+        max_iter : Positive integer. Maximum allowed number of iterations.
+
+        min_iter : Positive integer. Minimum number of iterations.
+        """
+        super(Bisection, self).__init__(info=info,
+                                        max_iter=max_iter,
+                                        min_iter=min_iter)
 
         self.force_negative = force_negative
         self.parameter_positive = parameter_positive
         self.parameter_negative = parameter_negative
         self.parameter_zero = parameter_zero
-        self.eps = eps
-        self.max_iter = max_iter
-        self.min_iter = min_iter
 
+        self.eps = eps
+
+    @bases.check_compatibility
     def run(self, function, x=None):
         """
         Parameters
@@ -827,6 +846,9 @@ class Bisection(bases.ExplicitAlgorithm):
                 automatically. Finding them may be slow, though, if the
                 function is expensive to evaluate.
         """
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = False
+
         if x is not None:
             low = x[0]
             high = x[1]
@@ -926,17 +948,12 @@ class Bisection(bases.ExplicitAlgorithm):
 
                     raise ValueError("Parameter must be allowed to be real!")
 
-#        low_start = low
-#        high_start = high
-#        print "low_start:", low_start
-#        print "high_start:", high_start
-
         # Use the bisection method to find where |f(x)|_2 <= eps.
         neg_count = 0
 
         mid = (low + high) / 2.0
         f_mid = function.f(mid)
-#        for i in xrange(self.max_iter):
+        i = 0
         while True:
             if np.sign(f_mid) == np.sign(f_low):
                 low = mid
@@ -949,9 +966,8 @@ class Bisection(bases.ExplicitAlgorithm):
             f_mid = function.f(mid)
 #            print "i:", (i + 1), ", mid: ", mid, ", f_mid:", f_mid
 
-#            if np.sqrt(np.sum((high - low) ** 2.0)) <= self.eps:
-            if (abs(f_high - f_low) <= self.eps and i + 1 >= self.min_iter) \
-                    or i + 1 >= self.max_iter:
+            if (abs(f_high - f_low) <= self.eps and i >= self.min_iter - 1) \
+                    or i >= self.max_iter - 1:
                 if self.force_negative and f_mid > 0.0:
                     if neg_count < self.max_iter:
                         neg_count += 1
@@ -961,11 +977,25 @@ class Bisection(bases.ExplicitAlgorithm):
                     break
             i += 1
 
-#        return mid, low_start, high_start
+        if self.info.allows(Info.converged):
+            if abs(f_high - f_low) <= self.eps:
+                self.info[Info.converged] = True
+
+                if self.force_negative and f_mid > 0.0:
+                    self.info[Info.converged] = False
+        if self.info.allows(Info.num_iter):
+            self.info[Info.num_iter] = i + 1
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = True
+
+        # TODO: We already have f_mid, so we can return a better approximation
+        # here!
         return mid
 
 
-class NewtonRaphson(bases.ExplicitAlgorithm):
+class NewtonRaphson(bases.ExplicitAlgorithm,
+                    bases.IterativeAlgorithm,
+                    bases.InformationAlgorithm):
     """Finds a root of the function assumed to be in the vicinity of a given
     point.
 
@@ -974,40 +1004,53 @@ class NewtonRaphson(bases.ExplicitAlgorithm):
 
     Problems may also arise if the gradient is too small (e.g. at a stationary
     point) on the path to the root.
-
-    Parameters
-    ----------
-    force_negative : Boolean. Default is False. Will try to make the result
-            negative. It may fail if the function does not behave "nicely"
-            around the found point.
-
-    eps : Positive float. A small value used as the stopping criterion. The
-            stopping criterion will be fulfilled if it converges in less than
-            max_iter iterations.
-
-    max_iter : Positive integer. Maximum allowed number of iterations.
-
-    min_iter : Positive integer. Minimum number of iterations. Default is 1.
     """
     INTERFACES = [interfaces.Function,
-                  interfaces.Gradient,
-                 ]
+                  interfaces.Gradient]
+
+    PROVIDED_INFO = [Info.ok,
+                     Info.num_iter,
+                     Info.converged]
 
     def __init__(self, force_negative=False,
                  parameter_positive=True,
                  parameter_negative=True,
                  parameter_zero=True,
+
                  eps=consts.TOLERANCE,
-                 max_iter=20, min_iter=1):
+                 info=None, max_iter=30, min_iter=1):
+        """
+        Parameters
+        ----------
+        force_negative : Boolean. Default is False. Will try to make the result
+                negative. It may fail if the function does not behave "nicely"
+                around the found point.
+
+        eps : Positive float. A small value used as the stopping criterion. The
+                stopping criterion will be fulfilled if it converges in less
+                than max_iter iterations.
+
+        info : Information. If, and if so what, extra run information should be
+                returned. Default is None, which is replaced by Information(),
+                which means that no run information is computed nor returned.
+
+        max_iter : Positive integer. Maximum allowed number of iterations.
+
+        min_iter : Positive integer. Minimum number of iterations. Default is
+                1.
+        """
+        super(NewtonRaphson, self).__init__(info=info,
+                                            max_iter=max_iter,
+                                            min_iter=min_iter)
 
         self.force_negative = force_negative
         self.parameter_positive = parameter_positive
         self.parameter_negative = parameter_negative
         self.parameter_zero = parameter_zero
-        self.eps = eps
-        self.max_iter = max_iter
-        self.min_iter = min_iter
 
+        self.eps = eps
+
+    @bases.check_compatibility
     def run(self, function, x=None):
         """
         Parameters
@@ -1017,6 +1060,9 @@ class NewtonRaphson(bases.ExplicitAlgorithm):
         x : Float. The starting point of the Newton-Raphson algorithm. Should
                 be "close" to the root.
         """
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = False
+
         if x is None:
             if self.parameter_positive:
                 x = 1.0
@@ -1030,10 +1076,7 @@ class NewtonRaphson(bases.ExplicitAlgorithm):
         while True:
             x_ = x
             f = function.f(x_)
-#            print "f:", f
             df = function.grad(x_)
-#            print "df:", df
-#            print "x:", x, ", f(x):", f
             x = x_ - f / df
             # TODO: Handle the other cases!
             if not self.parameter_negative \
@@ -1047,26 +1090,35 @@ class NewtonRaphson(bases.ExplicitAlgorithm):
                 and x < 0.0:
                 x = 0.0
 
-            if (abs(x - x_) <= self.eps and i + 1 >= self.min_iter) \
-                    or i + 1 >= self.max_iter:
+            if (abs(x - x_) <= self.eps and i >= self.min_iter - 1) \
+                    or i >= self.max_iter - 1:
                 if self.force_negative:
                     f = function.f(x)
                     if f > 0.0:
                         df = function.grad(x)
-#                        print "f(x):", f
                         # We assume that we are within |x_opt - x| < eps from
                         # the root. I.e. that the root is within the interval
                         # [x_opt - eps, x_opt + eps]. We are at x_opt + eps or
                         # x_opt - eps. Then we go to x_opt - 0.5 * eps or
                         # x_opt + 0.5 * eps, respectively.
                         x -= 1.5 * (f / df)
-                        f = function.f(x)
-#                        print "f(x):", f
+#                        f = function.f(x)
                 break
 
             i += 1
 
-#        print "x:", x, ", f(x):", f
+        if self.info.allows(Info.converged):
+            if abs(x - x_) <= self.eps:
+                self.info[Info.converged] = True
+
+                if self.force_negative:
+                    f = function.f(x)
+                    if f > 0.0:
+                        self.info[Info.converged] = False
+        if self.info.allows(Info.num_iter):
+            self.info[Info.num_iter] = i + 1
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = True
 
         return x
 
