@@ -77,6 +77,7 @@ class GradientDescent(bases.ExplicitAlgorithm,
                   interfaces.StepSize]
 
     PROVIDED_INFO = [Info.ok,
+                     Info.num_iter,
                      Info.t,
                      Info.f,
                      Info.converged]
@@ -148,6 +149,8 @@ class GradientDescent(bases.ExplicitAlgorithm,
 
                 break
 
+        if self.info.allows(Info.num_iter):
+            self.info[Info.num_iter] = i
         if self.info.allows(Info.t):
             self.info[Info.t] = t
         if self.info.allows(Info.f):
@@ -202,6 +205,7 @@ class ISTA(bases.ExplicitAlgorithm,
                   interfaces.ProximalOperator]
 
     PROVIDED_INFO = [Info.ok,
+                     Info.num_iter,
                      Info.t,
                      Info.f,
                      Info.converged]
@@ -273,6 +277,8 @@ class ISTA(bases.ExplicitAlgorithm,
 
                 break
 
+        if self.info.allows(Info.num_iter):
+            self.info[Info.num_iter] = i
         if self.info.allows(Info.t):
             self.info[Info.t] = t
         if self.info.allows(Info.f):
@@ -327,6 +333,7 @@ class FISTA(bases.ExplicitAlgorithm,
                   interfaces.ProximalOperator]
 
     PROVIDED_INFO = [Info.ok,
+                     Info.num_iter,
                      Info.t,
                      Info.f,
                      Info.converged]
@@ -400,6 +407,8 @@ class FISTA(bases.ExplicitAlgorithm,
 
                 break
 
+        if self.info.allows(Info.num_iter):
+            self.info[Info.num_iter] = i
         if self.info.allows(Info.t):
             self.info[Info.t] = t
         if self.info.allows(Info.f):
@@ -424,6 +433,7 @@ class CONESTA(bases.ExplicitAlgorithm,
                   interfaces.DualFunction]
 
     PROVIDED_INFO = [Info.ok,
+                     Info.num_iter,
                      Info.t,
                      Info.f,
                      Info.gap,
@@ -536,12 +546,13 @@ class CONESTA(bases.ExplicitAlgorithm,
                                        tmin)
             function.set_mu(mu[-1])
 
-            if (1.0 / tmin) * maths.norm(beta - beta_tilde) < self.eps \
-                    or i >= self.continuations - 1:
-
+            if (1.0 / tmin) * maths.norm(beta - beta_tilde) < self.eps:
                 if self.info.allows(Info.converged):
                     self.info[Info.converged] = True
 
+                stop = True
+
+            if i >= self.continuations - 1:
                 stop = True
 
             if self.fista_info.allows(Info.t):
@@ -584,6 +595,8 @@ class CONESTA(bases.ExplicitAlgorithm,
 
             i = i + 1
 
+        if self.info.allows(Info.num_iter):
+            self.info[Info.num_iter] = i + 1
         if self.info.allows(Info.t):
             self.info[Info.t] = t
         if self.info.allows(Info.f):
@@ -600,7 +613,7 @@ class CONESTA(bases.ExplicitAlgorithm,
 
 class StaticCONESTA(CONESTA):
     """COntinuation with NEsterov smoothing in a Soft-Thresholding Algorithm,
-    or CONESTA for short, with a statically decreasing \mu.
+    or CONESTA for short, with a statically decreasing mu.
     """
     def __init__(self, **kwargs):
 
@@ -611,7 +624,7 @@ class StaticCONESTA(CONESTA):
 
 class DynamicCONESTA(CONESTA):
     """COntinuation with NEsterov smoothing in a Soft-Thresholding Algorithm,
-    or CONESTA for short, with a dynamically decreasing \mu.
+    or CONESTA for short, with a dynamically decreasing mu.
     """
     def __init__(self, **kwargs):
 
@@ -620,21 +633,28 @@ class DynamicCONESTA(CONESTA):
         super(DynamicCONESTA, self).__init__(**kwargs)
 
 
-class ExcessiveGapMethod(bases.ExplicitAlgorithm):
+class ExcessiveGapMethod(bases.ExplicitAlgorithm,
+                         bases.IterativeAlgorithm,
+                         bases.InformationAlgorithm):
     """Nesterov's excessive gap method for strongly convex functions.
     """
     INTERFACES = [nesterov_interfaces.NesterovFunction,
                   interfaces.LipschitzContinuousGradient,
                   interfaces.GradientMap,
                   interfaces.DualFunction,
-                  interfaces.StronglyConvex,
-                 ]
+                  interfaces.StronglyConvex]
 
-    def __init__(self, output=False,
-                 eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
+    PROVIDED_INFO = [Info.ok,
+                     Info.num_iter,
+                     Info.t,
+                     Info.f,
+                     Info.bound,
+                     Info.converged]
+
+    def __init__(self, eps=consts.TOLERANCE,
+                 info=None, max_iter=consts.MAX_ITER, min_iter=1):
         """
-        Parameters:
+        Parameters
         ----------
         output : Boolean. Whether or not to return extra output information.
                 If output is True, running the algorithm will return a tuple
@@ -647,24 +667,29 @@ class ExcessiveGapMethod(bases.ExplicitAlgorithm):
 
         min_iter : Positive integer. Minimum allowed number of iterations.
         """
-        self.output = output
-        self.eps = eps
-        self.max_iter = max_iter
-        self.min_iter = min_iter
+        super(ExcessiveGapMethod, self).__init__(info=info,
+                                                 max_iter=max_iter,
+                                                 min_iter=min_iter)
 
+        self.eps = eps
+
+    @bases.check_compatibility
     def run(self, function, beta=None):
         """The excessive gap method for strongly convex functions.
 
-        Parameters:
+        Parameters
         ----------
         function : The function to minimise. It contains two parts, function.g
                 is the strongly convex part and function.h is the smoothed part
                 of the function.
 
-        beta : Numpy array. The start vector. This is normally not given, but
-                left None. The start vector is computed by the algorithm.
+        beta : Numpy array. A start vector. This is normally not given, but
+                left None, since the start vector is computed by the algorithm.
         """
-        A = function.h.A()
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = False
+
+        A = function.A()
 
         u = [0] * len(A)
         for i in xrange(len(A)):
@@ -675,7 +700,7 @@ class ExcessiveGapMethod(bases.ExplicitAlgorithm):
         if L < consts.TOLERANCE:
             L = consts.TOLERANCE
         mu = [2.0 * L]
-        function.h.set_mu(mu)
+        function.set_mu(mu)
         if beta is not None:
             beta0 = beta
         else:
@@ -683,20 +708,24 @@ class ExcessiveGapMethod(bases.ExplicitAlgorithm):
         beta = beta0
         alpha = function.V(u, beta, L)  # u is zero here
 
-        t = []
-        f = []
-        ubound = []
+        if self.info.allows(Info.t):
+            t = []
+        if self.info.allows(Info.f):
+            f = []
+        if self.info.allows(Info.bound):
+            bound = []
+        if self.info.allows(Info.converged):
+            self.info[Info.converged] = False
 
         k = 0
-
         while True:
-            if self.output:
+            if self.info.allows(Info.t):
                 tm = utils.time_cpu()
 
             tau = 2.0 / (float(k) + 3.0)
 
-            function.h.set_mu(mu[k])
-            alpha_hat = function.h.alpha(beta)
+            function.set_mu(mu[k])
+            alpha_hat = function.alpha(beta)
             for i in xrange(len(alpha_hat)):
                 u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
 
@@ -705,28 +734,47 @@ class ExcessiveGapMethod(bases.ExplicitAlgorithm):
             beta = (1.0 - tau) * beta + tau * betahat
             alpha = function.V(u, betahat, L)
 
-            ulim = mu[k + 1] * function.h.M()
-            if self.output:
+            upper_limit = mu[k + 1] * function.M()
+
+            if self.info.allows(Info.t):
                 t.append(utils.time_cpu() - tm)
-                mu_old = function.h.get_mu()
-                function.h.set_mu(0.0)
+            if self.info.allows(Info.f):
+                mu_old = function.get_mu()
+                function.set_mu(0.0)
                 f.append(function.f(beta))
-                function.h.set_mu(mu_old)
+                function.set_mu(mu_old)
+            if self.info.allows(Info.bound):
+#                bound.append(2.0 * function.M() * mu[0] \
+#                        / ((float(k) + 1.0) * (float(k) + 2.0)))
+                bound.append(upper_limit)
 
-#                ulim.append(2.0 * function.h.M() * mu[0] / ((float(k) + 1.0) * (float(k) + 2.0)))
-                ubound.append(ulim)
+            if upper_limit < self.eps and k >= self.min_iter - 1:
+                if self.info.allows(Info.converged):
+                    self.info[Info.converged] = True
 
-            if ulim < self.eps or k >= self.max_iter:
+                break
+
+            if k >= self.max_iter - 1 and k >= self.min_iter - 1:
                 break
 
             k = k + 1
 
-        if self.output:
-            output = {"t": t, "f": f, "mu": mu, "upper_bound": ubound,
-                      "beta_start": beta0}
-            return (beta, output)
-        else:
-            return beta
+        if self.info.allows(Info.num_iter):
+            self.info[Info.num_iter] = k + 1
+        if self.info.allows(Info.t):
+            self.info[Info.t] = t
+        if self.info.allows(Info.f):
+            self.info[Info.f] = f
+        if self.info.allows(Info.mu):
+            self.info[Info.mu] = mu
+        if self.info.allows(Info.bound):
+            self.info[Info.bound] = bound
+        if self.info.allows(Info.beta):
+            self.info[Info.beta] = beta0
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = True
+
+        return beta
 
 
 class Bisection(bases.ExplicitAlgorithm):
@@ -749,8 +797,7 @@ class Bisection(bases.ExplicitAlgorithm):
 
     min_iter : Positive integer. Minimum number of iterations.
     """
-    INTERFACES = [interfaces.Function,
-                 ]
+    INTERFACES = [interfaces.Function]
 
     def __init__(self, force_negative=False,
                  parameter_positive=True,

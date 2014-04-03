@@ -63,6 +63,8 @@ class L1TV(interfaces.AtomicFunction,
         self._p = Atv[0].shape[1]
         if Al1 is None:
             Al1 = sparse.eye(self._p, self._p)
+        elif isinstance(Al1, (list, tuple)):
+            Al1 = Al1[0]
         A = [l * Al1,
              g * Atv[0],
              g * Atv[1],
@@ -269,7 +271,7 @@ def A_from_mask(mask, num_variables, penalty_start=0):
             from penalisation. Equivalently, the first index to be penalised.
             Default is 0, all variables are included.
     """
-    Atv = tv.A_from_mask(mask)
+    Atv, _ = tv.A_from_mask(mask)
     Al1 = L1.A_from_variables(num_variables, penalty_start=penalty_start)
 
     return Atv, Al1
@@ -293,7 +295,7 @@ def A_from_shape(shape, num_variables, penalty_start=0):
             from penalisation. Equivalently, the first index to be penalised.
             Default is 0, all variables are included.
     """
-    Atv = tv.A_from_shape(shape)
+    Atv, _ = tv.A_from_shape(shape)
     Al1 = L1.A_from_variables(num_variables, penalty_start=penalty_start)
 
     return Atv, Al1

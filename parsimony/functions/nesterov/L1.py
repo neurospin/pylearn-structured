@@ -213,4 +213,4 @@ def A_from_variables(num_variables, penalty_start=0):
     A = sparse.eye(num_variables - penalty_start,
                    num_variables - penalty_start)
 
-    return A
+    return [A]

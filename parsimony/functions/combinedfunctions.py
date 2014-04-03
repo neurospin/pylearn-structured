@@ -991,6 +991,9 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
         return self.g.f(beta) \
              + self.h.phi(alpha, beta)
 
+    def A(self):
+        return self.h.A()
+
     def L(self):
         """Lipschitz constant of the gradient.
 
@@ -1035,6 +1038,13 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
             u_new[i] = u[i] + a[i]
 
         return self.h.project(u_new)
+
+    def alpha(self, beta):
+        """ Dual variable of the Nesterov function.
+
+        From the interface "NesterovFunction".
+        """
+        return self.h.alpha(beta)
 
     def betahat(self, alpha, beta=None):
         """ Returns the beta that minimises the dual function.

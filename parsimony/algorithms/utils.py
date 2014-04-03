@@ -15,7 +15,8 @@ from parsimony.utils import Enum
 __all__ = ["AlgorithmInfo",
            "Info"]
 
-Info = Enum("Info", "ok", "t", "f", "gap", "mu", "converged")
+Info = Enum("Info", "ok", "num_iter", "t", "f", "gap", "mu", "bound", "beta",
+                    "converged")
 
 
 class AlgorithmInfo(collections.MutableMapping):
