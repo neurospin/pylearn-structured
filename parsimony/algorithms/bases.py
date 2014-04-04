@@ -28,7 +28,7 @@ import functools
 
 import parsimony.utils.consts as consts
 import parsimony.functions.interfaces as interfaces
-from .utils import AlgorithmInfo
+from parsimony.utils import LimitedDict
 
 __all__ = ["BaseAlgorithm", "check_compatibility",
            "ImplicitAlgorithm", "ExplicitAlgorithm",
@@ -174,7 +174,7 @@ class InformationAlgorithm(object):
         super(InformationAlgorithm, self).__init__(**kwargs)
 
         if info == None:
-            self.info = AlgorithmInfo()
+            self.info = LimitedDict()
         else:
             self.info = info
 

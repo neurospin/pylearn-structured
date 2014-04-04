@@ -29,8 +29,7 @@ try:
     from . import bases  # Only works when imported as a package.
 except ValueError:
     import parsimony.algorithms.bases as bases  # When run as a program.
-from .utils import Info
-from parsimony.algorithms.utils import AlgorithmInfo, Info
+from parsimony.utils import LimitedDict, Info
 import parsimony.utils as utils
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
@@ -491,7 +490,7 @@ class CONESTA(bases.ExplicitAlgorithm,
         for i in self.info.allowed_keys():
             if i in FISTA.PROVIDED_INFO:
                 fista_keys.append(i)
-        self.fista_info = AlgorithmInfo(fista_keys)
+        self.fista_info = LimitedDict(fista_keys)
         self.FISTA = FISTA(eps=eps, max_iter=max_iter, min_iter=min_iter,
                            info=self.fista_info)
 
