@@ -338,7 +338,8 @@ class FISTA(bases.ExplicitAlgorithm,
                      Info.converged]
 
     def __init__(self, eps=consts.TOLERANCE,
-                 info=None, max_iter=consts.MAX_ITER, min_iter=1):
+                 info=None, max_iter=consts.MAX_ITER, min_iter=1,
+                 conesta_stop=None):
         """
         Parameters
         ----------
@@ -356,6 +357,7 @@ class FISTA(bases.ExplicitAlgorithm,
                                     max_iter=max_iter,
                                     min_iter=min_iter)
         self.eps = eps
+        self.conesta_stop = conesta_stop
 
     @bases.check_compatibility
     def run(self, function, beta):
@@ -397,6 +399,15 @@ class FISTA(bases.ExplicitAlgorithm,
                 t.append(utils.time_cpu() - tm)
             if self.info.allows(Info.f):
                 f.append(function.f(betanew))
+
+            if self.conesta_stop is not None:
+                mu_min = self.conesta_stop[0]
+                mu_old = function.set_mu(mu_min)
+                step = function.step(beta)
+                # Take one ISTA step for use in the stopping criterion.
+                z = function.prox(betanew - step * function.grad(betanew),
+                                  step)
+                function.set_mu(mu_old)
 
             if (1.0 / step) * maths.norm(betanew - z) < self.eps \
                     and i >= self.min_iter:
@@ -528,7 +539,9 @@ class CONESTA(bases.ExplicitAlgorithm,
             print "current iterations: ", self.num_iter, \
                     ", iterations left: ", self.max_iter - self.num_iter
             self.FISTA.set_params(step=tnew, eps=eps_plus,
-                                  max_iter=self.max_iter - self.num_iter)
+                                  max_iter=self.max_iter - self.num_iter,
+#                                  conesta_stop=None)
+                                  conesta_stop=[self.mu_min])
             self.fista_info.clear()
             beta = self.FISTA.run(function, beta)
 
