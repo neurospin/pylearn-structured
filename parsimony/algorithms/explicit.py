@@ -441,7 +441,6 @@ class CONESTA(bases.ExplicitAlgorithm,
 
     def __init__(self, mu_start=None, mu_min=consts.TOLERANCE,
                  tau=0.5, dynamic=True,
-                 continuations=30,
 
                  eps=consts.TOLERANCE,
                  info=None, max_iter=consts.MAX_ITER, min_iter=1):
@@ -459,19 +458,15 @@ class CONESTA(bases.ExplicitAlgorithm,
         dynamic : Boolean. Whether to dynamically decrease eps (through the
                 duality gap) or not.
 
-        continuations : Positive integer. Maximum number of outer loop
-                iterations.
-
         eps : Positive float. Tolerance for the stopping criterion.
 
         info : Information. If, and if so what, extra run information should be
                 returned. Default is None, which is replaced by Information(),
                 which means that no run information is computed nor returned.
 
-        max_iter : Positive integer. Maximum allowed number of inner loop
-                iterations.
+        max_iter : Positive integer. Maximum allowed number of iterations.
 
-        min_iter : Positive integer. Minimum number of inner loop iterations.
+        min_iter : Positive integer. Minimum number of iterations.
         """
         super(CONESTA, self).__init__(info=info,
                                       max_iter=max_iter,
@@ -481,7 +476,6 @@ class CONESTA(bases.ExplicitAlgorithm,
         self.mu_min = mu_min
         self.tau = tau
         self.dynamic = dynamic
-        self.continuations = continuations
 
         self.eps = eps
 
@@ -491,8 +485,11 @@ class CONESTA(bases.ExplicitAlgorithm,
             if i in FISTA.PROVIDED_INFO:
                 fista_keys.append(i)
         self.fista_info = LimitedDict(fista_keys)
+        if not self.fista_info.allows(Info.num_iter):
+            self.fista_info.add_key(Info.num_iter)
         self.FISTA = FISTA(eps=eps, max_iter=max_iter, min_iter=min_iter,
                            info=self.fista_info)
+        self.num_iter = 0
 
     @bases.check_compatibility
     def run(self, function, beta):
@@ -528,13 +525,21 @@ class CONESTA(bases.ExplicitAlgorithm,
 
             tnew = function.step(beta)
             eps_plus = min(max_eps, function.eps_opt(mu[-1]))
-            self.FISTA.set_params(step=tnew, eps=eps_plus)
+            print "current iterations: ", self.num_iter, \
+                    ", iterations left: ", self.max_iter - self.num_iter
+            self.FISTA.set_params(step=tnew, eps=eps_plus,
+                                  max_iter=self.max_iter - self.num_iter)
             self.fista_info.clear()
             beta = self.FISTA.run(function, beta)
 
-            if self.fista_info.allows(Info.t):
+            # This should always be true!
+            if Info.num_iter in self.fista_info:
+                self.num_iter += self.fista_info[Info.num_iter]
+            else:
+                assert(True)  # TODO: Remove!
+            if Info.t in self.fista_info:
                 tval = self.fista_info[Info.t]
-            if self.fista_info.allows(Info.f):
+            if Info.f in self.fista_info:
                 fval = self.fista_info[Info.f]
 
             self.mu_min = min(self.mu_min, mu[-1])
@@ -551,10 +556,10 @@ class CONESTA(bases.ExplicitAlgorithm,
 
                 stop = True
 
-            if i >= self.continuations - 1:
+            if self.num_iter >= self.max_iter:
                 stop = True
 
-            if self.fista_info.allows(Info.t):
+            if self.info.allows(Info.t):
                 gap_time = utils.time_cpu()
 
             if self.dynamic:
@@ -572,7 +577,7 @@ class CONESTA(bases.ExplicitAlgorithm,
 
                 G = self.tau * G
 
-            if self.fista_info.allows(Info.t):
+            if self.info.allows(Info.t):
                 gap_time = utils.time_cpu() - gap_time
                 tval[-1] += gap_time
                 t = t + tval
@@ -593,6 +598,8 @@ class CONESTA(bases.ExplicitAlgorithm,
             function.set_mu(mu_new)
 
             i = i + 1
+
+        print "total number of iterations:", self.num_iter
 
         if self.info.allows(Info.num_iter):
             self.info[Info.num_iter] = i + 1

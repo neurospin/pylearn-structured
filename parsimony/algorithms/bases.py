@@ -143,13 +143,13 @@ class InformationAlgorithm(object):
     Examples
     --------
     >>> import parsimony.algorithms as algorithms
-    >>> from parsimony.algorithms.utils import AlgorithmInfo, Info
+    >>> from parsimony.utils import LimitedInfo, Info
     >>> import numpy as np
     >>> from parsimony.functions.losses import LinearRegression
     >>> np.random.seed(42)
-    >>> gd = algorithms.explicit.GradientDescent(info=AlgorithmInfo(Info.f))
+    >>> gd = algorithms.explicit.GradientDescent(info=LimitedInfo(Info.f))
     >>> gd.info
-    AlgorithmInfo([EnumItem('Info', 'f', 2)]).update({})
+    LimitedDict([Enum('Info', 'f', 2)]).update({})
     >>> lr = LinearRegression(X=np.random.rand(10,15), y=np.random.rand(10,1))
     >>> gd.run(lr, np.random.rand(15, 1))
     array([[-0.16182435],
