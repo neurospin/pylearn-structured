@@ -532,14 +532,12 @@ class CONESTA(bases.ExplicitAlgorithm,
             self.fista_info.clear()
             beta = self.FISTA.run(function, beta)
 
-            # This should always be true!
+            # This must always be true here!
             if Info.num_iter in self.fista_info:
                 self.num_iter += self.fista_info[Info.num_iter]
-            else:
-                assert(True)  # TODO: Remove!
-            if Info.t in self.fista_info:
+            if self.fista_info.allows(Info.t) and (Info.t in self.fista_info):
                 tval = self.fista_info[Info.t]
-            if Info.f in self.fista_info:
+            if self.fista_info.allows(Info.f) and (Info.f in self.fista_info):
                 fval = self.fista_info[Info.f]
 
             self.mu_min = min(self.mu_min, mu[-1])

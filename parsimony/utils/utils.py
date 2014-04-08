@@ -374,11 +374,11 @@ class LimitedDict(collections.MutableMapping):
     def __init__(self, *keys):
         if (len(keys) == 1 and isinstance(keys[0], collections.Sequence) \
                 and len(keys[0]) == 0) or len(keys) == 0:
-            self.__keys = list()
+            self.__keys = set()
 
         elif (len(keys) == 1 and isinstance(keys[0], collections.Sequence) \
                 and len(keys[0]) == 1):
-            self.__keys = list(keys[0])
+            self.__keys = set(list(keys[0]))
 
         elif len(keys) == 1 and isinstance(keys[0], collections.Iterable):
 

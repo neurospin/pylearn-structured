@@ -343,7 +343,7 @@ class RR_L1_TV(interfaces.CompositeFunction,
         return self.l1.prox(beta, factor)
 
     def estimate_mu(self, beta):
-        """Computes a "good" value of \mu with respect to the given \beta.
+        """Computes a "good" value of mu with respect to the given beta.
 
         From the interface "NesterovFunction".
         """
@@ -353,7 +353,7 @@ class RR_L1_TV(interfaces.CompositeFunction,
         """The maximum value of the regularisation of the dual variable. We
         have
 
-            M = max_{\alpha \in K} 0.5*|\alpha|²_2.
+            M = max_{alpha in K} 0.5*|alpha|²_2.
 
         From the interface "NesterovFunction".
         """
