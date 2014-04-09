@@ -402,20 +402,36 @@ class FISTA(bases.ExplicitAlgorithm,
 
             if self.conesta_stop is not None:
                 mu_min = self.conesta_stop[0]
+#                print "mu_min:", mu_min
                 mu_old = function.set_mu(mu_min)
-                step = function.step(beta)
+#                print "mu_old:", mu_old
+                stop_step = function.step(betanew)
+#                print "step  :", step
                 # Take one ISTA step for use in the stopping criterion.
-                z = function.prox(betanew - step * function.grad(betanew),
-                                  step)
+                stop_z = function.prox(betanew - stop_step \
+                                                    * function.grad(betanew),
+                                  stop_step)
                 function.set_mu(mu_old)
+#                print "err   :", maths.norm(betanew - z)
+#                print "sc err:", (1.0 / step) * maths.norm(betanew - z)
+#                print "eps   :", self.eps
 
-            if (1.0 / step) * maths.norm(betanew - z) < self.eps \
-                    and i >= self.min_iter:
+                if (1.0 / stop_step) * maths.norm(betanew - stop_z) < self.eps \
+                        and i >= self.min_iter:
 
-                if self.info.allows(Info.converged):
-                    self.info[Info.converged] = True
+                    if self.info.allows(Info.converged):
+                        self.info[Info.converged] = True
 
-                break
+                    break
+
+            else:
+                if (1.0 / step) * maths.norm(betanew - z) < self.eps \
+                        and i >= self.min_iter:
+
+                    if self.info.allows(Info.converged):
+                        self.info[Info.converged] = True
+
+                    break
 
         if self.info.allows(Info.num_iter):
             self.info[Info.num_iter] = i
@@ -540,8 +556,8 @@ class CONESTA(bases.ExplicitAlgorithm,
                     ", iterations left: ", self.max_iter - self.num_iter
             self.FISTA.set_params(step=tnew, eps=eps_plus,
                                   max_iter=self.max_iter - self.num_iter,
-#                                  conesta_stop=None)
-                                  conesta_stop=[self.mu_min])
+                                  conesta_stop=None)
+#                                  conesta_stop=[self.mu_min])
             self.fista_info.clear()
             beta = self.FISTA.run(function, beta)
 

@@ -19,15 +19,15 @@
 
 ./parsimony/algorithms/explicit.py:
 ----------------------------------
-563: # TODO: Warn if G_new < 0.
+585: # TODO: Warn if G_new < 0.
 
-990: # TODO: We already have f_mid, so we can return a better approximation
-991: # here!
+1014: # TODO: We already have f_mid, so we can return a better approximation
+1015: # here!
 
-1080: # TODO: Handle the other cases!
+1104: # TODO: Handle the other cases!
 
-1270: # TODO: Does the weights really matter when the function is the
-1271: # indicator function?
+1294: # TODO: Does the weights really matter when the function is the
+1295: # indicator function?
 
 ./parsimony/algorithms/implicit.py:
 ----------------------------------
@@ -120,6 +120,18 @@
 ./parsimony/functions/multiblock/losses.py:
 ------------------------------------------
 581: # TODO: Check instead if it is a numpy array.
+
+./parsimony/functions/nesterov/TV.py:
+------------------------------------
+146: # TODO: This only work if the elements of self._A are scipy.sparse. We
+147: # should allow dense matrices as well.
+
+150: # TODO: Instead of p, this should really be the number of non-zero
+151: # rows of A.
+
+161: # TODO: Add max_iter here!
+
+263: # TODO: This is the wrong order of the dimensions. They should be reversed.
 
 ./parsimony/functions/nesterov/L1TV.py:
 --------------------------------------
