@@ -553,8 +553,8 @@ class CONESTA(bases.ExplicitAlgorithm,
 
             tnew = function.step(beta)
             eps_plus = min(max_eps, function.eps_opt(mu[-1]))
-            print "current iterations: ", self.num_iter, \
-                    ", iterations left: ", self.max_iter - self.num_iter
+#            print "current iterations: ", self.num_iter, \
+#                    ", iterations left: ", self.max_iter - self.num_iter
             self.FISTA.set_params(step=tnew, eps=eps_plus,
                                   max_iter=self.max_iter - self.num_iter,
                                   conesta_stop=None)
@@ -627,7 +627,7 @@ class CONESTA(bases.ExplicitAlgorithm,
 
             i = i + 1
 
-        print "total number of iterations:", self.num_iter
+#        print "total number of iterations:", self.num_iter
 
         if self.info.allows(Info.num_iter):
             self.info[Info.num_iter] = i + 1

@@ -379,13 +379,13 @@ class RidgeRegression_L1_TV(RegressionEstimator):
     >>> res = ridge_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
     >>> print "error = ", error
-    error =  3.1369738548
+    error =  3.13516111507
     >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
     ...                     algorithm=explicit.DynamicCONESTA(max_iter=1000))
     >>> res = ridge_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
     >>> print "error = ", error
-    error =  3.13697446847
+    error =  3.13529610137
     >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
     ...                     algorithm=explicit.FISTA(max_iter=1000))
     >>> res = ridge_l1_tv.fit(X, y)
@@ -865,7 +865,7 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
     >>> res = ridge_smoothed_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_smoothed_l1_tv.beta) - y))
     >>> print "error = ", error
-    error =  1.69470206808
+    error =  1.69470205937
     """
     def __init__(self, k, l, g, Atv, Al1, mu=None, output=False,
                  algorithm=explicit.ExcessiveGapMethod()):

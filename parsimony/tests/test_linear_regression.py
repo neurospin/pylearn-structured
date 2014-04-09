@@ -6,7 +6,6 @@ Created on Thu Feb 27 09:21:23 2014
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
-import unittest
 from nose.tools import assert_less, assert_equal, assert_almost_equal
 
 import numpy as np
@@ -2605,4 +2604,5 @@ class TestLinearRegression(TestCase):
                      places=5)
 
 if __name__ == "__main__":
+    import unittest
     unittest.main()

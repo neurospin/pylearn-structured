@@ -136,41 +136,29 @@ class InformationAlgorithm(object):
     Implementing classes should update the PROVIDED_INFO class variable with
     the information provided by the algorithm. Defauls to an empty list.
 
-    Parameters
-    ----------
-    info : Information. The data structure to store the run information in.
-
     Examples
     --------
     >>> import parsimony.algorithms as algorithms
-    >>> from parsimony.utils import LimitedInfo, Info
-    >>> import numpy as np
+    >>> from parsimony.utils import LimitedDict, Info
     >>> from parsimony.functions.losses import LinearRegression
+    >>> import numpy as np
     >>> np.random.seed(42)
-    >>> gd = algorithms.explicit.GradientDescent(info=LimitedInfo(Info.f))
-    >>> gd.info
-    LimitedDict([Enum('Info', 'f', 2)]).update({})
+    >>> gd = algorithms.explicit.GradientDescent(info=LimitedDict(Info.f))
+    >>> gd.info  # doctest:+ELLIPSIS
+    LimitedDict(set([EnumItem('Info', 'f', ...)])).update({})
     >>> lr = LinearRegression(X=np.random.rand(10,15), y=np.random.rand(10,1))
-    >>> gd.run(lr, np.random.rand(15, 1))
-    array([[-0.16182435],
-           [-0.32531503],
-           [ 0.59671756],
-           [ 0.21625723],
-           [-0.471255  ],
-           [ 0.54145156],
-           [-0.37417327],
-           [ 0.14100936],
-           [-0.11326736],
-           [ 0.41277009],
-           [-0.34019314],
-           [ 0.46712471],
-           [-0.11843076],
-           [-0.26156307],
-           [ 0.46435206]])
+    >>> beta = gd.run(lr, np.random.rand(15, 1))
+    >>> gd.info[Info.f]  # doctest:+ELLIPSIS
+    [0.068510926021035312, ... 1.8856122733915382e-12]
     """
     PROVIDED_INFO = []
 
     def __init__(self, info=None, **kwargs):
+        """
+        Parameters
+        ----------
+        info : LimitedDict. The data structure to store the run information in.
+        """
         super(InformationAlgorithm, self).__init__(**kwargs)
 
         if info == None:
