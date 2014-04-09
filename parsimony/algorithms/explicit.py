@@ -45,7 +45,8 @@ __all__ = ["GradientDescent",
 
            "Bisection", "NewtonRaphson",
 
-           "ProjectionADMM", "DykstrasProjectionAlgorithm",
+#           "ProjectionADMM",
+           "DykstrasProjectionAlgorithm",
            "ParallelDykstrasProjectionAlgorithm",
 
            "BacktrackingLineSearch"]
@@ -82,7 +83,7 @@ class GradientDescent(bases.ExplicitAlgorithm,
                      Info.converged]
 
     def __init__(self, eps=consts.TOLERANCE,
-                 info=None, max_iter=consts.MAX_ITER, min_iter=1):
+                 info=None, max_iter=20000, min_iter=1):
         """
         Parameters
         ----------
@@ -210,7 +211,7 @@ class ISTA(bases.ExplicitAlgorithm,
                      Info.converged]
 
     def __init__(self, eps=consts.TOLERANCE,
-                 info=None, max_iter=consts.MAX_ITER, min_iter=1):
+                 info=None, max_iter=20000, min_iter=1):
         """
         Parameters
         ----------
@@ -338,7 +339,7 @@ class FISTA(bases.ExplicitAlgorithm,
                      Info.converged]
 
     def __init__(self, eps=consts.TOLERANCE,
-                 info=None, max_iter=consts.MAX_ITER, min_iter=1,
+                 info=None, max_iter=10000, min_iter=1,
                  conesta_stop=None):
         """
         Parameters
@@ -470,7 +471,7 @@ class CONESTA(bases.ExplicitAlgorithm,
                  tau=0.5, dynamic=True,
 
                  eps=consts.TOLERANCE,
-                 info=None, max_iter=consts.MAX_ITER, min_iter=1):
+                 info=None, max_iter=10000, min_iter=1):
         """
         Parameters
         ----------
@@ -685,7 +686,7 @@ class ExcessiveGapMethod(bases.ExplicitAlgorithm,
                      Info.converged]
 
     def __init__(self, eps=consts.TOLERANCE,
-                 info=None, max_iter=consts.MAX_ITER, min_iter=1):
+                 info=None, max_iter=10000, min_iter=1):
         """
         Parameters
         ----------
@@ -1156,46 +1157,46 @@ class NewtonRaphson(bases.ExplicitAlgorithm,
         return x
 
 
-class ProjectionADMM(bases.ExplicitAlgorithm):
-    """ The Alternating direction method of multipliers, where the functions
-    have projection operators onto the corresponding convex sets.
-    """
-    INTERFACES = [interfaces.Function,
-                  interfaces.ProjectionOperator]
-
-    def __init__(self, output=False,
-                 eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
-
-        self.output = output
-        self.eps = eps
-        self.max_iter = max_iter
-        self.min_iter = min_iter
-
-    def run(self, function, x):
-        """Finds the projection onto the intersection of two sets.
-
-        Parameters
-        ----------
-        function : List or tuple with two Functions. The two functions.
-
-        x : Numpy array. The point that we wish to project.
-        """
-        self.check_compatibility(function[0], self.INTERFACES)
-        self.check_compatibility(function[1], self.INTERFACES)
-
-        z = x
-        u = np.zeros(x.shape)
-        for i in xrange(1, self.max_iter + 1):
-            x = function[0].proj(z - u)
-            z = function[1].proj(x + u)
-            u = u + x - z
-
-            if maths.norm(z - x) / maths.norm(z) < self.eps \
-                    and i >= self.min_iter:
-                break
-
-        return z
+#class ProjectionADMM(bases.ExplicitAlgorithm):
+#    """ The Alternating direction method of multipliers, where the functions
+#    have projection operators onto the corresponding convex sets.
+#    """
+#    INTERFACES = [interfaces.Function,
+#                  interfaces.ProjectionOperator]
+#
+#    def __init__(self, output=False,
+#                 eps=consts.TOLERANCE,
+#                 max_iter=consts.MAX_ITER, min_iter=1):
+#
+#        self.output = output
+#        self.eps = eps
+#        self.max_iter = max_iter
+#        self.min_iter = min_iter
+#
+#    def run(self, function, x):
+#        """Finds the projection onto the intersection of two sets.
+#
+#        Parameters
+#        ----------
+#        function : List or tuple with two Functions. The two functions.
+#
+#        x : Numpy array. The point that we wish to project.
+#        """
+#        self.check_compatibility(function[0], self.INTERFACES)
+#        self.check_compatibility(function[1], self.INTERFACES)
+#
+#        z = x
+#        u = np.zeros(x.shape)
+#        for i in xrange(1, self.max_iter + 1):
+#            x = function[0].proj(z - u)
+#            z = function[1].proj(x + u)
+#            u = u + x - z
+#
+#            if maths.norm(z - x) / maths.norm(z) < self.eps \
+#                    and i >= self.min_iter:
+#                break
+#
+#        return z
 
 
 class DykstrasProjectionAlgorithm(bases.ExplicitAlgorithm):
@@ -1210,7 +1211,8 @@ class DykstrasProjectionAlgorithm(bases.ExplicitAlgorithm):
 
     def __init__(self, output=False,
                  eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
+                 max_iter=100, min_iter=1):
+                 # TODO: Investigate what is a good default value here!
 
         self.output = output
         self.eps = eps
@@ -1262,7 +1264,8 @@ class ParallelDykstrasProjectionAlgorithm(bases.ExplicitAlgorithm):
 
     def __init__(self, output=False,
                  eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
+                 max_iter=100, min_iter=1):
+                 # TODO: Investigate what is a good default value here!
 
         self.output = output
         self.eps = eps
@@ -1335,7 +1338,8 @@ class ParallelDykstrasProximalAlgorithm(bases.ExplicitAlgorithm):
 
     def __init__(self, output=False,
                  eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
+                 max_iter=100, min_iter=1):
+                 # TODO: Investigate what is a good default value here!
 
         self.output = output
         self.eps = eps
