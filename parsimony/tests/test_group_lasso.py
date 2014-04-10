@@ -6,9 +6,7 @@ Created on Mon Feb 24 11:03:30 2014
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
-import numpy as np
-
-from tests import TestCase
+from .tests import TestCase
 
 
 class TestGroupLasso():#TestCase):
@@ -16,6 +14,7 @@ class TestGroupLasso():#TestCase):
     def test_nonoverlapping_nonsmooth(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/doc_spams.pdf
 
+        import numpy as np
         from parsimony.functions import CombinedFunction
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
@@ -126,6 +125,7 @@ class TestGroupLasso():#TestCase):
     def test_nonoverlapping_smooth(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/doc_spams.pdf
 
+        import numpy as np
         from parsimony.functions import CombinedFunction
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
@@ -133,7 +133,7 @@ class TestGroupLasso():#TestCase):
         import parsimony.datasets.simulated.l1_l2_glmu as l1_l2_glmu
         import parsimony.start_vectors as start_vectors
 
-        np.random.seed(314)
+        np.random.seed(42)
 
         # Note that p must be even!
         n, p = 25, 20
@@ -231,11 +231,13 @@ class TestGroupLasso():#TestCase):
 
         f_parsimony = function.f(beta_parsimony)
         f_spams = function.f(beta_spams)
-#        print abs(f_parsimony - f_spams)
-        assert abs(f_parsimony - f_spams) < 5e-4
+        ferr = abs(f_parsimony - f_spams)
+#        print ferr
+        assert ferr < 5e-4
 
     def test_overlapping_nonsmooth(self):
 
+        import numpy as np
         from parsimony.functions import CombinedFunction
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
@@ -302,6 +304,7 @@ class TestGroupLasso():#TestCase):
 
     def test_overlapping_smooth(self):
 
+        import numpy as np
         from parsimony.functions import CombinedFunction
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
@@ -370,6 +373,7 @@ class TestGroupLasso():#TestCase):
 
     def test_combo_overlapping_smooth(self):
 
+        import numpy as np
         from parsimony.functions import CombinedFunction
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
@@ -440,6 +444,7 @@ class TestGroupLasso():#TestCase):
 
     def test_combo_overlapping_nonsmooth(self):
 
+        import numpy as np
         from parsimony.functions import CombinedFunction
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions

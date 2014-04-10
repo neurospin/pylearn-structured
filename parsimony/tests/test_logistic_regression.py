@@ -1454,7 +1454,7 @@ class TestLogisticRegression(TestCase):
         y[prob < 0.5] = 0.0
 
         eps = 1e-8
-        max_iter = 500
+        max_iter = 10000
 
         k = 0.618
         l = 1.0 - k
@@ -1470,7 +1470,6 @@ class TestLogisticRegression(TestCase):
                            mu=mu,
                            output=False,
                            algorithm=explicit.StaticCONESTA(eps=eps,
-                                                            continuations=20,
                                                             max_iter=max_iter))
         logreg_static.fit(X, y)
         err = logreg_static.score(X, y)
@@ -1488,7 +1487,6 @@ class TestLogisticRegression(TestCase):
                           mu=mu,
                           output=False,
                           algorithm=explicit.DynamicCONESTA(eps=eps,
-                                                            continuations=20,
                                                             max_iter=max_iter))
         logreg_dynamic.fit(X, y)
         err = logreg_dynamic.score(X, y)
@@ -1506,7 +1504,7 @@ class TestLogisticRegression(TestCase):
                           mu=mu,
                           output=False,
                           algorithm=explicit.FISTA(eps=eps,
-                                                   max_iter=10000))
+                                                   max_iter=max_iter))
         logreg_fista.fit(X, y)
         err = logreg_fista.score(X, y)
 #        print err
@@ -1523,7 +1521,7 @@ class TestLogisticRegression(TestCase):
                           mu=mu,
                           output=False,
                           algorithm=explicit.ISTA(eps=eps,
-                                                  max_iter=10000))
+                                                  max_iter=max_iter))
         logreg_ista.fit(X, y)
         err = logreg_ista.score(X, y)
 #        print err
