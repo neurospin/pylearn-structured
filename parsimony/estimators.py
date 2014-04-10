@@ -867,8 +867,10 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
     >>> print "error = ", error
     error =  1.69470205937
     """
+    # TODO: Remove output.
     def __init__(self, k, l, g, Atv, Al1, mu=None, output=False,
-                 algorithm=explicit.ExcessiveGapMethod()):
+                 algorithm=explicit.ExcessiveGapMethod(),
+                 start_vector=start_vectors.RandomStartVector()):
 
         self.k = float(k)
         self.l = float(l)
@@ -883,30 +885,28 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
             self.mu = None
 
         super(RidgeRegression_SmoothedL1TV, self).__init__(algorithm=algorithm,
-                                                           output=output)
+                                                     output=output,
+                                                     start_vector=start_vector)
 
     def get_params(self):
         """Return a dictionary containing all the estimator's parameters
         """
         return {"k": self.k, "l": self.l, "g": self.g,
-                "A": self.A, "mu": self.mu}
+                "Atv": self.Atv, "Al1": self.Al1, "mu": self.mu}
 
     def fit(self, X, y):
         """Fit the estimator to the data
         """
         X, y = check_arrays(X, y)
-        function = functions.RR_SmoothedL1TV(X, y,
-                                                  self.k, self.l, self.g,
-                                                  Atv=self.Atv, Al1=self.Al1)
+        function = functions.RR_SmoothedL1TV(X, y, self.k, self.l, self.g,
+                                             Atv=self.Atv, Al1=self.Al1)
 
         self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)
 
         self.algorithm.set_params(output=self.output)
-        if self.output:
-            (self.beta, self.info) = self.algorithm.run(function)
-        else:
-            self.beta = self.algorithm.run(function)
+        # TODO: Allow a given beta vector here.
+        self.beta = self.algorithm.run(function)
 
         return self
 

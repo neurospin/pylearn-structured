@@ -224,8 +224,7 @@ class TestGroupLasso():#TestCase):
                                      [12.64594707],
                                      [21.81113869],
                                      [17.95400007],
-                                     [12.10507338]]
-)
+                                     [12.10507338]])
 
         berr = np.linalg.norm(beta_parsimony - beta_spams)
 #        print berr

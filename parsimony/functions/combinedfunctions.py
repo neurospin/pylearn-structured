@@ -1176,10 +1176,11 @@ class PCA_L1_TV(interfaces.CompositeFunction,
 
     def set_params(self, **kwargs):
 
+        # TODO: This is not a nice solution. Can we solve it better?
         mu = kwargs.pop("mu", self.get_mu())
         self.set_mu(mu)
 
-        super(RR_L1_TV, self).set_params(**kwargs)
+        super(PCA_L1_TV, self).set_params(**kwargs)
 
     def get_mu(self):
         """Returns the regularisation constant for the smoothing.
