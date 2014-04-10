@@ -6,7 +6,7 @@ Created on Thu Feb 27 09:21:23 2014
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
-from nose.tools import assert_less, assert_equal, assert_almost_equal
+from nose.tools import assert_less, assert_almost_equal
 
 import numpy as np
 
@@ -338,8 +338,8 @@ class TestLinearRegression(TestCase):
 #                #/ np.linalg.norm(beta_spams)
 #        print "mse:", mse
 ##        assert_almost_equal(mse, 0.367913,
-##                            msg="The found regression vector is not correct.",
-##                            places=5)
+##                           msg="The found regression vector is not correct.",
+##                           places=5)
 #        print np.hstack((beta_star, beta_parsimony, beta_spams))
 #
 #        f_parsimony = function.f(beta_parsimony)
@@ -404,7 +404,6 @@ class TestLinearRegression(TestCase):
         reg_est = estimators.LinearRegression_L1_L2_TV(
                     l=l, k=k, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     mean=False)
         reg_est.fit(X, y)
@@ -412,7 +411,6 @@ class TestLinearRegression(TestCase):
         rreg_est = estimators.RidgeRegression_L1_TV(
                     k=k, l=l, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     mean=False)
         rreg_est.fit(X, y)
@@ -420,7 +418,6 @@ class TestLinearRegression(TestCase):
         rreg_est_2 = estimators.RidgeRegression_L1_GL(
                     k=k, l=l, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     mean=False)
         rreg_est_2.fit(X, y)
@@ -523,7 +520,6 @@ class TestLinearRegression(TestCase):
         reg_est = estimators.LinearRegression_L1_L2_TV(
                     l=l, k=k, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     penalty_start=1,
                     mean=False)
@@ -532,7 +528,6 @@ class TestLinearRegression(TestCase):
         rreg_est = estimators.RidgeRegression_L1_TV(
                     k=k, l=l, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     penalty_start=1,
                     mean=False)
@@ -541,7 +536,6 @@ class TestLinearRegression(TestCase):
         rreg_est_2 = estimators.RidgeRegression_L1_GL(
                     k=k, l=l, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     penalty_start=1,
                     mean=False)
@@ -783,7 +777,6 @@ class TestLinearRegression(TestCase):
         reg_est = estimators.LinearRegression_L1_L2_TV(
                     l=l, k=k, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     penalty_start=1,
                     mean=False)
@@ -804,7 +797,6 @@ class TestLinearRegression(TestCase):
         rreg_est = estimators.RidgeRegression_L1_TV(
                     k=k, l=l, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     penalty_start=1,
                     mean=False)
@@ -825,7 +817,6 @@ class TestLinearRegression(TestCase):
         rreg_est_2 = estimators.RidgeRegression_L1_GL(
                     k=k, l=l, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     penalty_start=1,
                     mean=False)
@@ -1034,7 +1025,6 @@ class TestLinearRegression(TestCase):
         reg_est = estimators.LinearRegression_L1_L2_TV(
                     l=l, k=k, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.StaticCONESTA(eps=eps,
                                                      max_iter=max_iter),
                     penalty_start=1,
@@ -1056,7 +1046,6 @@ class TestLinearRegression(TestCase):
         rreg_est = estimators.RidgeRegression_L1_TV(
                     k=k, l=l, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.StaticCONESTA(eps=eps,
                                                      max_iter=max_iter),
                     penalty_start=1,
@@ -1261,7 +1250,6 @@ class TestLinearRegression(TestCase):
         rreg_est = estimators.RidgeRegression_L1_GL(
                     k=k, l=l, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.StaticCONESTA(eps=eps,
                                                      max_iter=max_iter),
                     penalty_start=1,
@@ -2532,7 +2520,6 @@ class TestLinearRegression(TestCase):
                            g=g,
                            A=A,
                            mu=mu,
-                           output=False,
                            algorithm=explicit.StaticCONESTA(eps=eps,
                                                             max_iter=max_iter),
                            mean=False)
@@ -2550,7 +2537,6 @@ class TestLinearRegression(TestCase):
                           g=g,
                           A=A,
                           mu=mu,
-                          output=False,
                           algorithm=explicit.DynamicCONESTA(eps=eps,
                                                             max_iter=max_iter),
                           mean=False)
@@ -2568,7 +2554,6 @@ class TestLinearRegression(TestCase):
                           g=g,
                           A=A,
                           mu=mu,
-                          output=False,
                           algorithm=explicit.FISTA(eps=eps,
                                                    max_iter=max_iter),
                           mean=False)
@@ -2586,7 +2571,6 @@ class TestLinearRegression(TestCase):
                           g=g,
                           A=A,
                           mu=mu,
-                          output=False,
                           algorithm=explicit.ISTA(eps=eps,
                                                   max_iter=max_iter),
                           mean=False)

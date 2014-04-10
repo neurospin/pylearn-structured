@@ -133,7 +133,7 @@ class TestLogisticRegression(TestCase):
         mu = None
         logreg_est = estimators.RidgeLogisticRegression_L1_TV(
                        k=0.0, l=0.0, g=0.0,
-                       A=A, class_weight=None, mu=mu, output=False, mean=True,
+                       A=A, class_weight=None, mu=mu, mean=True,
                        algorithm=explicit.ISTA(eps=eps, max_iter=max_iter))
         logreg_est.fit(X, y)
 
@@ -279,7 +279,7 @@ class TestLogisticRegression(TestCase):
         mu = None
         logreg_est = estimators.RidgeLogisticRegression_L1_TV(
                     k=k, l=l, g=0.0,
-                    A=A, class_weight=None, mu=mu, output=False,
+                    A=A, class_weight=None, mu=mu,
                     algorithm=explicit.ISTA(eps=eps, max_iter=max_iter))
         logreg_est.fit(X, y)
 
@@ -413,7 +413,7 @@ class TestLogisticRegression(TestCase):
         mu = None
         logreg_est = estimators.RidgeLogisticRegression_L1_TV(
                     k=k, l=l, g=0.0,
-                    A=A, class_weight=None, mu=mu, output=False,
+                    A=A, class_weight=None, mu=mu,
                     algorithm=explicit.ISTA(eps=eps, max_iter=max_iter),
                     penalty_start=1)
         logreg_est.fit(X_parsimony, y)
@@ -545,7 +545,7 @@ class TestLogisticRegression(TestCase):
         mu = None
         logreg_est = estimators.RidgeLogisticRegression_L1_TV(
                     k=k, l=l, g=0.0,
-                    A=A, class_weight=None, mu=mu, output=False,
+                    A=A, class_weight=None, mu=mu,
                     algorithm=explicit.ISTA(eps=eps, max_iter=max_iter))
         logreg_est.fit(X, y)
 
@@ -683,7 +683,7 @@ class TestLogisticRegression(TestCase):
         mu = None
         logreg_est = estimators.RidgeLogisticRegression_L1_TV(
                     k=k, l=l, g=0.0,
-                    A=A, class_weight=None, mu=mu, output=False,
+                    A=A, class_weight=None, mu=mu,
                     algorithm=explicit.ISTA(eps=eps, max_iter=max_iter),
                     penalty_start=1)
         logreg_est.fit(X_parsimony, y)
@@ -821,7 +821,6 @@ class TestLogisticRegression(TestCase):
                            A=A,
                            class_weight=None,
                            mu=mu,
-                           output=False,
                            algorithm=explicit.ISTA(eps=eps, max_iter=max_iter),
                            penalty_start=0,
                            mean=True)
@@ -978,7 +977,7 @@ class TestLogisticRegression(TestCase):
         mu = None
         logreg_est = estimators.RidgeLogisticRegression_L1_TV(
                     k=k, l=l, g=g,
-                    A=A, class_weight=None, mu=mu, output=False,
+                    A=A, class_weight=None, mu=mu,
                     algorithm=explicit.ISTA(eps=eps, max_iter=max_iter))
         logreg_est.fit(X, y)
 
@@ -1115,7 +1114,7 @@ class TestLogisticRegression(TestCase):
         mu = None
         logreg_est = estimators.RidgeLogisticRegression_L1_TV(
                           k=k, l=l, g=g,
-                          A=A, mu=mu, output=False,
+                          A=A, mu=mu,
                           algorithm=explicit.ISTA(eps=eps, max_iter=max_iter),
                           class_weight=None, penalty_start=1, mean=True)
         logreg_est.fit(X_parsimony, y)
@@ -1250,7 +1249,6 @@ class TestLogisticRegression(TestCase):
                            A=A,
                            class_weight=None,
                            mu=mu,
-                           output=False,
                            algorithm=explicit.ISTA(eps=eps, max_iter=max_iter),
                            penalty_start=0,
                            mean=True)
@@ -1389,7 +1387,6 @@ class TestLogisticRegression(TestCase):
 #                           A=A,
 #                           class_weight=None,
 #                           mu=mu,
-#                           output=False,
 #                           algorithm=explicit.ISTA(eps=eps, max_iter=max_iter),
 #                           penalty_start=1,
 #                           mean=True)
@@ -1468,7 +1465,6 @@ class TestLogisticRegression(TestCase):
                            A=A,
                            class_weight=None,
                            mu=mu,
-                           output=False,
                            algorithm=explicit.StaticCONESTA(eps=eps,
                                                             max_iter=max_iter))
         logreg_static.fit(X, y)
@@ -1485,7 +1481,6 @@ class TestLogisticRegression(TestCase):
                           A=A,
                           class_weight=None,
                           mu=mu,
-                          output=False,
                           algorithm=explicit.DynamicCONESTA(eps=eps,
                                                             max_iter=max_iter))
         logreg_dynamic.fit(X, y)
@@ -1502,7 +1497,6 @@ class TestLogisticRegression(TestCase):
                           A=A,
                           class_weight=None,
                           mu=mu,
-                          output=False,
                           algorithm=explicit.FISTA(eps=eps,
                                                    max_iter=max_iter))
         logreg_fista.fit(X, y)
@@ -1519,7 +1513,6 @@ class TestLogisticRegression(TestCase):
                           A=A,
                           class_weight=None,
                           mu=mu,
-                          output=False,
                           algorithm=explicit.ISTA(eps=eps,
                                                   max_iter=max_iter))
         logreg_ista.fit(X, y)

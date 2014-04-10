@@ -452,7 +452,6 @@ class TestSimulations(TestCase):
         max_iter = 5000
         estimator = estimators.RidgeRegression_L1_TV(k, l, g,
                      A, mu=mu,
-                     output=False,
                      algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                      penalty_start=1,
                      mean=False)
@@ -732,7 +731,6 @@ class TestSimulations(TestCase):
         max_iter = 2500
         estimator = estimators.RidgeRegression_L1_GL(k, l, g,
                      A, mu=mu,
-                     output=False,
                      algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                      penalty_start=1,
                      mean=False)
@@ -1009,7 +1007,6 @@ class TestSimulations(TestCase):
 #        max_iter = 5000
 #        estimator = estimators.RidgeRegression_L1_TV(k, l, g,
 #                     A, mu=mu,
-#                     output=False,
 #                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
 #                     penalty_start=1)
 #        estimator.fit(X, y)
@@ -1286,7 +1283,6 @@ class TestSimulations(TestCase):
 #        max_iter = 2500
 #        estimator = estimators.RidgeRegression_L1_GL(k, l, g,
 #                     A, mu=mu,
-#                     output=False,
 #                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
 #                     penalty_start=1)
 #        estimator.fit(X, y)
