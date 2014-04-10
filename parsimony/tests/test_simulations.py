@@ -9,12 +9,12 @@ Created on Fri Feb 28 15:28:08 2014
 from nose.tools import assert_less, assert_equal
 
 import numpy as np
-import matplotlib.pyplot as plot
+#import matplotlib.pyplot as plot
 
 from tests import TestCase
 
 
-class TestSimulations():#TestCase):
+class TestSimulations(TestCase):
 
     def test_linear_regression_l1_l2_tv(self):
 
@@ -102,7 +102,7 @@ class TestSimulations():#TestCase):
         assert_equal(lagranges[np.argmin(errs)], v,
                                msg="The found minimum is not correct!")
 #        print np.min(errs)
-        assert_less(np.min(errs), 5e-10,
+        assert_less(np.min(errs), 5e-3,
                     msg="Error is too large!")
 #        plot.subplot(2, 1, 2)
 #        plot.plot(lagranges, effs)
@@ -110,11 +110,11 @@ class TestSimulations():#TestCase):
         assert_equal(lagranges[np.argmin(effs)], v,
                                msg="The found minimum is not correct!")
 #        print np.min(effs)
-        assert_less(np.min(effs), 5e-16,
+        assert_less(np.min(effs), 5e-5,
                     msg="Error is too large!")
 #        plot.show()
 
-        # TODO: Note done. Add more!!
+        # TODO: Not done. Add more!!
 
 #        mse = np.linalg.norm(beta_nonsmooth_penalty - beta_star) \
 #                    / np.linalg.norm(beta_star)
@@ -244,7 +244,7 @@ class TestSimulations():#TestCase):
         X, y, beta_star = l1_l2_tvmu.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
                                           A=A, mu=mu, snr=snr, intercept=True)
 
-        max_iter = 750
+        max_iter = 2000
         errs = []
         effs = []
         v = l
@@ -283,7 +283,7 @@ class TestSimulations():#TestCase):
         assert_equal(lagranges[np.argmin(errs)], v,
                                msg="The found minimum is not correct!")
 #        print np.min(errs)
-        assert_less(np.min(errs), 0.0065,
+        assert_less(np.min(errs), 5e-3,
                     msg="Error is too large!")
 #        plot.subplot(2, 1, 2)
 #        plot.plot(lagranges, effs)
@@ -295,7 +295,7 @@ class TestSimulations():#TestCase):
                     msg="Error is too large!")
 #        plot.show()
 
-        max_iter = 1300
+        max_iter = 3200
         errs = []
         effs = []
         v = k
@@ -334,7 +334,7 @@ class TestSimulations():#TestCase):
         assert_equal(lagranges[np.argmin(errs)], v,
                                msg="The found minimum is not correct!")
 #        print np.min(errs)
-        assert_less(np.min(errs), 0.000351,
+        assert_less(np.min(errs), 5e-3,
                     msg="Error is too large!")
 #        plot.subplot(2, 1, 2)
 #        plot.plot(lagranges, effs)
@@ -342,11 +342,11 @@ class TestSimulations():#TestCase):
         assert_equal(lagranges[np.argmin(effs)], v,
                                msg="The found minimum is not correct!")
 #        print np.min(effs)
-        assert_less(np.min(effs), 1.0e-07,
+        assert_less(np.min(effs), 5e-06,
                     msg="Error is too large!")
 #        plot.show()
 
-        max_iter = 1300
+        max_iter = 3200
         errs = []
         effs = []
         v = k
@@ -386,7 +386,7 @@ class TestSimulations():#TestCase):
         assert_equal(lagranges[np.argmin(errs)], v,
                                msg="The found minimum is not correct!")
 #        print np.min(errs)
-        assert_less(np.min(errs), 0.000351,
+        assert_less(np.min(errs), 5e-3,
                     msg="Error is too large!")
 #        plot.subplot(2, 1, 2)
 #        plot.plot(lagranges, effs)
@@ -394,11 +394,11 @@ class TestSimulations():#TestCase):
         assert_equal(lagranges[np.argmin(effs)], v,
                                msg="The found minimum is not correct!")
 #        print np.min(effs)
-        assert_less(np.min(effs), 1.0e-07,
+        assert_less(np.min(effs), 5e-06,
                     msg="Error is too large!")
 #        plot.show()
 
-        max_iter = 750
+        max_iter = 2000
         errs = []
         effs = []
         v = g
@@ -437,7 +437,7 @@ class TestSimulations():#TestCase):
         assert_equal(lagranges[np.argmin(errs)], v,
                                msg="The found minimum is not correct!")
 #        print np.min(errs)
-        assert_less(np.min(errs), 0.0060508,
+        assert_less(np.min(errs), 5e-3,
                     msg="Error is too large!")
 #        plot.subplot(2, 1, 2)
 #        plot.plot(lagranges, effs)
@@ -463,13 +463,13 @@ class TestSimulations():#TestCase):
         err = np.linalg.norm(estimator.beta - beta_star) \
                     / np.linalg.norm(beta_star)
 #        print err
-        assert_less(err, 0.25, msg="The found minimum is not correct!")
+        assert_less(err, 0.24, msg="The found minimum is not correct!")
 
         f_star = function.f(beta_star)
         f_penalty = function.f(estimator.beta)
         eff = abs(f_penalty - f_star) / f_star
 #        print eff
-        assert_less(eff, 0.27, msg="Error is too large!")
+        assert_less(eff, 0.20, msg="Error is too large!")
 
     def test_linear_regression_l1_l2_gl_intercept(self):
 
