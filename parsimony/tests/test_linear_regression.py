@@ -10,7 +10,7 @@ from nose.tools import assert_less, assert_equal, assert_almost_equal
 
 import numpy as np
 
-from tests import TestCase
+from .tests import TestCase
 import parsimony.utils.consts as consts
 
 

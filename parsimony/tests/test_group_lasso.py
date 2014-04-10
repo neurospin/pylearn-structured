@@ -202,38 +202,40 @@ class TestGroupLasso():#TestCase):
                                     W0=np.asfortranarray(beta_start),
                                     return_optim_info=True,
                                     **params)
+#            print beta_spams
 
         except ImportError:
-            beta_spams = np.asarray([[9.92737817],
-                                     [6.25741002],
-                                     [2.85462422],
-                                     [8.45021308],
-                                     [9.85959465],
-                                     [8.90571615],
-                                     [7.77263765],
-                                     [2.87114577],
-                                     [9.79103766],
-                                     [2.78660721],
-                                     [8.20420015],
-                                     [2.81858990],
-                                     [1.30444549],
-                                     [4.10358283],
-                                     [9.05604300],
-                                     [2.97987576],
-                                     [0.71923705],
-                                     [6.83698462],
-                                     [6.29995241],
-                                     [6.25209606]])
+            beta_spams = np.asarray([[15.56784201],
+                                     [39.51679274],
+                                     [30.42583205],
+                                     [24.8816362],
+                                     [6.48671072],
+                                     [6.48350546],
+                                     [2.41477318],
+                                     [36.00285723],
+                                     [24.98522184],
+                                     [29.43128643],
+                                     [0.85520539],
+                                     [40.31463542],
+                                     [34.60084146],
+                                     [8.82322513],
+                                     [7.55741642],
+                                     [7.62364398],
+                                     [12.64594707],
+                                     [21.81113869],
+                                     [17.95400007],
+                                     [12.10507338]]
+)
 
         berr = np.linalg.norm(beta_parsimony - beta_spams)
 #        print berr
-        assert berr < 0.1
+        assert berr < 5e-3
 
         f_parsimony = function.f(beta_parsimony)
         f_spams = function.f(beta_spams)
         ferr = abs(f_parsimony - f_spams)
 #        print ferr
-        assert ferr < 5e-4
+        assert ferr < 5e-6
 
     def test_overlapping_nonsmooth(self):
 
