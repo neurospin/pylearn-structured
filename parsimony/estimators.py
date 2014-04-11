@@ -2,14 +2,6 @@
 """Estimators encapsulates a loss function with penalties and a corresponding
 algorithm.
 
-The naming convention is such that an underscore, '_', implies plus, such that
-if
-
-    f(x) = a + (b + c),
-
-where "(b + c)" means that b and c are encapsulated as a single function, then
-the name of that estimator should be a_bc.
-
 Created on Sat Nov  2 15:19:17 2013
 
 @author:  Tommy Löfstedt, Edouard Duchesnay
@@ -30,8 +22,9 @@ from parsimony.utils import class_weight_to_sample_weight, check_labels
 
 __all__ = ["BaseEstimator", "RegressionEstimator",
 
-           "LinearRegression_L1_L2_TV",
-           "RidgeRegression_L1_TV", "RidgeLogisticRegression_L1_TV",
+           "LinearRegressionL1L2TV",
+           "RidgeRegression_L1_TV",
+           "RidgeLogisticRegression_L1_TV",
 
            "RidgeRegression_SmoothedL1TV"]
 
@@ -170,7 +163,7 @@ class LogisticRegressionEstimator(BaseEstimator):
     def predict_probability(self, X):
         X = check_arrays(X)
         logit = np.dot(X, self.beta)
-        prob = 1. / (1. + np.exp(-logit))
+        prob = 1.0 / (1.0 + np.exp(-logit))
 
         return prob
 
@@ -183,30 +176,40 @@ class LogisticRegressionEstimator(BaseEstimator):
         return rate
 
 
-class LinearRegression_L1_L2_TV(RegressionEstimator):
+class LinearRegressionL1L2TV(RegressionEstimator):
     """Minimize regression  with L1, L2 and TV penalties:
 
-    f(beta, X, y) = 1/2 ||Xbeta - y||²_2 / n_samples
-                    + k/2 * ||beta||²_2
-                    + l * ||beta||_1
-                    + g * TV(beta)
+    f(beta, X, y) = (1 / 2 * n) * ||Xbeta - y||²_2
+                    + l1 * ||beta||_1
+                    + (l2 / 2) * ||beta||²_2
+                    + tv * TV(beta)
     Parameters
     ----------
-    l : Non-negative float. The L1 regularization parameter.
+    l1 : Non-negative float. The L1 regularization parameter.
 
-    k : Non-negative float. The L2 regularization parameter.
+    l2 : Non-negative float. The L2 regularization parameter.
 
-    g : Non-negative float. The total variation regularization parameter.
+    tv : Non-negative float. The total variation regularization parameter.
 
     A : Numpy or (usually) scipy.sparse array. The linear operator for the
-            smoothed total variation Nesterov function.
+            smoothed total variation Nesterov function. A must be given.
 
     mu : Non-negative float. The regularisation constant for the smoothing.
 
     algorithm : ExplicitAlgorithm. The algorithm that should be applied.
             Should be one of:
-                3. algorithms.FISTA()
-                4. algorithms.ISTA()
+                1. algorithms.StaticCONESTA(...)
+                2. algorithms.DynamicCONESTA(...)
+                3. algorithms.FISTA(...)
+                4. algorithms.ISTA(...)
+
+            Default is algorithms.StaticCONESTA(...).
+
+    algorithm_params : A dict. The dictionary algorithm_params contains
+            parameters that should be set in the algorithm. Passing
+            algorithm=algorithms.StaticCONESTA(**params) is equivalent
+            to passing algorithm=algorithms.StaticCONESTA() and
+            algorithm_params=params. Default is an empty dictionary.
 
     penalty_start : Non-negative integer. The number of columns, variables
             etc., to be exempt from penalisation. Equivalently, the first
@@ -220,53 +223,75 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
     >>> import numpy as np
     >>> import parsimony.estimators as estimators
     >>> import parsimony.algorithms.explicit as explicit
-    >>> import parsimony.functions.nesterov.tv as tv
+    >>> import parsimony.functions.nesterov.tv as total_variation
     >>> shape = (1, 4, 4)
-    >>> num_samples = 10
-    >>> num_ft = shape[0] * shape[1] * shape[2]
+    >>> n = 10
+    >>> p = shape[0] * shape[1] * shape[2]
     >>>
     >>> np.random.seed(42)
-    >>> X = np.random.rand(num_samples, num_ft)
-    >>> y = np.random.rand(num_samples, 1)
-    >>> l = 0.1  # L1 coefficient
-    >>> k = 0.9  # Ridge coefficient
-    >>> g = 1.0  # TV coefficient
-    >>> A, n_compacts = tv.A_from_shape(shape)
-    >>> lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
-    ...                               algorithm=explicit.FISTA(max_iter=1000),
-    ...                               mean=False)
-    >>> lr = lr.fit(X, y)
+    >>> X = np.random.rand(n, p)
+    >>> y = np.random.rand(n, 1)
+    >>> l1 = 0.1  # L1 coefficient
+    >>> l2 = 0.9  # Ridge coefficient
+    >>> tv = 1.0  # TV coefficient
+    >>> A, n_compacts = total_variation.A_from_shape(shape)
+    >>> lr = estimators.LinearRegressionL1L2TV(l1, l2, tv, A,
+    ...                        algorithm=explicit.StaticCONESTA(max_iter=1000),
+    ...                        mean=False)
+    >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
-    error =  1.3261562691
-    >>> lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
-    ...                                algorithm=explicit.ISTA(max_iter=1000),
+    error =  0.0683839364837
+    >>> lr = estimators.LinearRegressionL1L2TV(l1, l2, tv, A,
+    ...                       algorithm=explicit.DynamicCONESTA(max_iter=1000),
+    ...                       mean=False)
+    >>> res = lr.fit(X, y)
+    >>> error = lr.score(X, y)
+    >>> print "error = ", error
+    error =  0.068372945166
+    >>> lr = estimators.LinearRegressionL1L2TV(l1, l2, tv, A,
+    ...                                algorithm=explicit.FISTA(max_iter=1000),
     ...                                mean=False)
     >>> lr = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
-    error =  1.45373582999
+    error =  1.58175771272
+    >>> lr = estimators.LinearRegressionL1L2TV(l1, l2, tv, A,
+    ...                                 algorithm=explicit.ISTA(max_iter=1000),
+    ...                                 mean=False)
+    >>> lr = lr.fit(X, y)
+    >>> error = lr.score(X, y)
+    >>> print "error = ", error
+    error =  2.075830689
     """
-    def __init__(self, l, k, g, A, mu=consts.TOLERANCE,
-                 algorithm=explicit.StaticCONESTA(),
-#                 algorithm=algorithms.DynamicCONESTA()):
-#                 algorithm=algorithms.FISTA()):
-                 penalty_start=0, mean=True):
+    def __init__(self, l1, l2, tv,
+                 A=None, mu=consts.TOLERANCE,
+                 algorithm=None,
+                 algorithm_params=dict(),
+                 penalty_start=0,
+                 mean=True):
 
-        super(LinearRegression_L1_L2_TV, self).__init__(algorithm=algorithm)
+        if algorithm is None:
+            algorithm = explicit.StaticCONESTA(**algorithm_params)
+        else:
+            algorithm.set_params(**algorithm_params)
 
-        self.l = float(l)
-        self.k = float(k)
-        self.g = float(g)
+        super(LinearRegressionL1L2TV, self).__init__(algorithm=algorithm)
+
+        self.l1 = float(l1)
+        self.l2 = float(l2)
+        self.tv = float(tv)
+        if A is None:
+            raise TypeError("A may not be None.")
         self.A = A
-        self.mu = float(mu)
+        self.mu = float(mu) if mu is not None else mu
         self.penalty_start = int(penalty_start)
         self.mean = bool(mean)
 
     def get_params(self):
         """Return a dictionary containing all the estimator's parameters
         """
-        return {"k": self.k, "l": self.l, "g": self.g,
+        return {"l1": self.l1, "l2": self.l2, "tv": self.tv,
                 "A": self.A, "mu": self.mu,
                 "penalty_start": self.penalty_start, "mean": self.mean}
 
@@ -275,10 +300,10 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
         """
         X, y = check_arrays(X, y)
 
-        function = functions.RR_L1_TV(X, y, self.k, self.l, self.g,
-                                           A=self.A,
-                                           penalty_start=self.penalty_start,
-                                           mean=self.mean)
+        function = functions.RR_L1_TV(X, y, self.l2, self.l1, self.tv,
+                                      A=self.A,
+                                      penalty_start=self.penalty_start,
+                                      mean=self.mean)
         self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)
 
@@ -288,8 +313,6 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
 
         if self.mu is None:
             self.mu = function.estimate_mu(beta)
-        else:
-            self.mu = float(self.mu)
 
         function.set_params(mu=self.mu)
         self.beta = self.algorithm.run(function, beta)
@@ -377,8 +400,6 @@ class RidgeRegression_L1_TV(RegressionEstimator):
     """
     def __init__(self, k, l, g, A, mu=None,
                  algorithm=explicit.StaticCONESTA(),
-#                 algorithm=algorithms.DynamicCONESTA()):
-#                 algorithm=algorithms.FISTA()):
                  penalty_start=0, mean=True):
         self.k = float(k)
         self.l = float(l)

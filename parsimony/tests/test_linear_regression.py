@@ -16,7 +16,7 @@ import parsimony.utils.consts as consts
 
 class TestLinearRegression(TestCase):
 
-    def test_linear_regression_overdetermined(self):
+    def test_overdetermined(self):
 
         from parsimony.functions.losses import LinearRegression
         import parsimony.algorithms.explicit as explicit
@@ -60,7 +60,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 1e-6, "The found regression vector does not give " \
                                "the correct function value.")
 
-    def test_linear_regression_underdetermined(self):
+    def test_underdetermined(self):
 
         from parsimony.functions.losses import LinearRegression
         import parsimony.algorithms.explicit as explicit
@@ -104,7 +104,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 1e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
-    def test_linear_regression_determined(self):
+    def test_determined(self):
 
         from parsimony.functions.losses import LinearRegression
         import parsimony.algorithms.explicit as explicit
@@ -148,7 +148,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 1e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
-    def test_linear_regression_intercept1(self):
+    def test_intercept1(self):
 
         from parsimony.functions.losses import LinearRegression
         import parsimony.algorithms.explicit as explicit
@@ -352,7 +352,7 @@ class TestLinearRegression(TestCase):
 ##        assert_less(err, 5e-05, msg="The found regression vector does not " \
 ##                                    "give the correct function value.")
 
-    def test_linear_regression_l1(self):
+    def test_l1(self):
 
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.penalties import L1
@@ -401,19 +401,21 @@ class TestLinearRegression(TestCase):
         beta_parsimony = fista.run(function, beta_start)
 
         mu = consts.TOLERANCE
-        reg_est = estimators.LinearRegression_L1_L2_TV(
-                    l=l, k=k, g=g,
-                    A=A, mu=mu,
-                    algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
-                    mean=False)
+        reg_est = estimators.LinearRegressionL1L2TV(
+                                      l, k, g, A, mu=mu,
+                                      algorithm=explicit.FISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      mean=False)
         reg_est.fit(X, y)
 
-        rreg_est = estimators.RidgeRegression_L1_TV(
-                    k=k, l=l, g=g,
-                    A=A, mu=mu,
-                    algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
-                    mean=False)
-        rreg_est.fit(X, y)
+#        rreg_est = estimators.RidgeRegression_L1_TV(
+#                    k=k, l=l, g=g,
+#                    A=A, mu=mu,
+#                    algorithm=explicit.FISTA(),
+#                    algorithm_params=dict(eps=eps, max_iter=max_iter),
+#                    mean=False)
+#        rreg_est.fit(X, y)
 
         rreg_est_2 = estimators.RidgeRegression_L1_GL(
                     k=k, l=l, g=g,
@@ -432,10 +434,10 @@ class TestLinearRegression(TestCase):
 #        print "re:", re
         assert_less(re, 5e-3, "The found regression vector is not correct.")
 
-        re = np.linalg.norm(rreg_est.beta - beta_star) \
-                / np.linalg.norm(beta_star)
-#        print "re:", re
-        assert_less(re, 5e-3, "The found regression vector is not correct.")
+#        re = np.linalg.norm(rreg_est.beta - beta_star) \
+#                / np.linalg.norm(beta_star)
+##        print "re:", re
+#        assert_less(re, 5e-3, "The found regression vector is not correct.")
 
         re = np.linalg.norm(rreg_est_2.beta - beta_star) \
                 / np.linalg.norm(beta_star)
@@ -456,11 +458,11 @@ class TestLinearRegression(TestCase):
         assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
-        f_rest = function.f(rreg_est.beta)
-        err = abs(f_rest - f_star) / f_star
-#        print "err:", err
-        assert_less(err, 5e-5, "The found regression vector does not give " \
-                               "the correct function value.")
+#        f_rest = function.f(rreg_est.beta)
+#        err = abs(f_rest - f_star) / f_star
+##        print "err:", err
+#        assert_less(err, 5e-5, "The found regression vector does not give " \
+#                               "the correct function value.")
 
         f_rest_2 = function.f(rreg_est_2.beta)
         err = abs(f_rest_2 - f_star) / f_star
@@ -468,7 +470,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
-    def test_linear_regression_l1_intercept(self):
+    def test_l1_intercept(self):
 
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.penalties import L1
@@ -517,21 +519,22 @@ class TestLinearRegression(TestCase):
         beta_parsimony = fista.run(function, beta_start)
 
         mu = consts.TOLERANCE
-        reg_est = estimators.LinearRegression_L1_L2_TV(
-                    l=l, k=k, g=g,
-                    A=A, mu=mu,
-                    algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
-                    penalty_start=1,
-                    mean=False)
+        reg_est = estimators.LinearRegressionL1L2TV(
+                                      l, k, g, A, mu=mu,
+                                      algorithm=explicit.FISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      penalty_start=1,
+                                      mean=False)
         reg_est.fit(X, y)
 
-        rreg_est = estimators.RidgeRegression_L1_TV(
-                    k=k, l=l, g=g,
-                    A=A, mu=mu,
-                    algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
-                    penalty_start=1,
-                    mean=False)
-        rreg_est.fit(X, y)
+#        rreg_est = estimators.RidgeRegression_L1_TV(
+#                    k=k, l=l, g=g,
+#                    A=A, mu=mu,
+#                    algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
+#                    penalty_start=1,
+#                    mean=False)
+#        rreg_est.fit(X, y)
 
         rreg_est_2 = estimators.RidgeRegression_L1_GL(
                     k=k, l=l, g=g,
@@ -551,10 +554,10 @@ class TestLinearRegression(TestCase):
 #        print "re:", re
         assert_less(re, 5e-3, "The found regression vector is not correct.")
 
-        re = np.linalg.norm(rreg_est.beta - beta_star) \
-                / np.linalg.norm(beta_star)
-#        print "re:", re
-        assert_less(re, 5e-3, "The found regression vector is not correct.")
+#        re = np.linalg.norm(rreg_est.beta - beta_star) \
+#                / np.linalg.norm(beta_star)
+##        print "re:", re
+#        assert_less(re, 5e-3, "The found regression vector is not correct.")
 
         re = np.linalg.norm(rreg_est_2.beta - beta_star) \
                 / np.linalg.norm(beta_star)
@@ -575,11 +578,11 @@ class TestLinearRegression(TestCase):
         assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
-        f_rest = function.f(rreg_est.beta)
-        err = abs(f_rest - f_star) / f_star
-#        print "err:", err
-        assert_less(err, 5e-5, "The found regression vector does not give " \
-                               "the correct function value.")
+#        f_rest = function.f(rreg_est.beta)
+#        err = abs(f_rest - f_star) / f_star
+##        print "err:", err
+#        assert_less(err, 5e-5, "The found regression vector does not give " \
+#                               "the correct function value.")
 
         f_rest_2 = function.f(rreg_est_2.beta)
         err = abs(f_rest_2 - f_star) / f_star
@@ -587,7 +590,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
-    def test_linear_regression_l2(self):
+    def test_l2(self):
 
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
@@ -678,7 +681,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 1e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
-    def test_linear_regression_l2_intercept(self):
+    def test_l2_intercept(self):
 
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
@@ -774,12 +777,13 @@ class TestLinearRegression(TestCase):
                                "the correct function value.")
 
         mu = consts.TOLERANCE
-        reg_est = estimators.LinearRegression_L1_L2_TV(
-                    l=l, k=k, g=g,
-                    A=A, mu=mu,
-                    algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
-                    penalty_start=1,
-                    mean=False)
+        reg_est = estimators.LinearRegressionL1L2TV(
+                                      l, k, g, A, mu=mu,
+                                      algorithm=explicit.FISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      penalty_start=1,
+                                      mean=False)
         reg_est.fit(X, y)
 
         re = np.linalg.norm(reg_est.beta - beta_star) \
@@ -794,25 +798,25 @@ class TestLinearRegression(TestCase):
         assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
-        rreg_est = estimators.RidgeRegression_L1_TV(
-                    k=k, l=l, g=g,
-                    A=A, mu=mu,
-                    algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
-                    penalty_start=1,
-                    mean=False)
-        rreg_est.fit(X, y)
+#        rreg_est = estimators.RidgeRegression_L1_TV(
+#                    k=k, l=l, g=g,
+#                    A=A, mu=mu,
+#                    algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
+#                    penalty_start=1,
+#                    mean=False)
+#        rreg_est.fit(X, y)
 
-        re = np.linalg.norm(rreg_est.beta - beta_star) \
-                / np.linalg.norm(beta_star)
-#        print "re:", re
-        assert_less(re, 5e-3, "The found regression vector is not correct.")
+#        re = np.linalg.norm(rreg_est.beta - beta_star) \
+#                / np.linalg.norm(beta_star)
+##        print "re:", re
+#        assert_less(re, 5e-3, "The found regression vector is not correct.")
 
-        f_star = function.f(beta_star)
-        f_rr = function.f(rreg_est.beta)
-        err = abs(f_rr - f_star) / f_star
-#        print "err:", err
-        assert_less(err, 5e-4, "The found regression vector does not give " \
-                               "the correct function value.")
+#        f_star = function.f(beta_star)
+#        f_rr = function.f(rreg_est.beta)
+#        err = abs(f_rr - f_star) / f_star
+##        print "err:", err
+#        assert_less(err, 5e-4, "The found regression vector does not give " \
+#                               "the correct function value.")
 
         rreg_est_2 = estimators.RidgeRegression_L1_GL(
                     k=k, l=l, g=g,
@@ -834,7 +838,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
-    def test_linear_regression_tv(self):
+    def test_tv(self):
 
         from parsimony.functions.losses import LinearRegression
 #        from parsimony.functions.losses import RidgeRegression
@@ -927,7 +931,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
-    def test_linear_regression_tv_intercept(self):
+    def test_tv_intercept(self):
 
         from parsimony.functions.losses import LinearRegression
         import parsimony.functions.nesterov.tv as tv
@@ -1022,13 +1026,13 @@ class TestLinearRegression(TestCase):
 
         max_iter = 10000
         mu = mu_min
-        reg_est = estimators.LinearRegression_L1_L2_TV(
-                    l=l, k=k, g=g,
-                    A=A, mu=mu,
-                    algorithm=explicit.StaticCONESTA(eps=eps,
-                                                     max_iter=max_iter),
-                    penalty_start=1,
-                    mean=False)
+        reg_est = estimators.LinearRegressionL1L2TV(
+                                      l, k, g, A, mu=mu,
+                                      algorithm=explicit.StaticCONESTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      penalty_start=1,
+                                      mean=False)
         reg_est.fit(X, y)
 
         re = np.linalg.norm(reg_est.beta - beta_star) \
@@ -1064,7 +1068,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
-    def test_linear_regression_gl(self):
+    def test_gl(self):
 
         from parsimony.functions.losses import LinearRegression
         import parsimony.functions.nesterov.gl as gl
@@ -1153,7 +1157,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 1e-3, "The found regression vector does not give " \
                                "the correct function value.")
 
-    def test_linear_regression_gl_intercept(self):
+    def test_gl_intercept(self):
 
         from parsimony.functions.losses import LinearRegression
         import parsimony.functions.nesterov.gl as gl
@@ -1268,7 +1272,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
-    def test_linear_regression_l1_l2(self):
+    def test_l1_l2(self):
 
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
@@ -1345,7 +1349,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
-    def test_linear_regression_l1_tv(self):
+    def test_l1_tv(self):
 
         from parsimony.functions.losses import LinearRegression
 #        from parsimony.functions.losses import RidgeRegression
@@ -1445,7 +1449,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
-    def test_linear_regression_l1_gl(self):
+    def test_l1_gl(self):
 
         from parsimony.functions.losses import LinearRegression
 #        from parsimony.functions.losses import RidgeRegression
@@ -1539,7 +1543,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
-    def test_linear_regression_l2_tv(self):
+    def test_l2_tv(self):
 
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
@@ -1718,7 +1722,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
-    def test_linear_regression_l2_gl(self):
+    def test_l2_gl(self):
 
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
@@ -1896,7 +1900,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
-    def test_linear_regression_l1_l2_tv(self):
+    def test_l1_l2_tv(self):
 
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
@@ -2038,7 +2042,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
-    def test_linear_regression_l1_l2_gl(self):
+    def test_l1_l2_gl(self):
 
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
@@ -2208,9 +2212,10 @@ class TestLinearRegression(TestCase):
         X, y, beta_star = l1_l2_tv.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
                                         A=A, snr=snr)
 
-        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
-                                       algorithm=explicit.FISTA(max_iter=1000),
-                                       mean=False)
+        lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
+                                          algorithm=explicit.FISTA(),
+                                          algorithm_params=dict(max_iter=1000),
+                                          mean=False)
         lr.fit(X, y)
         score = lr.score(X, y)
 #        print "score:", score
@@ -2237,9 +2242,10 @@ class TestLinearRegression(TestCase):
         X, y, beta_star = l1_l2_tv.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
                                         A=A, snr=snr)
 
-        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
-                                       algorithm=explicit.FISTA(max_iter=1000),
-                                       mean=False)
+        lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
+                                          algorithm=explicit.FISTA(),
+                                          algorithm_params=dict(max_iter=1000),
+                                          mean=False)
         lr.fit(X, y)
         score = lr.score(X, y)
 #        print "score:", score
@@ -2266,9 +2272,10 @@ class TestLinearRegression(TestCase):
         X, y, beta_star = l1_l2_tv.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
                                         A=A, snr=snr)
 
-        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
-                                       algorithm=explicit.FISTA(max_iter=1000),
-                                       mean=False)
+        lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
+                                          algorithm=explicit.FISTA(),
+                                          algorithm_params=dict(max_iter=1000),
+                                          mean=False)
         lr.fit(X, y)
         score = lr.score(X, y)
 #        print "score:", score
@@ -2300,8 +2307,9 @@ class TestLinearRegression(TestCase):
         l = 0.0
         k = 0.0
         g = 0.0
-        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
-                                       algorithm=explicit.FISTA(max_iter=1000))
+        lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
+                                          algorithm=explicit.FISTA(),
+                                          algorithm_params=dict(max_iter=1000))
         lr.fit(X, y)
         score = lr.score(X, y)
 #        print "score:", score
@@ -2313,9 +2321,10 @@ class TestLinearRegression(TestCase):
         l = 0.618
         k = 0.0
         g = 0.0
-        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
-                                       algorithm=explicit.FISTA(max_iter=1000),
-                                       mean=False)
+        lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
+                                          algorithm=explicit.FISTA(),
+                                          algorithm_params=dict(max_iter=1000),
+                                          mean=False)
         lr.fit(X, y)
         score = lr.score(X, y)
 #        print "score:", score
@@ -2327,9 +2336,10 @@ class TestLinearRegression(TestCase):
         l = 0.0
         k = 1.0 - 0.618
         g = 0.0
-        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
-                                       algorithm=explicit.FISTA(max_iter=1000),
-                                       mean=False)
+        lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
+                                          algorithm=explicit.FISTA(),
+                                          algorithm_params=dict(max_iter=1000),
+                                          mean=False)
         lr.fit(X, y)
         score = lr.score(X, y)
 #        print "score:", score
@@ -2341,9 +2351,10 @@ class TestLinearRegression(TestCase):
         l = 0.0
         k = 0.0
         g = 2.718
-        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
-                                       algorithm=explicit.FISTA(max_iter=1000),
-                                       mean=False)
+        lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
+                                          algorithm=explicit.FISTA(),
+                                          algorithm_params=dict(max_iter=1000),
+                                          mean=False)
         lr.fit(X, y)
         score = lr.score(X, y)
 #        print "score:", score
@@ -2355,9 +2366,10 @@ class TestLinearRegression(TestCase):
         l = 0.618
         k = 1.0 - l
         g = 0.0
-        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
-                                       algorithm=explicit.FISTA(max_iter=1000),
-                                       mean=False)
+        lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
+                                          algorithm=explicit.FISTA(),
+                                          algorithm_params=dict(max_iter=1000),
+                                          mean=False)
         lr.fit(X, y)
         score = lr.score(X, y)
 #        print "score:", score
@@ -2369,9 +2381,10 @@ class TestLinearRegression(TestCase):
         l = 0.618
         k = 0.0
         g = 2.718
-        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
-                                       algorithm=explicit.FISTA(max_iter=1000),
-                                       mean=False)
+        lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
+                                          algorithm=explicit.FISTA(),
+                                          algorithm_params=dict(max_iter=1000),
+                                          mean=False)
         lr.fit(X, y)
         score = lr.score(X, y)
 #        print "score:", score
@@ -2383,9 +2396,10 @@ class TestLinearRegression(TestCase):
         l = 0.0
         k = 1.0 - 0.618
         g = 2.718
-        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
-                                       algorithm=explicit.FISTA(max_iter=1000),
-                                       mean=False)
+        lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
+                                          algorithm=explicit.FISTA(),
+                                          algorithm_params=dict(max_iter=1000),
+                                          mean=False)
         lr.fit(X, y)
         score = lr.score(X, y)
 #        print "score:", score
@@ -2397,9 +2411,10 @@ class TestLinearRegression(TestCase):
         l = 0.618
         k = 1.0 - l
         g = 2.718
-        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
-                                        algorithm=explicit.ISTA(max_iter=1000),
-                                        mean=False)
+        lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
+                                          algorithm=explicit.ISTA(),
+                                          algorithm_params=dict(max_iter=1000),
+                                          mean=False)
         lr.fit(X, y)
         score = lr.score(X, y)
 #        print "score:", score
@@ -2411,9 +2426,10 @@ class TestLinearRegression(TestCase):
         l = 0.618
         k = 1.0 - l
         g = 2.718
-        lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
-                                      algorithm=explicit.FISTA(max_iter=1000),
-                                      mean=False)
+        lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
+                                       algorithm=explicit.FISTA(),
+                                       algorithm_params=dict(max_iter=1000),
+                                       mean=False)
         lr.fit(X, y)
         score = lr.score(X, y)
 #        print "score:", score
@@ -2478,7 +2494,7 @@ class TestLinearRegression(TestCase):
                                 "the correct score value.",
                             places=5)
 
-    def test_linear_regression_large(self):
+    def test_large(self):
 
         import parsimony.algorithms.explicit as explicit
         import parsimony.estimators as estimators
@@ -2514,15 +2530,11 @@ class TestLinearRegression(TestCase):
         g = 1.618
 
         mu = None
-        logreg_static = estimators.RidgeRegression_L1_TV(
-                           k=k,
-                           l=l,
-                           g=g,
-                           A=A,
-                           mu=mu,
-                           algorithm=explicit.StaticCONESTA(eps=eps,
+        logreg_static = estimators.LinearRegressionL1L2TV(l, k, g, A, mu=mu,
+                                      algorithm=explicit.StaticCONESTA(),
+                                      algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
-                           mean=False)
+                                      mean=False)
         logreg_static.fit(X, y)
         err = logreg_static.score(X, y)
 #        print err
@@ -2531,15 +2543,11 @@ class TestLinearRegression(TestCase):
                      places=5)
 
         mu = None
-        logreg_dynamic = estimators.RidgeRegression_L1_TV(
-                          k=k,
-                          l=l,
-                          g=g,
-                          A=A,
-                          mu=mu,
-                          algorithm=explicit.DynamicCONESTA(eps=eps,
+        logreg_dynamic = estimators.LinearRegressionL1L2TV(l, k, g, A, mu=mu,
+                                      algorithm=explicit.DynamicCONESTA(),
+                                      algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
-                          mean=False)
+                                      mean=False)
         logreg_dynamic.fit(X, y)
         err = logreg_dynamic.score(X, y)
 #        print err
@@ -2548,15 +2556,11 @@ class TestLinearRegression(TestCase):
                      places=5)
 
         mu = 5e-4
-        logreg_fista = estimators.RidgeRegression_L1_TV(
-                          k=k,
-                          l=l,
-                          g=g,
-                          A=A,
-                          mu=mu,
-                          algorithm=explicit.FISTA(eps=eps,
-                                                   max_iter=max_iter),
-                          mean=False)
+        logreg_fista = estimators.LinearRegressionL1L2TV(l, k, g, A, mu=mu,
+                                      algorithm=explicit.FISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      mean=False)
         logreg_fista.fit(X, y)
         err = logreg_fista.score(X, y)
 #        print err
@@ -2565,15 +2569,11 @@ class TestLinearRegression(TestCase):
                      places=5)
 
         mu = 5e-4
-        logreg_ista = estimators.RidgeRegression_L1_TV(
-                          k=k,
-                          l=l,
-                          g=g,
-                          A=A,
-                          mu=mu,
-                          algorithm=explicit.ISTA(eps=eps,
-                                                  max_iter=max_iter),
-                          mean=False)
+        logreg_ista = estimators.LinearRegressionL1L2TV(l, k, g, A, mu=mu,
+                                      algorithm=explicit.ISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      mean=False)
         logreg_ista.fit(X, y)
         err = logreg_ista.score(X, y)
 #        print err
