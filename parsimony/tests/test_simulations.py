@@ -450,11 +450,12 @@ class TestSimulations(TestCase):
 #        plot.show()
 
         max_iter = 5000
-        estimator = estimators.RidgeRegression_L1_TV(k, l, g,
-                     A, mu=mu,
-                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
-                     penalty_start=1,
-                     mean=False)
+        estimator = estimators.LinearRegressionL1L2TV(l, k, g, A=A, mu=mu,
+                                      algorithm=explicit.FISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      penalty_start=1,
+                                      mean=False)
         estimator.fit(X, y)
         function = RR_L1_TV(X, y, k, l, g, A=A, mu=estimator.mu,
                             penalty_start=1)
@@ -729,11 +730,12 @@ class TestSimulations(TestCase):
 #        plot.show()
 
         max_iter = 2500
-        estimator = estimators.RidgeRegression_L1_GL(k, l, g,
-                     A, mu=mu,
-                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
-                     penalty_start=1,
-                     mean=False)
+        estimator = estimators.LinearRegressionL1L2GL(l, k, g, A=A, mu=mu,
+                                      algorithm=explicit.FISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      penalty_start=1,
+                                      mean=False)
         estimator.fit(X, y)
         function = RR_L1_GL(X, y, k, l, g, A=A, mu=estimator.mu,
                             penalty_start=1)
