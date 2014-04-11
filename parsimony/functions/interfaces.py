@@ -188,21 +188,21 @@ class Continuation(object):
 
     @abc.abstractmethod
     def mu_opt(self, eps):
-        """The optimal value of \mu given \epsilon.
+        """The optimal value of mu given epsilon.
         """
         raise NotImplementedError('Abstract method "mu_opt" must be '
                                   'specialised!')
 
     @abc.abstractmethod
     def eps_opt(self, mu):
-        """The optimal value of \epsilon given \mu.
+        """The optimal value of epsilon given mu.
         """
         raise NotImplementedError('Abstract method "eps_opt" must be '
                                   'specialised!')
 
     @abc.abstractmethod
     def eps_max(self, mu):
-        """The maximum value of \epsilon.
+        """The maximum value of epsilon.
         """
         raise NotImplementedError('Abstract method "eps_max" must be '
                                   'specialised!')

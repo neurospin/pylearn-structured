@@ -28,7 +28,8 @@ import numpy as np
 try:
     from . import bases  # Only works when imported as a package.
 except ValueError:
-    import parsimony.algorithms.bases as bases  # When run as a program
+    import parsimony.algorithms.bases as bases  # When run as a program.
+from parsimony.utils import LimitedDict, Info
 import parsimony.utils as utils
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
@@ -44,13 +45,16 @@ __all__ = ["GradientDescent",
 
            "Bisection", "NewtonRaphson",
 
-           "ProjectionADMM", "DykstrasProjectionAlgorithm",
+#           "ProjectionADMM",
+           "DykstrasProjectionAlgorithm",
            "ParallelDykstrasProjectionAlgorithm",
 
            "BacktrackingLineSearch"]
 
 
-class GradientDescent(bases.ExplicitAlgorithm):
+class GradientDescent(bases.ExplicitAlgorithm,
+                      bases.IterativeAlgorithm,
+                      bases.InformationAlgorithm):
     """The gradient descent algorithm.
 
     Examples
@@ -70,36 +74,36 @@ class GradientDescent(bases.ExplicitAlgorithm):
     """
     INTERFACES = [interfaces.Function,
                   interfaces.Gradient,
-                  interfaces.StepSize,
-                 ]
+                  interfaces.StepSize]
 
-    def __init__(self, step=None, output=False,
-                 eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
+    PROVIDED_INFO = [Info.ok,
+                     Info.num_iter,
+                     Info.t,
+                     Info.f,
+                     Info.converged]
+
+    def __init__(self, eps=consts.TOLERANCE,
+                 info=None, max_iter=20000, min_iter=1):
         """
         Parameters
         ----------
-        step : Non-negative float. The step-size to use in each iteration.
-                This is usually not provided, and StepSize.step is used
-                instead.
-
-        output : Boolean. Whether or not to return extra output information.
-                If output is True, running the algorithm will return a tuple
-                with two elements. The first element is the found regression
-                vector, and the second is the extra output information.
-
         eps : Positive float. Tolerance for the stopping criterion.
+
+        info : Information. If, and if so what, extra run information should be
+                returned. Default is None, which is replaced by Information(),
+                which means that no run information is computed nor returned.
 
         max_iter : Positive integer. Maximum allowed number of iterations.
 
         min_iter : Positive integer. Minimum number of iterations.
         """
-        self.step = step
-        self.output = output
-        self.eps = eps
-        self.max_iter = max_iter
-        self.min_iter = min_iter
+        super(GradientDescent, self).__init__(info=info,
+                                              max_iter=max_iter,
+                                              min_iter=min_iter)
 
+        self.eps = eps
+
+    @bases.check_compatibility
     def run(self, function, beta):
         """Find the minimiser of the given function, starting at beta.
 
@@ -109,44 +113,57 @@ class GradientDescent(bases.ExplicitAlgorithm):
 
         beta : Numpy array. The start vector.
         """
-        self.check_compatibility(function, self.INTERFACES)
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = False
 
-        if self.step is None:
-            step = function.step(beta)
-        else:
-            step = self.step
+        step = function.step(beta)
 
         betanew = betaold = beta
 
-        if self.output:
+        if self.info.allows(Info.t):
             t = []
+        if self.info.allows(Info.f):
             f = []
+        if self.info.allows(Info.converged):
+            self.info[Info.converged] = False
+
         for i in xrange(1, self.max_iter + 1):
-            if self.output:
+            if self.info.allows(Info.t):
                 tm = utils.time_cpu()
 
-            if self.step is None:
-                step = function.step(betanew)
+            step = function.step(betanew)
 
             betaold = betanew
             betanew = betaold - step * function.grad(betaold)
 
-            if self.output:
+            if self.info.allows(Info.t):
                 t.append(utils.time_cpu() - tm)
+            if self.info.allows(Info.f):
                 f.append(function.f(betanew))
 
             if maths.norm(betanew - betaold) < self.eps \
                     and i >= self.min_iter:
+
+                if self.info.allows(Info.converged):
+                    self.info[Info.converged] = True
+
                 break
 
-        if self.output:
-            output = {"t": t, "f": f}
-            return betanew, output
-        else:
-            return betanew
+        if self.info.allows(Info.num_iter):
+            self.info[Info.num_iter] = i
+        if self.info.allows(Info.t):
+            self.info[Info.t] = t
+        if self.info.allows(Info.f):
+            self.info[Info.f] = f
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = True
+
+        return betanew
 
 
-class ISTA(bases.ExplicitAlgorithm):
+class ISTA(bases.ExplicitAlgorithm,
+           bases.IterativeAlgorithm,
+           bases.InformationAlgorithm):
     """The iterative shrinkage-thresholding algorithm.
 
     Examples
@@ -184,42 +201,38 @@ class ISTA(bases.ExplicitAlgorithm):
     """
     INTERFACES = [interfaces.Function,
                   interfaces.Gradient,
-                  # TODO: We should use a step size here instead of the
-                  # Lipschitz constant. All functions don't have L, but will
-                  # still run in FISTA with a small enough step size.
-                  # Updated: Use StepSize instead!!
-                  # interfaces.LipschitzContinuousGradient,
-                  interfaces.ProximalOperator,
-                 ]
+                  interfaces.StepSize,
+                  interfaces.ProximalOperator]
 
-    def __init__(self, step=None, output=False,
-                 eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
+    PROVIDED_INFO = [Info.ok,
+                     Info.num_iter,
+                     Info.t,
+                     Info.f,
+                     Info.converged]
+
+    def __init__(self, eps=consts.TOLERANCE,
+                 info=None, max_iter=20000, min_iter=1):
         """
         Parameters
         ----------
-        step : Non-negative float. The step-size to use in each iteration.
-                This is usually not provided.
-
-        output : Boolean. Whether or not to return output information. If
-                output is True, running the algorithm will return a tuple with
-                two elements. The first element is the found regression vector,
-                and the second is the extra output information.
-
         eps : Positive float. Tolerance for the stopping criterion.
+
+        info : Information. If, and if so what, extra run information should be
+                returned. Default is None, which is replaced by Information(),
+                which means that no run information is computed nor returned.
 
         max_iter : Positive integer. Maximum allowed number of iterations.
 
         min_iter : Positive integer. Minimum number of iterations.
         """
-        self.step = step
-        self.output = output
+        super(ISTA, self).__init__(info=info,
+                                   max_iter=max_iter,
+                                   min_iter=min_iter)
         self.eps = eps
-        self.max_iter = max_iter
-        self.min_iter = min_iter
 
+    @bases.check_compatibility
     def run(self, function, beta):
-        """Call this object to obtain the variable that gives the minimum.
+        """Find the minimiser of the given function, starting at beta.
 
         Parameters
         ----------
@@ -227,67 +240,59 @@ class ISTA(bases.ExplicitAlgorithm):
 
         beta : Numpy array. The start vector.
         """
-        self.check_compatibility(function, self.INTERFACES)
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = False
+
+        step = function.step(beta)
 
         betanew = betaold = beta
 
-        # TODO: Change the functions so that we can use the StepSize API here.
-        has_step = False
-        if self.step is None:
-            if isinstance(function, interfaces.StepSize):
-                self.step = function.step(beta)
-                has_step = True
-            else:
-                self.step = 1.0 / function.L()
-
-        if self.output:
+        if self.info.allows(Info.t):
             t = []
+        if self.info.allows(Info.f):
             f = []
+        if self.info.allows(Info.converged):
+            self.info[Info.converged] = False
+
         for i in xrange(1, self.max_iter + 1):
-            if self.output:
+            if self.info.allows(Info.t):
                 tm = utils.time_cpu()
 
-            if has_step:
-                self.step = function.step(betanew)
+            step = function.step(betanew)
 
             betaold = betanew
-            betanew = function.prox(betaold -
-                                    self.step * function.grad(betaold),
-                                    self.step)
+            betanew = function.prox(betaold - step * function.grad(betaold),
+                                    step)
 
-            if self.output:
+            if self.info.allows(Info.t):
                 t.append(utils.time_cpu() - tm)
+            if self.info.allows(Info.f):
                 f.append(function.f(betanew))
 
-            if (1.0 / self.step) * maths.norm(betanew - betaold) < self.eps \
+            if (1.0 / step) * maths.norm(betanew - betaold) < self.eps \
                     and i >= self.min_iter:
+
+                if self.info.allows(Info.converged):
+                    self.info[Info.converged] = True
+
                 break
 
-        if self.output:
-            output = {"t": t, "f": f}
-            return betanew, output
-        else:
-            return betanew
+        if self.info.allows(Info.num_iter):
+            self.info[Info.num_iter] = i
+        if self.info.allows(Info.t):
+            self.info[Info.t] = t
+        if self.info.allows(Info.f):
+            self.info[Info.f] = f
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = True
+
+        return betanew
 
 
-class FISTA(bases.ExplicitAlgorithm):
-    """ The fast iterative shrinkage threshold algorithm.
-
-    Parameters
-    ----------
-    step : Non-negative float. The step-size to use in each iteration. This is
-            usually not provided.
-
-    output : Boolean. Whether or not to return output information. If output
-            is True, running the algorithm will return a tuple with two
-            elements. The first element is the found regression vector, and
-            the second is the extra output information.
-
-    eps : Positive float. Tolerance for the stopping criterion.
-
-    max_iter : Positive integer. Maximum allowed number of iterations.
-
-    min_iter : Positive integer. Minimum number of iterations.
+class FISTA(bases.ExplicitAlgorithm,
+            bases.IterativeAlgorithm,
+            bases.InformationAlgorithm):
+    """ The fast iterative shrinkage-thresholding algorithm.
 
     Example
     -------
@@ -322,198 +327,272 @@ class FISTA(bases.ExplicitAlgorithm):
     >>> np.linalg.norm(beta1.ravel(), 0)
     7
     """
-    INTERFACES = [interfaces.Gradient,
-                  # TODO: We should use a step size here instead of the
-                  # Lipschitz constant. All functions don't have L, but will
-                  # still run in FISTA with a small enough step size.
-                  # Updated: Use StepSize instead!!
-#                  interfaces.LipschitzContinuousGradient,
-                  interfaces.ProximalOperator,
-                 ]
+    INTERFACES = [interfaces.Function,
+                  interfaces.Gradient,
+                  interfaces.StepSize,
+                  interfaces.ProximalOperator]
 
-    def __init__(self, step=None, output=False,
-                 eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
+    PROVIDED_INFO = [Info.ok,
+                     Info.num_iter,
+                     Info.t,
+                     Info.f,
+                     Info.converged]
 
-        self.step = step
-        self.output = output
+    def __init__(self, eps=consts.TOLERANCE,
+                 info=None, max_iter=10000, min_iter=1,
+                 conesta_stop=None):
+        """
+        Parameters
+        ----------
+        eps : Positive float. Tolerance for the stopping criterion.
+
+        info : Information. If, and if so what, extra run information should be
+                returned. Default is None, which is replaced by Information(),
+                which means that no run information is computed nor returned.
+
+        max_iter : Positive integer. Maximum allowed number of iterations.
+
+        min_iter : Positive integer. Minimum number of iterations.
+        """
+        super(FISTA, self).__init__(info=info,
+                                    max_iter=max_iter,
+                                    min_iter=min_iter)
         self.eps = eps
-        self.max_iter = max_iter
-        self.min_iter = min_iter
+        self.conesta_stop = conesta_stop
 
+    @bases.check_compatibility
     def run(self, function, beta):
-        """Call this object to obtain the variable that gives the minimum.
+        """Find the minimiser of the given function, starting at beta.
 
         Parameters
         ----------
         function : Function. The function to minimise.
 
-        beta : Numpy array. A start vector.
+        beta : Numpy array. The start vector.
         """
-        self.check_compatibility(function, self.INTERFACES)
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = False
+
+        step = function.step(beta)
 
         z = betanew = betaold = beta
 
-        # TODO: Change the functions so that we can use the StepSize API here.
-        has_step = False
-        if self.step is None:
-            if isinstance(function, interfaces.StepSize):
-                self.step = function.step(beta)
-                has_step = True
-            else:
-                self.step = 1.0 / function.L()
-
-        if self.output:
+        if self.info.allows(Info.t):
             t = []
+        if self.info.allows(Info.f):
             f = []
+        if self.info.allows(Info.converged):
+            self.info[Info.converged] = False
+
         for i in xrange(1, self.max_iter + 1):
-            if self.output:
+            if self.info.allows(Info.t):
                 tm = utils.time_cpu()
 
             z = betanew + ((i - 2.0) / (i + 1.0)) * (betanew - betaold)
 
-            if has_step:
-                self.step = function.step(z)
+            step = function.step(z)
 
             betaold = betanew
-            betanew = function.prox(z - self.step * function.grad(z),
-                                    self.step)
+            betanew = function.prox(z - step * function.grad(z),
+                                    step)
 
-            if self.output:
+            if self.info.allows(Info.t):
                 t.append(utils.time_cpu() - tm)
+            if self.info.allows(Info.f):
                 f.append(function.f(betanew))
 
-            if (1.0 / self.step) * maths.norm(betanew - z) < self.eps \
-                    and i >= self.min_iter:
-                break
+            if self.conesta_stop is not None:
+                mu_min = self.conesta_stop[0]
+#                print "mu_min:", mu_min
+                mu_old = function.set_mu(mu_min)
+#                print "mu_old:", mu_old
+                stop_step = function.step(betanew)
+#                print "step  :", step
+                # Take one ISTA step for use in the stopping criterion.
+                stop_z = function.prox(betanew - stop_step \
+                                                    * function.grad(betanew),
+                                  stop_step)
+                function.set_mu(mu_old)
+#                print "err   :", maths.norm(betanew - z)
+#                print "sc err:", (1.0 / step) * maths.norm(betanew - z)
+#                print "eps   :", self.eps
 
-        if self.output:
-            output = {"t": t, "f": f}
-            return betanew, output
-        else:
-            return betanew
+                if (1.0 / stop_step) * maths.norm(betanew - stop_z) < self.eps \
+                        and i >= self.min_iter:
+
+                    if self.info.allows(Info.converged):
+                        self.info[Info.converged] = True
+
+                    break
+
+            else:
+                if (1.0 / step) * maths.norm(betanew - z) < self.eps \
+                        and i >= self.min_iter:
+
+                    if self.info.allows(Info.converged):
+                        self.info[Info.converged] = True
+
+                    break
+
+        if self.info.allows(Info.num_iter):
+            self.info[Info.num_iter] = i
+        if self.info.allows(Info.t):
+            self.info[Info.t] = t
+        if self.info.allows(Info.f):
+            self.info[Info.f] = f
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = True
+
+        return betanew
 
 
-class CONESTA(bases.ExplicitAlgorithm):
+class CONESTA(bases.ExplicitAlgorithm,
+              bases.IterativeAlgorithm,
+              bases.InformationAlgorithm):
     """COntinuation with NEsterov smoothing in a Soft-Thresholding Algorithm,
     or CONESTA for short.
-
-    Parameters
-    ----------
-    mu_start : Non-negative float. An optional initial value of \mu.
-
-    mu_min : Non-negative float. A "very small" mu to use when computing the
-            stopping criterion.
-
-    tau : Float, 0 < tau < 1. The rate at which \eps is decreasing. Default
-            is 0.5.
-
-    dynamic : Boolean. Whether to dynamically decrease \eps (through the
-            duality gap) or not.
-
-    continuations : Positive integer. Maximum number of outer loop iterations.
-
-    output : Boolean. Whether or not to return extra output information. If
-            output is True, running the algorithm will return a tuple with two
-            elements. The first element is the found regression vector, and
-            the second is the extra output information.
-
-    eps : Positive float. Tolerance for the stopping criterion.
-
-    max_iter : Positive integer. Maximum allowed number of inner loop
-            iterations.
-
-    min_iter : Positive integer. Minimum number of inner loop iterations.
     """
     INTERFACES = [nesterov_interfaces.NesterovFunction,
-                  interfaces.Continuation,
-                  interfaces.LipschitzContinuousGradient,
-                  interfaces.ProximalOperator,
                   interfaces.Gradient,
-                  interfaces.DualFunction
-                 ]
+                  interfaces.StepSize,
+                  interfaces.ProximalOperator,
+                  interfaces.Continuation,
+                  interfaces.DualFunction]
 
-    def __init__(self, mu_start=None, mu_min=consts.TOLERANCE, tau=0.5,
-                 dynamic=True, continuations=30,
+    PROVIDED_INFO = [Info.ok,
+                     Info.num_iter,
+                     Info.t,
+                     Info.f,
+                     Info.gap,
+                     Info.mu,
+                     Info.converged]
 
-                 output=False,
+    def __init__(self, mu_start=None, mu_min=consts.TOLERANCE,
+                 tau=0.5, dynamic=True,
+
                  eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
+                 info=None, max_iter=10000, min_iter=1):
+        """
+        Parameters
+        ----------
+        mu_start : Non-negative float. An optional initial value of mu.
+
+        mu_min : Non-negative float. A "very small" mu to use when computing
+                the stopping criterion.
+
+        tau : Float, 0 < tau < 1. The rate at which eps is decreasing. Default
+                is 0.5.
+
+        dynamic : Boolean. Whether to dynamically decrease eps (through the
+                duality gap) or not.
+
+        eps : Positive float. Tolerance for the stopping criterion.
+
+        info : Information. If, and if so what, extra run information should be
+                returned. Default is None, which is replaced by Information(),
+                which means that no run information is computed nor returned.
+
+        max_iter : Positive integer. Maximum allowed number of iterations.
+
+        min_iter : Positive integer. Minimum number of iterations.
+        """
+        super(CONESTA, self).__init__(info=info,
+                                      max_iter=max_iter,
+                                      min_iter=min_iter)
 
         self.mu_start = mu_start
         self.mu_min = mu_min
         self.tau = tau
         self.dynamic = dynamic
-        self.continuations = continuations
 
-        self.output = output
         self.eps = eps
-        self.max_iter = max_iter
-        self.min_iter = min_iter
 
-        self.FISTA = FISTA(output=self.output,
-                           eps=self.eps,
-                           max_iter=self.max_iter, min_iter=self.min_iter)
+        # Copy the allowed info keys for FISTA.
+        fista_keys = []
+        for i in self.info.allowed_keys():
+            if i in FISTA.PROVIDED_INFO:
+                fista_keys.append(i)
+        self.fista_info = LimitedDict(fista_keys)
+        if not self.fista_info.allows(Info.num_iter):
+            self.fista_info.add_key(Info.num_iter)
+        self.FISTA = FISTA(eps=eps, max_iter=max_iter, min_iter=min_iter,
+                           info=self.fista_info)
+        self.num_iter = 0
 
+    @bases.check_compatibility
     def run(self, function, beta):
 
-        self.check_compatibility(function, self.INTERFACES)
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = False
 
         if self.mu_start is None:
-            mu = [0.9 * function.estimate_mu(beta)]
+            mu = [function.estimate_mu(beta)]
         else:
             mu = [self.mu_start]
 
-#        old_mu = function.get_mu()
         function.set_mu(self.mu_min)
-        # TODO: Use StepSize instead.
-        tmin = 1.0 / function.L()
+        tmin = function.step(beta)
         function.set_mu(mu[0])
 
         max_eps = function.eps_max(mu[0])
 
-#        G = eps0 = min(max_eps, function.eps_opt(mu[0]))
         G = min(max_eps, function.eps_opt(mu[0]))
 
-        if self.output:
+        if self.info.allows(Info.t):
             t = []
+        if self.info.allows(Info.f):
             f = []
+        if self.info.allows(Info.gap):
             Gval = []
+        if self.info.allows(Info.converged):
+            self.info[Info.converged] = False
 
         i = 0
         while True:
             stop = False
 
-            # TODO: Use StepSize instead.
-            tnew = 1.0 / function.L()
+            tnew = function.step(beta)
             eps_plus = min(max_eps, function.eps_opt(mu[-1]))
-            self.FISTA.set_params(step=tnew, eps=eps_plus, output=self.output)
-            if self.output:
-                (beta, info) = self.FISTA.run(function, beta)
-                fval = info["f"]
-                tval = info["t"]
-            else:
-                beta = self.FISTA.run(function, beta)
+#            print "current iterations: ", self.num_iter, \
+#                    ", iterations left: ", self.max_iter - self.num_iter
+            self.FISTA.set_params(step=tnew, eps=eps_plus,
+                                  max_iter=self.max_iter - self.num_iter,
+                                  conesta_stop=None)
+#                                  conesta_stop=[self.mu_min])
+            self.fista_info.clear()
+            beta = self.FISTA.run(function, beta)
+
+            # This must always be true here!
+            if Info.num_iter in self.fista_info:
+                self.num_iter += self.fista_info[Info.num_iter]
+            if self.fista_info.allows(Info.t) and (Info.t in self.fista_info):
+                tval = self.fista_info[Info.t]
+            if self.fista_info.allows(Info.f) and (Info.f in self.fista_info):
+                fval = self.fista_info[Info.f]
 
             self.mu_min = min(self.mu_min, mu[-1])
             tmin = min(tmin, tnew)
             function.set_mu(self.mu_min)
-            # Take one ISTA step to use in the stopping criterion.
+            # Take one ISTA step for use in the stopping criterion.
             beta_tilde = function.prox(beta - tmin * function.grad(beta),
                                        tmin)
             function.set_mu(mu[-1])
 
-            if (1.0 / tmin) * maths.norm(beta - beta_tilde) < self.eps \
-                    or i >= self.continuations - 1:
-#                print "%f < %f" % ((1. / tmin) \
-#                                * maths.norm(beta - beta_tilde), self.eps)
-#                print "%d >= %d" % (i, self.continuations)
+            if (1.0 / tmin) * maths.norm(beta - beta_tilde) < self.eps:
+                if self.info.allows(Info.converged):
+                    self.info[Info.converged] = True
+
                 stop = True
 
-            if self.output:
+            if self.num_iter >= self.max_iter:
+                stop = True
+
+            if self.info.allows(Info.t):
                 gap_time = utils.time_cpu()
+
             if self.dynamic:
                 G_new = function.gap(beta)
+
                 # TODO: Warn if G_new < 0.
                 G_new = abs(G_new)  # Just in case ...
 
@@ -524,24 +603,23 @@ class CONESTA(bases.ExplicitAlgorithm):
 
             else:  # Static
 
-    #            G_new = eps0 * tau ** (i + 1)
                 G = self.tau * G
 
-#            print "Gap:", G
-            if self.output:
+            if self.info.allows(Info.t):
                 gap_time = utils.time_cpu() - gap_time
-                Gval.append(G)
-
-                f = f + fval
                 tval[-1] += gap_time
                 t = t + tval
+            if self.info.allows(Info.f):
+                f = f + fval
+            if self.info.allows(Info.gap):
+                Gval.append(G)
 
             if (G <= consts.TOLERANCE and mu[-1] <= consts.TOLERANCE) or stop:
                 break
 
             mu_new = min(mu[-1], function.mu_opt(G))
             self.mu_min = min(self.mu_min, mu_new)
-            if self.output:
+            if self.info.allows(Info.mu):
                 mu = mu + [max(self.mu_min, mu_new)] * len(fval)
             else:
                 mu.append(max(self.mu_min, mu_new))
@@ -549,16 +627,27 @@ class CONESTA(bases.ExplicitAlgorithm):
 
             i = i + 1
 
-        if self.output:
-            info = {"t": t, "f": f, "mu": mu, "gap": Gval}
-            return (beta, info)
-        else:
-            return beta
+#        print "total number of iterations:", self.num_iter
+
+        if self.info.allows(Info.num_iter):
+            self.info[Info.num_iter] = i + 1
+        if self.info.allows(Info.t):
+            self.info[Info.t] = t
+        if self.info.allows(Info.f):
+            self.info[Info.f] = f
+        if self.info.allows(Info.gap):
+            self.info[Info.gap] = Gval
+        if self.info.allows(Info.mu):
+            self.info[Info.mu] = mu
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = True
+
+        return beta
 
 
 class StaticCONESTA(CONESTA):
     """COntinuation with NEsterov smoothing in a Soft-Thresholding Algorithm,
-    or CONESTA for short, with a statically decreasing \mu.
+    or CONESTA for short, with a statically decreasing mu.
     """
     def __init__(self, **kwargs):
 
@@ -569,7 +658,7 @@ class StaticCONESTA(CONESTA):
 
 class DynamicCONESTA(CONESTA):
     """COntinuation with NEsterov smoothing in a Soft-Thresholding Algorithm,
-    or CONESTA for short, with a dynamically decreasing \mu.
+    or CONESTA for short, with a dynamically decreasing mu.
     """
     def __init__(self, **kwargs):
 
@@ -578,21 +667,28 @@ class DynamicCONESTA(CONESTA):
         super(DynamicCONESTA, self).__init__(**kwargs)
 
 
-class ExcessiveGapMethod(bases.ExplicitAlgorithm):
+class ExcessiveGapMethod(bases.ExplicitAlgorithm,
+                         bases.IterativeAlgorithm,
+                         bases.InformationAlgorithm):
     """Nesterov's excessive gap method for strongly convex functions.
     """
     INTERFACES = [nesterov_interfaces.NesterovFunction,
                   interfaces.LipschitzContinuousGradient,
                   interfaces.GradientMap,
                   interfaces.DualFunction,
-                  interfaces.StronglyConvex,
-                 ]
+                  interfaces.StronglyConvex]
 
-    def __init__(self, output=False,
-                 eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
+    PROVIDED_INFO = [Info.ok,
+                     Info.num_iter,
+                     Info.t,
+                     Info.f,
+                     Info.bound,
+                     Info.converged]
+
+    def __init__(self, eps=consts.TOLERANCE,
+                 info=None, max_iter=10000, min_iter=1):
         """
-        Parameters:
+        Parameters
         ----------
         output : Boolean. Whether or not to return extra output information.
                 If output is True, running the algorithm will return a tuple
@@ -601,28 +697,37 @@ class ExcessiveGapMethod(bases.ExplicitAlgorithm):
 
         eps : Positive float. Tolerance for the stopping criterion.
 
+        info : Information. If, and if so what, extra run information should be
+                returned. Default is None, which is replaced by Information(),
+                which means that no run information is computed nor returned.
+
         max_iter : Positive integer. Maximum allowed number of iterations.
 
         min_iter : Positive integer. Minimum allowed number of iterations.
         """
-        self.output = output
-        self.eps = eps
-        self.max_iter = max_iter
-        self.min_iter = min_iter
+        super(ExcessiveGapMethod, self).__init__(info=info,
+                                                 max_iter=max_iter,
+                                                 min_iter=min_iter)
 
+        self.eps = eps
+
+    @bases.check_compatibility
     def run(self, function, beta=None):
         """The excessive gap method for strongly convex functions.
 
-        Parameters:
+        Parameters
         ----------
         function : The function to minimise. It contains two parts, function.g
                 is the strongly convex part and function.h is the smoothed part
                 of the function.
 
-        beta : Numpy array. The start vector. This is normally not given, but
-                left None. The start vector is computed by the algorithm.
+        beta : Numpy array. A start vector. This is normally not given, but
+                left None, since the start vector is computed by the algorithm.
         """
-        A = function.h.A()
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = False
+
+        A = function.A()
 
         u = [0] * len(A)
         for i in xrange(len(A)):
@@ -633,7 +738,7 @@ class ExcessiveGapMethod(bases.ExplicitAlgorithm):
         if L < consts.TOLERANCE:
             L = consts.TOLERANCE
         mu = [2.0 * L]
-        function.h.set_mu(mu)
+        function.set_mu(mu)
         if beta is not None:
             beta0 = beta
         else:
@@ -641,20 +746,24 @@ class ExcessiveGapMethod(bases.ExplicitAlgorithm):
         beta = beta0
         alpha = function.V(u, beta, L)  # u is zero here
 
-        t = []
-        f = []
-        ubound = []
+        if self.info.allows(Info.t):
+            t = []
+        if self.info.allows(Info.f):
+            f = []
+        if self.info.allows(Info.bound):
+            bound = []
+        if self.info.allows(Info.converged):
+            self.info[Info.converged] = False
 
         k = 0
-
         while True:
-            if self.output:
+            if self.info.allows(Info.t):
                 tm = utils.time_cpu()
 
             tau = 2.0 / (float(k) + 3.0)
 
-            function.h.set_mu(mu[k])
-            alpha_hat = function.h.alpha(beta)
+            function.set_mu(mu[k])
+            alpha_hat = function.alpha(beta)
             for i in xrange(len(alpha_hat)):
                 u[i] = (1.0 - tau) * alpha[i] + tau * alpha_hat[i]
 
@@ -663,68 +772,101 @@ class ExcessiveGapMethod(bases.ExplicitAlgorithm):
             beta = (1.0 - tau) * beta + tau * betahat
             alpha = function.V(u, betahat, L)
 
-            ulim = mu[k + 1] * function.h.M()
-            if self.output:
+            upper_limit = mu[k + 1] * function.M()
+
+            if self.info.allows(Info.t):
                 t.append(utils.time_cpu() - tm)
-                mu_old = function.h.get_mu()
-                function.h.set_mu(0.0)
+            if self.info.allows(Info.f):
+                mu_old = function.get_mu()
+                function.set_mu(0.0)
                 f.append(function.f(beta))
-                function.h.set_mu(mu_old)
+                function.set_mu(mu_old)
+            if self.info.allows(Info.bound):
+#                bound.append(2.0 * function.M() * mu[0] \
+#                        / ((float(k) + 1.0) * (float(k) + 2.0)))
+                bound.append(upper_limit)
 
-#                ulim.append(2.0 * function.h.M() * mu[0] / ((float(k) + 1.0) * (float(k) + 2.0)))
-                ubound.append(ulim)
+            if upper_limit < self.eps and k >= self.min_iter - 1:
+                if self.info.allows(Info.converged):
+                    self.info[Info.converged] = True
 
-            if ulim < self.eps or k >= self.max_iter:
+                break
+
+            if k >= self.max_iter - 1 and k >= self.min_iter - 1:
                 break
 
             k = k + 1
 
-        if self.output:
-            output = {"t": t, "f": f, "mu": mu, "upper_bound": ubound,
-                      "beta_start": beta0}
-            return (beta, output)
-        else:
-            return beta
+        if self.info.allows(Info.num_iter):
+            self.info[Info.num_iter] = k + 1
+        if self.info.allows(Info.t):
+            self.info[Info.t] = t
+        if self.info.allows(Info.f):
+            self.info[Info.f] = f
+        if self.info.allows(Info.mu):
+            self.info[Info.mu] = mu
+        if self.info.allows(Info.bound):
+            self.info[Info.bound] = bound
+        if self.info.allows(Info.beta):
+            self.info[Info.beta] = beta0
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = True
+
+        return beta
 
 
-class Bisection(bases.ExplicitAlgorithm):
+class Bisection(bases.ExplicitAlgorithm,
+                bases.IterativeAlgorithm,
+                bases.InformationAlgorithm):
     """Finds a root of the function assumed to be on the line between two
     points.
 
     Assumes a function f(x) such that |f(x)|_2 < -eps if x is too small,
     |f(x)|_2 > eps if x is too large and |f(x)|_2 <= eps if x is just right.
-
-    Parameters
-    ----------
-    force_negative : Boolean. Default is False. Will try, by running more
-            iterations, to make the result negative. It may fail, but that is
-            unlikely.
-
-    eps : Positive float. A value such that |f(x)|_2 <= eps. Only guaranteed
-            if |f(x)|_2 <= eps in less than max_iter iterations.
-
-    max_iter : Positive integer. Maximum allowed number of iterations.
-
-    min_iter : Positive integer. Minimum number of iterations.
     """
-    INTERFACES = [interfaces.Function,
-                 ]
+    INTERFACES = [interfaces.Function]
+
+    PROVIDED_INFO = [Info.ok,
+                     Info.num_iter,
+                     Info.converged]
 
     def __init__(self, force_negative=False,
                  parameter_positive=True,
                  parameter_negative=True,
                  parameter_zero=True,
+
                  eps=consts.TOLERANCE,
-                 max_iter=30, min_iter=1):
+                 info=None, max_iter=30, min_iter=1):
+        """
+        Parameters
+        ----------
+        force_negative : Boolean. Default is False. Will try, by running more
+                iterations, to make the result negative. It may fail, but that
+                is unlikely.
+
+        eps : Positive float. A value such that |f(x)|_2 <= eps. Only
+                guaranteed if |f(x)|_2 <= eps in less than max_iter iterations.
+
+        info : Information. If, and if so what, extra run information should be
+                returned. Default is None, which is replaced by Information(),
+                which means that no run information is computed nor returned.
+
+        max_iter : Positive integer. Maximum allowed number of iterations.
+
+        min_iter : Positive integer. Minimum number of iterations.
+        """
+        super(Bisection, self).__init__(info=info,
+                                        max_iter=max_iter,
+                                        min_iter=min_iter)
 
         self.force_negative = force_negative
         self.parameter_positive = parameter_positive
         self.parameter_negative = parameter_negative
         self.parameter_zero = parameter_zero
-        self.eps = eps
-        self.max_iter = max_iter
-        self.min_iter = min_iter
 
+        self.eps = eps
+
+    @bases.check_compatibility
     def run(self, function, x=None):
         """
         Parameters
@@ -738,6 +880,9 @@ class Bisection(bases.ExplicitAlgorithm):
                 automatically. Finding them may be slow, though, if the
                 function is expensive to evaluate.
         """
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = False
+
         if x is not None:
             low = x[0]
             high = x[1]
@@ -837,17 +982,12 @@ class Bisection(bases.ExplicitAlgorithm):
 
                     raise ValueError("Parameter must be allowed to be real!")
 
-#        low_start = low
-#        high_start = high
-#        print "low_start:", low_start
-#        print "high_start:", high_start
-
         # Use the bisection method to find where |f(x)|_2 <= eps.
         neg_count = 0
 
         mid = (low + high) / 2.0
         f_mid = function.f(mid)
-#        for i in xrange(self.max_iter):
+        i = 0
         while True:
             if np.sign(f_mid) == np.sign(f_low):
                 low = mid
@@ -860,9 +1000,8 @@ class Bisection(bases.ExplicitAlgorithm):
             f_mid = function.f(mid)
 #            print "i:", (i + 1), ", mid: ", mid, ", f_mid:", f_mid
 
-#            if np.sqrt(np.sum((high - low) ** 2.0)) <= self.eps:
-            if (abs(f_high - f_low) <= self.eps and i + 1 >= self.min_iter) \
-                    or i + 1 >= self.max_iter:
+            if (abs(f_high - f_low) <= self.eps and i >= self.min_iter - 1) \
+                    or i >= self.max_iter - 1:
                 if self.force_negative and f_mid > 0.0:
                     if neg_count < self.max_iter:
                         neg_count += 1
@@ -872,11 +1011,25 @@ class Bisection(bases.ExplicitAlgorithm):
                     break
             i += 1
 
-#        return mid, low_start, high_start
+        if self.info.allows(Info.converged):
+            if abs(f_high - f_low) <= self.eps:
+                self.info[Info.converged] = True
+
+                if self.force_negative and f_mid > 0.0:
+                    self.info[Info.converged] = False
+        if self.info.allows(Info.num_iter):
+            self.info[Info.num_iter] = i + 1
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = True
+
+        # TODO: We already have f_mid, so we can return a better approximation
+        # here!
         return mid
 
 
-class NewtonRaphson(bases.ExplicitAlgorithm):
+class NewtonRaphson(bases.ExplicitAlgorithm,
+                    bases.IterativeAlgorithm,
+                    bases.InformationAlgorithm):
     """Finds a root of the function assumed to be in the vicinity of a given
     point.
 
@@ -885,40 +1038,53 @@ class NewtonRaphson(bases.ExplicitAlgorithm):
 
     Problems may also arise if the gradient is too small (e.g. at a stationary
     point) on the path to the root.
-
-    Parameters
-    ----------
-    force_negative : Boolean. Default is False. Will try to make the result
-            negative. It may fail if the function does not behave "nicely"
-            around the found point.
-
-    eps : Positive float. A small value used as the stopping criterion. The
-            stopping criterion will be fulfilled if it converges in less than
-            max_iter iterations.
-
-    max_iter : Positive integer. Maximum allowed number of iterations.
-
-    min_iter : Positive integer. Minimum number of iterations. Default is 1.
     """
     INTERFACES = [interfaces.Function,
-                  interfaces.Gradient,
-                 ]
+                  interfaces.Gradient]
+
+    PROVIDED_INFO = [Info.ok,
+                     Info.num_iter,
+                     Info.converged]
 
     def __init__(self, force_negative=False,
                  parameter_positive=True,
                  parameter_negative=True,
                  parameter_zero=True,
+
                  eps=consts.TOLERANCE,
-                 max_iter=20, min_iter=1):
+                 info=None, max_iter=30, min_iter=1):
+        """
+        Parameters
+        ----------
+        force_negative : Boolean. Default is False. Will try to make the result
+                negative. It may fail if the function does not behave "nicely"
+                around the found point.
+
+        eps : Positive float. A small value used as the stopping criterion. The
+                stopping criterion will be fulfilled if it converges in less
+                than max_iter iterations.
+
+        info : Information. If, and if so what, extra run information should be
+                returned. Default is None, which is replaced by Information(),
+                which means that no run information is computed nor returned.
+
+        max_iter : Positive integer. Maximum allowed number of iterations.
+
+        min_iter : Positive integer. Minimum number of iterations. Default is
+                1.
+        """
+        super(NewtonRaphson, self).__init__(info=info,
+                                            max_iter=max_iter,
+                                            min_iter=min_iter)
 
         self.force_negative = force_negative
         self.parameter_positive = parameter_positive
         self.parameter_negative = parameter_negative
         self.parameter_zero = parameter_zero
-        self.eps = eps
-        self.max_iter = max_iter
-        self.min_iter = min_iter
 
+        self.eps = eps
+
+    @bases.check_compatibility
     def run(self, function, x=None):
         """
         Parameters
@@ -928,6 +1094,9 @@ class NewtonRaphson(bases.ExplicitAlgorithm):
         x : Float. The starting point of the Newton-Raphson algorithm. Should
                 be "close" to the root.
         """
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = False
+
         if x is None:
             if self.parameter_positive:
                 x = 1.0
@@ -941,10 +1110,7 @@ class NewtonRaphson(bases.ExplicitAlgorithm):
         while True:
             x_ = x
             f = function.f(x_)
-#            print "f:", f
             df = function.grad(x_)
-#            print "df:", df
-#            print "x:", x, ", f(x):", f
             x = x_ - f / df
             # TODO: Handle the other cases!
             if not self.parameter_negative \
@@ -958,70 +1124,79 @@ class NewtonRaphson(bases.ExplicitAlgorithm):
                 and x < 0.0:
                 x = 0.0
 
-            if (abs(x - x_) <= self.eps and i + 1 >= self.min_iter) \
-                    or i + 1 >= self.max_iter:
+            if (abs(x - x_) <= self.eps and i >= self.min_iter - 1) \
+                    or i >= self.max_iter - 1:
                 if self.force_negative:
                     f = function.f(x)
                     if f > 0.0:
                         df = function.grad(x)
-#                        print "f(x):", f
                         # We assume that we are within |x_opt - x| < eps from
                         # the root. I.e. that the root is within the interval
                         # [x_opt - eps, x_opt + eps]. We are at x_opt + eps or
                         # x_opt - eps. Then we go to x_opt - 0.5 * eps or
                         # x_opt + 0.5 * eps, respectively.
                         x -= 1.5 * (f / df)
-                        f = function.f(x)
-#                        print "f(x):", f
+#                        f = function.f(x)
                 break
 
             i += 1
 
-#        print "x:", x, ", f(x):", f
+        if self.info.allows(Info.converged):
+            if abs(x - x_) <= self.eps:
+                self.info[Info.converged] = True
+
+                if self.force_negative:
+                    f = function.f(x)
+                    if f > 0.0:
+                        self.info[Info.converged] = False
+        if self.info.allows(Info.num_iter):
+            self.info[Info.num_iter] = i + 1
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = True
 
         return x
 
 
-class ProjectionADMM(bases.ExplicitAlgorithm):
-    """ The Alternating direction method of multipliers, where the functions
-    have projection operators onto the corresponding convex sets.
-    """
-    INTERFACES = [interfaces.Function,
-                  interfaces.ProjectionOperator]
-
-    def __init__(self, output=False,
-                 eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
-
-        self.output = output
-        self.eps = eps
-        self.max_iter = max_iter
-        self.min_iter = min_iter
-
-    def run(self, function, x):
-        """Finds the projection onto the intersection of two sets.
-
-        Parameters
-        ----------
-        function : List or tuple with two Functions. The two functions.
-
-        x : Numpy array. The point that we wish to project.
-        """
-        self.check_compatibility(function[0], self.INTERFACES)
-        self.check_compatibility(function[1], self.INTERFACES)
-
-        z = x
-        u = np.zeros(x.shape)
-        for i in xrange(1, self.max_iter + 1):
-            x = function[0].proj(z - u)
-            z = function[1].proj(x + u)
-            u = u + x - z
-
-            if maths.norm(z - x) / maths.norm(z) < self.eps \
-                    and i >= self.min_iter:
-                break
-
-        return z
+#class ProjectionADMM(bases.ExplicitAlgorithm):
+#    """ The Alternating direction method of multipliers, where the functions
+#    have projection operators onto the corresponding convex sets.
+#    """
+#    INTERFACES = [interfaces.Function,
+#                  interfaces.ProjectionOperator]
+#
+#    def __init__(self, output=False,
+#                 eps=consts.TOLERANCE,
+#                 max_iter=consts.MAX_ITER, min_iter=1):
+#
+#        self.output = output
+#        self.eps = eps
+#        self.max_iter = max_iter
+#        self.min_iter = min_iter
+#
+#    def run(self, function, x):
+#        """Finds the projection onto the intersection of two sets.
+#
+#        Parameters
+#        ----------
+#        function : List or tuple with two Functions. The two functions.
+#
+#        x : Numpy array. The point that we wish to project.
+#        """
+#        self.check_compatibility(function[0], self.INTERFACES)
+#        self.check_compatibility(function[1], self.INTERFACES)
+#
+#        z = x
+#        u = np.zeros(x.shape)
+#        for i in xrange(1, self.max_iter + 1):
+#            x = function[0].proj(z - u)
+#            z = function[1].proj(x + u)
+#            u = u + x - z
+#
+#            if maths.norm(z - x) / maths.norm(z) < self.eps \
+#                    and i >= self.min_iter:
+#                break
+#
+#        return z
 
 
 class DykstrasProjectionAlgorithm(bases.ExplicitAlgorithm):
@@ -1036,7 +1211,8 @@ class DykstrasProjectionAlgorithm(bases.ExplicitAlgorithm):
 
     def __init__(self, output=False,
                  eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
+                 max_iter=100, min_iter=1):
+                 # TODO: Investigate what is a good default value here!
 
         self.output = output
         self.eps = eps
@@ -1088,7 +1264,8 @@ class ParallelDykstrasProjectionAlgorithm(bases.ExplicitAlgorithm):
 
     def __init__(self, output=False,
                  eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
+                 max_iter=100, min_iter=1):
+                 # TODO: Investigate what is a good default value here!
 
         self.output = output
         self.eps = eps
@@ -1161,7 +1338,8 @@ class ParallelDykstrasProximalAlgorithm(bases.ExplicitAlgorithm):
 
     def __init__(self, output=False,
                  eps=consts.TOLERANCE,
-                 max_iter=consts.MAX_ITER, min_iter=1):
+                 max_iter=100, min_iter=1):
+                 # TODO: Investigate what is a good default value here!
 
         self.output = output
         self.eps = eps

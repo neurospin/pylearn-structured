@@ -6,18 +6,15 @@ Created on Mon Feb 24 11:03:30 2014
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
-import unittest
-
-import numpy as np
-
-from tests import TestCase
+from .tests import TestCase
 
 
-class TestGroupLasso(TestCase):
+class TestGroupLasso():#TestCase):
 
     def test_nonoverlapping_nonsmooth(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/doc_spams.pdf
 
+        import numpy as np
         from parsimony.functions import CombinedFunction
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
@@ -53,7 +50,7 @@ class TestGroupLasso(TestCase):
         X, y, beta_star = l1_l2_gl.load(l, k, g, beta, M, e, A, snr=snr)
 
         eps = 1e-8
-        max_iter = 10000
+        max_iter = 8500
 
         beta_start = start_vector.get_vector((p, 1))
 
@@ -115,16 +112,20 @@ class TestGroupLasso(TestCase):
                                      [16.15855845],
                                      [10.89356615]])
 
-        mse = (np.linalg.norm(beta_parsimony - beta_spams) ** 2.0) / p
-        assert mse < 1e-5
+        berr = np.linalg.norm(beta_parsimony - beta_spams)
+#        print berr
+        assert berr < 5e-2
 
         f_parsimony = function.f(beta_parsimony)
         f_spams = function.f(beta_spams)
-        assert abs(f_parsimony - f_spams) < 1e-5
+        ferr = abs(f_parsimony - f_spams)
+#        print ferr
+        assert ferr < 5e-6
 
     def test_nonoverlapping_smooth(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/doc_spams.pdf
 
+        import numpy as np
         from parsimony.functions import CombinedFunction
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
@@ -132,7 +133,7 @@ class TestGroupLasso(TestCase):
         import parsimony.datasets.simulated.l1_l2_glmu as l1_l2_glmu
         import parsimony.start_vectors as start_vectors
 
-        np.random.seed(314)
+        np.random.seed(42)
 
         # Note that p must be even!
         n, p = 25, 20
@@ -162,7 +163,7 @@ class TestGroupLasso(TestCase):
                                           mu=mu_min, snr=snr)
 
         eps = 1e-8
-        max_iter = 10000
+        max_iter = 18000
 
         beta_start = start_vector.get_vector((p, 1))
 
@@ -201,38 +202,43 @@ class TestGroupLasso(TestCase):
                                     W0=np.asfortranarray(beta_start),
                                     return_optim_info=True,
                                     **params)
+#            print beta_spams
 
         except ImportError:
-            beta_spams = np.asarray([[9.92737817],
-                                     [6.25741002],
-                                     [2.85462422],
-                                     [8.45021308],
-                                     [9.85959465],
-                                     [8.90571615],
-                                     [7.77263765],
-                                     [2.87114577],
-                                     [9.79103766],
-                                     [2.78660721],
-                                     [8.20420015],
-                                     [2.81858990],
-                                     [1.30444549],
-                                     [4.10358283],
-                                     [9.05604300],
-                                     [2.97987576],
-                                     [0.71923705],
-                                     [6.83698462],
-                                     [6.29995241],
-                                     [6.25209606]])
+            beta_spams = np.asarray([[15.56784201],
+                                     [39.51679274],
+                                     [30.42583205],
+                                     [24.8816362],
+                                     [6.48671072],
+                                     [6.48350546],
+                                     [2.41477318],
+                                     [36.00285723],
+                                     [24.98522184],
+                                     [29.43128643],
+                                     [0.85520539],
+                                     [40.31463542],
+                                     [34.60084146],
+                                     [8.82322513],
+                                     [7.55741642],
+                                     [7.62364398],
+                                     [12.64594707],
+                                     [21.81113869],
+                                     [17.95400007],
+                                     [12.10507338]])
 
-        mse = (np.linalg.norm(beta_parsimony - beta_spams) ** 2.0) / p
-        assert mse < 0.005
+        berr = np.linalg.norm(beta_parsimony - beta_spams)
+#        print berr
+        assert berr < 5e-3
 
         f_parsimony = function.f(beta_parsimony)
         f_spams = function.f(beta_spams)
-        assert abs(f_parsimony - f_spams) < 0.005
+        ferr = abs(f_parsimony - f_spams)
+#        print ferr
+        assert ferr < 5e-6
 
     def test_overlapping_nonsmooth(self):
 
+        import numpy as np
         from parsimony.functions import CombinedFunction
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
@@ -268,7 +274,7 @@ class TestGroupLasso(TestCase):
         X, y, beta_star = l1_l2_gl.load(l, k, g, beta, M, e, A, snr=snr)
 
         eps = 1e-8
-        max_iter = 5000
+        max_iter = 8000
 
         beta_start = start_vector.get_vector((p, 1))
 
@@ -288,15 +294,18 @@ class TestGroupLasso(TestCase):
 
             beta_parsimony = fista.run(function, beta_parsimony)
 
-        mse = (np.linalg.norm(beta_parsimony - beta_star) ** 2.0) / p
-        assert mse < 0.005
+        berr = np.linalg.norm(beta_parsimony - beta_star)
+#        print berr
+        assert berr < 0.05
 
         f_parsimony = function.f(beta_parsimony)
         f_star = function.f(beta_star)
-        assert abs(f_parsimony - f_star) < 0.005
+#        print abs(f_parsimony - f_star)
+        assert abs(f_parsimony - f_star) < 5e-5
 
     def test_overlapping_smooth(self):
 
+        import numpy as np
         from parsimony.functions import CombinedFunction
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
@@ -334,7 +343,7 @@ class TestGroupLasso(TestCase):
                                           mu=mu_min, snr=snr)
 
         eps = 1e-8
-        max_iter = 5000
+        max_iter = 15000
 
         beta_start = start_vector.get_vector((p, 1))
 
@@ -354,15 +363,18 @@ class TestGroupLasso(TestCase):
 
             beta_parsimony = fista.run(function, beta_parsimony)
 
-        mse = (np.linalg.norm(beta_parsimony - beta_star) ** 2.0) / p
-        assert mse < 1e-7
+        berr = np.linalg.norm(beta_parsimony - beta_star)
+#        print berr
+        assert berr < 5e-2
 
         f_parsimony = function.f(beta_parsimony)
         f_star = function.f(beta_star)
-        assert abs(f_parsimony - f_star) < 1e-7
+#        print abs(f_parsimony - f_star)
+        assert abs(f_parsimony - f_star) < 5e-7
 
     def test_combo_overlapping_smooth(self):
 
+        import numpy as np
         from parsimony.functions import CombinedFunction
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
@@ -400,7 +412,7 @@ class TestGroupLasso(TestCase):
                                           mu=mu_min, snr=snr)
 
         eps = 1e-8
-        max_iter = 2000
+        max_iter = 5000
 
         beta_start = start_vector.get_vector((p, 1))
 
@@ -422,15 +434,18 @@ class TestGroupLasso(TestCase):
 
             beta_parsimony = fista.run(function, beta_parsimony)
 
-        mse = (np.linalg.norm(beta_parsimony - beta_star) ** 2.0) / p
-        assert mse < 0.0005
+        berr = np.linalg.norm(beta_parsimony - beta_star)
+#        print berr
+        assert berr < 5e-3
 
         f_parsimony = function.f(beta_parsimony)
         f_star = function.f(beta_star)
-        assert abs(f_parsimony - f_star) < 0.001
+#        print abs(f_parsimony - f_star)
+        assert abs(f_parsimony - f_star) < 5e-7
 
     def test_combo_overlapping_nonsmooth(self):
 
+        import numpy as np
         from parsimony.functions import CombinedFunction
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
@@ -466,7 +481,7 @@ class TestGroupLasso(TestCase):
         X, y, beta_star = l1_l2_gl.load(l, k, g, beta, M, e, A, snr=snr)
 
         eps = 1e-8
-        max_iter = 5000
+        max_iter = 10000
 
         beta_start = start_vector.get_vector((p, 1))
 
@@ -488,12 +503,15 @@ class TestGroupLasso(TestCase):
 
             beta_parsimony = fista.run(function, beta_parsimony)
 
-        mse = (np.linalg.norm(beta_parsimony - beta_star) ** 2.0) / p
-        assert mse < 1e-4
+        berr = np.linalg.norm(beta_parsimony - beta_star)
+#        print berr
+        assert berr < 5e-3
 
         f_parsimony = function.f(beta_parsimony)
         f_star = function.f(beta_star)
-        assert abs(f_parsimony - f_star) < 0.005
+#        print abs(f_parsimony - f_star)
+        assert abs(f_parsimony - f_star) < 5e-6
 
 if __name__ == "__main__":
+    import unittest
     unittest.main()

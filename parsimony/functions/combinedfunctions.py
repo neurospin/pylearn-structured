@@ -211,7 +211,8 @@ class RR_L1_TV(interfaces.CompositeFunction,
                interfaces.ProximalOperator,
                interfaces.Continuation,
                interfaces.DualFunction,
-               interfaces.StronglyConvex):
+               interfaces.StronglyConvex,
+               interfaces.StepSize):
     """Combination (sum) of RidgeRegression, L1 and TotalVariation.
     """
     def __init__(self, X, y, k, l, g, A=None, mu=0.0, penalty_start=0,
@@ -342,7 +343,7 @@ class RR_L1_TV(interfaces.CompositeFunction,
         return self.l1.prox(beta, factor)
 
     def estimate_mu(self, beta):
-        """Computes a "good" value of \mu with respect to the given \beta.
+        """Computes a "good" value of mu with respect to the given beta.
 
         From the interface "NesterovFunction".
         """
@@ -352,14 +353,14 @@ class RR_L1_TV(interfaces.CompositeFunction,
         """The maximum value of the regularisation of the dual variable. We
         have
 
-            M = max_{\alpha \in K} 0.5*|\alpha|²_2.
+            M = max_{alpha in K} 0.5*|alpha|²_2.
 
         From the interface "NesterovFunction".
         """
         return self.tv.M()
 
     def mu_opt(self, eps):
-        """The optimal value of \mu given \epsilon.
+        """The optimal value of mu given epsilon.
 
         From the interface "Continuation".
         """
@@ -378,7 +379,7 @@ class RR_L1_TV(interfaces.CompositeFunction,
              / (gM * Lg)
 
     def eps_opt(self, mu):
-        """The optimal value of \epsilon given \mu.
+        """The optimal value of epsilon given mu.
 
         From the interface "Continuation".
         """
@@ -397,7 +398,7 @@ class RR_L1_TV(interfaces.CompositeFunction,
              / gA2
 
     def eps_max(self, mu):
-        """The maximum value of \epsilon.
+        """The maximum value of epsilon.
 
         From the interface "Continuation".
         """
@@ -491,6 +492,17 @@ class RR_L1_TV(interfaces.CompositeFunction,
         From the interface "StronglyConvex".
         """
         return self.rr.k
+
+    def step(self, x):
+        """The step size to use in descent methods.
+
+        From the interface "StepSize".
+
+        Parameters
+        ----------
+        x : Numpy array. The point at which to evaluate the step size.
+        """
+        return 1.0 / self.L()
 
 
 class RR_L1_GL(RR_L1_TV):
@@ -768,6 +780,17 @@ class RR_L1_GL(RR_L1_TV):
         """
         return self.gl.project(a)
 
+    def step(self, x):
+        """The step size to use in descent methods.
+
+        From the interface "StepSize".
+
+        Parameters
+        ----------
+        x : Numpy array. The point at which to evaluate the step size.
+        """
+        return 1.0 / self.L()
+
 
 class RLR_L1_TV(RR_L1_TV):
     """Combination (sum) of RidgeLogisticRegression, L1 and TotalVariation.
@@ -968,6 +991,9 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
         return self.g.f(beta) \
              + self.h.phi(alpha, beta)
 
+    def A(self):
+        return self.h.A()
+
     def L(self):
         """Lipschitz constant of the gradient.
 
@@ -1012,6 +1038,13 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
             u_new[i] = u[i] + a[i]
 
         return self.h.project(u_new)
+
+    def alpha(self, beta):
+        """ Dual variable of the Nesterov function.
+
+        From the interface "NesterovFunction".
+        """
+        return self.h.alpha(beta)
 
     def betahat(self, alpha, beta=None):
         """ Returns the beta that minimises the dual function.
@@ -1095,7 +1128,8 @@ class PCA_L1_TV(interfaces.CompositeFunction,
                interfaces.ProximalOperator,
                interfaces.Continuation,
                interfaces.DualFunction,
-               interfaces.StronglyConvex):
+               interfaces.StronglyConvex,
+               interfaces.StepSize):
     """Combination (sum) of PCA (Variance), L1 and TotalVariation
     """
     def __init__(self, X, k, l, g, A=None, mu=0.0, penalty_start=0):
@@ -1142,10 +1176,11 @@ class PCA_L1_TV(interfaces.CompositeFunction,
 
     def set_params(self, **kwargs):
 
+        # TODO: This is not a nice solution. Can we solve it better?
         mu = kwargs.pop("mu", self.get_mu())
         self.set_mu(mu)
 
-        super(RR_L1_TV, self).set_params(**kwargs)
+        super(PCA_L1_TV, self).set_params(**kwargs)
 
     def get_mu(self):
         """Returns the regularisation constant for the smoothing.
@@ -1370,3 +1405,14 @@ class PCA_L1_TV(interfaces.CompositeFunction,
         From the interface "StronglyConvex".
         """
         return self.rr.k
+
+    def step(self, x):
+        """The step size to use in descent methods.
+
+        From the interface "StepSize".
+
+        Parameters
+        ----------
+        x : Numpy array. The point at which to evaluate the step size.
+        """
+        return 1.0 / self.L()

@@ -10,8 +10,8 @@ Created on Mon Feb  3 10:46:47 2014
 @email:   lofstedt.tommy@gmail.com, edouard.duchesnay@cea.fr
 @license: BSD 3-clause.
 """
-import scipy.sparse as sparse
 import numpy as np
+import scipy.sparse as sparse
 
 from .interfaces import NesterovFunction
 from .. import interfaces
@@ -19,8 +19,6 @@ import parsimony.utils.consts as consts
 import parsimony.utils.maths as maths
 
 __all__ = ["GroupLassoOverlap", "A_from_groups"]
-
-#TODO: Make the factories take a penalty_start parameter!
 
 
 class GroupLassoOverlap(interfaces.AtomicFunction,
@@ -38,7 +36,7 @@ class GroupLassoOverlap(interfaces.AtomicFunction,
 
         GL(x) <= c.
 
-    Attributes:
+    Attributes
     ----------
     l : Non-negative float. The Lagrange multiplier, or regularisation
             constant, of the function.
@@ -56,7 +54,7 @@ class GroupLassoOverlap(interfaces.AtomicFunction,
     """
     def __init__(self, l, c=0.0, A=None, mu=0.0, penalty_start=0):
         """
-        Parameters:
+        Parameters
         ----------
         l : Non-negative float. The Lagrange multiplier, or regularisation
                 constant, of the function.
@@ -72,7 +70,7 @@ class GroupLassoOverlap(interfaces.AtomicFunction,
                 smoothing.
 
         penalty_start : Non-negative integer. The number of columns, variables
-                etc., to except from penalisation. Equivalently, the first
+                etc., to exempt from penalisation. Equivalently, the first
                 index to be penalised. Default is 0, all columns are included.
         """
         super(GroupLassoOverlap, self).__init__(l, A=A, mu=mu,
@@ -221,13 +219,13 @@ class GroupLassoOverlap(interfaces.AtomicFunction,
         return SS
 
 
-def A_from_groups(num_variables, groups, weights=None):
+def A_from_groups(num_variables, groups, weights=None, penalty_start=0):
     """Generates the linear operator for the group lasso Nesterov function
     from the groups of variables.
 
     Parameters:
     ----------
-    num_variables : Integer. The total number of variables, not including the
+    num_variables : Integer. The total number of variables, including the
             intercept variable(s).
 
     groups : A list of lists. The outer list represents the groups and the
@@ -237,6 +235,10 @@ def A_from_groups(num_variables, groups, weights=None):
 
     weights : List. Weights put on the groups. Default is weight 1 for each
             group.
+
+    penalty_start : Non-negative integer. The number of variables to exempt
+            from penalisation. Equivalently, the first index to be penalised.
+            Default is 0, all variables are included.
     """
     if weights is None:
         weights = [1.0] * len(groups)
@@ -245,10 +247,10 @@ def A_from_groups(num_variables, groups, weights=None):
     for g in xrange(len(groups)):
         Gi = groups[g]
         lenGi = len(Gi)
-        Ag = sparse.lil_matrix((lenGi, num_variables))
+        Ag = sparse.lil_matrix((lenGi, num_variables - penalty_start))
         for i in xrange(lenGi):
             w = weights[g]
-            Ag[i, Gi[i]] = w
+            Ag[i, Gi[i] - penalty_start] = w
 
         # Matrix operations are a lot faster when the sparse matrix is csr
         A.append(Ag.tocsr())

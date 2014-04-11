@@ -3,46 +3,31 @@
 
 ./parsimony/estimators.py:
 -------------------------
-41: # TODO: Add penalty_start and mean to all of these!
+79: # TODO: Is this a good name?
 
-81: # TODO: Is this a good name?
+296: # TODO: Should we use a seed here so that we get deterministic results?
 
-310: # TODO: Should we use a seed here so that we get deterministic results?
+433: # TODO: Should we use a seed here so that we get deterministic results?
 
-437: # TODO: Should we use a seed here so that we get deterministic results?
+565: # TODO: Should we use a seed here so that we get deterministic results?
 
-570: # TODO: Should we use a seed here so that we get deterministic results?
+694: # TODO: Should we use a seed here so that we get deterministic results?
 
-701: # TODO: Should we use a seed here so that we get deterministic results?
+802: # TODO: Should we use a seed here so that we get deterministic results?
 
-810: # TODO: Should we use a seed here so that we get deterministic results?
+822: # TODO: Add penalty_start and mean to here!
 
 ./parsimony/algorithms/explicit.py:
 ----------------------------------
-187: # TODO: We should use a step size here instead of the
-188: # Lipschitz constant. All functions don't have L, but will
-189: # still run in FISTA with a small enough step size.
-190: # Updated: Use StepSize instead!!
-191: # interfaces.LipschitzContinuousGradient,
+585: # TODO: Warn if G_new < 0.
 
-234: # TODO: Change the functions so that we can use the StepSize API here.
+1014: # TODO: We already have f_mid, so we can return a better approximation
+1015: # here!
 
-360: # TODO: We should use a step size here instead of the
-361: # Lipschitz constant. All functions don't have L, but will
-362: # still run in FISTA with a small enough step size.
-363: # Updated: Use StepSize instead!!
-364: #                  interfaces.LipschitzContinuousGradient,
+1104: # TODO: Handle the other cases!
 
-391: # TODO: Change the functions so that we can use the StepSize API here.
-
-503: # TODO: Use StepSize instead.
-
-521: # TODO: Use StepSize instead.
-
-551: # TODO: Warn if G_new < 0.
-
-1049: # TODO: Does the weights really matter when the function is the
-1050: # indicator function?
+1294: # TODO: Does the weights really matter when the function is the
+1295: # indicator function?
 
 ./parsimony/algorithms/implicit.py:
 ----------------------------------
@@ -59,30 +44,28 @@
 
 ./parsimony/algorithms/multiblock.py:
 ------------------------------------
-114: for it in xrange(self.outer_iter):  # TODO: Get number of iterations!
+126: for it in xrange(self.outer_iter):  # TODO: Get number of iterations!
 
 ./parsimony/utils/utils.py:
 --------------------------
-20: #TODO: This depends on the OS. We should try to be clever here ...
+21: #TODO: This depends on the OS. We should try to be clever here ...
 
 ./parsimony/utils/consts.py:
 ---------------------------
-15: # TODO: MAX_ITER is heavily algorithm-dependent, so we have to think about if
-16: # we should include a package-wide maximum at all.
+16: # TODO: MAX_ITER is heavily algorithm-dependent, so we have to think about if
+17: # we should include a package-wide maximum at all.
 
-./parsimony/datasets/samples_generator_struct.py:
-------------------------------------------------
-9: # TODO: Remove dependence on scikit learn.
-
-112: # TODO: This is wrong. Shape should be Z, Y, X.
+./parsimony/datasets/regression/dice5.py:
+----------------------------------------
+32: # TODO: This is wrong. Shape should be Z, Y, X.
 
 ./parsimony/functions/interfaces.py:
 -----------------------------------
-96: # TODO: Should all constraints have the projection operator?
+97: # TODO: Should all constraints have the projection operator?
 
-178: # TODO: This should be in the NesterovFunction interface, right?
+184: # TODO: This should be in the NesterovFunction interface, right?
 
-287: # TODO: Should L by default take a weight vector as argument?
+296: # TODO: Should L by default take a weight vector as argument?
 
 ./parsimony/functions/losses.py:
 -------------------------------
@@ -111,15 +94,10 @@
 
 ./parsimony/functions/penalties.py:
 ----------------------------------
-513: # TODO: Check if this is correct!
+519: # TODO: Check if this is correct!
 
-1065: # TODO: Tweak these magic numbers on real data. Or even better,
-1066: # find theoretical bounds. Convergence is faster if these bounds
-1067: # are close to accurate when we start the bisection algorithm.
-
-1182: # TODO: Tweak these magic numbers on real data. Or even better,
-1183: # find theoretical bounds. Convergence is faster if these bounds
-1184: # are close to accurate when we start the bisection algorithm.
+1066: # TODO: We can share variables between f and df and speed up
+1067: # some shared computations.
 
 ./parsimony/functions/combinedfunctions.py:
 ------------------------------------------
@@ -129,40 +107,40 @@
 
 157: # TODO: We currently only allow one proximal operator. Fix this!
 
-552: # TODO: This is not good. Solve this better!
+564: # TODO: This is not good. Solve this better!
 
-929: # TODO: This is not good. Solve this better!
+952: # TODO: This is not good. Solve this better!
 
-978: # TODO: Use max_iter here!!
+1004: # TODO: Use max_iter here!!
 
-1021: # TODO: Kernelise this function! See how I did in RR_L1_TV._beta_hat.
+1054: # TODO: Kernelise this function! See how I did in RR_L1_TV._beta_hat.
 
-1063: # TODO: Add this function or refactor API!
-
-./parsimony/functions/_objectives/functions.py:
-----------------------------------------------
-555: # TODO: This is not good. Solve this better!
-
-840: # TODO: This is not good. Solve this better!
-
-889: # TODO: Use max_iter here!!
-
-932: # TODO: Kernelise this function! See how I did in RR_L1_TV._beta_hat.
-
-974: # TODO: Add this function or refactor API!
+1096: # TODO: Add this function or refactor API!
 
 ./parsimony/functions/multiblock/losses.py:
 ------------------------------------------
-141: # TODO: Check instead if it is a numpy array.
+581: # TODO: Check instead if it is a numpy array.
+
+./parsimony/functions/nesterov/TV.py:
+------------------------------------
+146: # TODO: This only work if the elements of self._A are scipy.sparse. We
+147: # should allow dense matrices as well.
+
+150: # TODO: Instead of p, this should really be the number of non-zero
+151: # rows of A.
+
+161: # TODO: Add max_iter here!
+
+263: # TODO: This is the wrong order of the dimensions. They should be reversed.
 
 ./parsimony/functions/nesterov/L1TV.py:
 --------------------------------------
-55: # WARNING: Number of non-zero rows may differ from p.
+62: # WARNING: Number of non-zero rows may differ from p.
 
-140: # TODO: Instead of p, this should really be the number of non-zero
-141: # rows of A.
+149: # TODO: Instead of p, this should really be the number of non-zero
+150: # rows of A.
 
-152: # TODO: Add max_iter here!!
+161: # TODO: Add max_iter here!!
 
 ./parsimony/functions/nesterov/tv.py:
 ------------------------------------
@@ -173,6 +151,8 @@
 151: # rows of A.
 
 161: # TODO: Add max_iter here!
+
+263: # TODO: This is the wrong order of the dimensions. They should be reversed.
 
 ./parsimony/tests/test_simulations.py:
 -------------------------------------
@@ -199,12 +179,6 @@
 17: # TODO: Test penalty_start and mean.
 
 19: # TODO: Test total variation.
-
-./parsimony/tests/test_algorithms.py:
-------------------------------------
-31: # WARNING: We must have a non-zero ridge parameter!
-
-34: # WARNING: We must have a non-zero TV parameter!
 
 ./parsimony/tests/spamsdata.py:
 ------------------------------

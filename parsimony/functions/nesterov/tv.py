@@ -22,8 +22,6 @@ import parsimony.utils.maths as maths
 
 __all__ = ["TotalVariation", "A_from_mask", "A_from_shape"]
 
-#TODO: Make the factories take a penalty_start parameter!
-
 
 class TotalVariation(interfaces.AtomicFunction,
                      NesterovFunction,
@@ -42,7 +40,7 @@ class TotalVariation(interfaces.AtomicFunction,
     """
     def __init__(self, l, c=0.0, A=None, mu=0.0, penalty_start=0):
         """
-        Parameters:
+        Parameters
         ----------
         l : Non-negative float. The Lagrange multiplier, or regularisation
                 constant, of the function.
@@ -57,7 +55,7 @@ class TotalVariation(interfaces.AtomicFunction,
         mu : Non-negative float. The regularisation constant for the smoothing.
 
         penalty_start : Non-negative integer. The number of columns, variables
-                etc., to except from penalisation. Equivalently, the first
+                etc., to exempt from penalisation. Equivalently, the first
                 index to be penalised. Default is 0, all columns are included.
         """
         super(TotalVariation, self).__init__(l, A=A, mu=mu,
@@ -254,9 +252,15 @@ class TotalVariation(interfaces.AtomicFunction,
 def A_from_mask(mask):
     """Generates the linear operator for the total variation Nesterov function
     from a mask for a 3D image.
+
+    Parameters
+    ----------
+    mask : Numpy array. The mask. The mask does not involve any intercept
+            variables.
     """
     while len(mask.shape) < 3:
         mask = mask[:, np.newaxis]
+    # TODO: This is the wrong order of the dimensions. They should be reversed.
     nx, ny, nz = mask.shape
     mask = mask.astype(bool)
     xyz_mask = np.where(mask)
@@ -271,7 +275,7 @@ def A_from_mask(mask):
     Az_v = list()
     n_compacts = 0
     p = np.sum(mask)
-    # mapping from image coordinate to flat masked array
+    # Mapping from image coordinate to flat masked array.
     im2flat = np.zeros(mask.shape, dtype=int)
     im2flat[:] = -1
     im2flat[mask] = np.arange(p)
@@ -312,6 +316,7 @@ def A_from_shape(shape):
     shape : List or tuple with 1, 2 or 3 elements. The shape of the 1D, 2D or
             3D image. shape has the form (X, Y, Z), where Z is the number of
             "layers", Y is the number of rows and X is the number of columns.
+            The shape does not involve any intercept variables.
     """
     while len(shape) < 3:
         shape = tuple(list(shape) + [1])

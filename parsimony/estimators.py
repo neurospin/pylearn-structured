@@ -23,9 +23,6 @@ import numpy as np
 
 import parsimony.utils.consts as consts
 import parsimony.functions as functions
-import parsimony.functions.losses as losses
-import parsimony.functions.penalties as penalties
-import parsimony.functions.nesterov.tv as tv
 import parsimony.algorithms.explicit as explicit
 import parsimony.start_vectors as start_vectors
 from parsimony.utils import check_arrays
@@ -90,19 +87,16 @@ class RegressionEstimator(BaseEstimator):
     ----------
     algorithm : ExplicitAlgorithm. The algorithm that will be applied.
 
-    output : Boolean. Whether or not to return extra output information.
-
     start_vector : Numpy array. Generates the start vector that will be used.
     """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, algorithm, output=False,
+    def __init__(self, algorithm,
                  start_vector=start_vectors.RandomStartVector()):
 
-        self.output = output
-        self.start_vector = start_vector
-
         super(RegressionEstimator, self).__init__(algorithm=algorithm)
+
+        self.start_vector = start_vector
 
     @abc.abstractmethod
     def fit(self, X, y):
@@ -136,8 +130,6 @@ class LogisticRegressionEstimator(BaseEstimator):
     ----------
     algorithm : ExplicitAlgorithm. The algorithm that will be applied.
 
-    output : Boolean. Whether or not to return extra output information.
-
     start_vector : Numpy array. Generates the start vector that will be used.
 
     class_weight : {dict, "auto"}, optional. Set the parameter weight of
@@ -148,15 +140,14 @@ class LogisticRegressionEstimator(BaseEstimator):
     """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, algorithm, output=False,
+    def __init__(self, algorithm,
                  start_vector=start_vectors.RandomStartVector(),
                  class_weight=None):
 
-        self.output = output
+        super(LogisticRegressionEstimator, self).__init__(algorithm=algorithm)
+
         self.start_vector = start_vector
         self.class_weight = class_weight
-
-        super(LogisticRegressionEstimator, self).__init__(algorithm=algorithm)
 
     @abc.abstractmethod
     def fit(self, X, y):
@@ -201,9 +192,9 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
                     + g * TV(beta)
     Parameters
     ----------
-    k : Non-negative float. The L2 regularization parameter.
-
     l : Non-negative float. The L1 regularization parameter.
+
+    k : Non-negative float. The L2 regularization parameter.
 
     g : Non-negative float. The total variation regularization parameter.
 
@@ -211,8 +202,6 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
             smoothed total variation Nesterov function.
 
     mu : Non-negative float. The regularisation constant for the smoothing.
-
-    output : Boolean. Whether or not to return extra output information.
 
     algorithm : ExplicitAlgorithm. The algorithm that should be applied.
             Should be one of:
@@ -252,17 +241,20 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
     error =  1.3261562691
     >>> lr = estimators.LinearRegression_L1_L2_TV(l, k, g, A,
     ...                                algorithm=explicit.ISTA(max_iter=1000),
-    ...                               mean=False)
+    ...                                mean=False)
     >>> lr = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
     error =  1.45373582999
     """
-    def __init__(self, l, k, g, A, mu=consts.TOLERANCE, output=False,
+    def __init__(self, l, k, g, A, mu=consts.TOLERANCE,
                  algorithm=explicit.StaticCONESTA(),
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
                  penalty_start=0, mean=True):
+
+        super(LinearRegression_L1_L2_TV, self).__init__(algorithm=algorithm)
+
         self.l = float(l)
         self.k = float(k)
         self.g = float(g)
@@ -270,9 +262,6 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
         self.mu = float(mu)
         self.penalty_start = int(penalty_start)
         self.mean = bool(mean)
-
-        super(LinearRegression_L1_L2_TV, self).__init__(algorithm=algorithm,
-                                                        output=output)
 
     def get_params(self):
         """Return a dictionary containing all the estimator's parameters
@@ -303,12 +292,7 @@ class LinearRegression_L1_L2_TV(RegressionEstimator):
             self.mu = float(self.mu)
 
         function.set_params(mu=self.mu)
-        self.algorithm.set_params(output=self.output)
-
-        if self.output:
-            (self.beta, self.info) = self.algorithm.run(function, beta)
-        else:
-            self.beta = self.algorithm.run(function, beta)
+        self.beta = self.algorithm.run(function, beta)
 
         return self
 
@@ -341,8 +325,6 @@ class RidgeRegression_L1_TV(RegressionEstimator):
             smoothed total variation Nesterov function.
 
     mu : Non-negative float. The regularisation constant for the smoothing.
-
-    output : Boolean. Whether or not to return extra output information.
 
     algorithm : ExplicitAlgorithm. The algorithm that be applied. Should be
             one of:
@@ -379,13 +361,13 @@ class RidgeRegression_L1_TV(RegressionEstimator):
     >>> res = ridge_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
     >>> print "error = ", error
-    error =  3.1369738548
+    error =  3.13516111507
     >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
     ...                     algorithm=explicit.DynamicCONESTA(max_iter=1000))
     >>> res = ridge_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
     >>> print "error = ", error
-    error =  3.13697446847
+    error =  3.13529610137
     >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
     ...                     algorithm=explicit.FISTA(max_iter=1000))
     >>> res = ridge_l1_tv.fit(X, y)
@@ -393,7 +375,7 @@ class RidgeRegression_L1_TV(RegressionEstimator):
     >>> print "error = ", error
     error =  3.07185427305
     """
-    def __init__(self, k, l, g, A, mu=None, output=False,
+    def __init__(self, k, l, g, A, mu=None,
                  algorithm=explicit.StaticCONESTA(),
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
@@ -409,8 +391,7 @@ class RidgeRegression_L1_TV(RegressionEstimator):
         self.penalty_start = int(penalty_start)
         self.mean = bool(mean)
 
-        super(RidgeRegression_L1_TV, self).__init__(algorithm=algorithm,
-                                                    output=output)
+        super(RidgeRegression_L1_TV, self).__init__(algorithm=algorithm)
 
     def get_params(self):
         """Return a dictionary containing all the estimator's parameters
@@ -440,12 +421,7 @@ class RidgeRegression_L1_TV(RegressionEstimator):
             self.mu = float(self.mu)
 
         function.set_params(mu=self.mu)
-        self.algorithm.set_params(output=self.output)
-
-        if self.output:
-            (self.beta, self.info) = self.algorithm.run(function, beta)
-        else:
-            self.beta = self.algorithm.run(function, beta)
+        self.beta = self.algorithm.run(function, beta)
 
         return self
 
@@ -472,8 +448,6 @@ class RidgeRegression_L1_GL(RegressionEstimator):
             smoothed group lasso Nesterov function.
 
     mu : Non-negative float. The regularisation constant for the smoothing.
-
-    output : Boolean. Whether or not to return extra output information.
 
     algorithm : ExplicitAlgorithm. The algorithm that should be applied.
             Should be one of:
@@ -524,11 +498,14 @@ class RidgeRegression_L1_GL(RegressionEstimator):
 #    >>> print "error = ", error
 #    error =  4.24400179809
     """
-    def __init__(self, k, l, g, A, mu=None, output=False,
+    def __init__(self, k, l, g, A, mu=None,
                  algorithm=explicit.StaticCONESTA(),
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
                  penalty_start=0, mean=True):
+
+        super(RidgeRegression_L1_GL, self).__init__(algorithm=algorithm)
+
         self.k = float(k)
         self.l = float(l)
         self.g = float(g)
@@ -539,9 +516,6 @@ class RidgeRegression_L1_GL(RegressionEstimator):
             self.mu = None
         self.penalty_start = int(penalty_start)
         self.mean = bool(mean)
-
-        super(RidgeRegression_L1_GL, self).__init__(algorithm=algorithm,
-                                                    output=output)
 
     def get_params(self):
         """Return a dictionary containing all the estimator's parameters.
@@ -572,12 +546,7 @@ class RidgeRegression_L1_GL(RegressionEstimator):
             self.mu = float(self.mu)
 
         self.function.set_params(mu=self.mu)
-        self.algorithm.set_params(output=self.output)
-
-        if self.output:
-            (self.beta, self.info) = self.algorithm.run(self.function, beta)
-        else:
-            self.beta = self.algorithm.run(self.function, beta)
+        self.beta = self.algorithm.run(self.function, beta)
 
         return self
 
@@ -616,8 +585,6 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
 
     mu : Non-negative float. The regularisation constant for the smoothing.
 
-    output : Boolean. Whether or not to return extra output information.
-
     algorithm : ExplicitAlgorithm. The algorithm that will be run. Should
             be one of:
                 1. algorithms.StaticCONESTA()
@@ -641,11 +608,15 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
     Examples
     --------
     """
-    def __init__(self, k, l, g, A, mu=None, output=False,
+    def __init__(self, k, l, g, A, mu=None,
                  algorithm=explicit.StaticCONESTA(),
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
                  class_weight=None, penalty_start=0, mean=True):
+
+        super(RidgeLogisticRegression_L1_TV,
+              self).__init__(algorithm=algorithm, class_weight=class_weight)
+
         self.k = float(k)
         self.l = float(l)
         self.g = float(g)
@@ -661,10 +632,6 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
 
         self.penalty_start = int(penalty_start)
         self.mean = bool(mean)
-
-        super(RidgeLogisticRegression_L1_TV,
-              self).__init__(algorithm=algorithm, output=output,
-                            class_weight=class_weight)
 
     def get_params(self):
         """Return a dictionary containing all the estimator's parameters.
@@ -700,12 +667,7 @@ class RidgeLogisticRegression_L1_TV(LogisticRegressionEstimator):
             self.mu = float(self.mu)
 
         function.set_params(mu=self.mu)
-        self.algorithm.set_params(output=self.output)
-
-        if self.output:
-            (self.beta, self.info) = self.algorithm.run(function, beta)
-        else:
-            self.beta = self.algorithm.run(function, beta)
+        self.beta = self.algorithm.run(function, beta)
 
         return self
 
@@ -743,8 +705,6 @@ class RidgeLogisticRegression_L1_GL(LogisticRegressionEstimator):
 
     mu : Non-negative float. The regularisation constant for the smoothing.
 
-    output : Boolean. Whether or not to return extra output information.
-
     algorithm : ExplicitAlgorithm. The algorithm that will be run. Should be
             one of:
                 1. algorithms.StaticCONESTA()
@@ -754,11 +714,15 @@ class RidgeLogisticRegression_L1_GL(LogisticRegressionEstimator):
     Examples
     --------
     """
-    def __init__(self, k, l, g, A, weigths=None, mu=None, output=False,
+    def __init__(self, k, l, g, A, weigths=None, mu=None,
                  algorithm=explicit.StaticCONESTA(), penalty_start=0,
                  mean=True, class_weight=None):
 #                 algorithm=algorithms.DynamicCONESTA()):
 #                 algorithm=algorithms.FISTA()):
+
+        super(RidgeLogisticRegression_L1_GL,
+              self).__init__(algorithm=algorithm)
+
         self.k = float(k)
         self.l = float(l)
         self.g = float(g)
@@ -774,9 +738,6 @@ class RidgeLogisticRegression_L1_GL(LogisticRegressionEstimator):
 
         self.penalty_start = int(penalty_start)
         self.mean = bool(mean)
-
-        super(RidgeLogisticRegression_L1_GL,
-              self).__init__(algorithm=algorithm, output=output)
 
     def get_params(self):
         """Returns a dictionary containing all the estimator's own parameters.
@@ -808,12 +769,7 @@ class RidgeLogisticRegression_L1_GL(LogisticRegressionEstimator):
             self.mu = float(self.mu)
 
         function.set_params(mu=self.mu)
-        self.algorithm.set_params(output=self.output)
-
-        if self.output:
-            (self.beta, self.info) = self.algorithm.run(function, beta)
-        else:
-            self.beta = self.algorithm.run(function, beta)
+        self.beta = self.algorithm.run(function, beta)
 
         return self
 
@@ -836,8 +792,6 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
             L1 Nesterov function.
 
     mu : Non-negative float. The regularisation constant for the smoothing.
-
-    output : Boolean. Whether or not to return extra output information.
 
     algorithm : ExplicitAlgorithm. The algorithm that will be applied.
 
@@ -865,10 +819,11 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
     >>> res = ridge_smoothed_l1_tv.fit(X, y)
     >>> error = np.sum(np.abs(np.dot(X, ridge_smoothed_l1_tv.beta) - y))
     >>> print "error = ", error
-    error =  1.69470206808
+    error =  1.69470205937
     """
-    def __init__(self, k, l, g, Atv, Al1, mu=None, output=False,
-                 algorithm=explicit.ExcessiveGapMethod()):
+    def __init__(self, k, l, g, Atv, Al1, mu=None,
+                 algorithm=explicit.ExcessiveGapMethod(),
+                 start_vector=start_vectors.RandomStartVector()):
 
         self.k = float(k)
         self.l = float(l)
@@ -877,36 +832,33 @@ class RidgeRegression_SmoothedL1TV(RegressionEstimator):
             warnings.warn("The ridge parameter should be non-zero.")
         self.Atv = Atv
         self.Al1 = Al1
+        # TODO: Remove mu? Not used, right?
         try:
             self.mu = float(mu)
         except (ValueError, TypeError):
             self.mu = None
 
         super(RidgeRegression_SmoothedL1TV, self).__init__(algorithm=algorithm,
-                                                           output=output)
+                                                     start_vector=start_vector)
 
     def get_params(self):
         """Return a dictionary containing all the estimator's parameters
         """
         return {"k": self.k, "l": self.l, "g": self.g,
-                "A": self.A, "mu": self.mu}
+                "Atv": self.Atv, "Al1": self.Al1, "mu": self.mu}
 
     def fit(self, X, y):
         """Fit the estimator to the data
         """
         X, y = check_arrays(X, y)
-        function = functions.RR_SmoothedL1TV(X, y,
-                                                  self.k, self.l, self.g,
-                                                  Atv=self.Atv, Al1=self.Al1)
+        function = functions.RR_SmoothedL1TV(X, y, self.k, self.l, self.g,
+                                             Atv=self.Atv, Al1=self.Al1)
 
         self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)
 
-        self.algorithm.set_params(output=self.output)
-        if self.output:
-            (self.beta, self.info) = self.algorithm.run(function)
-        else:
-            self.beta = self.algorithm.run(function)
+        # TODO: Allow a given beta vector here.
+        self.beta = self.algorithm.run(function)
 
         return self
 

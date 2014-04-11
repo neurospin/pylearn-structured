@@ -1063,6 +1063,8 @@ class RGCCAConstraint(QuadraticConstraint,
                     self.S = S
                     self.c = c
 
+                # TODO: We can share variables between f and df and speed up
+                # some shared computations.
                 def f(self, mu):
                     term1 = (self.tau \
                             / ((1.0 + 2.0 * mu * self.tau) ** 2.0)) * ssdiff

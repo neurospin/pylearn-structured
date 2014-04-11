@@ -6,12 +6,11 @@ Created on Thu Feb 27 09:21:23 2014
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
-import unittest
-from nose.tools import assert_less, assert_equal, assert_almost_equal
+from nose.tools import assert_less, assert_almost_equal
 
 import numpy as np
 
-from tests import TestCase
+from .tests import TestCase
 import parsimony.utils.consts as consts
 
 
@@ -339,8 +338,8 @@ class TestLinearRegression(TestCase):
 #                #/ np.linalg.norm(beta_spams)
 #        print "mse:", mse
 ##        assert_almost_equal(mse, 0.367913,
-##                            msg="The found regression vector is not correct.",
-##                            places=5)
+##                           msg="The found regression vector is not correct.",
+##                           places=5)
 #        print np.hstack((beta_star, beta_parsimony, beta_spams))
 #
 #        f_parsimony = function.f(beta_parsimony)
@@ -405,7 +404,6 @@ class TestLinearRegression(TestCase):
         reg_est = estimators.LinearRegression_L1_L2_TV(
                     l=l, k=k, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     mean=False)
         reg_est.fit(X, y)
@@ -413,7 +411,6 @@ class TestLinearRegression(TestCase):
         rreg_est = estimators.RidgeRegression_L1_TV(
                     k=k, l=l, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     mean=False)
         rreg_est.fit(X, y)
@@ -421,7 +418,6 @@ class TestLinearRegression(TestCase):
         rreg_est_2 = estimators.RidgeRegression_L1_GL(
                     k=k, l=l, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     mean=False)
         rreg_est_2.fit(X, y)
@@ -524,7 +520,6 @@ class TestLinearRegression(TestCase):
         reg_est = estimators.LinearRegression_L1_L2_TV(
                     l=l, k=k, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     penalty_start=1,
                     mean=False)
@@ -533,7 +528,6 @@ class TestLinearRegression(TestCase):
         rreg_est = estimators.RidgeRegression_L1_TV(
                     k=k, l=l, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     penalty_start=1,
                     mean=False)
@@ -542,7 +536,6 @@ class TestLinearRegression(TestCase):
         rreg_est_2 = estimators.RidgeRegression_L1_GL(
                     k=k, l=l, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     penalty_start=1,
                     mean=False)
@@ -736,13 +729,13 @@ class TestLinearRegression(TestCase):
 
         re = np.linalg.norm(beta_penalty - beta_star) \
                 / np.linalg.norm(beta_star)
-        print "re:", re
+#        print "re:", re
         assert_less(re, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_parsimony = function.f(beta_penalty)
         err = abs(f_parsimony - f_star) / f_star
-        print "err:", err
+#        print "err:", err
         assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
@@ -753,13 +746,13 @@ class TestLinearRegression(TestCase):
 
         re = np.linalg.norm(beta_prox - beta_star) \
                 / np.linalg.norm(beta_star)
-        print "re:", re
+#        print "re:", re
         assert_less(re, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_prox = function.f(beta_prox)
         err = abs(f_prox - f_star) / f_star
-        print "err:", err
+#        print "err:", err
         assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
@@ -770,13 +763,13 @@ class TestLinearRegression(TestCase):
 
         re = np.linalg.norm(beta_rr - beta_star) \
                 / np.linalg.norm(beta_star)
-        print "re:", re
+#        print "re:", re
         assert_less(re, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_rr = function.f(beta_rr)
         err = abs(f_rr - f_star) / f_star
-        print "err:", err
+#        print "err:", err
         assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
@@ -784,7 +777,6 @@ class TestLinearRegression(TestCase):
         reg_est = estimators.LinearRegression_L1_L2_TV(
                     l=l, k=k, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     penalty_start=1,
                     mean=False)
@@ -792,20 +784,19 @@ class TestLinearRegression(TestCase):
 
         re = np.linalg.norm(reg_est.beta - beta_star) \
                 / np.linalg.norm(beta_star)
-        print "re:", re
+#        print "re:", re
         assert_less(re, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_rr = function.f(reg_est.beta)
         err = abs(f_rr - f_star) / f_star
-        print "err:", err
+#        print "err:", err
         assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
         rreg_est = estimators.RidgeRegression_L1_TV(
                     k=k, l=l, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     penalty_start=1,
                     mean=False)
@@ -813,20 +804,19 @@ class TestLinearRegression(TestCase):
 
         re = np.linalg.norm(rreg_est.beta - beta_star) \
                 / np.linalg.norm(beta_star)
-        print "re:", re
+#        print "re:", re
         assert_less(re, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_rr = function.f(rreg_est.beta)
         err = abs(f_rr - f_star) / f_star
-        print "err:", err
+#        print "err:", err
         assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
         rreg_est_2 = estimators.RidgeRegression_L1_GL(
                     k=k, l=l, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
                     penalty_start=1,
                     mean=False)
@@ -834,13 +824,13 @@ class TestLinearRegression(TestCase):
 
         re = np.linalg.norm(rreg_est_2.beta - beta_star) \
                 / np.linalg.norm(beta_star)
-        print "re:", re
+#        print "re:", re
         assert_less(re, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_rr = function.f(rreg_est_2.beta)
         err = abs(f_rr - f_star) / f_star
-        print "err:", err
+#        print "err:", err
         assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
@@ -885,7 +875,7 @@ class TestLinearRegression(TestCase):
         A, _ = tv.A_from_shape(shape)
         snr = 20.0
         eps = 1e-8
-        max_iter = 2500
+        max_iter = 5000
 
         X, y, beta_star = l1_l2_tv.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
                                         A=A, snr=snr)
@@ -905,13 +895,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_nonsmooth - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_nonsmooth = function.f(beta_nonsmooth)
         err = abs(f_nonsmooth - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-8, "The found regression vector does not give " \
+        assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
         mu_min = mus[-1]
@@ -928,13 +918,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_smooth - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_smooth = function.f(beta_smooth)
         err = abs(f_smooth - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-8, "The found regression vector does not give " \
+        assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
     def test_linear_regression_tv_intercept(self):
@@ -977,7 +967,7 @@ class TestLinearRegression(TestCase):
         A, _ = tv.A_from_shape(shape)
         snr = 20.0
         eps = 1e-8
-        max_iter = 4100
+        max_iter = 8800
 
         X, y, beta_star = l1_l2_tv.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
                                         A=A, snr=snr, intercept=True)
@@ -1030,15 +1020,12 @@ class TestLinearRegression(TestCase):
         assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
-        max_iter = 1500
-        conts = 14
+        max_iter = 10000
         mu = mu_min
         reg_est = estimators.LinearRegression_L1_L2_TV(
                     l=l, k=k, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.StaticCONESTA(eps=eps,
-                                                     continuations=conts,
                                                      max_iter=max_iter),
                     penalty_start=1,
                     mean=False)
@@ -1059,9 +1046,7 @@ class TestLinearRegression(TestCase):
         rreg_est = estimators.RidgeRegression_L1_TV(
                     k=k, l=l, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.StaticCONESTA(eps=eps,
-                                                     continuations=conts,
                                                      max_iter=max_iter),
                     penalty_start=1,
                     mean=False)
@@ -1133,16 +1118,16 @@ class TestLinearRegression(TestCase):
                                                       penalty_start=0))
             beta_nonsmooth = fista.run(function, beta_nonsmooth)
 
-        mse = np.linalg.norm(beta_nonsmooth - beta_star) \
+        berr = np.linalg.norm(beta_nonsmooth - beta_star) \
                 / np.linalg.norm(beta_star)
-#        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+#        print "berr:", berr
+        assert_less(berr, 5e-2, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_parsimony = function.f(beta_nonsmooth)
         err = abs(f_parsimony - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-8, "The found regression vector does not give " \
+        assert_less(err, 1e-3, "The found regression vector does not give " \
                                "the correct function value.")
 
         mu_min = mus[-1]
@@ -1156,16 +1141,16 @@ class TestLinearRegression(TestCase):
                                                       penalty_start=0))
             beta_smooth = fista.run(function, beta_smooth)
 
-        mse = np.linalg.norm(beta_smooth - beta_star) \
+        berr = np.linalg.norm(beta_smooth - beta_star) \
                 / np.linalg.norm(beta_star)
-#        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+#        print "berr:", berr
+        assert_less(berr, 5e-2, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_rr = function.f(beta_smooth)
         err = abs(f_rr - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-8, "The found regression vector does not give " \
+        assert_less(err, 1e-3, "The found regression vector does not give " \
                                "the correct function value.")
 
     def test_linear_regression_gl_intercept(self):
@@ -1184,10 +1169,11 @@ class TestLinearRegression(TestCase):
         np.random.seed(42)
 
         n, p = 60, 90 + 1
-        groups = [range(0, 2 * p / 3), range(p / 3, p - 1)]
+        groups = [range(1, 2 * p / 3), range(p / 3, p)]
         weights = [1.5, 0.5]
 
-        A = gl.A_from_groups(p - 1, groups=groups, weights=weights)
+        A = gl.A_from_groups(p, groups=groups, weights=weights,
+                             penalty_start=1)
 
         alpha = 0.9
         Sigma = alpha * np.eye(p - 1, p - 1) \
@@ -1207,7 +1193,7 @@ class TestLinearRegression(TestCase):
 
         snr = 20.0
         eps = 1e-8
-        max_iter = 1500
+        max_iter = 8000
 
         X, y, beta_star = l1_l2_gl.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
                                         A=A, snr=snr, intercept=True)
@@ -1226,13 +1212,13 @@ class TestLinearRegression(TestCase):
 
         re = np.linalg.norm(beta_nonsmooth - beta_star) \
                 / np.linalg.norm(beta_star)
-        print "re:", re
+#        print "re:", re
         assert_less(re, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_parsimony = function.f(beta_nonsmooth)
         err = abs(f_parsimony - f_star) / f_star
-        print "err:", err
+#        print "err:", err
         assert_less(err, 5e-6, "The found regression vector does not give " \
                                "the correct function value.")
 
@@ -1250,24 +1236,21 @@ class TestLinearRegression(TestCase):
 
         re = np.linalg.norm(beta_smooth - beta_star) \
                 / np.linalg.norm(beta_star)
-        print "re:", re
+#        print "re:", re
         assert_less(re, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_rr = function.f(beta_smooth)
         err = abs(f_rr - f_star) / f_star
-        print "err:", err
+#        print "err:", err
         assert_less(err, 5e-6, "The found regression vector does not give " \
                                "the correct function value.")
 
-        max_iter = 1500
-        conts = 10
+        max_iter = 5000
         rreg_est = estimators.RidgeRegression_L1_GL(
                     k=k, l=l, g=g,
                     A=A, mu=mu,
-                    output=False,
                     algorithm=explicit.StaticCONESTA(eps=eps,
-                                                     continuations=conts,
                                                      max_iter=max_iter),
                     penalty_start=1,
                     mean=False)
@@ -1275,14 +1258,14 @@ class TestLinearRegression(TestCase):
 
         re = np.linalg.norm(rreg_est.beta - beta_star) \
                 / np.linalg.norm(beta_star)
-        print "re:", re
+#        print "re:", re
         assert_less(re, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_rr = function.f(rreg_est.beta)
         err = abs(f_rr - f_star) / f_star
-        print "err:", err
-        assert_less(err, 5e-4, "The found regression vector does not give " \
+#        print "err:", err
+        assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
     def test_linear_regression_l1_l2(self):
@@ -1426,15 +1409,17 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_nonsmooth_penalty - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_nonsmooth_star = function.f(beta_star)
         f_nonsmooth_penalty = function.f(beta_nonsmooth_penalty)
         err = abs(f_nonsmooth_penalty - f_nonsmooth_star) / f_nonsmooth_star
 #        print "err:", err
-        assert_less(err, 1e-4, "The found regression vector does not give " \
+        assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
+        max_iter = 2700
+        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
         mu_min = mus[-1]
         X, y, beta_star = l1_l2_tvmu.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
                                           A=A, mu=mu_min, snr=snr)
@@ -1451,13 +1436,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_smooth_penalty - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_smooth_star = function.f(beta_star)
         f_smooth_penalty = function.f(beta_smooth_penalty)
         err = abs(f_smooth_penalty - f_smooth_star) / f_smooth_star
 #        print "err:", err
-        assert_less(err, 1e-4, "The found regression vector does not give " \
+        assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
     def test_linear_regression_l1_gl(self):
@@ -1500,7 +1485,7 @@ class TestLinearRegression(TestCase):
 
         snr = 20.0
         eps = 1e-8
-        max_iter = 1600
+        max_iter = 3900
 
         X, y, beta_star = l1_l2_gl.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
                                         A=A, snr=snr)
@@ -1521,13 +1506,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_nonsmooth - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_parsimony = function.f(beta_nonsmooth)
         err = abs(f_parsimony - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-4, "The found regression vector does not give " \
+        assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
         mu_min = mus[-1]
@@ -1545,13 +1530,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_smooth - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_rr = function.f(beta_smooth)
         err = abs(f_rr - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-4, "The found regression vector does not give " \
+        assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
     def test_linear_regression_l2_tv(self):
@@ -1595,7 +1580,7 @@ class TestLinearRegression(TestCase):
         A, _ = tv.A_from_shape(shape)
         snr = 20.0
         eps = 1e-8
-        max_iter = 900
+        max_iter = 1900
 
         X, y, beta_star = l1_l2_tv.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
                                         A=A, snr=snr)
@@ -1617,13 +1602,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_nonsmooth_penalty - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_nonsmooth_penalty = function.f(beta_nonsmooth_penalty)
         err = abs(f_nonsmooth_penalty - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-7, "The found regression vector does not give " \
+        assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
         beta_nonsmooth_prox = beta_start
@@ -1638,13 +1623,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_nonsmooth_prox - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_nonsmooth_prox = function.f(beta_nonsmooth_prox)
         err = abs(f_nonsmooth_prox - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-7, "The found regression vector does not give " \
+        assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
         beta_nonsmooth_rr = beta_start
@@ -1658,13 +1643,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_nonsmooth_rr - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_nonsmooth_rr = function.f(beta_nonsmooth_rr)
         err = abs(f_nonsmooth_rr - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-7, "The found regression vector does not give " \
+        assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
         mu_min = mus[-1]
@@ -1683,13 +1668,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_smooth_penalty - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_smooth_penalty = function.f(beta_smooth_penalty)
         err = abs(f_smooth_penalty - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-7, "The found regression vector does not give " \
+        assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
         beta_smooth_prox = beta_start
@@ -1704,13 +1689,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_smooth_prox - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_smooth_prox = function.f(beta_smooth_prox)
         err = abs(f_smooth_prox - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-7, "The found regression vector does not give " \
+        assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
         beta_smooth_rr = beta_start
@@ -1724,13 +1709,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_smooth_rr - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_smooth_rr = function.f(beta_smooth_rr)
         err = abs(f_smooth_rr - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-7, "The found regression vector does not give " \
+        assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
     def test_linear_regression_l2_gl(self):
@@ -1773,7 +1758,7 @@ class TestLinearRegression(TestCase):
 
         snr = 20.0
         eps = 1e-8
-        max_iter = 950
+        max_iter = 1500
 
         X, y, beta_star = l1_l2_gl.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
                                         A=A, snr=snr)
@@ -1795,13 +1780,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_nonsmooth_penalty - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_nonsmooth_penalty = function.f(beta_nonsmooth_penalty)
         err = abs(f_nonsmooth_penalty - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-6, "The found regression vector does not give " \
+        assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
         beta_nonsmooth_prox = beta_start
@@ -1816,13 +1801,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_nonsmooth_prox - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_nonsmooth_prox = function.f(beta_nonsmooth_prox)
         err = abs(f_nonsmooth_prox - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-6, "The found regression vector does not give " \
+        assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
         beta_nonsmooth_rr = beta_start
@@ -1836,13 +1821,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_nonsmooth_rr - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_nonsmooth_rr = function.f(beta_nonsmooth_rr)
         err = abs(f_nonsmooth_rr - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-6, "The found regression vector does not give " \
+        assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
         mu_min = mus[-1]
@@ -1861,13 +1846,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_smooth_penalty - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_smooth_penalty = function.f(beta_smooth_penalty)
         err = abs(f_smooth_penalty - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-6, "The found regression vector does not give " \
+        assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
         beta_smooth_prox = beta_start
@@ -1882,13 +1867,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_smooth_prox - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_smooth_prox = function.f(beta_smooth_prox)
         err = abs(f_smooth_prox - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-6, "The found regression vector does not give " \
+        assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
         beta_smooth_rr = beta_start
@@ -1902,13 +1887,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_smooth_rr - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_smooth_rr = function.f(beta_smooth_rr)
         err = abs(f_smooth_rr - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-6, "The found regression vector does not give " \
+        assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
     def test_linear_regression_l1_l2_tv(self):
@@ -1952,7 +1937,7 @@ class TestLinearRegression(TestCase):
         A, _ = tv.A_from_shape(shape)
         snr = 100.0
         eps = 1e-8
-        max_iter = 600
+        max_iter = 1200
 
         X, y, beta_star = l1_l2_tv.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
                                         A=A, snr=snr)
@@ -1976,13 +1961,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_nonsmooth_penalty - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_nonsmooth_star = function.f(beta_star)
         f_nonsmooth_penalty = function.f(beta_nonsmooth_penalty)
         err = abs(f_nonsmooth_penalty - f_nonsmooth_star) / f_nonsmooth_star
 #        print "err:", err
-        assert_less(err, 1e-4, "The found regression vector does not give " \
+        assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
         beta_nonsmooth_rr = beta_start
@@ -1997,13 +1982,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_nonsmooth_rr - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_nonsmooth_star = function.f(beta_star)
         f_nonsmooth_rr = function.f(beta_nonsmooth_rr)
         err = abs(f_nonsmooth_rr - f_nonsmooth_star) / f_nonsmooth_star
 #        print "err:", err
-        assert_less(err, 1e-4, "The found regression vector does not give " \
+        assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
         mu_min = mus[-1]
@@ -2023,13 +2008,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_smooth_penalty - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_smooth_star = function.f(beta_star)
         f_smooth_penalty = function.f(beta_smooth_penalty)
         err = abs(f_smooth_penalty - f_smooth_star) / f_smooth_star
 #        print "err:", err
-        assert_less(err, 1e-4, "The found regression vector does not give " \
+        assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
         beta_smooth_rr = beta_start
@@ -2044,13 +2029,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_smooth_rr - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_smooth_star = function.f(beta_star)
         f_smooth_rr = function.f(beta_smooth_rr)
         err = abs(f_smooth_rr - f_smooth_star) / f_smooth_star
 #        print "err:", err
-        assert_less(err, 1e-4, "The found regression vector does not give " \
+        assert_less(err, 5e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
     def test_linear_regression_l1_l2_gl(self):
@@ -2093,7 +2078,7 @@ class TestLinearRegression(TestCase):
 
         snr = 20.0
         eps = 1e-8
-        max_iter = 750
+        max_iter = 1500
 
         X, y, beta_star = l1_l2_gl.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
                                         A=A, snr=snr)
@@ -2116,13 +2101,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_nonsmooth_penalty - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_nonsmooth_penalty = function.f(beta_nonsmooth_penalty)
         err = abs(f_nonsmooth_penalty - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-6, "The found regression vector does not give " \
+        assert_less(err, 5e-6, "The found regression vector does not give " \
                                "the correct function value.")
 
         beta_nonsmooth_rr = beta_start
@@ -2137,13 +2122,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_nonsmooth_rr - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_nonsmooth_rr = function.f(beta_nonsmooth_rr)
         err = abs(f_nonsmooth_rr - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-6, "The found regression vector does not give " \
+        assert_less(err, 5e-6, "The found regression vector does not give " \
                                "the correct function value.")
 
         mu_min = mus[-1]
@@ -2162,13 +2147,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_smooth_penalty - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_smooth_penalty = function.f(beta_smooth_penalty)
         err = abs(f_smooth_penalty - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-6, "The found regression vector does not give " \
+        assert_less(err, 5e-6, "The found regression vector does not give " \
                                "the correct function value.")
 
         beta_smooth_rr = beta_start
@@ -2183,13 +2168,13 @@ class TestLinearRegression(TestCase):
         mse = np.linalg.norm(beta_smooth_rr - beta_star) \
                 / np.linalg.norm(beta_star)
 #        print "mse:", mse
-        assert_less(mse, 1e-3, "The found regression vector is not correct.")
+        assert_less(mse, 5e-3, "The found regression vector is not correct.")
 
         f_star = function.f(beta_star)
         f_smooth_rr = function.f(beta_smooth_rr)
         err = abs(f_smooth_rr - f_star) / f_star
 #        print "err:", err
-        assert_less(err, 1e-6, "The found regression vector does not give " \
+        assert_less(err, 5e-6, "The found regression vector does not give " \
                                "the correct function value.")
 
     def test_estimators(self):
@@ -2469,13 +2454,12 @@ class TestLinearRegression(TestCase):
         k = 1.0 - l
         g = 2.718
         rr = estimators.RidgeRegression_L1_TV(k, l, g, A,
-                            algorithm=explicit.DynamicCONESTA(continuations=10,
-                                                              max_iter=1000),
+                            algorithm=explicit.DynamicCONESTA(max_iter=1000),
                             mean=False)
         rr.fit(X, y)
         score = rr.score(X, y)
 #        print "score:", score
-        assert_almost_equal(score, 1.066583,
+        assert_almost_equal(score, 1.632811,
                             msg="The found regression vector does not give " \
                                 "the correct score value.",
                             places=5)
@@ -2484,13 +2468,12 @@ class TestLinearRegression(TestCase):
         k = 1.0 - l
         g = 2.718
         rr = estimators.RidgeRegression_L1_TV(k, l, g, A,
-                             algorithm=explicit.StaticCONESTA(continuations=10,
-                                                              max_iter=1000),
+                             algorithm=explicit.StaticCONESTA(max_iter=1000),
                              mean=False)
         rr.fit(X, y)
         score = rr.score(X, y)
 #        print "score:", score
-        assert_almost_equal(score, 1.066928,
+        assert_almost_equal(score, 1.612181,
                             msg="The found regression vector does not give " \
                                 "the correct score value.",
                             places=5)
@@ -2524,7 +2507,7 @@ class TestLinearRegression(TestCase):
         y = np.dot(X, beta)
 
         eps = 1e-8
-        max_iter = 500
+        max_iter = 10000
 
         k = 0.618
         l = 1.0 - k
@@ -2537,15 +2520,13 @@ class TestLinearRegression(TestCase):
                            g=g,
                            A=A,
                            mu=mu,
-                           output=False,
                            algorithm=explicit.StaticCONESTA(eps=eps,
-                                                            continuations=20,
                                                             max_iter=max_iter),
                            mean=False)
         logreg_static.fit(X, y)
         err = logreg_static.score(X, y)
 #        print err
-        assert_almost_equal(err, 0.025973,
+        assert_almost_equal(err, 0.025878,
                      msg="The found regression vector is not correct.",
                      places=5)
 
@@ -2556,15 +2537,13 @@ class TestLinearRegression(TestCase):
                           g=g,
                           A=A,
                           mu=mu,
-                          output=False,
                           algorithm=explicit.DynamicCONESTA(eps=eps,
-                                                            continuations=20,
                                                             max_iter=max_iter),
                           mean=False)
         logreg_dynamic.fit(X, y)
         err = logreg_dynamic.score(X, y)
 #        print err
-        assert_almost_equal(err, 0.025976,
+        assert_almost_equal(err, 0.025879,
                      msg="The found regression vector is not correct.",
                      places=5)
 
@@ -2575,9 +2554,8 @@ class TestLinearRegression(TestCase):
                           g=g,
                           A=A,
                           mu=mu,
-                          output=False,
                           algorithm=explicit.FISTA(eps=eps,
-                                                   max_iter=10000),
+                                                   max_iter=max_iter),
                           mean=False)
         logreg_fista.fit(X, y)
         err = logreg_fista.score(X, y)
@@ -2593,9 +2571,8 @@ class TestLinearRegression(TestCase):
                           g=g,
                           A=A,
                           mu=mu,
-                          output=False,
                           algorithm=explicit.ISTA(eps=eps,
-                                                  max_iter=10000),
+                                                  max_iter=max_iter),
                           mean=False)
         logreg_ista.fit(X, y)
         err = logreg_ista.score(X, y)
@@ -2605,4 +2582,5 @@ class TestLinearRegression(TestCase):
                      places=5)
 
 if __name__ == "__main__":
+    import unittest
     unittest.main()
