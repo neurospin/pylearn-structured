@@ -24,10 +24,11 @@ __all__ = ["BaseEstimator", "RegressionEstimator",
 
            "LinearRegressionL1L2TV",
            "LinearRegressionL1L2GL",
-#           "RidgeRegression_L1_TV",
-           "RidgeLogisticRegression_L1_TV",
 
-           "RidgeRegression_SmoothedL1TV"]
+           "LogisticRegressionL1L2TV",
+           "LogisticRegressionL1L2GL",
+
+           "LinearRegressionL2SmoothedL1TV"]
 
 
 class BaseEstimator(object):
@@ -178,12 +179,13 @@ class LogisticRegressionEstimator(BaseEstimator):
 
 
 class LinearRegressionL1L2TV(RegressionEstimator):
-    """Minimize regression  with L1, L2 and TV penalties:
+    """Linear regression with L1, L2 and TV penalties:
 
-    f(beta, X, y) = (1 / 2 * n) * ||Xbeta - y||²_2
-                    + l1 * ||beta||_1
-                    + (l2 / 2) * ||beta||²_2
-                    + tv * TV(beta)
+        f(beta, X, y) = (1 / 2 * n) * ||Xbeta - y||²_2
+                        + l1 * ||beta||_1
+                        + (l2 / 2) * ||beta||²_2
+                        + tv * TV(beta)
+
     Parameters
     ----------
     l1 : Non-negative float. The L1 regularization parameter.
@@ -199,18 +201,18 @@ class LinearRegressionL1L2TV(RegressionEstimator):
 
     algorithm : ExplicitAlgorithm. The algorithm that should be applied.
             Should be one of:
-                1. algorithms.StaticCONESTA(...)
-                2. algorithms.DynamicCONESTA(...)
-                3. algorithms.FISTA(...)
-                4. algorithms.ISTA(...)
+                1. StaticCONESTA(...)
+                2. DynamicCONESTA(...)
+                3. FISTA(...)
+                4. ISTA(...)
 
-            Default is algorithms.StaticCONESTA(...).
+            Default is StaticCONESTA(...).
 
     algorithm_params : A dict. The dictionary algorithm_params contains
             parameters that should be set in the algorithm. Passing
-            algorithm=algorithms.StaticCONESTA(**params) is equivalent
-            to passing algorithm=algorithms.StaticCONESTA() and
-            algorithm_params=params. Default is an empty dictionary.
+            algorithm=StaticCONESTA(**params) is equivalent to passing
+            algorithm=StaticCONESTA() and algorithm_params=params. Default is
+            an empty dictionary.
 
     penalty_start : Non-negative integer. The number of columns, variables
             etc., to be exempt from penalisation. Equivalently, the first
@@ -462,12 +464,13 @@ class LinearRegressionL1L2TV(RegressionEstimator):
 
 
 class LinearRegressionL1L2GL(RegressionEstimator):
-    """Minimize regression  with L1, L2 and Group lasso penalties:
+    """Linear regression with L1, L2 and Group lasso penalties:
 
-    f(beta, X, y) = (1 / 2 * n) * ||Xbeta - y||²_2
-                    + l1 * ||beta||_1
-                    + (l2 / 2) * ||beta||²_2
-                    + gl * GL(beta)
+        f(beta, X, y) = (1 / 2 * n) * ||Xbeta - y||²_2
+                        + l1 * ||beta||_1
+                        + (l2 / 2) * ||beta||²_2
+                        + gl * GL(beta)
+
     Parameters
     ----------
     l1 : Non-negative float. The L1 regularization parameter.
@@ -483,18 +486,18 @@ class LinearRegressionL1L2GL(RegressionEstimator):
 
     algorithm : ExplicitAlgorithm. The algorithm that should be applied.
             Should be one of:
-                1. algorithms.StaticCONESTA(...)
-                2. algorithms.DynamicCONESTA(...)
-                3. algorithms.FISTA(...)
-                4. algorithms.ISTA(...)
+                1. StaticCONESTA(...)
+                2. DynamicCONESTA(...)
+                3. FISTA(...)
+                4. ISTA(...)
 
-            Default is algorithms.StaticCONESTA(...).
+            Default is StaticCONESTA(...).
 
     algorithm_params : A dict. The dictionary algorithm_params contains
             parameters that should be set in the algorithm. Passing
-            algorithm=algorithms.StaticCONESTA(**params) is equivalent
-            to passing algorithm=algorithms.StaticCONESTA() and
-            algorithm_params=params. Default is an empty dictionary.
+            algorithm=StaticCONESTA(**params) is equivalent to passing
+            algorithm=StaticCONESTA() and algorithm_params=params. Default is
+            an empty dictionary.
 
     penalty_start : Non-negative integer. The number of columns, variables
             etc., to be exempt from penalisation. Equivalently, the first
@@ -782,18 +785,18 @@ class LogisticRegressionL1L2TV(LogisticRegressionEstimator):
 
     algorithm : ExplicitAlgorithm. The algorithm that should be applied.
             Should be one of:
-                1. algorithms.StaticCONESTA(...)
-                2. algorithms.DynamicCONESTA(...)
-                3. algorithms.FISTA(...)
-                4. algorithms.ISTA(...)
+                1. StaticCONESTA(...)
+                2. DynamicCONESTA(...)
+                3. FISTA(...)
+                4. ISTA(...)
 
-            Default is algorithms.StaticCONESTA(...).
+            Default is StaticCONESTA(...).
 
     algorithm_params : A dict. The dictionary algorithm_params contains
             parameters that should be set in the algorithm. Passing
-            algorithm=algorithms.StaticCONESTA(**params) is equivalent
-            to passing algorithm=algorithms.StaticCONESTA() and
-            algorithm_params=params. Default is an empty dictionary.
+            algorithm=StaticCONESTA(**params) is equivalent to passing
+            algorithm=StaticCONESTA() and algorithm_params=params. Default is
+            an empty dictionary.
 
     class_weight : Dict, 'auto' or None. If 'auto', class weights will be
             given inverse proportional to the frequency of the class in
@@ -960,18 +963,18 @@ class LogisticRegressionL1L2GL(LogisticRegressionEstimator):
 
     algorithm : ExplicitAlgorithm. The algorithm that should be applied.
             Should be one of:
-                1. algorithms.StaticCONESTA(...)
-                2. algorithms.DynamicCONESTA(...)
-                3. algorithms.FISTA(...)
-                4. algorithms.ISTA(...)
+                1. StaticCONESTA(...)
+                2. DynamicCONESTA(...)
+                3. FISTA(...)
+                4. ISTA(...)
 
-            Default is algorithms.StaticCONESTA(...).
+            Default is StaticCONESTA(...).
 
     algorithm_params : A dict. The dictionary algorithm_params contains
             parameters that should be set in the algorithm. Passing
-            algorithm=algorithms.StaticCONESTA(**params) is equivalent
-            to passing algorithm=algorithms.StaticCONESTA() and
-            algorithm_params=params. Default is an empty dictionary.
+            algorithm=StaticCONESTA(**params) is equivalent to passing
+            algorithm=StaticCONESTA() and algorithm_params=params. Default is
+            an empty dictionary.
 
     class_weight : Dict, 'auto' or None. If 'auto', class weights will be
             given inverse proportional to the frequency of the class in
@@ -1105,91 +1108,129 @@ class LogisticRegressionL1L2GL(LogisticRegressionEstimator):
         return self
 
 
-class RidgeRegression_SmoothedL1TV(RegressionEstimator):
-    # TODO: Add penalty_start and mean to here!
-    """
+class LinearRegressionL2SmoothedL1TV(RegressionEstimator):
+    """Linear regression with L2 and simultaneously smoothed L1 and TV
+    penalties:
+
+        f(beta, X, y) = (1 / 2 * n) * ||Xbeta - y||²_2
+                        + (l2 / 2) * ||beta||²_2
+                        + L1TV(beta),
+
+    where L1TV is l1 * L1(beta) + tv * TV(beta) smoothed together by Nesterov's
+    smoothing.
+
     Parameters
     ----------
-    k : Non-negative float. The L2 regularisation parameter.
+    l1 : Non-negative float. The L1 regularization parameter.
 
-    l : Non-negative float. The L1 regularisation parameter.
+    l2 : Non-negative float. The L2 regularization parameter.
 
-    g : Non-negative float. The total variation regularization parameter.
+    tv : Non-negative float. The total variation regularization parameter.
 
-    Atv : Numpy array (usually sparse). The linear operator for the smoothed
-            total variation Nesterov function.
+    Atv : Numpy or (usually) scipy.sparse array. The linear operator for the
+            smoothed total variation Nesterov function. A must be given.
 
-    Al1 : Numpy array (usually sparse). The linear operator for the smoothed
-            L1 Nesterov function.
+    Al1 : Numpy or (usually) scipy.sparse array. The linear operator for the
+            smoothed L1 Nesterov function. A must be given.
 
     mu : Non-negative float. The regularisation constant for the smoothing.
 
-    algorithm : ExplicitAlgorithm. The algorithm that will be applied.
+    algorithm : ExplicitAlgorithm. The algorithm that should be applied.
+            Should be one of:
+                1. ExcessiveGapMethod(...)
+
+            Default is ExcessiveGapMethod(...).
+
+    algorithm_params : A dict. The dictionary algorithm_params contains
+            parameters that should be set in the algorithm. Passing
+            algorithm=ExcessiveGapMethod(**params) is equivalent to passing
+            algorithm=ExcessiveGapMethod() and algorithm_params=params. Default
+            is an empty dictionary.
+
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to be exempt from penalisation. Equivalently, the first
+            index to be penalised. Default is 0, all columns are included.
+
+    mean : Boolean. Whether to compute the squared loss or the mean squared
+            loss. Default is True, the mean squared loss.
 
     Examples
     --------
     >>> import numpy as np
-    >>> import scipy.sparse as sparse
     >>> import parsimony.estimators as estimators
     >>> import parsimony.algorithms.explicit as explicit
-    >>> import parsimony.functions.nesterov.tv as tv
+    >>> import parsimony.functions.nesterov.l1tv as l1tv
     >>> shape = (1, 4, 4)
-    >>> num_samples = 10
-    >>> num_ft = shape[0] * shape[1] * shape[2]
-    >>> np.random.seed(seed=1)
-    >>> X = np.random.random((num_samples, num_ft))
-    >>> y = np.random.randint(0, 2, (num_samples, 1))
-    >>> k = 0.05  # ridge regression coefficient
-    >>> l = 0.05  # l1 coefficient
-    >>> g = 0.05  # tv coefficient
-    >>> Atv, n_compacts = tv.A_from_shape(shape)
-    >>> Al1 = sparse.eye(num_ft, num_ft)
-    >>> ridge_smoothed_l1_tv = estimators.RidgeRegression_SmoothedL1TV(k, l, g,
+    >>> n = 10
+    >>> p = shape[0] * shape[1] * shape[2]
+    >>>
+    >>> np.random.seed(42)
+    >>> X = np.random.rand(n, p)
+    >>> y = np.random.rand(n, 1)
+    >>> l1 = 0.1  # L1 coefficient
+    >>> l2 = 0.9  # Ridge coefficient
+    >>> tv = 1.0  # TV coefficient
+    >>> Atv, Al1 = l1tv.A_from_shape(shape, p, penalty_start=0)
+    >>> lr = estimators.LinearRegressionL2SmoothedL1TV(l1, l2, tv,
     ...                 Atv=Atv, Al1=Al1,
-    ...                 algorithm=explicit.ExcessiveGapMethod(max_iter=1000))
-    >>> res = ridge_smoothed_l1_tv.fit(X, y)
-    >>> error = np.sum(np.abs(np.dot(X, ridge_smoothed_l1_tv.beta) - y))
+    ...                 algorithm=explicit.ExcessiveGapMethod(),
+    ...                 algorithm_params=dict(max_iter=1000))
+    >>> res = lr.fit(X, y)
+    >>> error = lr.score(X, y)
     >>> print "error = ", error
-    error =  1.69470205937
+    error =  0.0683730496916
     """
-    def __init__(self, k, l, g, Atv, Al1, mu=None,
-                 algorithm=explicit.ExcessiveGapMethod(),
-                 start_vector=start_vectors.RandomStartVector()):
+    def __init__(self, l1, l2, tv,
+                 Atv=None, Al1=None,
+                 algorithm=None, algorithm_params=dict(),
+                 penalty_start=0,
+                 mean=True):
 
-        self.k = float(k)
-        self.l = float(l)
-        self.g = float(g)
-        if self.k < consts.TOLERANCE:
+        if algorithm is None:
+            algorithm = explicit.ExcessiveGapMethod(**algorithm_params)
+        else:
+            algorithm.set_params(**algorithm_params)
+
+        super(LinearRegressionL2SmoothedL1TV, self).__init__(
+                                                     algorithm=algorithm)
+
+        self.l1 = float(l1)
+        self.l2 = float(l2)
+        self.tv = float(tv)
+
+        if self.l2 < consts.TOLERANCE:
             warnings.warn("The ridge parameter should be non-zero.")
-        self.Atv = Atv
-        self.Al1 = Al1
-        # TODO: Remove mu? Not used, right?
-        try:
-            self.mu = float(mu)
-        except (ValueError, TypeError):
-            self.mu = None
 
-        super(RidgeRegression_SmoothedL1TV, self).__init__(algorithm=algorithm,
-                                                     start_vector=start_vector)
+        if Atv is None:
+            raise TypeError("Atv may not be None.")
+        self.Atv = Atv
+        if Al1 is None:
+            raise TypeError("Al1 may not be None.")
+        self.Al1 = Al1
+
+        self.penalty_start = int(penalty_start)
+        self.mean = bool(mean)
 
     def get_params(self):
-        """Return a dictionary containing all the estimator's parameters
+        """Returns a dictionary containing all the estimator's parameters.
         """
-        return {"k": self.k, "l": self.l, "g": self.g,
-                "Atv": self.Atv, "Al1": self.Al1, "mu": self.mu}
+        return {"l1": self.l1, "l2": self.l2, "tv": self.tv,
+                "Atv": self.Atv, "Al1": self.Al1,
+                "penalty_start": self.penalty_start, "mean": self.mean}
 
-    def fit(self, X, y):
-        """Fit the estimator to the data
+    def fit(self, X, y, beta=None):
+        """Fit the estimator to the data.
         """
         X, y = check_arrays(X, y)
-        function = functions.RR_SmoothedL1TV(X, y, self.k, self.l, self.g,
-                                             Atv=self.Atv, Al1=self.Al1)
+        function = functions.RR_SmoothedL1TV(X, y, self.l2, self.l1, self.tv,
+                                             Atv=self.Atv, Al1=self.Al1,
+                                             penalty_start=self.penalty_start,
+                                             mean=self.mean)
 
         self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)
 
-        # TODO: Allow a given beta vector here.
-        self.beta = self.algorithm.run(function)
+        self.beta = self.algorithm.run(function, beta)
 
         return self
 

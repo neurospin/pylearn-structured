@@ -890,7 +890,9 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
                       interfaces.GradientMap,
                       interfaces.DualFunction,
                       interfaces.StronglyConvex):
-    """
+    """Combination (sum) of Linear Regression, L2 and simultaneously smoothed
+    L1 and TotalVariation.
+
     Parameters
     ----------
     X : Numpy array. The X matrix for the ridge regression.
@@ -918,24 +920,30 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
     penalty_start : Non-negative integer. The number of columns, variables
             etc., to except from penalisation. Equivalently, the first index
             to be penalised. Default is 0, all columns are included.
-    """
-    def __init__(self, X, y, k, l, g, Atv=None, Al1=None, mu=0.0,
-                 penalty_start=0):
 
-        if k <= consts.TOLERANCE:
+    mean : Boolean. Whether to compute the squared loss or the mean squared
+            loss. Default is True, the mean squared loss.
+    """
+    def __init__(self, X, y, k, l, g, Atv=None, Al1=None, mu=consts.TOLERANCE,
+                 penalty_start=0, mean=True):
+
+        if k < consts.TOLERANCE:
             raise ValueError("The L2 regularisation constant must be " + \
                              "non-zero.")
 
         self.X = X
         self.y = y
 
-        self.g = RidgeRegression(X, y, k)
+        self.g = RidgeRegression(X, y, k,
+                                 penalty_start=penalty_start,
+                                 mean=mean)
         self.h = L1TV(l, g, Atv=Atv, Al1=Al1, mu=mu,
                       penalty_start=penalty_start)
 
-        self.penalty_start = int(penalty_start)
-
         self.mu = float(mu)
+
+        self.penalty_start = int(penalty_start)
+        self.mean = bool(mean)
 
         self.reset()
 
@@ -949,7 +957,7 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
 
     def set_params(self, **kwargs):
 
-        # TODO: This is not good. Solve this better!
+        # TODO: This is not a good solution. Can we solve this in a better way?
         mu = kwargs.pop("mu", self.get_mu())
         self.set_mu(mu)
 
