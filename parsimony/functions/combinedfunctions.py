@@ -26,7 +26,8 @@ from .losses import LatentVariableVariance
 import parsimony.utils.consts as consts
 
 __all__ = ["CombinedFunction",
-           "LinearRegressionL1L2TV", "RR_L1_GL", "RLR_L1_TV", "RLR_L1_GL",
+           "LinearRegressionL1L2TV", "LinearRegressionL1L2GL",
+           "RLR_L1_TV", "RLR_L1_GL",
            "RR_SmoothedL1TV",
            "PCA_L1_TV"]
 
@@ -506,10 +507,10 @@ class LinearRegressionL1L2TV(interfaces.CompositeFunction,
         return 1.0 / self.L()
 
 
-class RR_L1_GL(LinearRegressionL1L2TV):
+class LinearRegressionL1L2GL(LinearRegressionL1L2TV):
     """Combination (sum) of RidgeRegression, L1 and Overlapping Group Lasso.
     """
-    def __init__(self, X, y, k, l, g, A=None, mu=0.0, penalty_start=0,
+    def __init__(self, X, y, l, k, g, A=None, mu=0.0, penalty_start=0,
                  mean=True):
         """
         Parameters:
@@ -518,11 +519,11 @@ class RR_L1_GL(LinearRegressionL1L2TV):
 
         y : Numpy array (n-by-1). The y vector for the ridge regression.
 
-        k : Non-negative float. The Lagrange multiplier, or regularisation
-                constant, for the ridge penalty.
-
         l : Non-negative float. The Lagrange multiplier, or regularisation
                 constant, for the L1 penalty.
+
+        k : Non-negative float. The Lagrange multiplier, or regularisation
+                constant, for the ridge penalty.
 
         g : Non-negative float. The Lagrange multiplier, or regularisation
                 constant, of the overlapping group L1-L2 function.
@@ -566,7 +567,7 @@ class RR_L1_GL(LinearRegressionL1L2TV):
         mu = kwargs.pop("mu", self.get_mu())
         self.set_mu(mu)
 
-        super(RR_L1_GL, self).set_params(**kwargs)
+        super(LinearRegressionL1L2GL, self).set_params(**kwargs)
 
     def get_mu(self):
         """Returns the regularisation constant for the smoothing.
@@ -842,7 +843,7 @@ class RLR_L1_TV(LinearRegressionL1L2TV):
         self.reset()
 
 
-class RLR_L1_GL(RR_L1_GL):
+class RLR_L1_GL(LinearRegressionL1L2GL):
     """Combination (sum) of RidgeLogisticRegression, L1 and TotalVariation.
     """
     def __init__(self, X, y, k, l, g, A=None, mu=0.0, weights=None,

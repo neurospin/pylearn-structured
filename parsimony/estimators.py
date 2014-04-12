@@ -705,10 +705,11 @@ class LinearRegressionL1L2GL(RegressionEstimator):
         """
         X, y = check_arrays(X, y)
 
-        function = functions.RR_L1_GL(X, y, self.l2, self.l1, self.gl,
-                                           A=self.A,
-                                           penalty_start=self.penalty_start,
-                                           mean=self.mean)
+        function = functions.LinearRegressionL1L2GL(X, y,
+                                              self.l1, self.l2, self.gl,
+                                              A=self.A,
+                                              penalty_start=self.penalty_start,
+                                              mean=self.mean)
         self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)
 
@@ -832,10 +833,11 @@ class LinearRegressionL1L2GL(RegressionEstimator):
 #        """Fit the estimator to the data
 #        """
 #        X, y = check_arrays(X, y)
-#        self.function = functions.RR_L1_GL(X, y, self.k, self.l, self.g,
-#                                           A=self.A,
-#                                           penalty_start=self.penalty_start,
-#                                           mean=self.mean)
+#        self.function = functions.LinearRegressionL1L2GL(X, y,
+#                                             self.k, self.l, self.g,
+#                                             A=self.A,
+#                                             penalty_start=self.penalty_start,
+#                                             mean=self.mean)
 #        self.algorithm.check_compatibility(self.function,
 #                                           self.algorithm.INTERFACES)
 #
@@ -1285,7 +1287,7 @@ class LinearRegressionL2SmoothedL1TV(RegressionEstimator):
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
-    error =  0.0683730496916
+    error =  0.101661632451
     """
     def __init__(self, l1, l2, tv,
                  Atv=None, Al1=None,
