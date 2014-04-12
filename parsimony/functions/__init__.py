@@ -12,7 +12,7 @@ from . import penalties
 
 from .combinedfunctions import CombinedFunction
 from .combinedfunctions import LinearRegressionL1L2TV, LinearRegressionL1L2GL
-from .combinedfunctions import RLR_L1_TV, RLR_L1_GL
+from .combinedfunctions import LogisticRegressionL1L2TV, RLR_L1_GL
 from .combinedfunctions import RR_SmoothedL1TV
 from .combinedfunctions import PCA_L1_TV
 
@@ -20,6 +20,6 @@ __all__ = ["interfaces", "losses", "penalties",
 
            "CombinedFunction",
            "LinearRegressionL1L2TV", "LinearRegressionL1L2GL",
-           "RLR_L1_TV", "RLR_L1_GL",
+           "LogisticRegressionL1L2TV", "RLR_L1_GL",
            "RR_SmoothedL1TV",
            "PCA_L1_TV"]
