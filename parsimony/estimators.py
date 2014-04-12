@@ -1194,11 +1194,12 @@ class LogisticRegressionL1L2GL(LogisticRegressionEstimator):
         if sample_weight is None:
             sample_weight = class_weight_to_sample_weight(self.class_weight, y)
         y, sample_weight = check_arrays(y, sample_weight)
-        function = functions.RLR_L1_GL(X, y, self.l2, self.l1, self.gl,
-                                            A=self.A,
-                                            weights=sample_weight,
-                                            penalty_start=self.penalty_start,
-                                            mean=self.mean)
+        function = functions.LogisticRegressionL1L2GL(X, y,
+                                              self.l2, self.l1, self.gl,
+                                              A=self.A,
+                                              weights=sample_weight,
+                                              penalty_start=self.penalty_start,
+                                              mean=self.mean)
 
         self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)

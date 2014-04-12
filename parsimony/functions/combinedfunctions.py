@@ -27,7 +27,7 @@ import parsimony.utils.consts as consts
 
 __all__ = ["CombinedFunction",
            "LinearRegressionL1L2TV", "LinearRegressionL1L2GL",
-           "LogisticRegressionL1L2TV", "RLR_L1_GL",
+           "LogisticRegressionL1L2TV", "LogisticRegressionL1L2GL",
            "RR_SmoothedL1TV",
            "PCA_L1_TV"]
 
@@ -843,7 +843,7 @@ class LogisticRegressionL1L2TV(LinearRegressionL1L2TV):
         self.reset()
 
 
-class RLR_L1_GL(LinearRegressionL1L2GL):
+class LogisticRegressionL1L2GL(LinearRegressionL1L2GL):
     """Combination (sum) of RidgeLogisticRegression, L1 and TotalVariation.
     """
     def __init__(self, X, y, k, l, g, A=None, mu=0.0, weights=None,
