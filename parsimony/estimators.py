@@ -1333,10 +1333,11 @@ class LinearRegressionL2SmoothedL1TV(RegressionEstimator):
         """Fit the estimator to the data.
         """
         X, y = check_arrays(X, y)
-        function = functions.RR_SmoothedL1TV(X, y, self.l2, self.l1, self.tv,
-                                             Atv=self.Atv, Al1=self.Al1,
-                                             penalty_start=self.penalty_start,
-                                             mean=self.mean)
+        function = functions.LinearRegressionL2SmoothedL1TV(X, y,
+                                              self.l2, self.l1, self.tv,
+                                              Atv=self.Atv, Al1=self.Al1,
+                                              penalty_start=self.penalty_start,
+                                              mean=self.mean)
 
         self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)

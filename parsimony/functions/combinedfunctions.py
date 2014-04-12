@@ -28,7 +28,7 @@ import parsimony.utils.consts as consts
 __all__ = ["CombinedFunction",
            "LinearRegressionL1L2TV", "LinearRegressionL1L2GL",
            "LogisticRegressionL1L2TV", "LogisticRegressionL1L2GL",
-           "RR_SmoothedL1TV",
+           "LinearRegressionL2SmoothedL1TV",
            "PCA_L1_TV"]
 
 # TODO: Add penalty_start and mean to all of these!
@@ -886,12 +886,12 @@ class LogisticRegressionL1L2GL(LinearRegressionL1L2GL):
         self.reset()
 
 
-class RR_SmoothedL1TV(interfaces.CompositeFunction,
-                      interfaces.LipschitzContinuousGradient,
-                      nesterov_interfaces.NesterovFunction,
-                      interfaces.GradientMap,
-                      interfaces.DualFunction,
-                      interfaces.StronglyConvex):
+class LinearRegressionL2SmoothedL1TV(interfaces.CompositeFunction,
+                                     interfaces.LipschitzContinuousGradient,
+                                     nesterov_interfaces.NesterovFunction,
+                                     interfaces.GradientMap,
+                                     interfaces.DualFunction,
+                                     interfaces.StronglyConvex):
     """Combination (sum) of Linear Regression, L2 and simultaneously smoothed
     L1 and TotalVariation.
 
@@ -963,7 +963,7 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
         mu = kwargs.pop("mu", self.get_mu())
         self.set_mu(mu)
 
-        super(RR_SmoothedL1TV, self).set_params(**kwargs)
+        super(LinearRegressionL2SmoothedL1TV, self).set_params(**kwargs)
 
     def get_mu(self):
         """Returns the regularisation constant for the smoothing.
