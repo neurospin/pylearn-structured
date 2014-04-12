@@ -29,7 +29,7 @@ __all__ = ["CombinedFunction",
            "LinearRegressionL1L2TV", "LinearRegressionL1L2GL",
            "LogisticRegressionL1L2TV", "LogisticRegressionL1L2GL",
            "LinearRegressionL2SmoothedL1TV",
-           "PCA_L1_TV"]
+           "PrincipalComponentAnalysisL1TV"]
 
 # TODO: Add penalty_start and mean to all of these!
 
@@ -1132,7 +1132,7 @@ class LinearRegressionL2SmoothedL1TV(interfaces.CompositeFunction,
         return self.h.project(a)
 
 
-class PCA_L1_TV(interfaces.CompositeFunction,
+class PrincipalComponentAnalysisL1TV(interfaces.CompositeFunction,
                interfaces.Gradient,
                interfaces.LipschitzContinuousGradient,
                nesterov_interfaces.NesterovFunction,
@@ -1191,7 +1191,7 @@ class PCA_L1_TV(interfaces.CompositeFunction,
         mu = kwargs.pop("mu", self.get_mu())
         self.set_mu(mu)
 
-        super(PCA_L1_TV, self).set_params(**kwargs)
+        super(PrincipalComponentAnalysisL1TV, self).set_params(**kwargs)
 
     def get_mu(self):
         """Returns the regularisation constant for the smoothing.
