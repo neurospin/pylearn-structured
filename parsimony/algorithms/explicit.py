@@ -169,7 +169,7 @@ class ISTA(bases.ExplicitAlgorithm,
     Examples
     --------
     >>> from parsimony.algorithms.explicit import ISTA
-    >>> from parsimony.functions import RR_L1_TV
+    >>> from parsimony.functions import LinearRegressionL1L2TV
     >>> import scipy.sparse as sparse
     >>> import numpy as np
     >>>
@@ -177,7 +177,8 @@ class ISTA(bases.ExplicitAlgorithm,
     >>> X = np.random.rand(100, 50)
     >>> y = np.random.rand(100, 1)
     >>> A = sparse.csr_matrix((50, 50))  # Unused here
-    >>> function = RR_L1_TV(X, y, k=0.0, l=0.0, g=0.0, A=A, mu=0.0)
+    >>> function = LinearRegressionL1L2TV(X, y, l=0.0, k=0.0, g=0.0,
+    ...                                   A=A, mu=0.0)
     >>> ista = ISTA(max_iter=10000)
     >>> beta1 = ista.run(function, np.random.rand(50, 1))
     >>> beta2 = np.dot(np.linalg.pinv(X), y)
@@ -188,7 +189,8 @@ class ISTA(bases.ExplicitAlgorithm,
     >>> X = np.random.rand(100, 50)
     >>> y = np.random.rand(100, 1)
     >>> A = sparse.csr_matrix((50, 50))  # Unused here
-    >>> function = RR_L1_TV(X, y, k=0.0, l=0.1, g=0.0, A=A, mu=0.0)
+    >>> function = LinearRegressionL1L2TV(X, y, l=0.1, k=0.0, g=0.0,
+    ...                                   A=A, mu=0.0)
     >>> ista = ISTA(max_iter=10000)
     >>> beta1 = ista.run(function, np.random.rand(50, 1))
     >>> beta2 = np.dot(np.linalg.pinv(X), y)
@@ -297,7 +299,7 @@ class FISTA(bases.ExplicitAlgorithm,
     Example
     -------
     >>> from parsimony.algorithms.explicit import FISTA
-    >>> from parsimony.functions import RR_L1_TV
+    >>> from parsimony.functions import LinearRegressionL1L2TV
     >>> import scipy.sparse as sparse
     >>> import numpy as np
     >>>
@@ -305,7 +307,8 @@ class FISTA(bases.ExplicitAlgorithm,
     >>> X = np.random.rand(100, 50)
     >>> y = np.random.rand(100, 1)
     >>> A = sparse.csr_matrix((50, 50))  # Unused here
-    >>> function = RR_L1_TV(X, y, k=0.0, l=0.0, g=0.0, A=A, mu=0.0)
+    >>> function = LinearRegressionL1L2TV(X, y, k=0.0, l=0.0, g=0.0,
+    ...                                   A=A, mu=0.0)
     >>> fista = FISTA(max_iter=10000)
     >>> beta1 = fista.run(function, np.random.rand(50, 1))
     >>> beta2 = np.dot(np.linalg.pinv(X), y)
@@ -316,7 +319,8 @@ class FISTA(bases.ExplicitAlgorithm,
     >>> X = np.random.rand(100, 50)
     >>> y = np.random.rand(100, 1)
     >>> A = sparse.csr_matrix((50, 50))  # Unused here
-    >>> function = RR_L1_TV(X, y, k=0.0, l=0.1, g=0.0, A=A, mu=0.0)
+    >>> function = LinearRegressionL1L2TV(X, y, k=0.0, l=0.1, g=0.0,
+    ...                                   A=A, mu=0.0)
     >>> fista = FISTA(max_iter=10000)
     >>> beta1 = fista.run(function, np.random.rand(50, 1))
     >>> beta2 = np.dot(np.linalg.pinv(X), y)
@@ -417,7 +421,7 @@ class FISTA(bases.ExplicitAlgorithm,
 #                print "sc err:", (1.0 / step) * maths.norm(betanew - z)
 #                print "eps   :", self.eps
 
-                if (1.0 / stop_step) * maths.norm(betanew - stop_z) < self.eps \
+                if (1. / stop_step) * maths.norm(betanew - stop_z) < self.eps \
                         and i >= self.min_iter:
 
                     if self.info.allows(Info.converged):

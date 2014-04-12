@@ -26,7 +26,8 @@ from .losses import LatentVariableVariance
 import parsimony.utils.consts as consts
 
 __all__ = ["CombinedFunction",
-           "RR_L1_TV", "RR_L1_GL", "RLR_L1_TV", "RLR_L1_GL", "RR_SmoothedL1TV",
+           "LinearRegressionL1L2TV", "RR_L1_GL", "RLR_L1_TV", "RLR_L1_GL",
+           "RR_SmoothedL1TV",
            "PCA_L1_TV"]
 
 # TODO: Add penalty_start and mean to all of these!
@@ -204,16 +205,16 @@ class CombinedFunction(interfaces.CompositeFunction,
         return step
 
 
-class RR_L1_TV(interfaces.CompositeFunction,
-               interfaces.Gradient,
-               interfaces.LipschitzContinuousGradient,
-               nesterov_interfaces.NesterovFunction,
-               interfaces.ProximalOperator,
-               interfaces.Continuation,
-               interfaces.DualFunction,
-               interfaces.StronglyConvex,
-               interfaces.StepSize):
-    """Combination (sum) of RidgeRegression, L1 and TotalVariation.
+class LinearRegressionL1L2TV(interfaces.CompositeFunction,
+                             interfaces.Gradient,
+                             interfaces.LipschitzContinuousGradient,
+                             nesterov_interfaces.NesterovFunction,
+                             interfaces.ProximalOperator,
+                             interfaces.Continuation,
+                             interfaces.DualFunction,
+                             interfaces.StronglyConvex,
+                             interfaces.StepSize):
+    """Combination (sum) of LinearRegression, L1, L2 and TotalVariation.
     """
     def __init__(self, X, y, k, l, g, A=None, mu=0.0, penalty_start=0,
                  mean=True):
@@ -271,7 +272,7 @@ class RR_L1_TV(interfaces.CompositeFunction,
         mu = kwargs.pop("mu", self.get_mu())
         self.set_mu(mu)
 
-        super(RR_L1_TV, self).set_params(**kwargs)
+        super(LinearRegressionL1L2TV, self).set_params(**kwargs)
 
     def get_mu(self):
         """Returns the regularisation constant for the smoothing.
@@ -505,7 +506,7 @@ class RR_L1_TV(interfaces.CompositeFunction,
         return 1.0 / self.L()
 
 
-class RR_L1_GL(RR_L1_TV):
+class RR_L1_GL(LinearRegressionL1L2TV):
     """Combination (sum) of RidgeRegression, L1 and Overlapping Group Lasso.
     """
     def __init__(self, X, y, k, l, g, A=None, mu=0.0, penalty_start=0,
@@ -565,7 +566,7 @@ class RR_L1_GL(RR_L1_TV):
         mu = kwargs.pop("mu", self.get_mu())
         self.set_mu(mu)
 
-        super(RR_L1_TV, self).set_params(**kwargs)
+        super(RR_L1_GL, self).set_params(**kwargs)
 
     def get_mu(self):
         """Returns the regularisation constant for the smoothing.
@@ -792,7 +793,7 @@ class RR_L1_GL(RR_L1_TV):
         return 1.0 / self.L()
 
 
-class RLR_L1_TV(RR_L1_TV):
+class RLR_L1_TV(LinearRegressionL1L2TV):
     """Combination (sum) of RidgeLogisticRegression, L1 and TotalVariation.
     """
     def __init__(self, X, y, k, l, g, A=None, mu=0.0, weights=None,
@@ -899,11 +900,11 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
 
     y : Numpy array. The y vector for the ridge regression.
 
-    k : Non-negative float. The Lagrange multiplier, or regularisation
-            constant, for the ridge penalty.
-
     l : Non-negative float. The Lagrange multiplier, or regularisation
             constant, for the L1 penalty.
+
+    k : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, for the ridge penalty.
 
     g : Non-negative float. The Lagrange multiplier, or regularisation
             constant, of the TV function.
@@ -924,7 +925,7 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
     mean : Boolean. Whether to compute the squared loss or the mean squared
             loss. Default is True, the mean squared loss.
     """
-    def __init__(self, X, y, k, l, g, Atv=None, Al1=None, mu=consts.TOLERANCE,
+    def __init__(self, X, y, l, k, g, Atv=None, Al1=None, mu=consts.TOLERANCE,
                  penalty_start=0, mean=True):
 
         if k < consts.TOLERANCE:
@@ -1059,7 +1060,8 @@ class RR_SmoothedL1TV(interfaces.CompositeFunction,
 
         From the interface "DualFunction".
         """
-        # TODO: Kernelise this function! See how I did in RR_L1_TV._beta_hat.
+        # TODO: Kernelise this function! See how I did in
+        # LinearRegressionL1L2TV._beta_hat.
 
         A = self.h.A()
         grad = A[0].T.dot(alpha[0])

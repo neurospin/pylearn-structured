@@ -541,10 +541,11 @@ class LinearRegressionL1L2TV(RegressionEstimator):
         """
         X, y = check_arrays(X, y)
 
-        function = functions.RR_L1_TV(X, y, self.l2, self.l1, self.tv,
-                                      A=self.A,
-                                      penalty_start=self.penalty_start,
-                                      mean=self.mean)
+        function = functions.LinearRegressionL1L2TV(X, y,
+                                              self.l2, self.l1, self.tv,
+                                              A=self.A,
+                                              penalty_start=self.penalty_start,
+                                              mean=self.mean)
         self.algorithm.check_compatibility(function,
                                            self.algorithm.INTERFACES)
 
