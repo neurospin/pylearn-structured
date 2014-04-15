@@ -15,8 +15,9 @@ import numpy as np
 
 from . import interfaces
 import nesterov.interfaces as nesterov_interfaces
-from .nesterov.L1 import L1 as SmoothedL1
-from .nesterov.L1TV import L1TV
+from .nesterov.l1 import L1 as SmoothedL1
+import nesterov
+from .nesterov.l1tv import L1TV
 from .nesterov.tv import TotalVariation
 from .nesterov.gl import GroupLassoOverlap
 from .penalties import L1, ZeroFunction
@@ -408,7 +409,7 @@ class LinearRegressionL1L2TV(interfaces.CompositeFunction,
 
         return mu * gM
 
-    def betahat(self, alphak, betak):
+    def betahat(self, alphak, betak, mu_min=consts.TOLERANCE):
         """ Returns the beta that minimises the dual function. Used when we
         compute the gap.
 
@@ -418,7 +419,7 @@ class LinearRegressionL1L2TV(interfaces.CompositeFunction,
             self._Xty = np.dot(self.X.T, self.y)
 
         Ata_tv = self.tv.l * self.tv.Aa(alphak)
-        Ata_l1 = self.l1.l * SmoothedL1.project([betak / consts.TOLERANCE])[0]
+        Ata_l1 = self.l1.l * SmoothedL1.project([betak / mu_min])[0]
         v = (self._Xty - Ata_tv - Ata_l1)
 
         shape = self.X.shape
@@ -453,6 +454,21 @@ class LinearRegressionL1L2TV(interfaces.CompositeFunction,
 
         From the interface "DualFunction".
         """
+#        alpha = self.tv.alpha(beta)
+#
+#        P = self.rr.f(beta) \
+#          + self.l1.f(beta) \
+#          + self.tv.phi(alpha, beta)
+#
+#        beta_hat = self.betahat(alpha, beta)
+#
+#        D = self.rr.f(beta_hat) \
+#          + self.l1.f(beta_hat) \
+#          + self.tv.phi(alpha, beta_hat)
+
+        old_mu = self.get_mu()
+        self.set_mu(consts.TOLERANCE)
+
         alpha = self.tv.alpha(beta)
 
         P = self.rr.f(beta) \
@@ -464,6 +480,8 @@ class LinearRegressionL1L2TV(interfaces.CompositeFunction,
         D = self.rr.f(beta_hat) \
           + self.l1.f(beta_hat) \
           + self.tv.phi(alpha, beta_hat)
+
+        self.set_mu(old_mu)
 
         return P - D
 
@@ -548,6 +566,9 @@ class LinearRegressionL1L2GL(LinearRegressionL1L2TV):
                                   mean=mean)
         self.l1 = L1(l, penalty_start=penalty_start)
         self.gl = GroupLassoOverlap(g, A=A, mu=mu, penalty_start=penalty_start)
+
+        self.penalty_start = penalty_start
+        self.mean = mean
 
         self.reset()
 
@@ -639,7 +660,7 @@ class LinearRegressionL1L2GL(LinearRegressionL1L2TV):
         return self.l1.prox(beta, factor)
 
     def estimate_mu(self, beta):
-        """Computes a "good" value of \mu with respect to the given \beta.
+        """Computes a "good" value of mu with respect to the given beta.
 
         From the interface "NesterovFunction".
         """
@@ -649,14 +670,14 @@ class LinearRegressionL1L2GL(LinearRegressionL1L2TV):
         """The maximum value of the regularisation of the dual variable. We
         have
 
-            M = max_{\alpha \in K} 0.5*|\alpha|²_2.
+            M = max_{alpha in K} 0.5*|alpha|²_2.
 
         From the interface "NesterovFunction".
         """
         return self.gl.M()
 
     def mu_opt(self, eps):
-        """The optimal value of \mu given \epsilon.
+        """The optimal value of mu given epsilon.
 
         From the interface "Continuation".
         """
@@ -675,7 +696,7 @@ class LinearRegressionL1L2GL(LinearRegressionL1L2TV):
              / (gM * Lg)
 
     def eps_opt(self, mu):
-        """The optimal value of \epsilon given \mu.
+        """The optimal value of epsilon given mu.
 
         From the interface "Continuation".
         """
@@ -694,7 +715,7 @@ class LinearRegressionL1L2GL(LinearRegressionL1L2TV):
              / gA2
 
     def eps_max(self, mu):
-        """The maximum value of \epsilon.
+        """The maximum value of epsilon.
 
         From the interface "Continuation".
         """
@@ -702,18 +723,35 @@ class LinearRegressionL1L2GL(LinearRegressionL1L2TV):
 
         return mu * gM
 
-    def betahat(self, alphak, betak):
+    def betahat(self, alphak, betak, mu_min=consts.TOLERANCE):
         """ Returns the beta that minimises the dual function. Used when we
         compute the gap.
 
         From the interface "DualFunction".
         """
+        if self.penalty_start > 0:
+            betak_ = betak[self.penalty_start:, :]
+        else:
+            betak_ = betak
+
         if self._Xty is None:
             self._Xty = np.dot(self.X.T, self.y)
 
-        Ata_tv = self.gl.l * self.gl.Aa(alphak)
-        Ata_l1 = self.l1.l * SmoothedL1.project([betak / consts.TOLERANCE])[0]
-        v = (self._Xty - Ata_tv - Ata_l1)
+        Ata_gl = self.gl.l * self.gl.Aa(alphak)
+        if self.penalty_start > 0:
+            Ata_gl = np.vstack((np.zeros((self.penalty_start, 1)),
+                                Ata_gl))
+
+#        Al1 = nesterov.l1.A_from_variables(self.X.shape[1],
+#                                           penalty_start=self.penalty_start)
+#        smoothed_l1 = nesterov.l1.L1(self.l1.l, A=Al1, mu=mu_min,
+#                                     penalty_start=self.penalty_start)
+#        Ata_l1 = self.l1.l * smoothed_l1.Aa(smoothed_l1.alpha(betak_))
+        Ata_l1 = self.l1.l * SmoothedL1.project([betak_ / mu_min])[0]
+        if self.penalty_start > 0:
+            Ata_l1 = np.vstack((np.zeros((self.penalty_start, 1)),
+                                Ata_l1))
+        v = (self._Xty - Ata_gl - Ata_l1)
 
         shape = self.X.shape
 
@@ -740,6 +778,36 @@ class LinearRegressionL1L2GL(LinearRegressionL1L2TV):
             beta_hat = (v - np.dot(self._XtinvXXtkI, np.dot(self.X, v))) \
                        / self.rr.k
 
+#        from parsimony.functions import CombinedFunction
+#        import parsimony.algorithms.explicit as explicit
+#        import parsimony.functions.losses as losses
+#        import parsimony.functions.penalties as penalties
+##        import parsimony.functions.nesterov as nesterov
+#
+#        function = CombinedFunction()
+#        function.add_function(losses.RidgeRegression(self.X, self.y,
+#                                              self.rr.k,
+#                                              penalty_start=self.penalty_start,
+#                                              mean=self.mean))
+#        function.add_function(losses.LinearFunction(Ata_gl))
+#        function.add_function(losses.LinearFunction(Ata_l1))
+##        A = nesterov.l1.A_from_variables(self.X.shape[1],
+##                                         penalty_start=self.penalty_start)
+##        function.add_penalty(nesterov.l1.L1(self.l1.l, A=A, mu=mu_min,
+##                                            penalty_start=self.penalty_start))
+##        function.add_prox(penalties.L1(self.l1.l,
+##                                       penalty_start=self.penalty_start))
+#
+#        fista = explicit.FISTA(eps=0.01, max_iter=10000)
+#        beta_hat_ = fista.run(function, beta_hat)
+#
+#        print np.linalg.norm(beta_hat - beta_hat_)
+#
+#        print "f:", function.f(beta_hat)
+#        print "f:", function.f(beta_hat_)
+#
+#        beta_hat = beta_hat_
+
         return beta_hat
 
     def gap(self, beta, beta_hat=None):
@@ -747,6 +815,21 @@ class LinearRegressionL1L2GL(LinearRegressionL1L2TV):
 
         From the interface "DualFunction".
         """
+#        alpha_ = self.gl.alpha(beta)
+#
+#        P_ = self.rr.f(beta) \
+#           + self.l1.f(beta) \
+#           + self.gl.phi(alpha_, beta)
+#
+#        beta_hat_ = self.betahat(alpha_, beta)
+#
+#        D_ = self.rr.f(beta_hat_) \
+#           + self.l1.f(beta_hat_) \
+#           + self.gl.phi(alpha_, beta_hat_)
+
+        mu = consts.TOLERANCE
+        old_mu = self.gl.set_mu(mu)
+
         alpha = self.gl.alpha(beta)
 
         P = self.rr.f(beta) \
@@ -758,6 +841,15 @@ class LinearRegressionL1L2GL(LinearRegressionL1L2TV):
         D = self.rr.f(beta_hat) \
           + self.l1.f(beta_hat) \
           + self.gl.phi(alpha, beta_hat)
+
+#        print "rr.f  :", self.rr.f(beta) - self.rr.f(beta_hat)
+#        print "l1.f  :", self.l1.f(beta) - self.l1.f(beta_hat)
+#        print "gl.phi:", self.gl.phi(alpha, beta) - self.gl.phi(alpha, beta_hat)
+
+        self.gl.set_mu(old_mu)
+
+#        print "old gap:", (P_ - D_), ", new gap:", (P - D)
+#        print "new gap:", (P - D)
 
         return P - D
 
@@ -1065,10 +1157,10 @@ class LinearRegressionL2SmoothedL1TV(interfaces.CompositeFunction,
         # LinearRegressionL1L2TV._beta_hat.
 
         A = self.h.A()
-        grad = A[0].T.dot(alpha[0])
-        grad += A[1].T.dot(alpha[1])
-        grad += A[2].T.dot(alpha[2])
-        grad += A[3].T.dot(alpha[3])
+        grad = A[0].T.dot(alpha[0])  # L1
+        grad += A[1].T.dot(alpha[1])  # TV X
+        grad += A[2].T.dot(alpha[2])  # TV Y
+        grad += A[3].T.dot(alpha[3])  # TV Z
 
         if self.penalty_start > 0:
             grad = np.vstack((np.zeros((self.penalty_start, 1)), grad))

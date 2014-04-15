@@ -484,7 +484,7 @@ class LinearRegressionL1L2TV(RegressionEstimator):
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
-    error =  0.068372945166
+    error =  0.0683839298003
     >>> lr = estimators.LinearRegressionL1L2TV(l1, l2, tv, A,
     ...                                algorithm=explicit.FISTA(max_iter=1000),
     ...                                mean=False)
@@ -645,7 +645,7 @@ class LinearRegressionL1L2GL(RegressionEstimator):
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
-    error =  0.610180621661
+    error =  0.610158320863
     >>> lr = estimators.LinearRegressionL1L2GL(l1, l2, gl, A,
     ...                                   algorithm=explicit.FISTA(),
     ...                                   algorithm_params=dict(max_iter=1000),

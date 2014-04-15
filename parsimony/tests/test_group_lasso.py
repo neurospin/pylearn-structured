@@ -9,7 +9,7 @@ Created on Mon Feb 24 11:03:30 2014
 from .tests import TestCase
 
 
-class TestGroupLasso():#TestCase):
+class TestGroupLasso(TestCase):
 
     def test_nonoverlapping_nonsmooth(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/doc_spams.pdf

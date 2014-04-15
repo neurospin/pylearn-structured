@@ -13,7 +13,7 @@ from nose.tools import nottest
 import unittest
 import abc
 import os
-import re
+#import re
 
 __all__ = ["TestCase", "test_all"]
 
@@ -88,6 +88,8 @@ class TestCase(unittest.TestCase):
         """
         cls.teardown_class()
 
+    def runTest(self):
+        pass
 # TODO: Wait for Nose issue #732: https://github.com/nose-devs/nose/issues/732
 #    @nottest
 #    def runTest(self):

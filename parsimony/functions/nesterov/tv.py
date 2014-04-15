@@ -94,26 +94,27 @@ class TotalVariation(interfaces.AtomicFunction,
         if self.l < consts.TOLERANCE:
             return 0.0
 
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
         Aa = self.Aa(alpha)
 
         alpha_sqsum = 0.0
         for a in alpha:
             alpha_sqsum += np.sum(a ** 2.0)
 
-        if self.penalty_start > 0:
-            beta_ = beta[self.penalty_start:, :]
-        else:
-            beta_ = beta
+        mu = self.get_mu()
 
         return self.l * ((np.dot(beta_.T, Aa)[0, 0]
-                          - (self.mu / 2.0) * alpha_sqsum) - self.c)
+                          - (mu / 2.0) * alpha_sqsum) - self.c)
 
     def feasible(self, beta):
         """Feasibility of the constraint.
 
         From the interface "Constraint".
         """
-
         if self.penalty_start > 0:
             beta_ = beta[self.penalty_start:, :]
         else:

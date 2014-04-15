@@ -16,14 +16,27 @@ __all__ = ['BaseStartVector', 'IdentityStartVector', 'RandomStartVector',
 
 
 class BaseStartVector(object):
+    """Base class for start vector generation.
 
+    Parameters
+    ----------
+    normalise : Bool. Whether or not to normalise the vector that is returned.
+
+    seed : Integer or None. The seed to the pseudo-random number generator. If
+            none, no seed is used. The seed is set at initialisation, so if the
+            RNG is used in between initialisation and utilisation, then the
+            random numbers will change. Default is None. The seed is not used
+            by all implementing classes.
+    """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, normalise=True):
-
+    def __init__(self, normalise=True, seed=None):
         super(BaseStartVector, self).__init__()
 
         self.normalise = normalise
+        self.seed = seed
+        if seed is not None:
+            np.random.seed(seed)
 
     @abc.abstractmethod
     def get_vector(self, shape):
@@ -37,12 +50,13 @@ class IdentityStartVector(BaseStartVector):
 
     Parameters
     ----------
-    vector : nx1 Array. Value of the predetermined start vector
+    vector : Numpy array. The predetermined start vector
 
     Examples
     --------
     >>> from parsimony.start_vectors import IdentityStartVector
-    >>> start_vector = IdentityStartVector(np.array([[0.5], [2.0], [0.3], [1.0]]))
+    >>> start_vector = IdentityStartVector(np.array([[0.5], [2.0], [0.3],
+    ...                                              [1.0]]))
     >>> start_vector.get_vector()
     array([[ 0.5],
            [ 2. ],
@@ -56,18 +70,19 @@ class IdentityStartVector(BaseStartVector):
         self.vector = vector
 
     def get_vector(self, *args, **kwargs):
-        '''Return the predetermined start vector
+        """Return the predetermined start vector
 
         Examples
         --------
         >>> from parsimony.start_vectors import IdentityStartVector
-        >>> start_vector = IdentityStartVector(np.array([[0.5], [2.0], [0.3], [1.0]]))
+        >>> start_vector = IdentityStartVector(np.array([[0.5], [2.0], [0.3],
+        ...                                              [1.0]]))
         >>> start_vector.get_vector()
         array([[ 0.5],
                [ 2. ],
                [ 0.3],
                [ 1. ]])
-        '''
+        """
         return self.vector
 
 
@@ -79,33 +94,56 @@ class RandomStartVector(BaseStartVector):
     normalise : Bool. If True, normalise the randomly created vectors.
             Default is True.
 
+    seed : Integer or None. The seed to the pseudo-random number generator. If
+            none, no seed is used. The seed is set at initialisation, so if the
+            RNG is used in between initialisation and utilisation, then the
+            random numbers will change. Default is None.
+
+    limits : List or tuple. A list or tuple with two elements, the lower and
+            upper limits of the uniform distribution. If normalise=True, then
+            these limits may not be honoured. Default is (0.0, 1.0).
+
     Examples
     --------
     >>> from parsimony.start_vectors import RandomStartVector
-
-    # Without normalization
-    >>> start_vector = RandomStartVector(normalise=False)
-    >>> random = start_vector.get_vector((3,1))
-    >>> print random  # doctest: +SKIP
-    [[ 0.98716579]
-     [ 0.12228144]
-     [ 0.80464505]]
-    >>> print maths.norm(random)  # doctest: +SKIP
-    0.370257678561
-
-    # With normalization
-    >>> start_vector_normalized = RandomStartVector(normalise=True)
-    >>> random_normalized = start_vector_normalized.get_vector((3,1))
-    >>> print random_normalized  # doctest: +SKIP
-    [[ 0.71286161]
-     [ 0.52456579]
-     [ 0.46546651]]
+    >>>
+    >>> # Without normalization
+    >>> start_vector = RandomStartVector(normalise=False, seed=42)
+    >>> random = start_vector.get_vector((3, 1))
+    >>> print random
+    [[ 0.37454012]
+     [ 0.95071431]
+     [ 0.73199394]]
+    >>> print maths.norm(random)
+    1.25696186254
+    >>>
+    >>> # With normalization
+    >>> start_vector_normalized = RandomStartVector(normalise=True, seed=2)
+    >>> random_normalized = start_vector_normalized.get_vector((3, 1))
+    >>> print random_normalized
+    [[ 0.62101956]
+     [ 0.03692864]
+     [ 0.78292463]]
     >>> print maths.norm(random_normalized)
     1.0
+    >>>
+    >>> # With limits
+    >>> start_vector_normalized = RandomStartVector(normalise=True, seed=2,
+    ...                                             limits=(-1, 1))
+    >>> random_limits = start_vector_normalized.get_vector((3, 1))
+    >>> print random_limits
+    [[-0.1330817 ]
+     [-0.98571123]
+     [ 0.10326001]]
+    >>> print maths.norm(random_limits)
+    1.0
+
     """
-    def __init__(self, **kwargs):
+    def __init__(self, limits=(0.0, 1.0), **kwargs):
 
         super(RandomStartVector, self).__init__(**kwargs)
+
+        self.limits = limits
 
     def get_vector(self, shape):
         """Return randomly generated vector of given shape.
@@ -117,14 +155,25 @@ class RandomStartVector(BaseStartVector):
         Examples
         --------
         >>> from parsimony.start_vectors import RandomStartVector
-        >>> start_vector = RandomStartVector(normalise=False)
-        >>> random = start_vector.get_vector((3,1))
-        >>> print random  # doctest: +SKIP
-        [[ 0.98716579]
-         [ 0.12228144]
-         [ 0.80464505]]
+        >>> start_vector = RandomStartVector(normalise=False, seed=42)
+        >>> random = start_vector.get_vector((3, 1))
+        >>> print random
+        [[ 0.37454012]
+         [ 0.95071431]
+         [ 0.73199394]]
+        >>>
+        >>> start_vector = RandomStartVector(normalise=False, seed=1,
+        ...                                  limits=(-1, 2))
+        >>> random = start_vector.get_vector((3, 1))
+        >>> print random
+        [[ 0.25106601]
+         [ 1.16097348]
+         [-0.99965688]]
         """
-        vector = np.random.rand(*shape)  # Random start vector
+        l = float(self.limits[0])
+        u = float(self.limits[1])
+
+        vector = np.random.rand(*shape) * (u - l) + l  # Random start vector.
 
         if self.normalise:
             return vector / maths.norm(vector)
@@ -146,7 +195,7 @@ class OnesStartVector(BaseStartVector):
 
     # Without normalization
     >>> start_vector = OnesStartVector(normalise=False)
-    >>> ones = start_vector.get_vector((3,1))
+    >>> ones = start_vector.get_vector((3, 1))
     >>> print ones
     [[ 1.]
      [ 1.]
@@ -156,7 +205,7 @@ class OnesStartVector(BaseStartVector):
 
     # With normalization
     >>> start_vector_normalized = OnesStartVector(normalise=True)
-    >>> ones_normalized = start_vector_normalized.get_vector((3,1))
+    >>> ones_normalized = start_vector_normalized.get_vector((3, 1))
     >>> print ones_normalized
     [[ 0.57735027]
      [ 0.57735027]
@@ -179,7 +228,7 @@ class OnesStartVector(BaseStartVector):
         --------
         >>> from parsimony.start_vectors import OnesStartVector
         >>> start_vector = OnesStartVector()
-        >>> ones = start_vector.get_vector((3,1))
+        >>> ones = start_vector.get_vector((3, 1))
         >>> print ones
         [[ 1.]
          [ 1.]
@@ -203,7 +252,7 @@ class ZerosStartVector(BaseStartVector):
     --------
     >>> from parsimony.start_vectors import ZerosStartVector
     >>> start_vector = ZerosStartVector()
-    >>> zeros = start_vector.get_vector((3,1))
+    >>> zeros = start_vector.get_vector((3, 1))
     >>> print zeros
     [[ 0.]
      [ 0.]
@@ -226,7 +275,7 @@ class ZerosStartVector(BaseStartVector):
         --------
         >>> from parsimony.start_vectors import ZerosStartVector
         >>> start_vector = ZerosStartVector()
-        >>> zeros = start_vector.get_vector((3,1))
+        >>> zeros = start_vector.get_vector((3, 1))
         >>> print zeros
         [[ 0.]
          [ 0.]

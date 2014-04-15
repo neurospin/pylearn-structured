@@ -576,11 +576,11 @@ class CONESTA(bases.ExplicitAlgorithm,
 
             self.mu_min = min(self.mu_min, mu[-1])
             tmin = min(tmin, tnew)
-            function.set_mu(self.mu_min)
+            old_mu = function.set_mu(self.mu_min)
             # Take one ISTA step for use in the stopping criterion.
             beta_tilde = function.prox(beta - tmin * function.grad(beta),
                                        tmin)
-            function.set_mu(mu[-1])
+            function.set_mu(old_mu)
 
             if (1.0 / tmin) * maths.norm(beta - beta_tilde) < self.eps:
                 if self.info.allows(Info.converged):
