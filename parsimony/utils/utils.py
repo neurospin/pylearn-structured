@@ -310,42 +310,43 @@ class AnonymousClass(object):
         return self.__dict__ != other.__dict__
 
 
+class EnumItem(object):
+    def __init__(self, cls_name, name, value):
+        self.cls_name = cls_name
+        self.name = name
+        self.value = value
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        return self.cls_name == other.cls_name \
+                and self.name == other.name \
+                and self.value == other.value
+
+    def __hash__(self):
+        return hash(self.cls_name) | hash(self.name) | hash(self.value)
+
+    def __str__(self):
+        return "<%s.%s: %d>" % (self.cls_name, self.name, self.value)
+
+    def __repr__(self):
+        return "EnumItem('%s', '%s', %d)" % (self.cls_name, self.name,
+                                             self.value)
+
+
 class Enum(object):
     """Used to declare enumerated constants.
 
     Supposed to be similar to and used as the Enum class introduced in
     Python 3.4.
     """
-    class EnumItem(object):
-        def __init__(self, cls_name, name, value):
-            self.cls_name = cls_name
-            self.name = name
-            self.value = value
-
-        def __eq__(self, other):
-            if not isinstance(other, self.__class__):
-                return False
-
-            return self.cls_name == other.cls_name \
-                    and self.name == other.name \
-                    and self.value == other.value
-
-        def __hash__(self):
-            return hash(self.cls_name) | hash(self.name) | hash(self.value)
-
-        def __str__(self):
-            return "<%s.%s: %d>" % (self.cls_name, self.name, self.value)
-
-        def __repr__(self):
-            return "EnumItem('%s', '%s', %d)" % (self.cls_name, self.name,
-                                                 self.value)
-
     def __init__(self, name, *sequential, **named):
 #        self.__dict__["_Enum__name"] = name
         seq_pairs = zip(sequential, range(len(sequential)))
-        values = {k: self.EnumItem(name, k, v) for k, v in seq_pairs}
+        values = {k: EnumItem(name, k, v) for k, v in seq_pairs}
         for k, v in named:
-            values[k] = self.EnumItem(name, k, v)
+            values[k] = EnumItem(name, k, v)
         enums = dict(values)  # , **named)
         for k, v in enums.items():
             self.__dict__[k] = v
