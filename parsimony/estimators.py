@@ -895,9 +895,8 @@ class LogisticRegressionL1L2TV(LogisticRegressionEstimator):
     algorithm : ExplicitAlgorithm. The algorithm that should be applied.
             Should be one of:
                 1. StaticCONESTA(...)
-                2. DynamicCONESTA(...)
-                3. FISTA(...)
-                4. ISTA(...)
+                2. FISTA(...)
+                3. ISTA(...)
 
             Default is StaticCONESTA(...).
 
@@ -940,13 +939,6 @@ class LogisticRegressionL1L2TV(LogisticRegressionEstimator):
     >>> lr = estimators.LogisticRegressionL1L2TV(l1, l2, tv, A,
     ...                        algorithm=explicit.StaticCONESTA(max_iter=1000),
     ...                        mean=False)
-    >>> res = lr.fit(X, y)
-    >>> error = lr.score(X, y)
-    >>> print "error = ", error
-    error =  0.7
-    >>> lr = estimators.LogisticRegressionL1L2TV(l1, l2, tv, A,
-    ...                       algorithm=explicit.DynamicCONESTA(max_iter=1000),
-    ...                       mean=False)
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
@@ -1074,9 +1066,8 @@ class LogisticRegressionL1L2GL(LogisticRegressionEstimator):
     algorithm : ExplicitAlgorithm. The algorithm that should be applied.
             Should be one of:
                 1. StaticCONESTA(...)
-                2. DynamicCONESTA(...)
-                3. FISTA(...)
-                4. ISTA(...)
+                2. FISTA(...)
+                3. ISTA(...)
 
             Default is StaticCONESTA(...).
 
@@ -1121,13 +1112,6 @@ class LogisticRegressionL1L2GL(LogisticRegressionEstimator):
     >>> lr = estimators.LogisticRegressionL1L2GL(l1, l2, tv, A=A,
     ...                        algorithm=explicit.StaticCONESTA(max_iter=1000),
     ...                        mean=False)
-    >>> res = lr.fit(X, y)
-    >>> error = lr.score(X, y)
-    >>> print "error = ", error
-    error =  0.7
-    >>> lr = estimators.LogisticRegressionL1L2GL(l1, l2, tv, A=A,
-    ...                       algorithm=explicit.DynamicCONESTA(max_iter=1000),
-    ...                       mean=False)
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
