@@ -3,31 +3,37 @@
 
 ./parsimony/estimators.py:
 -------------------------
-79: # TODO: Is this a good name?
+73: # TODO: Is this a good name?
 
-296: # TODO: Should we use a seed here so that we get deterministic results?
+277: # TODO: Should we use a seed here so that we get deterministic results?
 
-433: # TODO: Should we use a seed here so that we get deterministic results?
+393: # TODO: Should we use a seed here so that we get deterministic results?
 
-565: # TODO: Should we use a seed here so that we get deterministic results?
+552: # TODO: Should we use a seed here so that we get deterministic results?
 
-694: # TODO: Should we use a seed here so that we get deterministic results?
+716: # TODO: Should we use a seed here so that we get deterministic results?
 
-802: # TODO: Should we use a seed here so that we get deterministic results?
+1030: # TODO: Should we use a seed here so that we get deterministic results?
 
-822: # TODO: Add penalty_start and mean to here!
+1207: # TODO: Should we use a seed here so that we get deterministic results?
 
 ./parsimony/algorithms/explicit.py:
 ----------------------------------
-585: # TODO: Warn if G_new < 0.
+601: # TODO: Warn if G_new < 0.
 
-1014: # TODO: We already have f_mid, so we can return a better approximation
-1015: # here!
+1030: # TODO: We already have f_mid, so we can return a better approximation
+1031: # here!
 
-1104: # TODO: Handle the other cases!
+1120: # TODO: Handle the other cases!
 
-1294: # TODO: Does the weights really matter when the function is the
-1295: # indicator function?
+1220: # TODO: Investigate what is a good default value here!
+
+1273: # TODO: Investigate what is a good default value here!
+
+1312: # TODO: Does the weights really matter when the function is the
+1313: # indicator function?
+
+1347: # TODO: Investigate what is a good default value here!
 
 ./parsimony/algorithms/implicit.py:
 ----------------------------------
@@ -61,77 +67,77 @@
 
 ./parsimony/functions/interfaces.py:
 -----------------------------------
-97: # TODO: Should all constraints have the projection operator?
+98: # TODO: Should all constraints have the projection operator?
 
-184: # TODO: This should be in the NesterovFunction interface, right?
+185: # TODO: This should be in the NesterovFunction interface, right?
 
-296: # TODO: Should L by default take a weight vector as argument?
+297: # TODO: Should L by default take a weight vector as argument?
 
 ./parsimony/functions/losses.py:
 -------------------------------
-31: # TODO: Add penalty_start and mean to all of these!
+185: # TODO: Inherit from LinearRegression and add an L2 constraint instead!
 
-187: # TODO: Inherit from LinearRegression and add an L2 constraint instead!
+362: # TODO: Make the weights sparse.
+363: #weights = np.eye(self.X.shape[0])
 
-363: # TODO: Make the weights sparse.
-364: #weights = np.eye(self.X.shape[0])
+365: # TODO: Allow the weight vector to be a list.
 
-366: # TODO: Allow the weight vector to be a list.
+470: # TODO: Use FastSVD for speedup!
 
-471: # TODO: Use FastSVD for speedup!
+472: self._L = np.max(s) ** 2.0  # TODO: CHECK
 
-473: self._L = np.max(s) ** 2.0  # TODO: CHECK
+632: PWX = 0.5 * np.sqrt(self.weights) * self.X  # TODO: CHECK WITH FOUAD
+633: # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
+634: #PW = 0.5 * np.sqrt(self.W)
+635: #PWX = np.dot(PW, self.X)
+636: # TODO: Use FastSVD for speedup!
 
-633: PWX = 0.5 * np.sqrt(self.weights) * self.X  # TODO: CHECK WITH FOUAD
-634: # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
-635: #PW = 0.5 * np.sqrt(self.W)
-636: #PWX = np.dot(PW, self.X)
-637: # TODO: Use FastSVD for speedup!
+638: self._L = np.max(s) ** 2.0  # TODO: CHECK
 
-639: self._L = np.max(s) ** 2.0  # TODO: CHECK
+643: self._L += self.k  # TODO: CHECK
 
-644: self._L += self.k  # TODO: CHECK
+661: # TODO: Handle mean here?
 
 ./parsimony/functions/penalties.py:
 ----------------------------------
-519: # TODO: Check if this is correct!
+520: # TODO: Check if this is correct!
 
-1066: # TODO: We can share variables between f and df and speed up
-1067: # some shared computations.
+1067: # TODO: We can share variables between f and df and speed up
+1068: # some shared computations.
 
 ./parsimony/functions/combinedfunctions.py:
 ------------------------------------------
-32: # TODO: Add penalty_start and mean to all of these!
+35: # TODO: Add penalty_start and mean to all of these!
 
-104: # TODO: We currently only allow one proximal operator. Fix this!
+107: # TODO: We currently only allow one proximal operator. Fix this!
 
-157: # TODO: We currently only allow one proximal operator. Fix this!
+160: # TODO: We currently only allow one proximal operator. Fix this!
 
-564: # TODO: This is not good. Solve this better!
+628: # TODO: This is not good. Solve this better!
 
-952: # TODO: This is not good. Solve this better!
+1099: # TODO: This is not a good solution. Can we solve this in a better way?
 
-1004: # TODO: Use max_iter here!!
+1151: # TODO: Use max_iter here!!
 
-1054: # TODO: Kernelise this function! See how I did in RR_L1_TV._beta_hat.
+1201: # TODO: Kernelise this function! See how I did in
+1202: # LinearRegressionL1L2TV._beta_hat.
 
-1096: # TODO: Add this function or refactor API!
+1244: # TODO: Add this function or refactor API!
+
+1327: # TODO: This is not a nice solution. Can we solve it better?
 
 ./parsimony/functions/multiblock/losses.py:
 ------------------------------------------
 581: # TODO: Check instead if it is a numpy array.
 
-./parsimony/functions/nesterov/TV.py:
-------------------------------------
-146: # TODO: This only work if the elements of self._A are scipy.sparse. We
-147: # should allow dense matrices as well.
+./parsimony/functions/nesterov/l1tv.py:
+--------------------------------------
+62: # WARNING: Number of non-zero rows may differ from p.
 
-150: # TODO: Instead of p, this should really be the number of non-zero
-151: # rows of A.
+149: # TODO: Instead of p, this should really be the number of non-zero
+150: # rows of A.
 
-161: # TODO: Add max_iter here!
-
-263: # TODO: This is the wrong order of the dimensions. They should be reversed.
+161: # TODO: Add max_iter here!!
 
 ./parsimony/functions/nesterov/L1TV.py:
 --------------------------------------
@@ -144,41 +150,41 @@
 
 ./parsimony/functions/nesterov/tv.py:
 ------------------------------------
-146: # TODO: This only work if the elements of self._A are scipy.sparse. We
-147: # should allow dense matrices as well.
+147: # TODO: This only work if the elements of self._A are scipy.sparse. We
+148: # should allow dense matrices as well.
 
-150: # TODO: Instead of p, this should really be the number of non-zero
-151: # rows of A.
+151: # TODO: Instead of p, this should really be the number of non-zero
+152: # rows of A.
 
-161: # TODO: Add max_iter here!
+162: # TODO: Add max_iter here!
 
-263: # TODO: This is the wrong order of the dimensions. They should be reversed.
+264: # TODO: This is the wrong order of the dimensions. They should be reversed.
 
 ./parsimony/tests/test_simulations.py:
 -------------------------------------
-118: # TODO: Note done. Add more!!
+117: # TODO: Not done. Add more!!
 
 ./parsimony/tests/tests.py:
 --------------------------
-91: # TODO: Wait for Nose issue #732: https://github.com/nose-devs/nose/issues/732
-92: #    @nottest
-93: #    def runTest(self):
-94: #        """Runs all unit tests.
-95: #
-96: #        From baseclass "unittest.TestCase".
-97: #        """
-98: #        RE_TEST = re.compile("[Tt]est[-_]")
-99: #        for attr in dir(self):
-100: #            if callable(getattr(self, attr)) and RE_TEST.match(attr):
-101: #                getattr(self, attr)()
+93: # TODO: Wait for Nose issue #732: https://github.com/nose-devs/nose/issues/732
+94: #    @nottest
+95: #    def runTest(self):
+96: #        """Runs all unit tests.
+97: #
+98: #        From baseclass "unittest.TestCase".
+99: #        """
+100: #        RE_TEST = re.compile("[Tt]est[-_]")
+101: #        for attr in dir(self):
+102: #            if callable(getattr(self, attr)) and RE_TEST.match(attr):
+103: #                getattr(self, attr)()
 
-108: # TODO: There is a better way to do this!
+110: # TODO: There is a better way to do this!
 
 ./parsimony/tests/test_logistic_regression.py:
 ---------------------------------------------
-17: # TODO: Test penalty_start and mean.
+16: # TODO: Test penalty_start.
 
-19: # TODO: Test total variation.
+18: # TODO: Test total variation.
 
 ./parsimony/tests/spamsdata.py:
 ------------------------------

@@ -595,7 +595,8 @@ class CONESTA(bases.ExplicitAlgorithm,
                 gap_time = utils.time_cpu()
 
             if self.dynamic:
-                G_new = function.gap(beta)
+                G_new = function.gap(beta, eps=eps_plus,
+                                     max_iter=self.max_iter - self.num_iter)
 
                 # TODO: Warn if G_new < 0.
                 G_new = abs(G_new)  # Just in case ...

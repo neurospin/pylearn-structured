@@ -28,8 +28,6 @@ __all__ = ["LinearRegression", "RidgeRegression",
            "LogisticRegression", "RidgeLogisticRegression",
            "LatentVariableVariance", "LinearFunction"]
 
-# TODO: Add penalty_start and mean to all of these!
-
 
 class LinearRegression(interfaces.CompositeFunction,
                        interfaces.Gradient,
@@ -660,7 +658,7 @@ class LatentVariableVariance(interfaces.Function,
                                interfaces.Gradient,
                                interfaces.StepSize,
                                interfaces.LipschitzContinuousGradient):
-
+    # TODO: Handle mean here?
     def __init__(self, X, unbiased=True):
 
         self.X = X
@@ -789,7 +787,7 @@ class LinearFunction(interfaces.CompositeFunction,
                      interfaces.StepSize):
     """A linear function.
     """
-    def __init__(self, a, mean=True):
+    def __init__(self, a):
         """
         Parameters
         ----------

@@ -257,6 +257,9 @@ class LinearRegressionL1L2TV(interfaces.CompositeFunction,
         self.l1 = L1(l, penalty_start=penalty_start)
         self.tv = TotalVariation(g, A=A, mu=mu, penalty_start=penalty_start)
 
+        self.penalty_start = penalty_start
+        self.mean = mean
+
         self.reset()
 
     def reset(self):
@@ -409,47 +412,85 @@ class LinearRegressionL1L2TV(interfaces.CompositeFunction,
 
         return mu * gM
 
-    def betahat(self, alphak, betak, mu_min=consts.TOLERANCE):
+    def betahat(self, alphak, betak,  # mu_min=consts.TOLERANCE,
+                eps=consts.TOLERANCE, max_iter=consts.MAX_ITER):
         """ Returns the beta that minimises the dual function. Used when we
         compute the gap.
 
         From the interface "DualFunction".
         """
-        if self._Xty is None:
-            self._Xty = np.dot(self.X.T, self.y)
+#        if self._Xty is None:
+#            self._Xty = np.dot(self.X.T, self.y)
 
         Ata_tv = self.tv.l * self.tv.Aa(alphak)
-        Ata_l1 = self.l1.l * SmoothedL1.project([betak / mu_min])[0]
-        v = (self._Xty - Ata_tv - Ata_l1)
+        if self.penalty_start > 0:
+            Ata_tv = np.vstack((np.zeros((self.penalty_start, 1)),
+                                Ata_tv))
 
-        shape = self.X.shape
+#        Ata_l1 = self.l1.l * SmoothedL1.project([betak / mu_min])[0]
+#        v = (self._Xty - Ata_tv - Ata_l1)
+#
+#        shape = self.X.shape
+#
+#        if shape[0] > shape[1]:  # If n > p
+#
+#            # Ridge solution
+#            if self._invXXkI is None:
+#                XtXkI = np.dot(self.X.T, self.X)
+#                index = np.arange(min(XtXkI.shape))
+#                XtXkI[index, index] += self.rr.k
+#                self._invXXkI = np.linalg.inv(XtXkI)
+#
+#            beta_hat = np.dot(self._invXXkI, v)
+#
+#        else:  # If p > n
+#            # Ridge solution using the Woodbury matrix identity:
+#            if self._XtinvXXtkI is None:
+#                XXtkI = np.dot(self.X, self.X.T)
+#                index = np.arange(min(XXtkI.shape))
+#                XXtkI[index, index] += self.rr.k
+#                invXXtkI = np.linalg.inv(XXtkI)
+#                self._XtinvXXtkI = np.dot(self.X.T, invXXtkI)
+#
+#            beta_hat = (v - np.dot(self._XtinvXXtkI, np.dot(self.X, v))) \
+#                       / self.rr.k
 
-        if shape[0] > shape[1]:  # If n > p
+        beta_hat = betak
 
-            # Ridge solution
-            if self._invXXkI is None:
-                XtXkI = np.dot(self.X.T, self.X)
-                index = np.arange(min(XtXkI.shape))
-                XtXkI[index, index] += self.rr.k
-                self._invXXkI = np.linalg.inv(XtXkI)
+        from parsimony.functions import CombinedFunction
+        import parsimony.algorithms.explicit as explicit
+        import parsimony.functions.losses as losses
+        import parsimony.functions.penalties as penalties
+#        import parsimony.functions.nesterov as nesterov
 
-            beta_hat = np.dot(self._invXXkI, v)
+        function = CombinedFunction()
+        function.add_function(losses.RidgeRegression(self.X, self.y,
+                                              self.rr.k,
+                                              penalty_start=self.penalty_start,
+                                              mean=self.mean))
+        function.add_function(losses.LinearFunction(Ata_tv))
+#        function.add_function(losses.LinearFunction(Ata_l1))
+#        A = nesterov.l1.A_from_variables(self.X.shape[1],
+#                                         penalty_start=self.penalty_start)
+#        function.add_penalty(nesterov.l1.L1(self.l1.l, A=A, mu=mu_min,
+#                                            penalty_start=self.penalty_start))
+        function.add_prox(penalties.L1(self.l1.l,
+                                       penalty_start=self.penalty_start))
 
-        else:  # If p > n
-            # Ridge solution using the Woodbury matrix identity:
-            if self._XtinvXXtkI is None:
-                XXtkI = np.dot(self.X, self.X.T)
-                index = np.arange(min(XXtkI.shape))
-                XXtkI[index, index] += self.rr.k
-                invXXtkI = np.linalg.inv(XXtkI)
-                self._XtinvXXtkI = np.dot(self.X.T, invXXtkI)
+        fista = explicit.FISTA(eps=eps, max_iter=max_iter)
+        beta_hat_ = fista.run(function, beta_hat)
 
-            beta_hat = (v - np.dot(self._XtinvXXtkI, np.dot(self.X, v))) \
-                       / self.rr.k
+#        print np.linalg.norm(beta_hat - beta_hat_)
+
+#        print "f:", function.f(beta_hat)
+#        print "f:", function.f(beta_hat_)
+
+        beta_hat = beta_hat_
 
         return beta_hat
 
-    def gap(self, beta, beta_hat=None):
+    def gap(self, beta, beta_hat=None,
+            eps=consts.TOLERANCE, max_iter=consts.MAX_ITER):
         """Compute the duality gap.
 
         From the interface "DualFunction".
@@ -475,7 +516,7 @@ class LinearRegressionL1L2TV(interfaces.CompositeFunction,
           + self.l1.f(beta) \
           + self.tv.phi(alpha, beta)
 
-        beta_hat = self.betahat(alpha, beta)
+        beta_hat = self.betahat(alpha, beta, eps=eps, max_iter=max_iter)
 
         D = self.rr.f(beta_hat) \
           + self.l1.f(beta_hat) \
@@ -723,94 +764,98 @@ class LinearRegressionL1L2GL(LinearRegressionL1L2TV):
 
         return mu * gM
 
-    def betahat(self, alphak, betak, mu_min=consts.TOLERANCE):
+    def betahat(self, alphak, betak,  # mu_min=consts.TOLERANCE,
+                eps=consts.TOLERANCE, max_iter=consts.MAX_ITER):
         """ Returns the beta that minimises the dual function. Used when we
         compute the gap.
 
         From the interface "DualFunction".
         """
-        if self.penalty_start > 0:
-            betak_ = betak[self.penalty_start:, :]
-        else:
-            betak_ = betak
+#        if self.penalty_start > 0:
+#            betak_ = betak[self.penalty_start:, :]
+#        else:
+#            betak_ = betak
 
-        if self._Xty is None:
-            self._Xty = np.dot(self.X.T, self.y)
+#        if self._Xty is None:
+#            self._Xty = np.dot(self.X.T, self.y)
 
         Ata_gl = self.gl.l * self.gl.Aa(alphak)
         if self.penalty_start > 0:
             Ata_gl = np.vstack((np.zeros((self.penalty_start, 1)),
                                 Ata_gl))
 
-#        Al1 = nesterov.l1.A_from_variables(self.X.shape[1],
-#                                           penalty_start=self.penalty_start)
-#        smoothed_l1 = nesterov.l1.L1(self.l1.l, A=Al1, mu=mu_min,
-#                                     penalty_start=self.penalty_start)
-#        Ata_l1 = self.l1.l * smoothed_l1.Aa(smoothed_l1.alpha(betak_))
-        Ata_l1 = self.l1.l * SmoothedL1.project([betak_ / mu_min])[0]
-        if self.penalty_start > 0:
-            Ata_l1 = np.vstack((np.zeros((self.penalty_start, 1)),
-                                Ata_l1))
-        v = (self._Xty - Ata_gl - Ata_l1)
-
-        shape = self.X.shape
-
-        if shape[0] > shape[1]:  # If n > p
-
-            # Ridge solution
-            if self._invXXkI is None:
-                XtXkI = np.dot(self.X.T, self.X)
-                index = np.arange(min(XtXkI.shape))
-                XtXkI[index, index] += self.rr.k
-                self._invXXkI = np.linalg.inv(XtXkI)
-
-            beta_hat = np.dot(self._invXXkI, v)
-
-        else:  # If p > n
-            # Ridge solution using the Woodbury matrix identity:
-            if self._XtinvXXtkI is None:
-                XXtkI = np.dot(self.X, self.X.T)
-                index = np.arange(min(XXtkI.shape))
-                XXtkI[index, index] += self.rr.k
-                invXXtkI = np.linalg.inv(XXtkI)
-                self._XtinvXXtkI = np.dot(self.X.T, invXXtkI)
-
-            beta_hat = (v - np.dot(self._XtinvXXtkI, np.dot(self.X, v))) \
-                       / self.rr.k
-
-#        from parsimony.functions import CombinedFunction
-#        import parsimony.algorithms.explicit as explicit
-#        import parsimony.functions.losses as losses
-#        import parsimony.functions.penalties as penalties
-##        import parsimony.functions.nesterov as nesterov
+##        Al1 = nesterov.l1.A_from_variables(self.X.shape[1],
+##                                           penalty_start=self.penalty_start)
+##        smoothed_l1 = nesterov.l1.L1(self.l1.l, A=Al1, mu=mu_min,
+##                                     penalty_start=self.penalty_start)
+##        Ata_l1 = self.l1.l * smoothed_l1.Aa(smoothed_l1.alpha(betak_))
+#        Ata_l1 = self.l1.l * SmoothedL1.project([betak_ / mu_min])[0]
+#        if self.penalty_start > 0:
+#            Ata_l1 = np.vstack((np.zeros((self.penalty_start, 1)),
+#                                Ata_l1))
+#        v = (self._Xty - Ata_gl - Ata_l1)
 #
-#        function = CombinedFunction()
-#        function.add_function(losses.RidgeRegression(self.X, self.y,
-#                                              self.rr.k,
-#                                              penalty_start=self.penalty_start,
-#                                              mean=self.mean))
-#        function.add_function(losses.LinearFunction(Ata_gl))
+#        shape = self.X.shape
+#
+#        if shape[0] > shape[1]:  # If n > p
+#
+#            # Ridge solution
+#            if self._invXXkI is None:
+#                XtXkI = np.dot(self.X.T, self.X)
+#                index = np.arange(min(XtXkI.shape))
+#                XtXkI[index, index] += self.rr.k
+#                self._invXXkI = np.linalg.inv(XtXkI)
+#
+#            beta_hat = np.dot(self._invXXkI, v)
+#
+#        else:  # If p > n
+#            # Ridge solution using the Woodbury matrix identity:
+#            if self._XtinvXXtkI is None:
+#                XXtkI = np.dot(self.X, self.X.T)
+#                index = np.arange(min(XXtkI.shape))
+#                XXtkI[index, index] += self.rr.k
+#                invXXtkI = np.linalg.inv(XXtkI)
+#                self._XtinvXXtkI = np.dot(self.X.T, invXXtkI)
+#
+#            beta_hat = (v - np.dot(self._XtinvXXtkI, np.dot(self.X, v))) \
+#                       / self.rr.k
+
+        beta_hat = betak
+
+        from parsimony.functions import CombinedFunction
+        import parsimony.algorithms.explicit as explicit
+        import parsimony.functions.losses as losses
+        import parsimony.functions.penalties as penalties
+#        import parsimony.functions.nesterov as nesterov
+
+        function = CombinedFunction()
+        function.add_function(losses.RidgeRegression(self.X, self.y,
+                                              self.rr.k,
+                                              penalty_start=self.penalty_start,
+                                              mean=self.mean))
+        function.add_function(losses.LinearFunction(Ata_gl))
 #        function.add_function(losses.LinearFunction(Ata_l1))
-##        A = nesterov.l1.A_from_variables(self.X.shape[1],
-##                                         penalty_start=self.penalty_start)
-##        function.add_penalty(nesterov.l1.L1(self.l1.l, A=A, mu=mu_min,
-##                                            penalty_start=self.penalty_start))
-##        function.add_prox(penalties.L1(self.l1.l,
-##                                       penalty_start=self.penalty_start))
-#
-#        fista = explicit.FISTA(eps=0.01, max_iter=10000)
-#        beta_hat_ = fista.run(function, beta_hat)
-#
+#        A = nesterov.l1.A_from_variables(self.X.shape[1],
+#                                         penalty_start=self.penalty_start)
+#        function.add_penalty(nesterov.l1.L1(self.l1.l, A=A, mu=mu_min,
+#                                            penalty_start=self.penalty_start))
+        function.add_prox(penalties.L1(self.l1.l,
+                                       penalty_start=self.penalty_start))
+
+        fista = explicit.FISTA(eps=eps, max_iter=max_iter)
+        beta_hat_ = fista.run(function, beta_hat)
+
 #        print np.linalg.norm(beta_hat - beta_hat_)
-#
+
 #        print "f:", function.f(beta_hat)
 #        print "f:", function.f(beta_hat_)
-#
-#        beta_hat = beta_hat_
+
+        beta_hat = beta_hat_
 
         return beta_hat
 
-    def gap(self, beta, beta_hat=None):
+    def gap(self, beta, beta_hat=None,
+            eps=consts.TOLERANCE, max_iter=consts.MAX_ITER):
         """Compute the duality gap.
 
         From the interface "DualFunction".
@@ -836,7 +881,7 @@ class LinearRegressionL1L2GL(LinearRegressionL1L2TV):
           + self.l1.f(beta) \
           + self.gl.phi(alpha, beta)
 
-        beta_hat = self.betahat(alpha, beta)
+        beta_hat = self.betahat(alpha, beta, eps=eps, max_iter=max_iter)
 
         D = self.rr.f(beta_hat) \
           + self.l1.f(beta_hat) \
@@ -932,6 +977,9 @@ class LogisticRegressionL1L2TV(LinearRegressionL1L2TV):
         self.l1 = L1(l, penalty_start=penalty_start)
         self.tv = TotalVariation(g, A=A, mu=mu, penalty_start=penalty_start)
 
+        self.penalty_start = penalty_start
+        self.mean = mean
+
         self.reset()
 
 
@@ -974,6 +1022,9 @@ class LogisticRegressionL1L2GL(LinearRegressionL1L2GL):
         self.rr = RidgeLogisticRegression(X, y, k, weights=weights, mean=mean)
         self.l1 = L1(l, penalty_start=penalty_start)
         self.gl = GroupLassoOverlap(g, A=A, mu=mu, penalty_start=penalty_start)
+
+        self.penalty_start = penalty_start
+        self.mean = mean
 
         self.reset()
 

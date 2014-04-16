@@ -484,7 +484,7 @@ class LinearRegressionL1L2TV(RegressionEstimator):
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
-    error =  0.0683839298003
+    error =  0.0683839265093
     >>> lr = estimators.LinearRegressionL1L2TV(l1, l2, tv, A,
     ...                                algorithm=explicit.FISTA(max_iter=1000),
     ...                                mean=False)
@@ -645,7 +645,7 @@ class LinearRegressionL1L2GL(RegressionEstimator):
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
-    error =  0.610158320863
+    error =  0.610280682745
     >>> lr = estimators.LinearRegressionL1L2GL(l1, l2, gl, A,
     ...                                   algorithm=explicit.FISTA(),
     ...                                   algorithm_params=dict(max_iter=1000),
@@ -1104,40 +1104,42 @@ class LogisticRegressionL1L2GL(LogisticRegressionEstimator):
     >>> import numpy as np
     >>> import parsimony.estimators as estimators
     >>> import parsimony.algorithms.explicit as explicit
-    >>> import parsimony.functions.nesterov.tv as total_variation
-    >>> shape = (1, 4, 4)
-    >>> n = 10
-    >>> p = shape[0] * shape[1] * shape[2]
+    >>> import parsimony.functions.nesterov.gl as group_lasso
     >>>
     >>> np.random.seed(42)
+    >>>
+    >>> n, p = 10, 16
+    >>> groups = [range(0, p / 2), range(p / 2, p)]
+    >>> weights = [1.5, 0.5]
+    >>> A = group_lasso.A_from_groups(p, groups=groups, weights=weights)
+    >>>
     >>> X = np.random.rand(n, p)
     >>> y = np.random.randint(0, 2, (n, 1))
     >>> l1 = 0.1  # L1 coefficient
     >>> l2 = 0.9  # Ridge coefficient
     >>> tv = 1.0  # TV coefficient
-    >>> A, n_compacts = total_variation.A_from_shape(shape)
-    >>> lr = estimators.LogisticRegressionL1L2TV(l1, l2, tv, A,
+    >>> lr = estimators.LogisticRegressionL1L2GL(l1, l2, tv, A=A,
     ...                        algorithm=explicit.StaticCONESTA(max_iter=1000),
     ...                        mean=False)
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
     error =  0.7
-    >>> lr = estimators.LogisticRegressionL1L2TV(l1, l2, tv, A,
+    >>> lr = estimators.LogisticRegressionL1L2GL(l1, l2, tv, A=A,
     ...                       algorithm=explicit.DynamicCONESTA(max_iter=1000),
     ...                       mean=False)
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
     error =  0.7
-    >>> lr = estimators.LogisticRegressionL1L2TV(l1, l2, tv, A,
+    >>> lr = estimators.LogisticRegressionL1L2GL(l1, l2, tv, A=A,
     ...                                algorithm=explicit.FISTA(max_iter=1000),
     ...                                mean=False)
     >>> lr = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
     error =  0.7
-    >>> lr = estimators.LogisticRegressionL1L2TV(l1, l2, tv, A,
+    >>> lr = estimators.LogisticRegressionL1L2GL(l1, l2, tv, A,
     ...                                 algorithm=explicit.ISTA(max_iter=1000),
     ...                                 mean=False)
     >>> lr = lr.fit(X, y)
@@ -1145,8 +1147,9 @@ class LogisticRegressionL1L2GL(LogisticRegressionEstimator):
     >>> print "error = ", error
     error =  0.7
     """
-    def __init__(self, l1, l2, gl, weigths=None,
+    def __init__(self, l1, l2, gl,
                  A=None, mu=consts.TOLERANCE,
+                 weigths=None,
                  algorithm=None, algorithm_params=dict(),
                  class_weight=None,
                  penalty_start=0,

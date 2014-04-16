@@ -17,6 +17,7 @@ import abc
 import numpy as np
 
 import parsimony.utils.maths as maths
+import parsimony.utils.consts as consts
 
 __all__ = ["Function", "AtomicFunction", "CompositeFunction",
            "Penalty", "Constraint",
@@ -360,14 +361,14 @@ class DualFunction(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def gap(self, beta, beta_hat):
+    def gap(self, beta, beta_hat=None, eps=consts.TOLERANCE):
         """Compute the duality gap.
         """
         raise NotImplementedError('Abstract method "gap" must be '
                                   'specialised!')
 
     @abc.abstractmethod
-    def betahat(self, alpha, beta=None):
+    def betahat(self, alpha, beta=None, eps=consts.TOLERANCE):
         """Return the beta that minimises the dual function.
         """
         raise NotImplementedError('Abstract method "betahat" must be '

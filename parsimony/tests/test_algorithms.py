@@ -54,7 +54,7 @@ class TestAlgorithms(TestCase):
         X, y, beta_star = l1_l2_tv.load(l, k, g, beta, M, e, A, snr=snr)
 
         eps = 1e-8
-        max_iter = 4200
+        max_iter = 5200
 
         mu = None
         dynamic = estimators.LinearRegressionL1L2TV(l, k, g, A, mu=mu,
@@ -71,8 +71,9 @@ class TestAlgorithms(TestCase):
         err_star = dynamic.score(X, y)
 #        print "err*:", err_star
 
-#        print "score diff:", err - err_star
-        assert_less(abs(err - err_star), 5e-5,
+        serr = abs(err - err_star)
+#        print "score diff:", serr
+        assert_less(serr, 5e-5,
                     msg="The algorithm did not find a minimiser.")
 
         berr = np.linalg.norm(beta_dynamic - beta_star)
@@ -143,19 +144,20 @@ class TestAlgorithms(TestCase):
                                       mean=False)
         dynamic.fit(X, y)
         err = dynamic.score(X, y)
-        print "err :", err
+#        print "err :", err
         beta_dynamic = dynamic.beta
 
         dynamic.beta = beta_star
         err_star = dynamic.score(X, y)
-        print "err*:", err_star
+#        print "err*:", err_star
 
-        print "score diff:", err - err_star
-        assert_less(err - err_star, 5e-4,
+        serr = abs(err - err_star)
+#        print "score diff:", serr
+        assert_less(serr, 5e-3,
                     msg="The algorithm did not find a minimiser.")
 
         berr = np.linalg.norm(beta_dynamic - beta_star)
-        print "beta diff:", berr
+#        print "beta diff:", berr
         assert_less(berr, 5e-3,
                     msg="The algorithm did not find a minimiser.")
 
