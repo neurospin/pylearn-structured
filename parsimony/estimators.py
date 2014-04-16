@@ -181,6 +181,102 @@ class LogisticRegressionEstimator(BaseEstimator):
         return rate
 
 
+class LinearRegression(RegressionEstimator):
+    """Linear regression:
+
+        f(beta, X, y) = (1 / 2 * n) * ||Xbeta - y||²_2,
+
+    where ||.||²_2 is the squared L2-norm.
+
+    Parameters
+    ----------
+    algorithm : ExplicitAlgorithm. The algorithm that should be used.
+            Should be one of:
+                1. GradientDescent(...)
+
+            Default is GradientDescent(...).
+
+    algorithm_params : A dict. The dictionary algorithm_params contains
+            parameters that should be set in the algorithm. Passing
+            algorithm=GradientDescent(**params) is equivalent to passing
+            algorithm=GradientDescent() and algorithm_params=params. Default
+            is an empty dictionary.
+
+    start_vector : BaseStartVector. Generates the start vector that will be
+            used.
+
+    mean : Boolean. Whether to compute the squared loss or the mean squared
+            loss. Default is True, the mean squared loss.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import parsimony.estimators as estimators
+    >>> import parsimony.algorithms.explicit as explicit
+    >>>
+    >>> np.random.seed(42)
+    >>>
+    >>> n = 10
+    >>> p = 16
+    >>> X = np.random.rand(n, p)
+    >>> y = np.random.rand(n, 1)
+    >>> lr = estimators.LinearRegression(algorithm=explicit.GradientDescent(),
+    ...                                  algorithm_params=dict(max_iter=1000),
+    ...                                  mean=False)
+    >>> error = lr.fit(X, y).score(X, y)
+    >>> print "error = ", error
+    error =  0.0116466703591
+    """
+    def __init__(self, algorithm=None, algorithm_params=dict(),
+                 start_vector=start_vectors.RandomStartVector(),
+                 mean=True):
+
+        if algorithm is None:
+            algorithm = explicit.GradientDescent(**algorithm_params)
+        else:
+            algorithm.set_params(**algorithm_params)
+
+        super(LinearRegression, self).__init__(algorithm=algorithm,
+                                               start_vector=start_vector)
+
+        self.mean = bool(mean)
+
+    def get_params(self):
+        """Return a dictionary containing the estimator's parameters
+        """
+        return {"mean": self.mean}
+
+    def fit(self, X, y, beta=None):
+        """Fit the estimator to the data.
+        """
+        X, y = check_arrays(X, y)
+
+        function = losses.LinearRegression(X, y, mean=self.mean)
+
+        self.algorithm.check_compatibility(function,
+                                           self.algorithm.INTERFACES)
+
+        # TODO: Should we use a seed here so that we get deterministic results?
+        if beta is None:
+            beta = self.start_vector.get_vector((X.shape[1], 1))
+
+        self.beta = self.algorithm.run(function, beta)
+
+        return self
+
+    def score(self, X, y):
+        """Returns the (mean) squared error of the estimator.
+        """
+        X, y = check_arrays(X, y)
+        n, p = X.shape
+        y_hat = np.dot(X, self.beta)
+        err = np.sum((y_hat - y) ** 2.0)
+        if self.mean:
+            err /= float(n)
+
+        return err
+
+
 class Lasso(RegressionEstimator):
     """Linear regression with an L1 penalty:
 
