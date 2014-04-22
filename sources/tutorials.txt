@@ -37,6 +37,7 @@ Parsimony currently comprise the following parts:
   * Excessive Gap Method
 
 * Estimators
+
   * LinearRegression
   * Lasso
   * ElasticNet
