@@ -67,7 +67,7 @@ object --+
 <dl><dt>Known Subclasses:</dt>
 <dd>
       <ul class="subclass-list">
-<li><a href="parsimony.functions.combinedfunctions.CombinedFunction-class.html">combinedfunctions.CombinedFunction</a></li><li>, <a href="parsimony.functions.combinedfunctions.PCA_L1_TV-class.html">combinedfunctions.PCA_L1_TV</a></li><li>, <a href="parsimony.functions.combinedfunctions.RR_L1_TV-class.html">combinedfunctions.RR_L1_TV</a></li><li>, <a href="parsimony.functions.penalties.L0-class.html">penalties.L0</a></li><li>, <a href="parsimony.functions.penalties.L1-class.html">penalties.L1</a></li><li>, <a href="parsimony.functions.penalties.L2-class.html">penalties.L2</a></li><li>, <a href="parsimony.functions.penalties.LInf-class.html">penalties.LInf</a></li><li>, <a href="parsimony.functions.penalties.ZeroFunction-class.html">penalties.ZeroFunction</a></li><li>, <a href="parsimony.functions.functions.CombinedFunction-class.html">functions.CombinedFunction</a></li><li>, <a href="parsimony.functions.functions.PCA_L1_TV-class.html">functions.PCA_L1_TV</a></li><li>, <a href="parsimony.functions.functions.RR_L1_TV-class.html">functions.RR_L1_TV</a></li><li>, <a href="parsimony.functions._objectives.functions.RR_L1_TV-class.html">_objectives.functions.RR_L1_TV</a></li><li>, <a href="parsimony.functions._objectives.functions.CombinedFunction-class.html">_objectives.functions.CombinedFunction</a></li>  </ul>
+<li><a href="parsimony.functions.combinedfunctions.CombinedFunction-class.html">combinedfunctions.CombinedFunction</a></li><li>, <a href="parsimony.functions.combinedfunctions.LinearRegressionL1L2TV-class.html">combinedfunctions.LinearRegressionL1L2TV</a></li><li>, <a href="parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV-class.html">combinedfunctions.PrincipalComponentAnalysisL1TV</a></li><li>, <a href="parsimony.functions.penalties.L0-class.html">penalties.L0</a></li><li>, <a href="parsimony.functions.penalties.L1-class.html">penalties.L1</a></li><li>, <a href="parsimony.functions.penalties.L2-class.html">penalties.L2</a></li><li>, <a href="parsimony.functions.penalties.LInf-class.html">penalties.LInf</a></li><li>, <a href="parsimony.functions.penalties.ZeroFunction-class.html">penalties.ZeroFunction</a></li><li>, <a href="parsimony.functions.functions.CombinedFunction-class.html">functions.CombinedFunction</a></li><li>, <a href="parsimony.functions.functions.PCA_L1_TV-class.html">functions.PCA_L1_TV</a></li><li>, <a href="parsimony.functions.functions.RR_L1_TV-class.html">functions.RR_L1_TV</a></li><li class="private">, <a href="parsimony.functions.multiblock.losses.MultiblockFunctionWrapper-class.html" onclick="show_private();">multiblock.losses.MultiblockFunctionWrapper</a></li>  </ul>
 </dd></dl>
 
 <hr />
@@ -181,28 +181,28 @@ object --+
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_cache"></a><span class="summary-name">_abc_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x22e0c10&gt;">&lt;_weakrefset.WeakSet object at 0x22e0c10&gt;</code>
+        <a name="_abc_cache"></a><span class="summary-name">_abc_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x1ef1ed0&gt;">&lt;_weakrefset.WeakSet object at 0x1ef1ed0&gt;</code>
     </td>
   </tr>
 <tr class="private">
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_negative_cache"></a><span class="summary-name">_abc_negative_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x22e0c90&gt;">&lt;_weakrefset.WeakSet object at 0x22e0c90&gt;</code>
+        <a name="_abc_negative_cache"></a><span class="summary-name">_abc_negative_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x1ef1f50&gt;">&lt;_weakrefset.WeakSet object at 0x1ef1f50&gt;</code>
     </td>
   </tr>
 <tr class="private">
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_negative_cache_version"></a><span class="summary-name">_abc_negative_cache_version</span> = <code title="15">15</code>
+        <a name="_abc_negative_cache_version"></a><span class="summary-name">_abc_negative_cache_version</span> = <code title="10">10</code>
     </td>
   </tr>
 <tr class="private">
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_registry"></a><span class="summary-name">_abc_registry</span> = <code title="&lt;_weakrefset.WeakSet object at 0x22e0b50&gt;">&lt;_weakrefset.WeakSet object at 0x22e0b50&gt;</code>
+        <a name="_abc_registry"></a><span class="summary-name">_abc_registry</span> = <code title="&lt;_weakrefset.WeakSet object at 0x1ef1e10&gt;">&lt;_weakrefset.WeakSet object at 0x1ef1e10&gt;</code>
     </td>
   </tr>
 </table>
@@ -265,7 +265,18 @@ object --+
     </td>
   </tr></table>
   
-  <p>The proximal operator corresponding to the function.</p>
+  <pre class="literalblock">
+The proximal operator corresponding to the function.
+
+Parameters
+----------
+beta : Numpy array (p-by-1). The point at which to apply the proximal
+        operator.
+
+factor : Positive float. A factor by which the Lagrange multiplier is
+        scaled. This is usually the step size.
+
+</pre>
   <dl class="fields">
     <dt>Decorators:</dt>
     <dd><ul class="nomargin-top">
@@ -301,7 +312,7 @@ object --+
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Mon Mar 10 10:21:49 2014
+    Generated by Epydoc 3.0.1 on Tue Apr 22 16:29:18 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

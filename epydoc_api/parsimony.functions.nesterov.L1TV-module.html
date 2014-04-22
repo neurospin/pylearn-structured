@@ -93,9 +93,65 @@
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
         <a href="parsimony.functions.nesterov.L1TV.L1TV-class.html" class="summary-name">L1TV</a><br />
-      Parameters:
-----------
-l : Non-negative float.
+      The proximal operator of the smoothed sum of the TV and L1 functions
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="parsimony.functions.nesterov.L1TV-module.html#A_from_mask" class="summary-sig-name">A_from_mask</a>(<span class="summary-sig-arg">mask</span>,
+        <span class="summary-sig-arg">num_variables</span>,
+        <span class="summary-sig-arg">penalty_start</span>=<span class="summary-sig-default">0</span>)</span><br />
+      Generates the linear operator for the total variation Nesterov function
+from a mask for a 3D image.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="parsimony.functions.nesterov.L1TV-pysrc.html#A_from_mask">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="parsimony.functions.nesterov.L1TV-module.html#A_from_shape" class="summary-sig-name">A_from_shape</a>(<span class="summary-sig-arg">shape</span>,
+        <span class="summary-sig-arg">num_variables</span>,
+        <span class="summary-sig-arg">penalty_start</span>=<span class="summary-sig-default">0</span>)</span><br />
+      Generates the linear operator for the total variation Nesterov function
+from the shape of a 3D image.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="parsimony.functions.nesterov.L1TV-pysrc.html#A_from_shape">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
     </td>
   </tr>
 </table>
@@ -124,6 +180,101 @@ l : Non-negative float.
     </td>
   </tr>
 </table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="A_from_mask"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">A_from_mask</span>(<span class="sig-arg">mask</span>,
+        <span class="sig-arg">num_variables</span>,
+        <span class="sig-arg">penalty_start</span>=<span class="sig-default">0</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="parsimony.functions.nesterov.L1TV-pysrc.html#A_from_mask">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+Generates the linear operator for the total variation Nesterov function
+from a mask for a 3D image.
+
+Parameters
+----------
+mask : Numpy array. The mask. The mask does not involve any intercept
+        variables.
+
+num_variables : Positive integer. The total number of variables, including
+        the intercept variable(s).
+
+penalty_start : Non-negative integer. The number of variables to exempt
+        from penalisation. Equivalently, the first index to be penalised.
+        Default is 0, all variables are included.
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="A_from_shape"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">A_from_shape</span>(<span class="sig-arg">shape</span>,
+        <span class="sig-arg">num_variables</span>,
+        <span class="sig-arg">penalty_start</span>=<span class="sig-default">0</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="parsimony.functions.nesterov.L1TV-pysrc.html#A_from_shape">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+Generates the linear operator for the total variation Nesterov function
+from the shape of a 3D image.
+
+Parameters
+----------
+shape : List or tuple with 1, 2 or 3 elements. The shape of the 1D, 2D or
+        3D image. shape has the form (Z, Y, X), where Z is the number of
+        &quot;layers&quot;, Y is the number of rows and X is the number of columns.
+        The shape does not involve any intercept variables.
+
+num_variables : Positive integer. The total number of variables, including
+        the intercept variable(s).
+
+penalty_start : Non-negative integer. The number of variables to exempt
+        from penalisation. Equivalently, the first index to be penalised.
+        Default is 0, all variables are included.
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
 <!-- ==================== NAVIGATION BAR ==================== -->
 <table class="navbar" border="0" width="100%" cellpadding="0"
        bgcolor="#a0c0ff" cellspacing="0">
@@ -150,7 +301,7 @@ l : Non-negative float.
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Mon Mar 10 10:21:48 2014
+    Generated by Epydoc 3.0.1 on Tue Apr 22 16:29:17 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

@@ -56,7 +56,7 @@
   </tr>
 </table>
 <!-- ==================== MODULE DESCRIPTION ==================== -->
-<h1 class="epydoc">Module samples_generator_struct</h1><p class="nomargin-top"><span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html">source&nbsp;code</a></span></p>
+<h1 class="epydoc">Module samples_generator_struct</h1><p class="nomargin-top"></p>
 <p>Created on Wed Aug  7 10:35:12 2013</p>
 
 <hr />
@@ -87,17 +87,7 @@
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a href="parsimony.datasets.samples_generator_struct.ObjImage-class.html" class="summary-name">ObjImage</a><br />
-      Parameters:
------------
-mask: ???
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-        <a href="parsimony.datasets.samples_generator_struct.Square-class.html" class="summary-name">Square</a>
+        <a href="parsimony.datasets.samples_generator_struct.Dimaond-class.html" class="summary-name">Dimaond</a>
     </td>
   </tr>
 <tr>
@@ -111,7 +101,17 @@ mask: ???
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a href="parsimony.datasets.samples_generator_struct.Dimaond-class.html" class="summary-name">Dimaond</a>
+        <a href="parsimony.datasets.samples_generator_struct.ObjImage-class.html" class="summary-name">ObjImage</a><br />
+      Parameters:
+-----------
+mask: ???
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="parsimony.datasets.samples_generator_struct.Square-class.html" class="summary-name">Square</a>
     </td>
   </tr>
 </table>
@@ -138,6 +138,64 @@ mask: ???
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
+          <td><span class="summary-sig"><a href="parsimony.datasets.samples_generator_struct-module.html#corr_to_coef" class="summary-sig-name">corr_to_coef</a>(<span class="summary-sig-arg">v_x</span>,
+        <span class="summary-sig-arg">v_e</span>,
+        <span class="summary-sig-arg">cov_xe</span>,
+        <span class="summary-sig-arg">cor</span>)</span><br />
+      In a linear model y = bx + e.</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="parsimony.datasets.samples_generator_struct-module.html#dice_five_with_union_of_pairs" class="summary-sig-name">dice_five_with_union_of_pairs</a>(<span class="summary-sig-arg">shape</span>,
+        <span class="summary-sig-arg">coef_info</span>,
+        <span class="summary-sig-arg">coef_noise</span>)</span><br />
+      Seven objects, five dot + union1 = dots 1 + 2 and union2 = dots 4 + 5
+1, 3 and 4 have coef_info
+2, 5  have coef_info = -coef_info/2
+union1 and union2 have coef_info = 0</td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_objects_edges"></a><span class="summary-sig-name">get_objects_edges</span>(<span class="summary-sig-arg">objects</span>)</span></td>
+          <td align="right" valign="top">
+            
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
           <td><span class="summary-sig"><a href="parsimony.datasets.samples_generator_struct-module.html#make_classification_struct" class="summary-sig-name">make_classification_struct</a>(<span class="summary-sig-arg">n_samples</span>=<span class="summary-sig-default">100</span>,
         <span class="summary-sig-arg">shape</span>=<span class="summary-sig-default"><code class="variable-group">(</code>30<code class="variable-op">, </code>30<code class="variable-op">, </code>1<code class="variable-group">)</code></span>,
         <span class="summary-sig-arg">snr</span>=<span class="summary-sig-default">2.0</span>,
@@ -146,7 +204,7 @@ mask: ???
         <span class="summary-sig-arg">**kwargs</span>)</span><br />
       Generate classification samples (images + target variable) and beta.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#make_classification_struct">source&nbsp;code</a></span>
+            
             
           </td>
         </tr>
@@ -169,65 +227,7 @@ mask: ???
         <span class="summary-sig-arg">random_seed</span>=<span class="summary-sig-default">None</span>)</span><br />
       Generates regression samples (images + target variable) and beta.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#make_regression_struct">source&nbsp;code</a></span>
             
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a href="parsimony.datasets.samples_generator_struct-module.html#corr_to_coef" class="summary-sig-name">corr_to_coef</a>(<span class="summary-sig-arg">v_x</span>,
-        <span class="summary-sig-arg">v_e</span>,
-        <span class="summary-sig-arg">cov_xe</span>,
-        <span class="summary-sig-arg">cor</span>)</span><br />
-      In a linear model y = bx + e.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#corr_to_coef">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a name="get_objects_edges"></a><span class="summary-sig-name">get_objects_edges</span>(<span class="summary-sig-arg">objects</span>)</span></td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#get_objects_edges">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a href="parsimony.datasets.samples_generator_struct-module.html#dice_five_with_union_of_pairs" class="summary-sig-name">dice_five_with_union_of_pairs</a>(<span class="summary-sig-arg">shape</span>,
-        <span class="summary-sig-arg">coef_info</span>,
-        <span class="summary-sig-arg">coef_noise</span>)</span><br />
-      Seven objects, five dot + union1 = dots 1 + 2 and union2 = dots 4 + 5
-1, 3 and 4 have coef_info
-2, 5  have coef_info = -coef_info/2
-union1 and union2 have coef_info = 0</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#dice_five_with_union_of_pairs">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -246,7 +246,7 @@ union1 and union2 have coef_info = 0</td>
         <span class="summary-sig-arg">mu_e</span>=<span class="summary-sig-default">None</span>,
         <span class="summary-sig-arg">sigma_pix</span>=<span class="summary-sig-default">None</span>)</span></td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#spatial_smoothing">source&nbsp;code</a></span>
+            
             
           </td>
         </tr>
@@ -298,6 +298,95 @@ union1 and union2 have coef_info = 0</td>
   </td>
 </tr>
 </table>
+<a name="corr_to_coef"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">corr_to_coef</span>(<span class="sig-arg">v_x</span>,
+        <span class="sig-arg">v_e</span>,
+        <span class="sig-arg">cov_xe</span>,
+        <span class="sig-arg">cor</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+In a linear model y = bx + e. Calculate b such cor(bx + e, x) = cor.
+
+Parameters
+----------
+v_x: Float. The variance of x, var(x).
+
+v_e: Float. The variance of e, var(e).
+
+cov_xe: Float. The covariance between x and e, cov(x, e).
+
+cor: Float. The desired correlation.
+
+Examples
+--------
+&gt;&gt;&gt; corr_to_coef(1, 1, 0, .5)
+0.57735026918962573
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="dice_five_with_union_of_pairs"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">dice_five_with_union_of_pairs</span>(<span class="sig-arg">shape</span>,
+        <span class="sig-arg">coef_info</span>,
+        <span class="sig-arg">coef_noise</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    >&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+Seven objects, five dot + union1 = dots 1 + 2 and union2 = dots 4 + 5
+1, 3 and 4 have coef_info
+2, 5  have coef_info = -coef_info/2
+union1 and union2 have coef_info = 0
+
+Examples
+--------
+#shape = (5, 5, 1)
+coef_info = 1
+coef_noise = 1
+noise = np.zeros(shape)
+info = np.zeros(shape)
+for o in dice_five_with_union_of_pairs(shape, coef_info, coef_noise):
+   noise[o.get_mask()] += o.coef_noise
+   info[o.get_mask()] += o.coef_info
+   print o.coef_noise, o.coef_info
+plot = plt.subplot(121)
+import matplotlib.pyplot as plt
+cax = plot.matshow(noise.squeeze())
+plt.colorbar(cax)
+plt.title(&quot;Noise sum coeficients&quot;)
+plot = plt.subplot(122)
+cax = plot.matshow(info.squeeze())
+plt.colorbar(cax)
+plt.title(&quot;Informative sum coeficients&quot;)
+plt.show()
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
 <a name="make_classification_struct"></a>
 <div>
 <table class="details" border="1" cellpadding="3"
@@ -313,7 +402,7 @@ union1 and union2 have coef_info = 0</td>
         <span class="sig-arg">**kwargs</span>)</span>
   </h3>
   </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#make_classification_struct">source&nbsp;code</a></span>&nbsp;
+    >&nbsp;
     </td>
   </tr></table>
   
@@ -391,7 +480,7 @@ Likelihood= 2.19102268035e-06
         <span class="sig-arg">random_seed</span>=<span class="sig-default">None</span>)</span>
   </h3>
   </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#make_regression_struct">source&nbsp;code</a></span>&nbsp;
+    >&nbsp;
     </td>
   </tr></table>
   
@@ -507,95 +596,6 @@ Examples
   </dl>
 </td></tr></table>
 </div>
-<a name="corr_to_coef"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">corr_to_coef</span>(<span class="sig-arg">v_x</span>,
-        <span class="sig-arg">v_e</span>,
-        <span class="sig-arg">cov_xe</span>,
-        <span class="sig-arg">cor</span>)</span>
-  </h3>
-  </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#corr_to_coef">source&nbsp;code</a></span>&nbsp;
-    </td>
-  </tr></table>
-  
-  <pre class="literalblock">
-In a linear model y = bx + e. Calculate b such cor(bx + e, x) = cor.
-
-Parameters
-----------
-v_x: Float. The variance of x, var(x).
-
-v_e: Float. The variance of e, var(e).
-
-cov_xe: Float. The covariance between x and e, cov(x, e).
-
-cor: Float. The desired correlation.
-
-Examples
---------
-&gt;&gt;&gt; corr_to_coef(1, 1, 0, .5)
-0.57735026918962573
-
-</pre>
-  <dl class="fields">
-  </dl>
-</td></tr></table>
-</div>
-<a name="dice_five_with_union_of_pairs"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">dice_five_with_union_of_pairs</span>(<span class="sig-arg">shape</span>,
-        <span class="sig-arg">coef_info</span>,
-        <span class="sig-arg">coef_noise</span>)</span>
-  </h3>
-  </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.datasets.samples_generator_struct-pysrc.html#dice_five_with_union_of_pairs">source&nbsp;code</a></span>&nbsp;
-    </td>
-  </tr></table>
-  
-  <pre class="literalblock">
-Seven objects, five dot + union1 = dots 1 + 2 and union2 = dots 4 + 5
-1, 3 and 4 have coef_info
-2, 5  have coef_info = -coef_info/2
-union1 and union2 have coef_info = 0
-
-Examples
---------
-#shape = (5, 5, 1)
-coef_info = 1
-coef_noise = 1
-noise = np.zeros(shape)
-info = np.zeros(shape)
-for o in dice_five_with_union_of_pairs(shape, coef_info, coef_noise):
-   noise[o.get_mask()] += o.coef_noise
-   info[o.get_mask()] += o.coef_info
-   print o.coef_noise, o.coef_info
-plot = plt.subplot(121)
-import matplotlib.pyplot as plt
-cax = plot.matshow(noise.squeeze())
-plt.colorbar(cax)
-plt.title(&quot;Noise sum coeficients&quot;)
-plot = plt.subplot(122)
-cax = plot.matshow(info.squeeze())
-plt.colorbar(cax)
-plt.title(&quot;Informative sum coeficients&quot;)
-plt.show()
-
-</pre>
-  <dl class="fields">
-  </dl>
-</td></tr></table>
-</div>
 <br />
 <!-- ==================== NAVIGATION BAR ==================== -->
 <table class="navbar" border="0" width="100%" cellpadding="0"
@@ -623,7 +623,7 @@ plt.show()
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Mon Mar 10 10:21:48 2014
+    Generated by Epydoc 3.0.1 on Tue Apr 22 16:29:17 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

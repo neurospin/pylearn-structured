@@ -1,0 +1,530 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>parsimony.tests.test_nesterov_functions</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="parsimony-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="parsimony-module.html">Package&nbsp;parsimony</a> ::
+        <a href="parsimony.tests-module.html">Package&nbsp;tests</a> ::
+        Module&nbsp;test_nesterov_functions
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="parsimony.tests.test_nesterov_functions-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="parsimony.tests.test_nesterov_functions-module.html">Module parsimony.tests.test_nesterov_functions</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno">  1</tt>  <tt class="py-line"><tt class="py-comment"># -*- coding: utf-8 -*-</tt> </tt>
+<a name="L2"></a><tt class="py-lineno">  2</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L3"></a><tt class="py-lineno">  3</tt>  <tt class="py-line"><tt class="py-docstring">Created on Tue Apr 15 15:58:38 2014</tt> </tt>
+<a name="L4"></a><tt class="py-lineno">  4</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L5"></a><tt class="py-lineno">  5</tt>  <tt class="py-line"><tt class="py-docstring">@author:  Tommy L&#246;fstedt</tt> </tt>
+<a name="L6"></a><tt class="py-lineno">  6</tt>  <tt class="py-line"><tt class="py-docstring">@email:   lofstedt.tommy@gmail.com</tt> </tt>
+<a name="L7"></a><tt class="py-lineno">  7</tt>  <tt class="py-line"><tt class="py-docstring">@license: BSD 3-clause.</tt> </tt>
+<a name="L8"></a><tt class="py-lineno">  8</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-0" class="py-name" targets="Package parsimony=parsimony-module.html"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-0', 'parsimony', 'link-0');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-1" class="py-name" targets="Package parsimony.tests=parsimony.tests-module.html,Module parsimony.tests.tests=parsimony.tests.tests-module.html"><a title="parsimony.tests
+parsimony.tests.tests" class="py-name" href="#" onclick="return doclink('link-1', 'tests', 'link-1');">tests</a></tt> <tt class="py-keyword">import</tt> <tt id="link-2" class="py-name" targets="Class parsimony.tests.tests.TestCase=parsimony.tests.tests.TestCase-class.html"><a title="parsimony.tests.tests.TestCase" class="py-name" href="#" onclick="return doclink('link-2', 'TestCase', 'link-2');">TestCase</a></tt> </tt>
+<a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line"> </tt>
+<a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"> </tt>
+<a name="TestL1"></a><div id="TestL1-def"><a name="L12"></a><tt class="py-lineno"> 12</tt> <a class="py-toggle" href="#" id="TestL1-toggle" onclick="return toggle('TestL1');">-</a><tt class="py-line"><tt class="py-keyword">class</tt> <a class="py-def-name" href="parsimony.tests.test_nesterov_functions.TestL1-class.html">TestL1</a><tt class="py-op">(</tt><tt class="py-base-class">TestCase</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="TestL1-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="TestL1-expanded"><a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"> </tt>
+<a name="TestL1.test_smoothed"></a><div id="TestL1.test_smoothed-def"><a name="L14"></a><tt class="py-lineno"> 14</tt> <a class="py-toggle" href="#" id="TestL1.test_smoothed-toggle" onclick="return toggle('TestL1.test_smoothed');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.tests.test_nesterov_functions.TestL1-class.html#test_smoothed">test_smoothed</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="TestL1.test_smoothed-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="TestL1.test_smoothed-expanded"><a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"> </tt>
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line">        <tt class="py-keyword">import</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">as</tt> <tt class="py-name">np</tt> </tt>
+<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"> </tt>
+<a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line">        <tt class="py-keyword">import</tt> <tt id="link-3" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-3', 'parsimony', 'link-0');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-4" class="py-name" targets="Module parsimony.algorithms.utils=parsimony.algorithms.utils-module.html,Module parsimony.datasets.simulated.utils=parsimony.datasets.simulated.utils-module.html,Module parsimony.datasets.utils=parsimony.datasets.utils-module.html,Package parsimony.utils=parsimony.utils-module.html,Module parsimony.utils.utils=parsimony.utils.utils-module.html"><a title="parsimony.algorithms.utils
+parsimony.datasets.simulated.utils
+parsimony.datasets.utils
+parsimony.utils
+parsimony.utils.utils" class="py-name" href="#" onclick="return doclink('link-4', 'utils', 'link-4');">utils</a></tt><tt class="py-op">.</tt><tt id="link-5" class="py-name" targets="Module parsimony.utils.consts=parsimony.utils.consts-module.html"><a title="parsimony.utils.consts" class="py-name" href="#" onclick="return doclink('link-5', 'consts', 'link-5');">consts</a></tt> <tt class="py-keyword">as</tt> <tt id="link-6" class="py-name"><a title="parsimony.utils.consts" class="py-name" href="#" onclick="return doclink('link-6', 'consts', 'link-5');">consts</a></tt> </tt>
+<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line">        <tt class="py-keyword">from</tt> <tt id="link-7" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-7', 'parsimony', 'link-0');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-8" class="py-name" targets="Package parsimony.functions=parsimony.functions-module.html,Module parsimony.functions.functions=parsimony.functions.functions-module.html"><a title="parsimony.functions
+parsimony.functions.functions" class="py-name" href="#" onclick="return doclink('link-8', 'functions', 'link-8');">functions</a></tt> <tt class="py-keyword">import</tt> <tt id="link-9" class="py-name" targets="Class parsimony.functions.combinedfunctions.CombinedFunction=parsimony.functions.combinedfunctions.CombinedFunction-class.html,Class parsimony.functions.functions.CombinedFunction=parsimony.functions.functions.CombinedFunction-class.html"><a title="parsimony.functions.combinedfunctions.CombinedFunction
+parsimony.functions.functions.CombinedFunction" class="py-name" href="#" onclick="return doclink('link-9', 'CombinedFunction', 'link-9');">CombinedFunction</a></tt> </tt>
+<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line">        <tt class="py-keyword">import</tt> <tt id="link-10" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-10', 'parsimony', 'link-0');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-11" class="py-name" targets="Package parsimony.algorithms=parsimony.algorithms-module.html"><a title="parsimony.algorithms" class="py-name" href="#" onclick="return doclink('link-11', 'algorithms', 'link-11');">algorithms</a></tt><tt class="py-op">.</tt><tt id="link-12" class="py-name" targets="Module parsimony.algorithms.explicit=parsimony.algorithms.explicit-module.html"><a title="parsimony.algorithms.explicit" class="py-name" href="#" onclick="return doclink('link-12', 'explicit', 'link-12');">explicit</a></tt> <tt class="py-keyword">as</tt> <tt id="link-13" class="py-name"><a title="parsimony.algorithms.explicit" class="py-name" href="#" onclick="return doclink('link-13', 'explicit', 'link-12');">explicit</a></tt> </tt>
+<a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line">        <tt class="py-keyword">import</tt> <tt id="link-14" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-14', 'parsimony', 'link-0');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-15" class="py-name"><a title="parsimony.functions
+parsimony.functions.functions" class="py-name" href="#" onclick="return doclink('link-15', 'functions', 'link-8');">functions</a></tt><tt class="py-op">.</tt><tt id="link-16" class="py-name" targets="Module parsimony.functions.losses=parsimony.functions.losses-module.html,Module parsimony.functions.multiblock.losses=parsimony.functions.multiblock.losses-module.html"><a title="parsimony.functions.losses
+parsimony.functions.multiblock.losses" class="py-name" href="#" onclick="return doclink('link-16', 'losses', 'link-16');">losses</a></tt> <tt class="py-keyword">as</tt> <tt id="link-17" class="py-name"><a title="parsimony.functions.losses
+parsimony.functions.multiblock.losses" class="py-name" href="#" onclick="return doclink('link-17', 'losses', 'link-16');">losses</a></tt> </tt>
+<a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line">        <tt class="py-keyword">import</tt> <tt id="link-18" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-18', 'parsimony', 'link-0');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-19" class="py-name"><a title="parsimony.functions
+parsimony.functions.functions" class="py-name" href="#" onclick="return doclink('link-19', 'functions', 'link-8');">functions</a></tt><tt class="py-op">.</tt><tt id="link-20" class="py-name" targets="Module parsimony.functions.penalties=parsimony.functions.penalties-module.html"><a title="parsimony.functions.penalties" class="py-name" href="#" onclick="return doclink('link-20', 'penalties', 'link-20');">penalties</a></tt> <tt class="py-keyword">as</tt> <tt id="link-21" class="py-name"><a title="parsimony.functions.penalties" class="py-name" href="#" onclick="return doclink('link-21', 'penalties', 'link-20');">penalties</a></tt> </tt>
+<a name="L23"></a><tt class="py-lineno"> 23</tt>  <tt class="py-line">        <tt class="py-keyword">import</tt> <tt id="link-22" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-22', 'parsimony', 'link-0');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-23" class="py-name"><a title="parsimony.functions
+parsimony.functions.functions" class="py-name" href="#" onclick="return doclink('link-23', 'functions', 'link-8');">functions</a></tt><tt class="py-op">.</tt><tt id="link-24" class="py-name" targets="Package parsimony.functions.nesterov=parsimony.functions.nesterov-module.html"><a title="parsimony.functions.nesterov" class="py-name" href="#" onclick="return doclink('link-24', 'nesterov', 'link-24');">nesterov</a></tt> <tt class="py-keyword">as</tt> <tt id="link-25" class="py-name"><a title="parsimony.functions.nesterov" class="py-name" href="#" onclick="return doclink('link-25', 'nesterov', 'link-24');">nesterov</a></tt> </tt>
+<a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line">        <tt class="py-keyword">import</tt> <tt id="link-26" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-26', 'parsimony', 'link-0');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-27" class="py-name" targets="Module parsimony.start_vectors=parsimony.start_vectors-module.html"><a title="parsimony.start_vectors" class="py-name" href="#" onclick="return doclink('link-27', 'start_vectors', 'link-27');">start_vectors</a></tt> <tt class="py-keyword">as</tt> <tt id="link-28" class="py-name"><a title="parsimony.start_vectors" class="py-name" href="#" onclick="return doclink('link-28', 'start_vectors', 'link-27');">start_vectors</a></tt> </tt>
+<a name="L25"></a><tt class="py-lineno"> 25</tt>  <tt class="py-line">        <tt class="py-keyword">import</tt> <tt id="link-29" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-29', 'parsimony', 'link-0');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-30" class="py-name" targets="Package parsimony.datasets=parsimony.datasets-module.html"><a title="parsimony.datasets" class="py-name" href="#" onclick="return doclink('link-30', 'datasets', 'link-30');">datasets</a></tt><tt class="py-op">.</tt><tt id="link-31" class="py-name" targets="Package parsimony.datasets.simulated=parsimony.datasets.simulated-module.html"><a title="parsimony.datasets.simulated" class="py-name" href="#" onclick="return doclink('link-31', 'simulated', 'link-31');">simulated</a></tt><tt class="py-op">.</tt><tt id="link-32" class="py-name" targets="Module parsimony.datasets.simulated.l1_l2_tv=parsimony.datasets.simulated.l1_l2_tv-module.html"><a title="parsimony.datasets.simulated.l1_l2_tv" class="py-name" href="#" onclick="return doclink('link-32', 'l1_l2_tv', 'link-32');">l1_l2_tv</a></tt> <tt class="py-keyword">as</tt> <tt id="link-33" class="py-name"><a title="parsimony.datasets.simulated.l1_l2_tv" class="py-name" href="#" onclick="return doclink('link-33', 'l1_l2_tv', 'link-32');">l1_l2_tv</a></tt> </tt>
+<a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line"> </tt>
+<a name="L27"></a><tt class="py-lineno"> 27</tt>  <tt class="py-line">        <tt class="py-name">start_vector</tt> <tt class="py-op">=</tt> <tt id="link-34" class="py-name"><a title="parsimony.start_vectors" class="py-name" href="#" onclick="return doclink('link-34', 'start_vectors', 'link-27');">start_vectors</a></tt><tt class="py-op">.</tt><tt id="link-35" class="py-name" targets="Class parsimony.start_vectors.RandomStartVector=parsimony.start_vectors.RandomStartVector-class.html"><a title="parsimony.start_vectors.RandomStartVector" class="py-name" href="#" onclick="return doclink('link-35', 'RandomStartVector', 'link-35');">RandomStartVector</a></tt><tt class="py-op">(</tt><tt class="py-name">normalise</tt><tt class="py-op">=</tt><tt class="py-name">True</tt><tt class="py-op">)</tt> </tt>
+<a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line"> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line">        <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">random</tt><tt class="py-op">.</tt><tt class="py-name">seed</tt><tt class="py-op">(</tt><tt class="py-number">42</tt><tt class="py-op">)</tt> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line"> </tt>
+<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line">        <tt id="link-36" class="py-name" targets="Variable parsimony.tests._playhouse.n=parsimony.tests._playhouse-module.html#n"><a title="parsimony.tests._playhouse.n" class="py-name" href="#" onclick="return doclink('link-36', 'n', 'link-36');">n</a></tt><tt class="py-op">,</tt> <tt id="link-37" class="py-name" targets="Variable parsimony.tests._playhouse.p=parsimony.tests._playhouse-module.html#p"><a title="parsimony.tests._playhouse.p" class="py-name" href="#" onclick="return doclink('link-37', 'p', 'link-37');">p</a></tt> <tt class="py-op">=</tt> <tt class="py-number">75</tt><tt class="py-op">,</tt> <tt class="py-number">100</tt> </tt>
+<a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line"> </tt>
+<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line">        <tt class="py-name">penalty_start</tt> <tt class="py-op">=</tt> <tt class="py-number">0</tt> </tt>
+<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line"> </tt>
+<a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line">        <tt id="link-38" class="py-name" targets="Method parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.alpha()=parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV-class.html#alpha,Method parsimony.functions.nesterov.L1.L1.alpha()=parsimony.functions.nesterov.L1.L1-class.html#alpha,Method parsimony.functions.nesterov.L1TV.L1TV.alpha()=parsimony.functions.nesterov.L1TV.L1TV-class.html#alpha,Method parsimony.functions.nesterov.interfaces.NesterovFunction.alpha()=parsimony.functions.nesterov.interfaces.NesterovFunction-class.html#alpha,Method parsimony.functions.nesterov.l1.L1.alpha()=parsimony.functions.nesterov.l1.L1-class.html#alpha,Method parsimony.functions.nesterov.l1tv.L1TV.alpha()=parsimony.functions.nesterov.l1tv.L1TV-class.html#alpha"><a title="parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.alpha
+parsimony.functions.nesterov.L1.L1.alpha
+parsimony.functions.nesterov.L1TV.L1TV.alpha
+parsimony.functions.nesterov.interfaces.NesterovFunction.alpha
+parsimony.functions.nesterov.l1.L1.alpha
+parsimony.functions.nesterov.l1tv.L1TV.alpha" class="py-name" href="#" onclick="return doclink('link-38', 'alpha', 'link-38');">alpha</a></tt> <tt class="py-op">=</tt> <tt class="py-number">0.9</tt> </tt>
+<a name="L36"></a><tt class="py-lineno"> 36</tt>  <tt class="py-line">        <tt class="py-name">Sigma</tt> <tt class="py-op">=</tt> <tt id="link-39" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.alpha
+parsimony.functions.nesterov.L1.L1.alpha
+parsimony.functions.nesterov.L1TV.L1TV.alpha
+parsimony.functions.nesterov.interfaces.NesterovFunction.alpha
+parsimony.functions.nesterov.l1.L1.alpha
+parsimony.functions.nesterov.l1tv.L1TV.alpha" class="py-name" href="#" onclick="return doclink('link-39', 'alpha', 'link-38');">alpha</a></tt> <tt class="py-op">*</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">eye</tt><tt class="py-op">(</tt><tt id="link-40" class="py-name"><a title="parsimony.tests._playhouse.p" class="py-name" href="#" onclick="return doclink('link-40', 'p', 'link-37');">p</a></tt><tt class="py-op">,</tt> <tt id="link-41" class="py-name"><a title="parsimony.tests._playhouse.p" class="py-name" href="#" onclick="return doclink('link-41', 'p', 'link-37');">p</a></tt><tt class="py-op">)</tt> \ </tt>
+<a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line">              <tt class="py-op">+</tt> <tt class="py-op">(</tt><tt class="py-number">1.0</tt> <tt class="py-op">-</tt> <tt id="link-42" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.alpha
+parsimony.functions.nesterov.L1.L1.alpha
+parsimony.functions.nesterov.L1TV.L1TV.alpha
+parsimony.functions.nesterov.interfaces.NesterovFunction.alpha
+parsimony.functions.nesterov.l1.L1.alpha
+parsimony.functions.nesterov.l1tv.L1TV.alpha" class="py-name" href="#" onclick="return doclink('link-42', 'alpha', 'link-38');">alpha</a></tt><tt class="py-op">)</tt> <tt class="py-op">*</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">random</tt><tt class="py-op">.</tt><tt class="py-name">randn</tt><tt class="py-op">(</tt><tt id="link-43" class="py-name"><a title="parsimony.tests._playhouse.p" class="py-name" href="#" onclick="return doclink('link-43', 'p', 'link-37');">p</a></tt><tt class="py-op">,</tt> <tt id="link-44" class="py-name"><a title="parsimony.tests._playhouse.p" class="py-name" href="#" onclick="return doclink('link-44', 'p', 'link-37');">p</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line">        <tt class="py-name">mean</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">zeros</tt><tt class="py-op">(</tt><tt id="link-45" class="py-name"><a title="parsimony.tests._playhouse.p" class="py-name" href="#" onclick="return doclink('link-45', 'p', 'link-37');">p</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line">        <tt id="link-46" class="py-name" targets="Method parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.M()=parsimony.functions.combinedfunctions.LinearRegressionL1L2GL-class.html#M,Method parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.M()=parsimony.functions.combinedfunctions.LinearRegressionL1L2TV-class.html#M,Method parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.M()=parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV-class.html#M,Method parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.M()=parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV-class.html#M,Method parsimony.functions.functions.PCA_L1_TV.M()=parsimony.functions.functions.PCA_L1_TV-class.html#M,Method parsimony.functions.functions.RR_L1_GL.M()=parsimony.functions.functions.RR_L1_GL-class.html#M,Method parsimony.functions.functions.RR_L1_TV.M()=parsimony.functions.functions.RR_L1_TV-class.html#M,Method parsimony.functions.functions.RR_SmoothedL1TV.M()=parsimony.functions.functions.RR_SmoothedL1TV-class.html#M,Method parsimony.functions.nesterov.L1.L1.M()=parsimony.functions.nesterov.L1.L1-class.html#M,Method parsimony.functions.nesterov.L1TV.L1TV.M()=parsimony.functions.nesterov.L1TV.L1TV-class.html#M,Method parsimony.functions.nesterov.gl.GroupLassoOverlap.M()=parsimony.functions.nesterov.gl.GroupLassoOverlap-class.html#M,Method parsimony.functions.nesterov.interfaces.NesterovFunction.M()=parsimony.functions.nesterov.interfaces.NesterovFunction-class.html#M,Method parsimony.functions.nesterov.l1.L1.M()=parsimony.functions.nesterov.l1.L1-class.html#M,Method parsimony.functions.nesterov.l1tv.L1TV.M()=parsimony.functions.nesterov.l1tv.L1TV-class.html#M,Method parsimony.functions.nesterov.tv.TotalVariation.M()=parsimony.functions.nesterov.tv.TotalVariation-class.html#M"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.M
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.M
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.M
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.M
+parsimony.functions.functions.PCA_L1_TV.M
+parsimony.functions.functions.RR_L1_GL.M
+parsimony.functions.functions.RR_L1_TV.M
+parsimony.functions.functions.RR_SmoothedL1TV.M
+parsimony.functions.nesterov.L1.L1.M
+parsimony.functions.nesterov.L1TV.L1TV.M
+parsimony.functions.nesterov.gl.GroupLassoOverlap.M
+parsimony.functions.nesterov.interfaces.NesterovFunction.M
+parsimony.functions.nesterov.l1.L1.M
+parsimony.functions.nesterov.l1tv.L1TV.M
+parsimony.functions.nesterov.tv.TotalVariation.M" class="py-name" href="#" onclick="return doclink('link-46', 'M', 'link-46');">M</a></tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">random</tt><tt class="py-op">.</tt><tt class="py-name">multivariate_normal</tt><tt class="py-op">(</tt><tt class="py-name">mean</tt><tt class="py-op">,</tt> <tt class="py-name">Sigma</tt><tt class="py-op">,</tt> <tt id="link-47" class="py-name"><a title="parsimony.tests._playhouse.n" class="py-name" href="#" onclick="return doclink('link-47', 'n', 'link-36');">n</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L40"></a><tt class="py-lineno"> 40</tt>  <tt class="py-line">        <tt class="py-name">e</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">random</tt><tt class="py-op">.</tt><tt class="py-name">randn</tt><tt class="py-op">(</tt><tt id="link-48" class="py-name"><a title="parsimony.tests._playhouse.n" class="py-name" href="#" onclick="return doclink('link-48', 'n', 'link-36');">n</a></tt><tt class="py-op">,</tt> <tt class="py-number">1</tt><tt class="py-op">)</tt> </tt>
+<a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line"> </tt>
+<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line">        <tt id="link-49" class="py-name" targets="Module parsimony.datasets.simulated.beta=parsimony.datasets.simulated.beta-module.html"><a title="parsimony.datasets.simulated.beta" class="py-name" href="#" onclick="return doclink('link-49', 'beta', 'link-49');">beta</a></tt> <tt class="py-op">=</tt> <tt class="py-name">start_vector</tt><tt class="py-op">.</tt><tt id="link-50" class="py-name" targets="Method parsimony.start_vectors.BaseStartVector.get_vector()=parsimony.start_vectors.BaseStartVector-class.html#get_vector,Method parsimony.start_vectors.IdentityStartVector.get_vector()=parsimony.start_vectors.IdentityStartVector-class.html#get_vector,Method parsimony.start_vectors.OnesStartVector.get_vector()=parsimony.start_vectors.OnesStartVector-class.html#get_vector,Method parsimony.start_vectors.RandomStartVector.get_vector()=parsimony.start_vectors.RandomStartVector-class.html#get_vector,Method parsimony.start_vectors.ZerosStartVector.get_vector()=parsimony.start_vectors.ZerosStartVector-class.html#get_vector"><a title="parsimony.start_vectors.BaseStartVector.get_vector
+parsimony.start_vectors.IdentityStartVector.get_vector
+parsimony.start_vectors.OnesStartVector.get_vector
+parsimony.start_vectors.RandomStartVector.get_vector
+parsimony.start_vectors.ZerosStartVector.get_vector" class="py-name" href="#" onclick="return doclink('link-50', 'get_vector', 'link-50');">get_vector</a></tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt id="link-51" class="py-name"><a title="parsimony.tests._playhouse.p" class="py-name" href="#" onclick="return doclink('link-51', 'p', 'link-37');">p</a></tt><tt class="py-op">,</tt> <tt class="py-number">1</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line">        <tt id="link-52" class="py-name"><a title="parsimony.datasets.simulated.beta" class="py-name" href="#" onclick="return doclink('link-52', 'beta', 'link-49');">beta</a></tt><tt class="py-op">[</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">abs</tt><tt class="py-op">(</tt><tt id="link-53" class="py-name"><a title="parsimony.datasets.simulated.beta" class="py-name" href="#" onclick="return doclink('link-53', 'beta', 'link-49');">beta</a></tt><tt class="py-op">)</tt> <tt class="py-op">&lt;</tt> <tt class="py-number">0.1</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt> </tt>
+<a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line"> </tt>
+<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line">        <tt class="py-name">l</tt> <tt class="py-op">=</tt> <tt class="py-number">0.618</tt> </tt>
+<a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line">        <tt class="py-name">k</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt> </tt>
+<a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line">        <tt class="py-name">g</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt> </tt>
+<a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line"> </tt>
+<a name="L49"></a><tt class="py-lineno"> 49</tt>  <tt class="py-line">        <tt class="py-name">mu_min</tt> <tt class="py-op">=</tt> <tt class="py-number">0.001</tt>  <tt class="py-comment"># consts.TOLERANCE</tt> </tt>
+<a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line"> </tt>
+<a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line">        <tt id="link-54" class="py-name" targets="Method parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.A()=parsimony.functions.combinedfunctions.LinearRegressionL1L2GL-class.html#A,Method parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.A()=parsimony.functions.combinedfunctions.LinearRegressionL1L2TV-class.html#A,Method parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.A()=parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV-class.html#A,Method parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.A()=parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV-class.html#A,Method parsimony.functions.functions.PCA_L1_TV.A()=parsimony.functions.functions.PCA_L1_TV-class.html#A,Method parsimony.functions.functions.RR_L1_GL.A()=parsimony.functions.functions.RR_L1_GL-class.html#A,Method parsimony.functions.functions.RR_L1_TV.A()=parsimony.functions.functions.RR_L1_TV-class.html#A,Method parsimony.functions.nesterov.interfaces.NesterovFunction.A()=parsimony.functions.nesterov.interfaces.NesterovFunction-class.html#A"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.A
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.A
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.A
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.A
+parsimony.functions.functions.PCA_L1_TV.A
+parsimony.functions.functions.RR_L1_GL.A
+parsimony.functions.functions.RR_L1_TV.A
+parsimony.functions.nesterov.interfaces.NesterovFunction.A" class="py-name" href="#" onclick="return doclink('link-54', 'A', 'link-54');">A</a></tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">eye</tt><tt class="py-op">(</tt><tt id="link-55" class="py-name"><a title="parsimony.tests._playhouse.p" class="py-name" href="#" onclick="return doclink('link-55', 'p', 'link-37');">p</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line">        <tt id="link-56" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.A
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.A
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.A
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.A
+parsimony.functions.functions.PCA_L1_TV.A
+parsimony.functions.functions.RR_L1_GL.A
+parsimony.functions.functions.RR_L1_TV.A
+parsimony.functions.nesterov.interfaces.NesterovFunction.A" class="py-name" href="#" onclick="return doclink('link-56', 'A', 'link-54');">A</a></tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt id="link-57" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.A
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.A
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.A
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.A
+parsimony.functions.functions.PCA_L1_TV.A
+parsimony.functions.functions.RR_L1_GL.A
+parsimony.functions.functions.RR_L1_TV.A
+parsimony.functions.nesterov.interfaces.NesterovFunction.A" class="py-name" href="#" onclick="return doclink('link-57', 'A', 'link-54');">A</a></tt><tt class="py-op">,</tt> <tt id="link-58" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.A
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.A
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.A
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.A
+parsimony.functions.functions.PCA_L1_TV.A
+parsimony.functions.functions.RR_L1_GL.A
+parsimony.functions.functions.RR_L1_TV.A
+parsimony.functions.nesterov.interfaces.NesterovFunction.A" class="py-name" href="#" onclick="return doclink('link-58', 'A', 'link-54');">A</a></tt><tt class="py-op">,</tt> <tt id="link-59" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.A
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.A
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.A
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.A
+parsimony.functions.functions.PCA_L1_TV.A
+parsimony.functions.functions.RR_L1_GL.A
+parsimony.functions.functions.RR_L1_TV.A
+parsimony.functions.nesterov.interfaces.NesterovFunction.A" class="py-name" href="#" onclick="return doclink('link-59', 'A', 'link-54');">A</a></tt><tt class="py-op">]</tt> </tt>
+<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line">        <tt class="py-name">snr</tt> <tt class="py-op">=</tt> <tt class="py-number">100.0</tt> </tt>
+<a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line">        <tt id="link-60" class="py-name" targets="Variable parsimony.tests._playhouse.X=parsimony.tests._playhouse-module.html#X"><a title="parsimony.tests._playhouse.X" class="py-name" href="#" onclick="return doclink('link-60', 'X', 'link-60');">X</a></tt><tt class="py-op">,</tt> <tt id="link-61" class="py-name" targets="Variable parsimony.tests._playhouse.y=parsimony.tests._playhouse-module.html#y"><a title="parsimony.tests._playhouse.y" class="py-name" href="#" onclick="return doclink('link-61', 'y', 'link-61');">y</a></tt><tt class="py-op">,</tt> <tt class="py-name">beta_star</tt> <tt class="py-op">=</tt> <tt id="link-62" class="py-name"><a title="parsimony.datasets.simulated.l1_l2_tv" class="py-name" href="#" onclick="return doclink('link-62', 'l1_l2_tv', 'link-32');">l1_l2_tv</a></tt><tt class="py-op">.</tt><tt id="link-63" class="py-name" targets="Function parsimony.datasets.Russett.load()=parsimony.datasets.Russett-module.html#load,Function parsimony.datasets.classification.dice5.load()=parsimony.datasets.classification.dice5-module.html#load,Function parsimony.datasets.regression.dice5.load()=parsimony.datasets.regression.dice5-module.html#load,Function parsimony.datasets.simulated.l1_l2_gl.load()=parsimony.datasets.simulated.l1_l2_gl-module.html#load,Function parsimony.datasets.simulated.l1_l2_glmu.load()=parsimony.datasets.simulated.l1_l2_glmu-module.html#load,Function parsimony.datasets.simulated.l1_l2_tv.load()=parsimony.datasets.simulated.l1_l2_tv-module.html#load,Function parsimony.datasets.simulated.l1_l2_tvmu.load()=parsimony.datasets.simulated.l1_l2_tvmu-module.html#load,Function parsimony.datasets.simulated.l1mu_l2_tvmu.load()=parsimony.datasets.simulated.l1mu_l2_tvmu-module.html#load,Function parsimony.datasets.simulated.regression.load()=parsimony.datasets.simulated.regression-module.html#load"><a title="parsimony.datasets.Russett.load
+parsimony.datasets.classification.dice5.load
+parsimony.datasets.regression.dice5.load
+parsimony.datasets.simulated.l1_l2_gl.load
+parsimony.datasets.simulated.l1_l2_glmu.load
+parsimony.datasets.simulated.l1_l2_tv.load
+parsimony.datasets.simulated.l1_l2_tvmu.load
+parsimony.datasets.simulated.l1mu_l2_tvmu.load
+parsimony.datasets.simulated.regression.load" class="py-name" href="#" onclick="return doclink('link-63', 'load', 'link-63');">load</a></tt><tt class="py-op">(</tt><tt class="py-name">l</tt><tt class="py-op">,</tt> <tt class="py-name">k</tt><tt class="py-op">,</tt> <tt class="py-name">g</tt><tt class="py-op">,</tt> <tt id="link-64" class="py-name"><a title="parsimony.datasets.simulated.beta" class="py-name" href="#" onclick="return doclink('link-64', 'beta', 'link-49');">beta</a></tt><tt class="py-op">,</tt> <tt id="link-65" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.M
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.M
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.M
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.M
+parsimony.functions.functions.PCA_L1_TV.M
+parsimony.functions.functions.RR_L1_GL.M
+parsimony.functions.functions.RR_L1_TV.M
+parsimony.functions.functions.RR_SmoothedL1TV.M
+parsimony.functions.nesterov.L1.L1.M
+parsimony.functions.nesterov.L1TV.L1TV.M
+parsimony.functions.nesterov.gl.GroupLassoOverlap.M
+parsimony.functions.nesterov.interfaces.NesterovFunction.M
+parsimony.functions.nesterov.l1.L1.M
+parsimony.functions.nesterov.l1tv.L1TV.M
+parsimony.functions.nesterov.tv.TotalVariation.M" class="py-name" href="#" onclick="return doclink('link-65', 'M', 'link-46');">M</a></tt><tt class="py-op">,</tt> <tt class="py-name">e</tt><tt class="py-op">,</tt> <tt id="link-66" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.A
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.A
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.A
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.A
+parsimony.functions.functions.PCA_L1_TV.A
+parsimony.functions.functions.RR_L1_GL.A
+parsimony.functions.functions.RR_L1_TV.A
+parsimony.functions.nesterov.interfaces.NesterovFunction.A" class="py-name" href="#" onclick="return doclink('link-66', 'A', 'link-54');">A</a></tt><tt class="py-op">,</tt> <tt class="py-name">snr</tt><tt class="py-op">=</tt><tt class="py-name">snr</tt><tt class="py-op">)</tt> </tt>
+<a name="L55"></a><tt class="py-lineno"> 55</tt>  <tt class="py-line"> </tt>
+<a name="L56"></a><tt class="py-lineno"> 56</tt>  <tt class="py-line">        <tt class="py-name">function</tt> <tt class="py-op">=</tt> <tt id="link-67" class="py-name"><a title="parsimony.functions.combinedfunctions.CombinedFunction
+parsimony.functions.functions.CombinedFunction" class="py-name" href="#" onclick="return doclink('link-67', 'CombinedFunction', 'link-9');">CombinedFunction</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line">        <tt class="py-name">function</tt><tt class="py-op">.</tt><tt id="link-68" class="py-name" targets="Method parsimony.functions.combinedfunctions.CombinedFunction.add_function()=parsimony.functions.combinedfunctions.CombinedFunction-class.html#add_function,Method parsimony.functions.functions.CombinedFunction.add_function()=parsimony.functions.functions.CombinedFunction-class.html#add_function,Method parsimony.functions.multiblock.losses.CombinedMultiblockFunction.add_function()=parsimony.functions.multiblock.losses.CombinedMultiblockFunction-class.html#add_function"><a title="parsimony.functions.combinedfunctions.CombinedFunction.add_function
+parsimony.functions.functions.CombinedFunction.add_function
+parsimony.functions.multiblock.losses.CombinedMultiblockFunction.add_function" class="py-name" href="#" onclick="return doclink('link-68', 'add_function', 'link-68');">add_function</a></tt><tt class="py-op">(</tt><tt id="link-69" class="py-name"><a title="parsimony.functions.losses
+parsimony.functions.multiblock.losses" class="py-name" href="#" onclick="return doclink('link-69', 'losses', 'link-16');">losses</a></tt><tt class="py-op">.</tt><tt id="link-70" class="py-name" targets="Class parsimony.estimators.LinearRegression=parsimony.estimators.LinearRegression-class.html,Class parsimony.functions.losses.LinearRegression=parsimony.functions.losses.LinearRegression-class.html"><a title="parsimony.estimators.LinearRegression
+parsimony.functions.losses.LinearRegression" class="py-name" href="#" onclick="return doclink('link-70', 'LinearRegression', 'link-70');">LinearRegression</a></tt><tt class="py-op">(</tt><tt id="link-71" class="py-name"><a title="parsimony.tests._playhouse.X" class="py-name" href="#" onclick="return doclink('link-71', 'X', 'link-60');">X</a></tt><tt class="py-op">,</tt> <tt id="link-72" class="py-name"><a title="parsimony.tests._playhouse.y" class="py-name" href="#" onclick="return doclink('link-72', 'y', 'link-61');">y</a></tt><tt class="py-op">,</tt> </tt>
+<a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line"><tt class="py-comment">#                                                   penalty_start=penalty_start,</tt> </tt>
+<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line">                                                   <tt class="py-name">mean</tt><tt class="py-op">=</tt><tt class="py-name">False</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L60"></a><tt class="py-lineno"> 60</tt>  <tt class="py-line">        <tt id="link-73" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.A
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.A
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.A
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.A
+parsimony.functions.functions.PCA_L1_TV.A
+parsimony.functions.functions.RR_L1_GL.A
+parsimony.functions.functions.RR_L1_TV.A
+parsimony.functions.nesterov.interfaces.NesterovFunction.A" class="py-name" href="#" onclick="return doclink('link-73', 'A', 'link-54');">A</a></tt> <tt class="py-op">=</tt> <tt id="link-74" class="py-name"><a title="parsimony.functions.nesterov" class="py-name" href="#" onclick="return doclink('link-74', 'nesterov', 'link-24');">nesterov</a></tt><tt class="py-op">.</tt><tt id="link-75" class="py-name" targets="Module parsimony.functions.nesterov.l1=parsimony.functions.nesterov.l1-module.html"><a title="parsimony.functions.nesterov.l1" class="py-name" href="#" onclick="return doclink('link-75', 'l1', 'link-75');">l1</a></tt><tt class="py-op">.</tt><tt id="link-76" class="py-name" targets="Function parsimony.functions.nesterov.L1.A_from_variables()=parsimony.functions.nesterov.L1-module.html#A_from_variables,Function parsimony.functions.nesterov.l1.A_from_variables()=parsimony.functions.nesterov.l1-module.html#A_from_variables"><a title="parsimony.functions.nesterov.L1.A_from_variables
+parsimony.functions.nesterov.l1.A_from_variables" class="py-name" href="#" onclick="return doclink('link-76', 'A_from_variables', 'link-76');">A_from_variables</a></tt><tt class="py-op">(</tt><tt id="link-77" class="py-name"><a title="parsimony.tests._playhouse.p" class="py-name" href="#" onclick="return doclink('link-77', 'p', 'link-37');">p</a></tt><tt class="py-op">,</tt> <tt class="py-name">penalty_start</tt><tt class="py-op">=</tt><tt class="py-name">penalty_start</tt><tt class="py-op">)</tt> </tt>
+<a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line">        <tt class="py-name">function</tt><tt class="py-op">.</tt><tt id="link-78" class="py-name" targets="Method parsimony.functions.combinedfunctions.CombinedFunction.add_penalty()=parsimony.functions.combinedfunctions.CombinedFunction-class.html#add_penalty,Method parsimony.functions.functions.CombinedFunction.add_penalty()=parsimony.functions.functions.CombinedFunction-class.html#add_penalty,Method parsimony.functions.multiblock.losses.CombinedMultiblockFunction.add_penalty()=parsimony.functions.multiblock.losses.CombinedMultiblockFunction-class.html#add_penalty"><a title="parsimony.functions.combinedfunctions.CombinedFunction.add_penalty
+parsimony.functions.functions.CombinedFunction.add_penalty
+parsimony.functions.multiblock.losses.CombinedMultiblockFunction.add_penalty" class="py-name" href="#" onclick="return doclink('link-78', 'add_penalty', 'link-78');">add_penalty</a></tt><tt class="py-op">(</tt><tt id="link-79" class="py-name"><a title="parsimony.functions.nesterov" class="py-name" href="#" onclick="return doclink('link-79', 'nesterov', 'link-24');">nesterov</a></tt><tt class="py-op">.</tt><tt id="link-80" class="py-name"><a title="parsimony.functions.nesterov.l1" class="py-name" href="#" onclick="return doclink('link-80', 'l1', 'link-75');">l1</a></tt><tt class="py-op">.</tt><tt id="link-81" class="py-name" targets="Module parsimony.functions.nesterov.L1=parsimony.functions.nesterov.L1-module.html,Class parsimony.functions.nesterov.L1.L1=parsimony.functions.nesterov.L1.L1-class.html,Class parsimony.functions.nesterov.l1.L1=parsimony.functions.nesterov.l1.L1-class.html,Class parsimony.functions.penalties.L1=parsimony.functions.penalties.L1-class.html"><a title="parsimony.functions.nesterov.L1
+parsimony.functions.nesterov.L1.L1
+parsimony.functions.nesterov.l1.L1
+parsimony.functions.penalties.L1" class="py-name" href="#" onclick="return doclink('link-81', 'L1', 'link-81');">L1</a></tt><tt class="py-op">(</tt><tt class="py-name">l</tt><tt class="py-op">,</tt> <tt id="link-82" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.A
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.A
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.A
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.A
+parsimony.functions.functions.PCA_L1_TV.A
+parsimony.functions.functions.RR_L1_GL.A
+parsimony.functions.functions.RR_L1_TV.A
+parsimony.functions.nesterov.interfaces.NesterovFunction.A" class="py-name" href="#" onclick="return doclink('link-82', 'A', 'link-54');">A</a></tt><tt class="py-op">=</tt><tt id="link-83" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.A
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.A
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.A
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.A
+parsimony.functions.functions.PCA_L1_TV.A
+parsimony.functions.functions.RR_L1_GL.A
+parsimony.functions.functions.RR_L1_TV.A
+parsimony.functions.nesterov.interfaces.NesterovFunction.A" class="py-name" href="#" onclick="return doclink('link-83', 'A', 'link-54');">A</a></tt><tt class="py-op">,</tt> <tt class="py-name">mu</tt><tt class="py-op">=</tt><tt class="py-name">mu_min</tt><tt class="py-op">,</tt> </tt>
+<a name="L62"></a><tt class="py-lineno"> 62</tt>  <tt class="py-line">                                            <tt class="py-name">penalty_start</tt><tt class="py-op">=</tt><tt class="py-name">penalty_start</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line"><tt class="py-comment">#        function.add_prox(penalties.L1(l, penalty_start=penalty_start))</tt> </tt>
+<a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line"> </tt>
+<a name="L65"></a><tt class="py-lineno"> 65</tt>  <tt class="py-line">        <tt class="py-name">fista</tt> <tt class="py-op">=</tt> <tt id="link-84" class="py-name"><a title="parsimony.algorithms.explicit" class="py-name" href="#" onclick="return doclink('link-84', 'explicit', 'link-12');">explicit</a></tt><tt class="py-op">.</tt><tt id="link-85" class="py-name" targets="Class parsimony.algorithms.explicit.FISTA=parsimony.algorithms.explicit.FISTA-class.html"><a title="parsimony.algorithms.explicit.FISTA" class="py-name" href="#" onclick="return doclink('link-85', 'FISTA', 'link-85');">FISTA</a></tt><tt class="py-op">(</tt><tt class="py-name">eps</tt><tt class="py-op">=</tt><tt class="py-name">mu_min</tt><tt class="py-op">,</tt> <tt class="py-name">max_iter</tt><tt class="py-op">=</tt><tt class="py-number">20000</tt><tt class="py-op">)</tt> </tt>
+<a name="L66"></a><tt class="py-lineno"> 66</tt>  <tt class="py-line">        <tt id="link-86" class="py-name"><a title="parsimony.datasets.simulated.beta" class="py-name" href="#" onclick="return doclink('link-86', 'beta', 'link-49');">beta</a></tt> <tt class="py-op">=</tt> <tt class="py-name">fista</tt><tt class="py-op">.</tt><tt id="link-87" class="py-name" targets="Method parsimony.algorithms.bases.ExplicitAlgorithm.run()=parsimony.algorithms.bases.ExplicitAlgorithm-class.html#run,Method parsimony.algorithms.bases.ImplicitAlgorithm.run()=parsimony.algorithms.bases.ImplicitAlgorithm-class.html#run,Method parsimony.algorithms.explicit.BacktrackingLineSearch.run()=parsimony.algorithms.explicit.BacktrackingLineSearch-class.html#run,Method parsimony.algorithms.explicit.Bisection.run()=parsimony.algorithms.explicit.Bisection-class.html#run,Method parsimony.algorithms.explicit.CONESTA.run()=parsimony.algorithms.explicit.CONESTA-class.html#run,Method parsimony.algorithms.explicit.DykstrasProjectionAlgorithm.run()=parsimony.algorithms.explicit.DykstrasProjectionAlgorithm-class.html#run,Method parsimony.algorithms.explicit.ExcessiveGapMethod.run()=parsimony.algorithms.explicit.ExcessiveGapMethod-class.html#run,Method parsimony.algorithms.explicit.FISTA.run()=parsimony.algorithms.explicit.FISTA-class.html#run,Method parsimony.algorithms.explicit.GradientDescent.run()=parsimony.algorithms.explicit.GradientDescent-class.html#run,Method parsimony.algorithms.explicit.ISTA.run()=parsimony.algorithms.explicit.ISTA-class.html#run,Method parsimony.algorithms.explicit.NewtonRaphson.run()=parsimony.algorithms.explicit.NewtonRaphson-class.html#run,Method parsimony.algorithms.explicit.ParallelDykstrasProjectionAlgorithm.run()=parsimony.algorithms.explicit.ParallelDykstrasProjectionAlgorithm-class.html#run,Method parsimony.algorithms.explicit.ParallelDykstrasProximalAlgorithm.run()=parsimony.algorithms.explicit.ParallelDykstrasProximalAlgorithm-class.html#run,Method parsimony.algorithms.implicit.FastSVD.run()=parsimony.algorithms.implicit.FastSVD-class.html#run,Method parsimony.algorithms.implicit.FastSVDProduct.run()=parsimony.algorithms.implicit.FastSVDProduct-class.html#run,Method parsimony.algorithms.implicit.FastSparseSVD.run()=parsimony.algorithms.implicit.FastSparseSVD-class.html#run,Method parsimony.algorithms.multiblock.MultiblockFISTA.run()=parsimony.algorithms.multiblock.MultiblockFISTA-class.html#run"><a title="parsimony.algorithms.bases.ExplicitAlgorithm.run
+parsimony.algorithms.bases.ImplicitAlgorithm.run
+parsimony.algorithms.explicit.BacktrackingLineSearch.run
+parsimony.algorithms.explicit.Bisection.run
+parsimony.algorithms.explicit.CONESTA.run
+parsimony.algorithms.explicit.DykstrasProjectionAlgorithm.run
+parsimony.algorithms.explicit.ExcessiveGapMethod.run
+parsimony.algorithms.explicit.FISTA.run
+parsimony.algorithms.explicit.GradientDescent.run
+parsimony.algorithms.explicit.ISTA.run
+parsimony.algorithms.explicit.NewtonRaphson.run
+parsimony.algorithms.explicit.ParallelDykstrasProjectionAlgorithm.run
+parsimony.algorithms.explicit.ParallelDykstrasProximalAlgorithm.run
+parsimony.algorithms.implicit.FastSVD.run
+parsimony.algorithms.implicit.FastSVDProduct.run
+parsimony.algorithms.implicit.FastSparseSVD.run
+parsimony.algorithms.multiblock.MultiblockFISTA.run" class="py-name" href="#" onclick="return doclink('link-87', 'run', 'link-87');">run</a></tt><tt class="py-op">(</tt><tt class="py-name">function</tt><tt class="py-op">,</tt> <tt id="link-88" class="py-name"><a title="parsimony.datasets.simulated.beta" class="py-name" href="#" onclick="return doclink('link-88', 'beta', 'link-49');">beta</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L67"></a><tt class="py-lineno"> 67</tt>  <tt class="py-line"> </tt>
+<a name="L68"></a><tt class="py-lineno"> 68</tt>  <tt class="py-line">        <tt class="py-keyword">assert</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">linalg</tt><tt class="py-op">.</tt><tt id="link-89" class="py-name" targets="Function parsimony.utils.maths.norm()=parsimony.utils.maths-module.html#norm"><a title="parsimony.utils.maths.norm" class="py-name" href="#" onclick="return doclink('link-89', 'norm', 'link-89');">norm</a></tt><tt class="py-op">(</tt><tt id="link-90" class="py-name"><a title="parsimony.datasets.simulated.beta" class="py-name" href="#" onclick="return doclink('link-90', 'beta', 'link-49');">beta</a></tt> <tt class="py-op">-</tt> <tt class="py-name">beta_star</tt><tt class="py-op">)</tt> <tt class="py-op">&lt;</tt> <tt class="py-number">5e-2</tt> </tt>
+</div><a name="L69"></a><tt class="py-lineno"> 69</tt>  <tt class="py-line"> </tt>
+<a name="TestL1.test_nonsmooth"></a><div id="TestL1.test_nonsmooth-def"><a name="L70"></a><tt class="py-lineno"> 70</tt> <a class="py-toggle" href="#" id="TestL1.test_nonsmooth-toggle" onclick="return toggle('TestL1.test_nonsmooth');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.tests.test_nesterov_functions.TestL1-class.html#test_nonsmooth">test_nonsmooth</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="TestL1.test_nonsmooth-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="TestL1.test_nonsmooth-expanded"><a name="L71"></a><tt class="py-lineno"> 71</tt>  <tt class="py-line"> </tt>
+<a name="L72"></a><tt class="py-lineno"> 72</tt>  <tt class="py-line">        <tt class="py-keyword">import</tt> <tt class="py-name">numpy</tt> <tt class="py-keyword">as</tt> <tt class="py-name">np</tt> </tt>
+<a name="L73"></a><tt class="py-lineno"> 73</tt>  <tt class="py-line"> </tt>
+<a name="L74"></a><tt class="py-lineno"> 74</tt>  <tt class="py-line">        <tt class="py-keyword">import</tt> <tt id="link-91" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-91', 'parsimony', 'link-0');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-92" class="py-name"><a title="parsimony.algorithms.utils
+parsimony.datasets.simulated.utils
+parsimony.datasets.utils
+parsimony.utils
+parsimony.utils.utils" class="py-name" href="#" onclick="return doclink('link-92', 'utils', 'link-4');">utils</a></tt><tt class="py-op">.</tt><tt id="link-93" class="py-name"><a title="parsimony.utils.consts" class="py-name" href="#" onclick="return doclink('link-93', 'consts', 'link-5');">consts</a></tt> <tt class="py-keyword">as</tt> <tt id="link-94" class="py-name"><a title="parsimony.utils.consts" class="py-name" href="#" onclick="return doclink('link-94', 'consts', 'link-5');">consts</a></tt> </tt>
+<a name="L75"></a><tt class="py-lineno"> 75</tt>  <tt class="py-line">        <tt class="py-keyword">from</tt> <tt id="link-95" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-95', 'parsimony', 'link-0');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-96" class="py-name"><a title="parsimony.functions
+parsimony.functions.functions" class="py-name" href="#" onclick="return doclink('link-96', 'functions', 'link-8');">functions</a></tt> <tt class="py-keyword">import</tt> <tt id="link-97" class="py-name"><a title="parsimony.functions.combinedfunctions.CombinedFunction
+parsimony.functions.functions.CombinedFunction" class="py-name" href="#" onclick="return doclink('link-97', 'CombinedFunction', 'link-9');">CombinedFunction</a></tt> </tt>
+<a name="L76"></a><tt class="py-lineno"> 76</tt>  <tt class="py-line">        <tt class="py-keyword">import</tt> <tt id="link-98" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-98', 'parsimony', 'link-0');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-99" class="py-name"><a title="parsimony.algorithms" class="py-name" href="#" onclick="return doclink('link-99', 'algorithms', 'link-11');">algorithms</a></tt><tt class="py-op">.</tt><tt id="link-100" class="py-name"><a title="parsimony.algorithms.explicit" class="py-name" href="#" onclick="return doclink('link-100', 'explicit', 'link-12');">explicit</a></tt> <tt class="py-keyword">as</tt> <tt id="link-101" class="py-name"><a title="parsimony.algorithms.explicit" class="py-name" href="#" onclick="return doclink('link-101', 'explicit', 'link-12');">explicit</a></tt> </tt>
+<a name="L77"></a><tt class="py-lineno"> 77</tt>  <tt class="py-line">        <tt class="py-keyword">import</tt> <tt id="link-102" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-102', 'parsimony', 'link-0');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-103" class="py-name"><a title="parsimony.functions
+parsimony.functions.functions" class="py-name" href="#" onclick="return doclink('link-103', 'functions', 'link-8');">functions</a></tt><tt class="py-op">.</tt><tt id="link-104" class="py-name"><a title="parsimony.functions.losses
+parsimony.functions.multiblock.losses" class="py-name" href="#" onclick="return doclink('link-104', 'losses', 'link-16');">losses</a></tt> <tt class="py-keyword">as</tt> <tt id="link-105" class="py-name"><a title="parsimony.functions.losses
+parsimony.functions.multiblock.losses" class="py-name" href="#" onclick="return doclink('link-105', 'losses', 'link-16');">losses</a></tt> </tt>
+<a name="L78"></a><tt class="py-lineno"> 78</tt>  <tt class="py-line">        <tt class="py-keyword">import</tt> <tt id="link-106" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-106', 'parsimony', 'link-0');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-107" class="py-name"><a title="parsimony.functions
+parsimony.functions.functions" class="py-name" href="#" onclick="return doclink('link-107', 'functions', 'link-8');">functions</a></tt><tt class="py-op">.</tt><tt id="link-108" class="py-name"><a title="parsimony.functions.penalties" class="py-name" href="#" onclick="return doclink('link-108', 'penalties', 'link-20');">penalties</a></tt> <tt class="py-keyword">as</tt> <tt id="link-109" class="py-name"><a title="parsimony.functions.penalties" class="py-name" href="#" onclick="return doclink('link-109', 'penalties', 'link-20');">penalties</a></tt> </tt>
+<a name="L79"></a><tt class="py-lineno"> 79</tt>  <tt class="py-line">        <tt class="py-keyword">import</tt> <tt id="link-110" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-110', 'parsimony', 'link-0');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-111" class="py-name"><a title="parsimony.functions
+parsimony.functions.functions" class="py-name" href="#" onclick="return doclink('link-111', 'functions', 'link-8');">functions</a></tt><tt class="py-op">.</tt><tt id="link-112" class="py-name"><a title="parsimony.functions.nesterov" class="py-name" href="#" onclick="return doclink('link-112', 'nesterov', 'link-24');">nesterov</a></tt> <tt class="py-keyword">as</tt> <tt id="link-113" class="py-name"><a title="parsimony.functions.nesterov" class="py-name" href="#" onclick="return doclink('link-113', 'nesterov', 'link-24');">nesterov</a></tt> </tt>
+<a name="L80"></a><tt class="py-lineno"> 80</tt>  <tt class="py-line">        <tt class="py-keyword">import</tt> <tt id="link-114" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-114', 'parsimony', 'link-0');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-115" class="py-name"><a title="parsimony.start_vectors" class="py-name" href="#" onclick="return doclink('link-115', 'start_vectors', 'link-27');">start_vectors</a></tt> <tt class="py-keyword">as</tt> <tt id="link-116" class="py-name"><a title="parsimony.start_vectors" class="py-name" href="#" onclick="return doclink('link-116', 'start_vectors', 'link-27');">start_vectors</a></tt> </tt>
+<a name="L81"></a><tt class="py-lineno"> 81</tt>  <tt class="py-line">        <tt class="py-keyword">import</tt> <tt id="link-117" class="py-name"><a title="parsimony" class="py-name" href="#" onclick="return doclink('link-117', 'parsimony', 'link-0');">parsimony</a></tt><tt class="py-op">.</tt><tt id="link-118" class="py-name"><a title="parsimony.datasets" class="py-name" href="#" onclick="return doclink('link-118', 'datasets', 'link-30');">datasets</a></tt><tt class="py-op">.</tt><tt id="link-119" class="py-name"><a title="parsimony.datasets.simulated" class="py-name" href="#" onclick="return doclink('link-119', 'simulated', 'link-31');">simulated</a></tt><tt class="py-op">.</tt><tt id="link-120" class="py-name"><a title="parsimony.datasets.simulated.l1_l2_tv" class="py-name" href="#" onclick="return doclink('link-120', 'l1_l2_tv', 'link-32');">l1_l2_tv</a></tt> <tt class="py-keyword">as</tt> <tt id="link-121" class="py-name"><a title="parsimony.datasets.simulated.l1_l2_tv" class="py-name" href="#" onclick="return doclink('link-121', 'l1_l2_tv', 'link-32');">l1_l2_tv</a></tt> </tt>
+<a name="L82"></a><tt class="py-lineno"> 82</tt>  <tt class="py-line"> </tt>
+<a name="L83"></a><tt class="py-lineno"> 83</tt>  <tt class="py-line">        <tt class="py-name">start_vector</tt> <tt class="py-op">=</tt> <tt id="link-122" class="py-name"><a title="parsimony.start_vectors" class="py-name" href="#" onclick="return doclink('link-122', 'start_vectors', 'link-27');">start_vectors</a></tt><tt class="py-op">.</tt><tt id="link-123" class="py-name"><a title="parsimony.start_vectors.RandomStartVector" class="py-name" href="#" onclick="return doclink('link-123', 'RandomStartVector', 'link-35');">RandomStartVector</a></tt><tt class="py-op">(</tt><tt class="py-name">normalise</tt><tt class="py-op">=</tt><tt class="py-name">True</tt><tt class="py-op">)</tt> </tt>
+<a name="L84"></a><tt class="py-lineno"> 84</tt>  <tt class="py-line"> </tt>
+<a name="L85"></a><tt class="py-lineno"> 85</tt>  <tt class="py-line">        <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">random</tt><tt class="py-op">.</tt><tt class="py-name">seed</tt><tt class="py-op">(</tt><tt class="py-number">42</tt><tt class="py-op">)</tt> </tt>
+<a name="L86"></a><tt class="py-lineno"> 86</tt>  <tt class="py-line"> </tt>
+<a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line">        <tt id="link-124" class="py-name"><a title="parsimony.tests._playhouse.n" class="py-name" href="#" onclick="return doclink('link-124', 'n', 'link-36');">n</a></tt><tt class="py-op">,</tt> <tt id="link-125" class="py-name"><a title="parsimony.tests._playhouse.p" class="py-name" href="#" onclick="return doclink('link-125', 'p', 'link-37');">p</a></tt> <tt class="py-op">=</tt> <tt class="py-number">75</tt><tt class="py-op">,</tt> <tt class="py-number">100</tt> </tt>
+<a name="L88"></a><tt class="py-lineno"> 88</tt>  <tt class="py-line"> </tt>
+<a name="L89"></a><tt class="py-lineno"> 89</tt>  <tt class="py-line">        <tt class="py-name">penalty_start</tt> <tt class="py-op">=</tt> <tt class="py-number">0</tt> </tt>
+<a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line"> </tt>
+<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line">        <tt id="link-126" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.alpha
+parsimony.functions.nesterov.L1.L1.alpha
+parsimony.functions.nesterov.L1TV.L1TV.alpha
+parsimony.functions.nesterov.interfaces.NesterovFunction.alpha
+parsimony.functions.nesterov.l1.L1.alpha
+parsimony.functions.nesterov.l1tv.L1TV.alpha" class="py-name" href="#" onclick="return doclink('link-126', 'alpha', 'link-38');">alpha</a></tt> <tt class="py-op">=</tt> <tt class="py-number">0.9</tt> </tt>
+<a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line">        <tt class="py-name">Sigma</tt> <tt class="py-op">=</tt> <tt id="link-127" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.alpha
+parsimony.functions.nesterov.L1.L1.alpha
+parsimony.functions.nesterov.L1TV.L1TV.alpha
+parsimony.functions.nesterov.interfaces.NesterovFunction.alpha
+parsimony.functions.nesterov.l1.L1.alpha
+parsimony.functions.nesterov.l1tv.L1TV.alpha" class="py-name" href="#" onclick="return doclink('link-127', 'alpha', 'link-38');">alpha</a></tt> <tt class="py-op">*</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">eye</tt><tt class="py-op">(</tt><tt id="link-128" class="py-name"><a title="parsimony.tests._playhouse.p" class="py-name" href="#" onclick="return doclink('link-128', 'p', 'link-37');">p</a></tt><tt class="py-op">,</tt> <tt id="link-129" class="py-name"><a title="parsimony.tests._playhouse.p" class="py-name" href="#" onclick="return doclink('link-129', 'p', 'link-37');">p</a></tt><tt class="py-op">)</tt> \ </tt>
+<a name="L93"></a><tt class="py-lineno"> 93</tt>  <tt class="py-line">              <tt class="py-op">+</tt> <tt class="py-op">(</tt><tt class="py-number">1.0</tt> <tt class="py-op">-</tt> <tt id="link-130" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.alpha
+parsimony.functions.nesterov.L1.L1.alpha
+parsimony.functions.nesterov.L1TV.L1TV.alpha
+parsimony.functions.nesterov.interfaces.NesterovFunction.alpha
+parsimony.functions.nesterov.l1.L1.alpha
+parsimony.functions.nesterov.l1tv.L1TV.alpha" class="py-name" href="#" onclick="return doclink('link-130', 'alpha', 'link-38');">alpha</a></tt><tt class="py-op">)</tt> <tt class="py-op">*</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">random</tt><tt class="py-op">.</tt><tt class="py-name">randn</tt><tt class="py-op">(</tt><tt id="link-131" class="py-name"><a title="parsimony.tests._playhouse.p" class="py-name" href="#" onclick="return doclink('link-131', 'p', 'link-37');">p</a></tt><tt class="py-op">,</tt> <tt id="link-132" class="py-name"><a title="parsimony.tests._playhouse.p" class="py-name" href="#" onclick="return doclink('link-132', 'p', 'link-37');">p</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line">        <tt class="py-name">mean</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">zeros</tt><tt class="py-op">(</tt><tt id="link-133" class="py-name"><a title="parsimony.tests._playhouse.p" class="py-name" href="#" onclick="return doclink('link-133', 'p', 'link-37');">p</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line">        <tt id="link-134" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.M
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.M
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.M
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.M
+parsimony.functions.functions.PCA_L1_TV.M
+parsimony.functions.functions.RR_L1_GL.M
+parsimony.functions.functions.RR_L1_TV.M
+parsimony.functions.functions.RR_SmoothedL1TV.M
+parsimony.functions.nesterov.L1.L1.M
+parsimony.functions.nesterov.L1TV.L1TV.M
+parsimony.functions.nesterov.gl.GroupLassoOverlap.M
+parsimony.functions.nesterov.interfaces.NesterovFunction.M
+parsimony.functions.nesterov.l1.L1.M
+parsimony.functions.nesterov.l1tv.L1TV.M
+parsimony.functions.nesterov.tv.TotalVariation.M" class="py-name" href="#" onclick="return doclink('link-134', 'M', 'link-46');">M</a></tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">random</tt><tt class="py-op">.</tt><tt class="py-name">multivariate_normal</tt><tt class="py-op">(</tt><tt class="py-name">mean</tt><tt class="py-op">,</tt> <tt class="py-name">Sigma</tt><tt class="py-op">,</tt> <tt id="link-135" class="py-name"><a title="parsimony.tests._playhouse.n" class="py-name" href="#" onclick="return doclink('link-135', 'n', 'link-36');">n</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line">        <tt class="py-name">e</tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">random</tt><tt class="py-op">.</tt><tt class="py-name">randn</tt><tt class="py-op">(</tt><tt id="link-136" class="py-name"><a title="parsimony.tests._playhouse.n" class="py-name" href="#" onclick="return doclink('link-136', 'n', 'link-36');">n</a></tt><tt class="py-op">,</tt> <tt class="py-number">1</tt><tt class="py-op">)</tt> </tt>
+<a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line"> </tt>
+<a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line">        <tt id="link-137" class="py-name"><a title="parsimony.datasets.simulated.beta" class="py-name" href="#" onclick="return doclink('link-137', 'beta', 'link-49');">beta</a></tt> <tt class="py-op">=</tt> <tt class="py-name">start_vector</tt><tt class="py-op">.</tt><tt id="link-138" class="py-name"><a title="parsimony.start_vectors.BaseStartVector.get_vector
+parsimony.start_vectors.IdentityStartVector.get_vector
+parsimony.start_vectors.OnesStartVector.get_vector
+parsimony.start_vectors.RandomStartVector.get_vector
+parsimony.start_vectors.ZerosStartVector.get_vector" class="py-name" href="#" onclick="return doclink('link-138', 'get_vector', 'link-50');">get_vector</a></tt><tt class="py-op">(</tt><tt class="py-op">(</tt><tt id="link-139" class="py-name"><a title="parsimony.tests._playhouse.p" class="py-name" href="#" onclick="return doclink('link-139', 'p', 'link-37');">p</a></tt><tt class="py-op">,</tt> <tt class="py-number">1</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L99"></a><tt class="py-lineno"> 99</tt>  <tt class="py-line">        <tt id="link-140" class="py-name"><a title="parsimony.datasets.simulated.beta" class="py-name" href="#" onclick="return doclink('link-140', 'beta', 'link-49');">beta</a></tt><tt class="py-op">[</tt><tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">abs</tt><tt class="py-op">(</tt><tt id="link-141" class="py-name"><a title="parsimony.datasets.simulated.beta" class="py-name" href="#" onclick="return doclink('link-141', 'beta', 'link-49');">beta</a></tt><tt class="py-op">)</tt> <tt class="py-op">&lt;</tt> <tt class="py-number">0.1</tt><tt class="py-op">]</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt> </tt>
+<a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line"> </tt>
+<a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line">        <tt class="py-name">l</tt> <tt class="py-op">=</tt> <tt class="py-number">0.618</tt> </tt>
+<a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line">        <tt class="py-name">k</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt> </tt>
+<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line">        <tt class="py-name">g</tt> <tt class="py-op">=</tt> <tt class="py-number">0.0</tt> </tt>
+<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line"> </tt>
+<a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line">        <tt id="link-142" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.A
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.A
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.A
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.A
+parsimony.functions.functions.PCA_L1_TV.A
+parsimony.functions.functions.RR_L1_GL.A
+parsimony.functions.functions.RR_L1_TV.A
+parsimony.functions.nesterov.interfaces.NesterovFunction.A" class="py-name" href="#" onclick="return doclink('link-142', 'A', 'link-54');">A</a></tt> <tt class="py-op">=</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">eye</tt><tt class="py-op">(</tt><tt id="link-143" class="py-name"><a title="parsimony.tests._playhouse.p" class="py-name" href="#" onclick="return doclink('link-143', 'p', 'link-37');">p</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line">        <tt id="link-144" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.A
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.A
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.A
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.A
+parsimony.functions.functions.PCA_L1_TV.A
+parsimony.functions.functions.RR_L1_GL.A
+parsimony.functions.functions.RR_L1_TV.A
+parsimony.functions.nesterov.interfaces.NesterovFunction.A" class="py-name" href="#" onclick="return doclink('link-144', 'A', 'link-54');">A</a></tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt id="link-145" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.A
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.A
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.A
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.A
+parsimony.functions.functions.PCA_L1_TV.A
+parsimony.functions.functions.RR_L1_GL.A
+parsimony.functions.functions.RR_L1_TV.A
+parsimony.functions.nesterov.interfaces.NesterovFunction.A" class="py-name" href="#" onclick="return doclink('link-145', 'A', 'link-54');">A</a></tt><tt class="py-op">,</tt> <tt id="link-146" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.A
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.A
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.A
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.A
+parsimony.functions.functions.PCA_L1_TV.A
+parsimony.functions.functions.RR_L1_GL.A
+parsimony.functions.functions.RR_L1_TV.A
+parsimony.functions.nesterov.interfaces.NesterovFunction.A" class="py-name" href="#" onclick="return doclink('link-146', 'A', 'link-54');">A</a></tt><tt class="py-op">,</tt> <tt id="link-147" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.A
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.A
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.A
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.A
+parsimony.functions.functions.PCA_L1_TV.A
+parsimony.functions.functions.RR_L1_GL.A
+parsimony.functions.functions.RR_L1_TV.A
+parsimony.functions.nesterov.interfaces.NesterovFunction.A" class="py-name" href="#" onclick="return doclink('link-147', 'A', 'link-54');">A</a></tt><tt class="py-op">]</tt> </tt>
+<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line">        <tt class="py-name">snr</tt> <tt class="py-op">=</tt> <tt class="py-number">100.0</tt> </tt>
+<a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line">        <tt id="link-148" class="py-name"><a title="parsimony.tests._playhouse.X" class="py-name" href="#" onclick="return doclink('link-148', 'X', 'link-60');">X</a></tt><tt class="py-op">,</tt> <tt id="link-149" class="py-name"><a title="parsimony.tests._playhouse.y" class="py-name" href="#" onclick="return doclink('link-149', 'y', 'link-61');">y</a></tt><tt class="py-op">,</tt> <tt class="py-name">beta_star</tt> <tt class="py-op">=</tt> <tt id="link-150" class="py-name"><a title="parsimony.datasets.simulated.l1_l2_tv" class="py-name" href="#" onclick="return doclink('link-150', 'l1_l2_tv', 'link-32');">l1_l2_tv</a></tt><tt class="py-op">.</tt><tt id="link-151" class="py-name"><a title="parsimony.datasets.Russett.load
+parsimony.datasets.classification.dice5.load
+parsimony.datasets.regression.dice5.load
+parsimony.datasets.simulated.l1_l2_gl.load
+parsimony.datasets.simulated.l1_l2_glmu.load
+parsimony.datasets.simulated.l1_l2_tv.load
+parsimony.datasets.simulated.l1_l2_tvmu.load
+parsimony.datasets.simulated.l1mu_l2_tvmu.load
+parsimony.datasets.simulated.regression.load" class="py-name" href="#" onclick="return doclink('link-151', 'load', 'link-63');">load</a></tt><tt class="py-op">(</tt><tt class="py-name">l</tt><tt class="py-op">,</tt> <tt class="py-name">k</tt><tt class="py-op">,</tt> <tt class="py-name">g</tt><tt class="py-op">,</tt> <tt id="link-152" class="py-name"><a title="parsimony.datasets.simulated.beta" class="py-name" href="#" onclick="return doclink('link-152', 'beta', 'link-49');">beta</a></tt><tt class="py-op">,</tt> <tt id="link-153" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.M
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.M
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.M
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.M
+parsimony.functions.functions.PCA_L1_TV.M
+parsimony.functions.functions.RR_L1_GL.M
+parsimony.functions.functions.RR_L1_TV.M
+parsimony.functions.functions.RR_SmoothedL1TV.M
+parsimony.functions.nesterov.L1.L1.M
+parsimony.functions.nesterov.L1TV.L1TV.M
+parsimony.functions.nesterov.gl.GroupLassoOverlap.M
+parsimony.functions.nesterov.interfaces.NesterovFunction.M
+parsimony.functions.nesterov.l1.L1.M
+parsimony.functions.nesterov.l1tv.L1TV.M
+parsimony.functions.nesterov.tv.TotalVariation.M" class="py-name" href="#" onclick="return doclink('link-153', 'M', 'link-46');">M</a></tt><tt class="py-op">,</tt> <tt class="py-name">e</tt><tt class="py-op">,</tt> <tt id="link-154" class="py-name"><a title="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL.A
+parsimony.functions.combinedfunctions.LinearRegressionL1L2TV.A
+parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV.A
+parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV.A
+parsimony.functions.functions.PCA_L1_TV.A
+parsimony.functions.functions.RR_L1_GL.A
+parsimony.functions.functions.RR_L1_TV.A
+parsimony.functions.nesterov.interfaces.NesterovFunction.A" class="py-name" href="#" onclick="return doclink('link-154', 'A', 'link-54');">A</a></tt><tt class="py-op">,</tt> <tt class="py-name">snr</tt><tt class="py-op">=</tt><tt class="py-name">snr</tt><tt class="py-op">)</tt> </tt>
+<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line"> </tt>
+<a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line">        <tt class="py-name">function</tt> <tt class="py-op">=</tt> <tt id="link-155" class="py-name"><a title="parsimony.functions.combinedfunctions.CombinedFunction
+parsimony.functions.functions.CombinedFunction" class="py-name" href="#" onclick="return doclink('link-155', 'CombinedFunction', 'link-9');">CombinedFunction</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line">        <tt class="py-name">function</tt><tt class="py-op">.</tt><tt id="link-156" class="py-name"><a title="parsimony.functions.combinedfunctions.CombinedFunction.add_function
+parsimony.functions.functions.CombinedFunction.add_function
+parsimony.functions.multiblock.losses.CombinedMultiblockFunction.add_function" class="py-name" href="#" onclick="return doclink('link-156', 'add_function', 'link-68');">add_function</a></tt><tt class="py-op">(</tt><tt id="link-157" class="py-name"><a title="parsimony.functions.losses
+parsimony.functions.multiblock.losses" class="py-name" href="#" onclick="return doclink('link-157', 'losses', 'link-16');">losses</a></tt><tt class="py-op">.</tt><tt id="link-158" class="py-name"><a title="parsimony.estimators.LinearRegression
+parsimony.functions.losses.LinearRegression" class="py-name" href="#" onclick="return doclink('link-158', 'LinearRegression', 'link-70');">LinearRegression</a></tt><tt class="py-op">(</tt><tt id="link-159" class="py-name"><a title="parsimony.tests._playhouse.X" class="py-name" href="#" onclick="return doclink('link-159', 'X', 'link-60');">X</a></tt><tt class="py-op">,</tt> <tt id="link-160" class="py-name"><a title="parsimony.tests._playhouse.y" class="py-name" href="#" onclick="return doclink('link-160', 'y', 'link-61');">y</a></tt><tt class="py-op">,</tt> </tt>
+<a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line"><tt class="py-comment">#                                                   penalty_start=penalty_start,</tt> </tt>
+<a name="L113"></a><tt class="py-lineno">113</tt>  <tt class="py-line">                                                   <tt class="py-name">mean</tt><tt class="py-op">=</tt><tt class="py-name">False</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L114"></a><tt class="py-lineno">114</tt>  <tt class="py-line"><tt class="py-comment">#        A = nesterov.l1.A_from_variables(p, penalty_start=penalty_start)</tt> </tt>
+<a name="L115"></a><tt class="py-lineno">115</tt>  <tt class="py-line"><tt class="py-comment">#        function.add_penalty(nesterov.l1.L1(l, A=A, mu=mu_min,</tt> </tt>
+<a name="L116"></a><tt class="py-lineno">116</tt>  <tt class="py-line"><tt class="py-comment">#                                            penalty_start=penalty_start))</tt> </tt>
+<a name="L117"></a><tt class="py-lineno">117</tt>  <tt class="py-line">        <tt class="py-name">function</tt><tt class="py-op">.</tt><tt id="link-161" class="py-name" targets="Method parsimony.functions.combinedfunctions.CombinedFunction.add_prox()=parsimony.functions.combinedfunctions.CombinedFunction-class.html#add_prox,Method parsimony.functions.functions.CombinedFunction.add_prox()=parsimony.functions.functions.CombinedFunction-class.html#add_prox,Method parsimony.functions.multiblock.losses.CombinedMultiblockFunction.add_prox()=parsimony.functions.multiblock.losses.CombinedMultiblockFunction-class.html#add_prox"><a title="parsimony.functions.combinedfunctions.CombinedFunction.add_prox
+parsimony.functions.functions.CombinedFunction.add_prox
+parsimony.functions.multiblock.losses.CombinedMultiblockFunction.add_prox" class="py-name" href="#" onclick="return doclink('link-161', 'add_prox', 'link-161');">add_prox</a></tt><tt class="py-op">(</tt><tt id="link-162" class="py-name"><a title="parsimony.functions.penalties" class="py-name" href="#" onclick="return doclink('link-162', 'penalties', 'link-20');">penalties</a></tt><tt class="py-op">.</tt><tt id="link-163" class="py-name"><a title="parsimony.functions.nesterov.L1
+parsimony.functions.nesterov.L1.L1
+parsimony.functions.nesterov.l1.L1
+parsimony.functions.penalties.L1" class="py-name" href="#" onclick="return doclink('link-163', 'L1', 'link-81');">L1</a></tt><tt class="py-op">(</tt><tt class="py-name">l</tt><tt class="py-op">,</tt> <tt class="py-name">penalty_start</tt><tt class="py-op">=</tt><tt class="py-name">penalty_start</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line"> </tt>
+<a name="L119"></a><tt class="py-lineno">119</tt>  <tt class="py-line">        <tt class="py-name">fista</tt> <tt class="py-op">=</tt> <tt id="link-164" class="py-name"><a title="parsimony.algorithms.explicit" class="py-name" href="#" onclick="return doclink('link-164', 'explicit', 'link-12');">explicit</a></tt><tt class="py-op">.</tt><tt id="link-165" class="py-name"><a title="parsimony.algorithms.explicit.FISTA" class="py-name" href="#" onclick="return doclink('link-165', 'FISTA', 'link-85');">FISTA</a></tt><tt class="py-op">(</tt><tt class="py-name">eps</tt><tt class="py-op">=</tt><tt id="link-166" class="py-name"><a title="parsimony.utils.consts" class="py-name" href="#" onclick="return doclink('link-166', 'consts', 'link-5');">consts</a></tt><tt class="py-op">.</tt><tt id="link-167" class="py-name" targets="Variable parsimony.datasets.simulated.utils.TOLERANCE=parsimony.datasets.simulated.utils-module.html#TOLERANCE,Variable parsimony.utils.consts.TOLERANCE=parsimony.utils.consts-module.html#TOLERANCE"><a title="parsimony.datasets.simulated.utils.TOLERANCE
+parsimony.utils.consts.TOLERANCE" class="py-name" href="#" onclick="return doclink('link-167', 'TOLERANCE', 'link-167');">TOLERANCE</a></tt><tt class="py-op">,</tt> <tt class="py-name">max_iter</tt><tt class="py-op">=</tt><tt class="py-number">7800</tt><tt class="py-op">)</tt> </tt>
+<a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line">        <tt id="link-168" class="py-name"><a title="parsimony.datasets.simulated.beta" class="py-name" href="#" onclick="return doclink('link-168', 'beta', 'link-49');">beta</a></tt> <tt class="py-op">=</tt> <tt class="py-name">fista</tt><tt class="py-op">.</tt><tt id="link-169" class="py-name"><a title="parsimony.algorithms.bases.ExplicitAlgorithm.run
+parsimony.algorithms.bases.ImplicitAlgorithm.run
+parsimony.algorithms.explicit.BacktrackingLineSearch.run
+parsimony.algorithms.explicit.Bisection.run
+parsimony.algorithms.explicit.CONESTA.run
+parsimony.algorithms.explicit.DykstrasProjectionAlgorithm.run
+parsimony.algorithms.explicit.ExcessiveGapMethod.run
+parsimony.algorithms.explicit.FISTA.run
+parsimony.algorithms.explicit.GradientDescent.run
+parsimony.algorithms.explicit.ISTA.run
+parsimony.algorithms.explicit.NewtonRaphson.run
+parsimony.algorithms.explicit.ParallelDykstrasProjectionAlgorithm.run
+parsimony.algorithms.explicit.ParallelDykstrasProximalAlgorithm.run
+parsimony.algorithms.implicit.FastSVD.run
+parsimony.algorithms.implicit.FastSVDProduct.run
+parsimony.algorithms.implicit.FastSparseSVD.run
+parsimony.algorithms.multiblock.MultiblockFISTA.run" class="py-name" href="#" onclick="return doclink('link-169', 'run', 'link-87');">run</a></tt><tt class="py-op">(</tt><tt class="py-name">function</tt><tt class="py-op">,</tt> <tt id="link-170" class="py-name"><a title="parsimony.datasets.simulated.beta" class="py-name" href="#" onclick="return doclink('link-170', 'beta', 'link-49');">beta</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L121"></a><tt class="py-lineno">121</tt>  <tt class="py-line"> </tt>
+<a name="L122"></a><tt class="py-lineno">122</tt>  <tt class="py-line">        <tt class="py-keyword">assert</tt> <tt class="py-name">np</tt><tt class="py-op">.</tt><tt class="py-name">linalg</tt><tt class="py-op">.</tt><tt id="link-171" class="py-name"><a title="parsimony.utils.maths.norm" class="py-name" href="#" onclick="return doclink('link-171', 'norm', 'link-89');">norm</a></tt><tt class="py-op">(</tt><tt id="link-172" class="py-name"><a title="parsimony.datasets.simulated.beta" class="py-name" href="#" onclick="return doclink('link-172', 'beta', 'link-49');">beta</a></tt> <tt class="py-op">-</tt> <tt class="py-name">beta_star</tt><tt class="py-op">)</tt> <tt class="py-op">&lt;</tt> <tt class="py-number">5e-2</tt> </tt>
+</div></div><a name="L123"></a><tt class="py-lineno">123</tt>  <tt class="py-line"> </tt>
+<a name="L124"></a><tt class="py-lineno">124</tt>  <tt class="py-line"><tt class="py-keyword">if</tt> <tt class="py-name">__name__</tt> <tt class="py-op">==</tt> <tt class="py-string">"__main__"</tt><tt class="py-op">:</tt> </tt>
+<a name="L125"></a><tt class="py-lineno">125</tt>  <tt class="py-line">    <tt class="py-keyword">import</tt> <tt class="py-name">unittest</tt> </tt>
+<a name="L126"></a><tt class="py-lineno">126</tt>  <tt class="py-line">    <tt class="py-name">unittest</tt><tt class="py-op">.</tt><tt class="py-name">main</tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L127"></a><tt class="py-lineno">127</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="parsimony-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Tue Apr 22 16:29:20 2014
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

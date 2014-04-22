@@ -69,7 +69,7 @@ unittest.case.TestCase --+
 <dl><dt>Known Subclasses:</dt>
 <dd>
       <ul class="subclass-list">
-<li><a href="parsimony.tests.test_functions.TestFunctions-class.html">test_functions.TestFunctions</a></li><li>, <a href="parsimony.tests.test_simulations.TestSimulations-class.html">test_simulations.TestSimulations</a></li><li>, <a href="parsimony.tests.test_logistic_regression.TestLogisticRegression-class.html">test_logistic_regression.TestLogisticRegression</a></li><li>, <a href="parsimony.tests.test_total_variation.TestTotalVariation-class.html">test_total_variation.TestTotalVariation</a></li><li>, <a href="parsimony.tests.test_algorithms.TestAlgorithms-class.html">test_algorithms.TestAlgorithms</a></li><li>, <a href="parsimony.tests.test_group_lasso.TestGroupLasso-class.html">test_group_lasso.TestGroupLasso</a></li>  </ul>
+<li><a href="parsimony.tests.test_nesterov_functions.TestL1-class.html">test_nesterov_functions.TestL1</a></li><li>, <a href="parsimony.tests.test_functions.TestFunctions-class.html">test_functions.TestFunctions</a></li><li>, <a href="parsimony.tests.test_linear_regression.TestLinearRegression-class.html">test_linear_regression.TestLinearRegression</a></li><li>, <a href="parsimony.tests.test_simulations.TestSimulations-class.html">test_simulations.TestSimulations</a></li><li>, <a href="parsimony.tests.test_logistic_regression.TestLogisticRegression-class.html">test_logistic_regression.TestLogisticRegression</a></li><li>, <a href="parsimony.tests.test_total_variation.TestTotalVariation-class.html">test_total_variation.TestTotalVariation</a></li><li>, <a href="parsimony.tests.test_algorithms.TestAlgorithms-class.html">test_algorithms.TestAlgorithms</a></li><li>, <a href="parsimony.tests.test_group_lasso.TestGroupLasso-class.html">test_group_lasso.TestGroupLasso</a></li>  </ul>
 </dd></dl>
 
 <hr />
@@ -144,10 +144,9 @@ Add a test method:
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a href="parsimony.tests.tests.TestCase-class.html#setup" class="summary-sig-name">setup</a>(<span class="summary-sig-arg">self</span>)</span><br />
-      This method is run before each unit test.</td>
+          <td><span class="summary-sig"><a name="runTest"></a><span class="summary-sig-name">runTest</span>(<span class="summary-sig-arg">self</span>)</span></td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.setup">source&nbsp;code</a></span>
+            <span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.runTest">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -178,10 +177,10 @@ Add a test method:
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a href="parsimony.tests.tests.TestCase-class.html#teardown" class="summary-sig-name">teardown</a>(<span class="summary-sig-arg">self</span>)</span><br />
-      This method is run after each unit test.</td>
+          <td><span class="summary-sig"><a href="parsimony.tests.tests.TestCase-class.html#setup" class="summary-sig-name">setup</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      This method is run before each unit test.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.teardown">source&nbsp;code</a></span>
+            <span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.setup">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -199,6 +198,23 @@ Add a test method:
       From unittest.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.tearDown">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="parsimony.tests.tests.TestCase-class.html#teardown" class="summary-sig-name">teardown</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      This method is run after each unit test.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.teardown">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -315,23 +331,6 @@ Add a test method:
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a href="parsimony.tests.tests.TestCase-class.html#setup_class" class="summary-sig-name">setup_class</a>(<span class="summary-sig-arg">cls</span>)</span><br />
-      This method is run before any other methods in this class.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.setup_class">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
           <td><span class="summary-sig"><a href="parsimony.tests.tests.TestCase-class.html#setUpClass" class="summary-sig-name">setUpClass</a>(<span class="summary-sig-arg">cls</span>)</span><br />
       From unittest.</td>
           <td align="right" valign="top">
@@ -349,10 +348,10 @@ Add a test method:
     </td><td class="summary">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td><span class="summary-sig"><a href="parsimony.tests.tests.TestCase-class.html#teardown_class" class="summary-sig-name">teardown_class</a>(<span class="summary-sig-arg">cls</span>)</span><br />
-      This method is run after all other methods in this class.</td>
+          <td><span class="summary-sig"><a href="parsimony.tests.tests.TestCase-class.html#setup_class" class="summary-sig-name">setup_class</a>(<span class="summary-sig-arg">cls</span>)</span><br />
+      This method is run before any other methods in this class.</td>
           <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.teardown_class">source&nbsp;code</a></span>
+            <span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.setup_class">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -370,6 +369,23 @@ Add a test method:
       From unittest.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.tearDownClass">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="parsimony.tests.tests.TestCase-class.html#teardown_class" class="summary-sig-name">teardown_class</a>(<span class="summary-sig-arg">cls</span>)</span><br />
+      This method is run after all other methods in this class.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.teardown_class">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -406,14 +422,14 @@ Add a test method:
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_cache"></a><span class="summary-name">_abc_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x2f5bb90&gt;">&lt;_weakrefset.WeakSet object at 0x2f5bb90&gt;</code>
+        <a name="_abc_cache"></a><span class="summary-name">_abc_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x3796690&gt;">&lt;_weakrefset.WeakSet object at 0x3796690&gt;</code>
     </td>
   </tr>
 <tr class="private">
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_negative_cache"></a><span class="summary-name">_abc_negative_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x2f5bbd0&gt;">&lt;_weakrefset.WeakSet object at 0x2f5bbd0&gt;</code>
+        <a name="_abc_negative_cache"></a><span class="summary-name">_abc_negative_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x37966d0&gt;">&lt;_weakrefset.WeakSet object at 0x37966d0&gt;</code>
     </td>
   </tr>
 <tr class="private">
@@ -427,7 +443,7 @@ Add a test method:
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_registry"></a><span class="summary-name">_abc_registry</span> = <code title="&lt;_weakrefset.WeakSet object at 0x2f5bb50&gt;">&lt;_weakrefset.WeakSet object at 0x2f5bb50&gt;</code>
+        <a name="_abc_registry"></a><span class="summary-name">_abc_registry</span> = <code title="&lt;_weakrefset.WeakSet object at 0x3796650&gt;">&lt;_weakrefset.WeakSet object at 0x3796650&gt;</code>
     </td>
   </tr>
   <tr>
@@ -486,27 +502,6 @@ Add a test method:
   </td>
 </tr>
 </table>
-<a name="setup"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">setup</span>(<span class="sig-arg">self</span>)</span>
-  </h3>
-  </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.setup">source&nbsp;code</a></span>&nbsp;
-    </td>
-  </tr></table>
-  
-  <p>This method is run before each unit test.</p>
-  <p>Specialise if you need to setup something before each test method is 
-  run.</p>
-  <dl class="fields">
-  </dl>
-</td></tr></table>
-</div>
 <a name="setUp"></a>
 <div>
 <table class="details" border="1" cellpadding="3"
@@ -526,71 +521,6 @@ Add a test method:
     <dt>Overrides:
         unittest.case.TestCase.setUp
     </dt>
-  </dl>
-</td></tr></table>
-</div>
-<a name="teardown"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">teardown</span>(<span class="sig-arg">self</span>)</span>
-  </h3>
-  </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.teardown">source&nbsp;code</a></span>&nbsp;
-    </td>
-  </tr></table>
-  
-  <p>This method is run after each unit test.</p>
-  <p>Specialise if you need to tear something down after each test method 
-  is run.</p>
-  <dl class="fields">
-  </dl>
-</td></tr></table>
-</div>
-<a name="tearDown"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">tearDown</span>(<span class="sig-arg">self</span>)</span>
-  </h3>
-  </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.tearDown">source&nbsp;code</a></span>&nbsp;
-    </td>
-  </tr></table>
-  
-  <p>From unittest.</p>
-  <dl class="fields">
-    <dt>Overrides:
-        unittest.case.TestCase.tearDown
-    </dt>
-  </dl>
-</td></tr></table>
-</div>
-<a name="setup_class"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">setup_class</span>(<span class="sig-arg">cls</span>)</span>
-    <br /><em class="fname">Class Method</em>
-  </h3>
-  </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.setup_class">source&nbsp;code</a></span>&nbsp;
-    </td>
-  </tr></table>
-  
-  <p>This method is run before any other methods in this class.</p>
-  <p>Specialise if you need to setup something before the test 
-  commences.</p>
-  <dl class="fields">
   </dl>
 </td></tr></table>
 </div>
@@ -617,25 +547,68 @@ Add a test method:
   </dl>
 </td></tr></table>
 </div>
-<a name="teardown_class"></a>
+<a name="setup"></a>
 <div>
 <table class="details" border="1" cellpadding="3"
        cellspacing="0" width="100%" bgcolor="white">
 <tr><td>
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">teardown_class</span>(<span class="sig-arg">cls</span>)</span>
-    <br /><em class="fname">Class Method</em>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">setup</span>(<span class="sig-arg">self</span>)</span>
   </h3>
   </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.teardown_class">source&nbsp;code</a></span>&nbsp;
+    ><span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.setup">source&nbsp;code</a></span>&nbsp;
     </td>
   </tr></table>
   
-  <p>This method is run after all other methods in this class.</p>
-  <p>Specialise if you need to tear something down after all these unit 
-  tests are done.</p>
+  <p>This method is run before each unit test.</p>
+  <p>Specialise if you need to setup something before each test method is 
+  run.</p>
   <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="setup_class"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">setup_class</span>(<span class="sig-arg">cls</span>)</span>
+    <br /><em class="fname">Class Method</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.setup_class">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>This method is run before any other methods in this class.</p>
+  <p>Specialise if you need to setup something before the test 
+  commences.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="tearDown"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">tearDown</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.tearDown">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>From unittest.</p>
+  <dl class="fields">
+    <dt>Overrides:
+        unittest.case.TestCase.tearDown
+    </dt>
   </dl>
 </td></tr></table>
 </div>
@@ -659,6 +632,49 @@ Add a test method:
     <dt>Overrides:
         unittest.case.TestCase.tearDownClass
     </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="teardown"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">teardown</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.teardown">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>This method is run after each unit test.</p>
+  <p>Specialise if you need to tear something down after each test method 
+  is run.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="teardown_class"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">teardown_class</span>(<span class="sig-arg">cls</span>)</span>
+    <br /><em class="fname">Class Method</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="parsimony.tests.tests-pysrc.html#TestCase.teardown_class">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>This method is run after all other methods in this class.</p>
+  <p>Specialise if you need to tear something down after all these unit 
+  tests are done.</p>
+  <dl class="fields">
   </dl>
 </td></tr></table>
 </div>
@@ -689,7 +705,7 @@ Add a test method:
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Mon Mar 10 10:21:50 2014
+    Generated by Epydoc 3.0.1 on Tue Apr 22 16:29:19 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

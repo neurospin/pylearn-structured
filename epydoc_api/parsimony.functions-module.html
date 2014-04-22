@@ -84,19 +84,6 @@
 </tr>
   <tr><td class="summary">
   <ul class="nomargin">
-    <li class="private"> <strong class="uidlink"><a href="parsimony.functions._helper-module.html">parsimony.functions._helper</a></strong>: <em class="summary">Created on Tue Jan 21 14:44:25 2014</em>
-    <ul class="private">
-    <li> <strong class="uidlink"><a href="parsimony.functions._helper.gl-module.html">parsimony.functions._helper.gl</a></strong>: <em class="summary">Created on Tue Jan 21 14:26:06 2014</em>    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions._helper.tv-module.html">parsimony.functions._helper.tv</a></strong>: <em class="summary">Created on Fri Sep 13 18:48:16 2013</em>    </li>
-    </ul>
-    </li>
-    <li class="private"> <strong class="uidlink"><a href="parsimony.functions._objectives-module.html">parsimony.functions._objectives</a></strong>: <em class="summary">Created on Tue Jan 21 14:54:28 2014</em>
-    <ul class="private">
-    <li class="private"> <strong class="uidlink"><a href="parsimony.functions._objectives.functions-module.html" onclick="show_private();">parsimony.functions._objectives.functions</a></strong>: <em class="summary">The :mod:`parsimony.functions.objectives.functions` module contains
-        rady-made common combinations of loss functions and penalties that 
-        can be used right away to analyse real data.</em>    </li>
-    </ul>
-    </li>
     <li class="private"> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions-module.html" onclick="show_private();">parsimony.functions.combinedfunctions</a></strong>: <em class="summary">The :mod:`parsimony.functions.objectives.functions` module contains
         rady-made common combinations of loss functions and penalties that 
         can be used right away to analyse real data.</em>    </li>
@@ -130,6 +117,11 @@
         smoothed using Nesterov's technique.</em>    </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.interfaces-module.html">parsimony.functions.nesterov.interfaces</a></strong>: <em class="summary">The :mod:`parsimony.functions.nesterov.interfaces` module contains 
         the necessary interfaces for Nesterov functions.</em>    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.l1-module.html">parsimony.functions.nesterov.l1</a></strong>: <em class="summary">The :mod:`parsimony.functions.nesterov.L1` module contains the loss
+        function for the L1 penalty, smoothed using Nesterov's technique.</em>    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.l1tv-module.html">parsimony.functions.nesterov.l1tv</a></strong>: <em class="summary">The :mod:`parsimony.functions.nesterov.L1TV` module contains the 
+        loss function for the L1 + TV penalty, smoothed together using 
+        Nesterov's technique.</em>    </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.tv-module.html">parsimony.functions.nesterov.tv</a></strong>: <em class="summary">The :mod:`parsimony.functions.nesterov.tv` module contains the loss
         function and helper functions for Total variation, TV, smoothed 
         using Nesterov's technique.</em>    </li>
@@ -171,15 +163,15 @@ or one proximal operator.
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a href="parsimony.functions.combinedfunctions.RR_L1_TV-class.html" class="summary-name">RR_L1_TV</a><br />
-      Combination (sum) of RidgeRegression, L1 and TotalVariation.
+        <a href="parsimony.functions.combinedfunctions.LinearRegressionL1L2TV-class.html" class="summary-name">LinearRegressionL1L2TV</a><br />
+      Combination (sum) of LinearRegression, L1, L2 and TotalVariation.
     </td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a href="parsimony.functions.combinedfunctions.RR_L1_GL-class.html" class="summary-name">RR_L1_GL</a><br />
+        <a href="parsimony.functions.combinedfunctions.LinearRegressionL1L2GL-class.html" class="summary-name">LinearRegressionL1L2GL</a><br />
       Combination (sum) of RidgeRegression, L1 and Overlapping Group 
         Lasso.
     </td>
@@ -188,7 +180,7 @@ or one proximal operator.
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a href="parsimony.functions.combinedfunctions.RLR_L1_TV-class.html" class="summary-name">RLR_L1_TV</a><br />
+        <a href="parsimony.functions.combinedfunctions.LogisticRegressionL1L2TV-class.html" class="summary-name">LogisticRegressionL1L2TV</a><br />
       Combination (sum) of RidgeLogisticRegression, L1 and 
         TotalVariation.
     </td>
@@ -197,7 +189,7 @@ or one proximal operator.
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a href="parsimony.functions.combinedfunctions.RLR_L1_GL-class.html" class="summary-name">RLR_L1_GL</a><br />
+        <a href="parsimony.functions.combinedfunctions.LogisticRegressionL1L2GL-class.html" class="summary-name">LogisticRegressionL1L2GL</a><br />
       Combination (sum) of RidgeLogisticRegression, L1 and 
         TotalVariation.
     </td>
@@ -206,17 +198,16 @@ or one proximal operator.
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a href="parsimony.functions.combinedfunctions.RR_SmoothedL1TV-class.html" class="summary-name">RR_SmoothedL1TV</a><br />
-      Parameters
-----------
-X : Numpy array.
+        <a href="parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV-class.html" class="summary-name">LinearRegressionL2SmoothedL1TV</a><br />
+      Combination (sum) of Linear Regression, L2 and simultaneously smoothed
+L1 and TotalVariation.
     </td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a href="parsimony.functions.combinedfunctions.PCA_L1_TV-class.html" class="summary-name">PCA_L1_TV</a><br />
+        <a href="parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV-class.html" class="summary-name">PrincipalComponentAnalysisL1TV</a><br />
       Combination (sum) of PCA (Variance), L1 and TotalVariation
     </td>
   </tr>
@@ -272,7 +263,7 @@ X : Numpy array.
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Mon Mar 10 10:21:48 2014
+    Generated by Epydoc 3.0.1 on Tue Apr 22 16:29:17 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

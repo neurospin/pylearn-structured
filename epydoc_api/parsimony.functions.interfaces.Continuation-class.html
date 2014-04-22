@@ -67,7 +67,7 @@ object --+
 <dl><dt>Known Subclasses:</dt>
 <dd>
       <ul class="subclass-list">
-<li><a href="parsimony.functions.combinedfunctions.PCA_L1_TV-class.html">combinedfunctions.PCA_L1_TV</a></li><li>, <a href="parsimony.functions.combinedfunctions.RR_L1_TV-class.html">combinedfunctions.RR_L1_TV</a></li><li>, <a href="parsimony.functions.functions.PCA_L1_TV-class.html">functions.PCA_L1_TV</a></li><li>, <a href="parsimony.functions.functions.RR_L1_TV-class.html">functions.RR_L1_TV</a></li><li>, <a href="parsimony.functions._objectives.functions.RR_L1_TV-class.html">_objectives.functions.RR_L1_TV</a></li>  </ul>
+<li><a href="parsimony.functions.combinedfunctions.LinearRegressionL1L2TV-class.html">combinedfunctions.LinearRegressionL1L2TV</a></li><li>, <a href="parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV-class.html">combinedfunctions.PrincipalComponentAnalysisL1TV</a></li><li>, <a href="parsimony.functions.functions.PCA_L1_TV-class.html">functions.PCA_L1_TV</a></li><li>, <a href="parsimony.functions.functions.RR_L1_TV-class.html">functions.RR_L1_TV</a></li>  </ul>
 </dd></dl>
 
 <hr />
@@ -122,7 +122,7 @@ object --+
         <tr>
           <td><span class="summary-sig"><a href="parsimony.functions.interfaces.Continuation-class.html#mu_opt" class="summary-sig-name">mu_opt</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">eps</span>)</span><br />
-      The optimal value of \mu given \epsilon.</td>
+      The optimal value of mu given epsilon.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.functions.interfaces-pysrc.html#Continuation.mu_opt">source&nbsp;code</a></span>
             
@@ -140,7 +140,7 @@ object --+
         <tr>
           <td><span class="summary-sig"><a href="parsimony.functions.interfaces.Continuation-class.html#eps_opt" class="summary-sig-name">eps_opt</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">mu</span>)</span><br />
-      The optimal value of \epsilon given \mu.</td>
+      The optimal value of epsilon given mu.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.functions.interfaces-pysrc.html#Continuation.eps_opt">source&nbsp;code</a></span>
             
@@ -158,7 +158,7 @@ object --+
         <tr>
           <td><span class="summary-sig"><a href="parsimony.functions.interfaces.Continuation-class.html#eps_max" class="summary-sig-name">eps_max</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">mu</span>)</span><br />
-      The maximum value of \epsilon.</td>
+      The maximum value of epsilon.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.functions.interfaces-pysrc.html#Continuation.eps_max">source&nbsp;code</a></span>
             
@@ -216,28 +216,28 @@ object --+
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_cache"></a><span class="summary-name">_abc_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x22e9150&gt;">&lt;_weakrefset.WeakSet object at 0x22e9150&gt;</code>
+        <a name="_abc_cache"></a><span class="summary-name">_abc_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x1efb410&gt;">&lt;_weakrefset.WeakSet object at 0x1efb410&gt;</code>
     </td>
   </tr>
 <tr class="private">
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_negative_cache"></a><span class="summary-name">_abc_negative_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x22e91d0&gt;">&lt;_weakrefset.WeakSet object at 0x22e91d0&gt;</code>
+        <a name="_abc_negative_cache"></a><span class="summary-name">_abc_negative_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x1efb490&gt;">&lt;_weakrefset.WeakSet object at 0x1efb490&gt;</code>
     </td>
   </tr>
 <tr class="private">
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_negative_cache_version"></a><span class="summary-name">_abc_negative_cache_version</span> = <code title="15">15</code>
+        <a name="_abc_negative_cache_version"></a><span class="summary-name">_abc_negative_cache_version</span> = <code title="10">10</code>
     </td>
   </tr>
 <tr class="private">
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_registry"></a><span class="summary-name">_abc_registry</span> = <code title="&lt;_weakrefset.WeakSet object at 0x22e9090&gt;">&lt;_weakrefset.WeakSet object at 0x22e9090&gt;</code>
+        <a name="_abc_registry"></a><span class="summary-name">_abc_registry</span> = <code title="&lt;_weakrefset.WeakSet object at 0x1efb350&gt;">&lt;_weakrefset.WeakSet object at 0x1efb350&gt;</code>
     </td>
   </tr>
 </table>
@@ -299,7 +299,7 @@ object --+
     </td>
   </tr></table>
   
-  <p>The optimal value of \mu given \epsilon.</p>
+  <p>The optimal value of mu given epsilon.</p>
   <dl class="fields">
     <dt>Decorators:</dt>
     <dd><ul class="nomargin-top">
@@ -323,7 +323,7 @@ object --+
     </td>
   </tr></table>
   
-  <p>The optimal value of \epsilon given \mu.</p>
+  <p>The optimal value of epsilon given mu.</p>
   <dl class="fields">
     <dt>Decorators:</dt>
     <dd><ul class="nomargin-top">
@@ -347,7 +347,7 @@ object --+
     </td>
   </tr></table>
   
-  <p>The maximum value of \epsilon.</p>
+  <p>The maximum value of epsilon.</p>
   <dl class="fields">
     <dt>Decorators:</dt>
     <dd><ul class="nomargin-top">
@@ -383,7 +383,7 @@ object --+
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Mon Mar 10 10:21:49 2014
+    Generated by Epydoc 3.0.1 on Tue Apr 22 16:29:18 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

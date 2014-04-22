@@ -67,7 +67,7 @@ object --+
 <dl><dt>Known Subclasses:</dt>
 <dd>
       <ul class="subclass-list">
-<li><a href="parsimony.functions.combinedfunctions.PCA_L1_TV-class.html">combinedfunctions.PCA_L1_TV</a></li><li>, <a href="parsimony.functions.combinedfunctions.RR_L1_TV-class.html">combinedfunctions.RR_L1_TV</a></li><li>, <a href="parsimony.functions.combinedfunctions.RR_SmoothedL1TV-class.html">combinedfunctions.RR_SmoothedL1TV</a></li><li>, <a href="parsimony.functions.functions.PCA_L1_TV-class.html">functions.PCA_L1_TV</a></li><li>, <a href="parsimony.functions.functions.RR_L1_TV-class.html">functions.RR_L1_TV</a></li><li>, <a href="parsimony.functions.functions.RR_SmoothedL1TV-class.html">functions.RR_SmoothedL1TV</a></li><li>, <a href="parsimony.functions._objectives.functions.RR_L1_TV-class.html">_objectives.functions.RR_L1_TV</a></li><li>, <a href="parsimony.functions._objectives.functions.RR_SmoothedL1TV-class.html">_objectives.functions.RR_SmoothedL1TV</a></li>  </ul>
+<li><a href="parsimony.functions.combinedfunctions.LinearRegressionL1L2TV-class.html">combinedfunctions.LinearRegressionL1L2TV</a></li><li>, <a href="parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV-class.html">combinedfunctions.LinearRegressionL2SmoothedL1TV</a></li><li>, <a href="parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV-class.html">combinedfunctions.PrincipalComponentAnalysisL1TV</a></li><li>, <a href="parsimony.functions.functions.PCA_L1_TV-class.html">functions.PCA_L1_TV</a></li><li>, <a href="parsimony.functions.functions.RR_L1_TV-class.html">functions.RR_L1_TV</a></li><li>, <a href="parsimony.functions.functions.RR_SmoothedL1TV-class.html">functions.RR_SmoothedL1TV</a></li>  </ul>
 </dd></dl>
 
 <hr />
@@ -122,7 +122,8 @@ object --+
         <tr>
           <td><span class="summary-sig"><a href="parsimony.functions.interfaces.DualFunction-class.html#gap" class="summary-sig-name">gap</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">beta</span>,
-        <span class="summary-sig-arg">beta_hat</span>)</span><br />
+        <span class="summary-sig-arg">beta_hat</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">eps</span>=<span class="summary-sig-default">5e-08</span>)</span><br />
       Compute the duality gap.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.functions.interfaces-pysrc.html#DualFunction.gap">source&nbsp;code</a></span>
@@ -141,7 +142,8 @@ object --+
         <tr>
           <td><span class="summary-sig"><a href="parsimony.functions.interfaces.DualFunction-class.html#betahat" class="summary-sig-name">betahat</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">alpha</span>,
-        <span class="summary-sig-arg">beta</span>=<span class="summary-sig-default">None</span>)</span><br />
+        <span class="summary-sig-arg">beta</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">eps</span>=<span class="summary-sig-default">5e-08</span>)</span><br />
       Return the beta that minimises the dual function.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.functions.interfaces-pysrc.html#DualFunction.betahat">source&nbsp;code</a></span>
@@ -200,28 +202,28 @@ object --+
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_cache"></a><span class="summary-name">_abc_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x22e9d50&gt;">&lt;_weakrefset.WeakSet object at 0x22e9d50&gt;</code>
+        <a name="_abc_cache"></a><span class="summary-name">_abc_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x1efbfd0&gt;">&lt;_weakrefset.WeakSet object at 0x1efbfd0&gt;</code>
     </td>
   </tr>
 <tr class="private">
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_negative_cache"></a><span class="summary-name">_abc_negative_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x22e9dd0&gt;">&lt;_weakrefset.WeakSet object at 0x22e9dd0&gt;</code>
+        <a name="_abc_negative_cache"></a><span class="summary-name">_abc_negative_cache</span> = <code title="&lt;_weakrefset.WeakSet object at 0x1f04090&gt;">&lt;_weakrefset.WeakSet object at 0x1f04090&gt;</code>
     </td>
   </tr>
 <tr class="private">
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_negative_cache_version"></a><span class="summary-name">_abc_negative_cache_version</span> = <code title="15">15</code>
+        <a name="_abc_negative_cache_version"></a><span class="summary-name">_abc_negative_cache_version</span> = <code title="10">10</code>
     </td>
   </tr>
 <tr class="private">
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a name="_abc_registry"></a><span class="summary-name">_abc_registry</span> = <code title="&lt;_weakrefset.WeakSet object at 0x22e9c90&gt;">&lt;_weakrefset.WeakSet object at 0x22e9c90&gt;</code>
+        <a name="_abc_registry"></a><span class="summary-name">_abc_registry</span> = <code title="&lt;_weakrefset.WeakSet object at 0x1efbf10&gt;">&lt;_weakrefset.WeakSet object at 0x1efbf10&gt;</code>
     </td>
   </tr>
 </table>
@@ -277,7 +279,8 @@ object --+
   <tr valign="top"><td>
   <h3 class="epydoc"><span class="sig"><span class="sig-name">gap</span>(<span class="sig-arg">self</span>,
         <span class="sig-arg">beta</span>,
-        <span class="sig-arg">beta_hat</span>)</span>
+        <span class="sig-arg">beta_hat</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">eps</span>=<span class="sig-default">5e-08</span>)</span>
   </h3>
   </td><td align="right" valign="top"
     ><span class="codelink"><a href="parsimony.functions.interfaces-pysrc.html#DualFunction.gap">source&nbsp;code</a></span>&nbsp;
@@ -302,7 +305,8 @@ object --+
   <tr valign="top"><td>
   <h3 class="epydoc"><span class="sig"><span class="sig-name">betahat</span>(<span class="sig-arg">self</span>,
         <span class="sig-arg">alpha</span>,
-        <span class="sig-arg">beta</span>=<span class="sig-default">None</span>)</span>
+        <span class="sig-arg">beta</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">eps</span>=<span class="sig-default">5e-08</span>)</span>
   </h3>
   </td><td align="right" valign="top"
     ><span class="codelink"><a href="parsimony.functions.interfaces-pysrc.html#DualFunction.betahat">source&nbsp;code</a></span>&nbsp;
@@ -345,7 +349,7 @@ object --+
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Mon Mar 10 10:21:49 2014
+    Generated by Epydoc 3.0.1 on Tue Apr 22 16:29:18 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

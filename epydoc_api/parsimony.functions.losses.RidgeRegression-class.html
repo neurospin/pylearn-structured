@@ -75,10 +75,6 @@
                                          |
                             object --+   |
                                      |   |
-                <a href="parsimony.functions.interfaces.Eigenvalues-class.html">interfaces.Eigenvalues</a> --+
-                                         |
-                            object --+   |
-                                     |   |
              <a href="parsimony.functions.interfaces.StronglyConvex-class.html">interfaces.StronglyConvex</a> --+
                                          |
                             object --+   |
@@ -92,17 +88,9 @@
 <pre class="literalblock">
 The Ridge Regression function, i.e. a representation of
 
-    f(x) = 0.5 * ||Xb - y||&#178;_2 + lambda * 0.5 * ||b||&#178;_2,
+    f(x) = (0.5 / n) * ||Xb - y||&#178;_2 + lambda * 0.5 * ||b||&#178;_2,
 
 where ||.||&#178;_2 is the L2 norm.
-
-Parameters
-----------
-X : Numpy array (n-by-p). The regressor matrix.
-
-y : Numpy array (n-by-1). The regressand vector.
-
-k : Non-negative float. The ridge parameter.
 
 </pre>
 
@@ -132,8 +120,12 @@ k : Non-negative float. The ridge parameter.
           <td><span class="summary-sig"><a href="parsimony.functions.losses.RidgeRegression-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
         <span class="summary-sig-arg">X</span>,
         <span class="summary-sig-arg">y</span>,
-        <span class="summary-sig-arg">k</span>)</span><br />
-      x.__init__(...) initializes x; see help(type(x)) for signature</td>
+        <span class="summary-sig-arg">k</span>,
+        <span class="summary-sig-arg">penalty_start</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">mean</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Parameters
+----------
+X : Numpy array (n-by-p).</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.functions.losses-pysrc.html#RidgeRegression.__init__">source&nbsp;code</a></span>
             
@@ -206,23 +198,6 @@ k : Non-negative float. The ridge parameter.
       Lipschitz constant of the gradient.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="parsimony.functions.losses-pysrc.html#RidgeRegression.L">source&nbsp;code</a></span>
-            
-          </td>
-        </tr>
-      </table>
-      
-    </td>
-  </tr>
-<tr>
-    <td width="15%" align="right" valign="top" class="summary">
-      <span class="summary-type">&nbsp;</span>
-    </td><td class="summary">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td><span class="summary-sig"><a href="parsimony.functions.losses.RidgeRegression-class.html#lambda_max" class="summary-sig-name">lambda_max</a>(<span class="summary-sig-arg">self</span>)</span><br />
-      Largest eigenvalue of the corresponding covariance matrix.</td>
-          <td align="right" valign="top">
-            <span class="codelink"><a href="parsimony.functions.losses-pysrc.html#RidgeRegression.lambda_max">source&nbsp;code</a></span>
             
           </td>
         </tr>
@@ -341,10 +316,12 @@ k : Non-negative float. The ridge parameter.
     <p class="indent-wrapped-lines"><b>Inherited from <code><a href="parsimony.functions.interfaces.CompositeFunction-class.html">interfaces.CompositeFunction</a></code></b>:
       <code><a href="parsimony.functions.interfaces.CompositeFunction-class.html#__metaclass__">__metaclass__</a></code>
       </p>
+    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="parsimony.functions.interfaces.CompositeFunction-class.html">interfaces.CompositeFunction</a></code></b> (private):
+      <code><a href="parsimony.functions.interfaces.CompositeFunction-class.html#_abc_negative_cache_version" onclick="show_private();">_abc_negative_cache_version</a></code>
+      </p></div>
     <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="parsimony.functions.interfaces.Function-class.html">interfaces.Function</a></code></b> (private):
       <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_cache" onclick="show_private();">_abc_cache</a></code>,
       <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_negative_cache" onclick="show_private();">_abc_negative_cache</a></code>,
-      <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_negative_cache_version" onclick="show_private();">_abc_negative_cache_version</a></code>,
       <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_registry" onclick="show_private();">_abc_registry</a></code>
       </p></div>
     </td>
@@ -403,7 +380,9 @@ k : Non-negative float. The ridge parameter.
   <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
         <span class="sig-arg">X</span>,
         <span class="sig-arg">y</span>,
-        <span class="sig-arg">k</span>)</span>
+        <span class="sig-arg">k</span>,
+        <span class="sig-arg">penalty_start</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">mean</span>=<span class="sig-default">True</span>)</span>
     <br /><em class="fname">(Constructor)</em>
   </h3>
   </td><td align="right" valign="top"
@@ -411,11 +390,27 @@ k : Non-negative float. The ridge parameter.
     </td>
   </tr></table>
   
-  <p>x.__init__(...) initializes x; see help(type(x)) for signature</p>
+  <pre class="literalblock">
+
+Parameters
+----------
+X : Numpy array (n-by-p). The regressor matrix.
+
+y : Numpy array (n-by-1). The regressand vector.
+
+k : Non-negative float. The ridge parameter.
+
+penalty_start : Non-negative integer. The number of columns, variables
+        etc., to except from penalisation. Equivalently, the first
+        index to be penalised. Default is 0, all columns are included.
+
+mean : Boolean. Whether to compute the squared loss or the mean
+        squared loss. Default is True, the mean squared loss.
+
+</pre>
   <dl class="fields">
     <dt>Overrides:
         object.__init__
-        <dd><em class="note">(inherited documentation)</em></dd>
     </dt>
   </dl>
 </td></tr></table>
@@ -465,7 +460,8 @@ From the interface &quot;Function&quot;.
 
 Parameters
 ----------
-beta : Regression coefficient vector
+beta : Numpy array. Regression coefficient vector. The point at which
+        to evaluate the function.
 
 </pre>
   <dl class="fields">
@@ -510,7 +506,7 @@ Examples
 &gt;&gt;&gt; rr = RidgeRegression(X=X, y=y, k=3.14159265)
 &gt;&gt;&gt; beta = np.random.rand(150, 1)
 &gt;&gt;&gt; np.linalg.norm(rr.grad(beta) - rr.approx_grad(beta, eps=1e-4))
-1.3403176569860683e-06
+1.2951508180081868e-08
 
 </pre>
   <dl class="fields">
@@ -543,29 +539,6 @@ Examples
   </dl>
 </td></tr></table>
 </div>
-<a name="lambda_max"></a>
-<div>
-<table class="details" border="1" cellpadding="3"
-       cellspacing="0" width="100%" bgcolor="white">
-<tr><td>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr valign="top"><td>
-  <h3 class="epydoc"><span class="sig"><span class="sig-name">lambda_max</span>(<span class="sig-arg">self</span>)</span>
-  </h3>
-  </td><td align="right" valign="top"
-    ><span class="codelink"><a href="parsimony.functions.losses-pysrc.html#RidgeRegression.lambda_max">source&nbsp;code</a></span>&nbsp;
-    </td>
-  </tr></table>
-  
-  <p>Largest eigenvalue of the corresponding covariance matrix.</p>
-  <p>From the interface &quot;Eigenvalues&quot;.</p>
-  <dl class="fields">
-    <dt>Overrides:
-        <a href="parsimony.functions.interfaces.Eigenvalues-class.html#lambda_max">interfaces.Eigenvalues.lambda_max</a>
-    </dt>
-  </dl>
-</td></tr></table>
-</div>
 <a name="lambda_min"></a>
 <div>
 <table class="details" border="1" cellpadding="3"
@@ -588,9 +561,6 @@ Examples
     <dd><ul class="nomargin-top">
         <li><code>@utils.deprecated("StronglyConvex.parameter")</code></li>
     </ul></dd>
-    <dt>Overrides:
-        <a href="parsimony.functions.interfaces.Eigenvalues-class.html#lambda_min">interfaces.Eigenvalues.lambda_min</a>
-    </dt>
   </dl>
 </td></tr></table>
 </div>
@@ -675,7 +645,7 @@ beta : Numpy array. The point at which to determine the step size.
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Mon Mar 10 10:21:49 2014
+    Generated by Epydoc 3.0.1 on Tue Apr 22 16:29:18 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

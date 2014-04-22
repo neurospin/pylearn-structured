@@ -56,7 +56,9 @@
 </table>
 <!-- ==================== MODULE DESCRIPTION ==================== -->
 <h1 class="epydoc">Module estimators</h1><p class="nomargin-top"><span class="codelink"><a href="parsimony.estimators-pysrc.html">source&nbsp;code</a></span></p>
-<p>Created on Sat Nov  2 15:19:17 2013</p>
+<p>Estimators encapsulates a loss function with penalties and a 
+  corresponding algorithm.</p>
+  <p>Created on Sat Nov  2 15:19:17 2013</p>
 
 <hr />
 <div class="fields">      <p><strong>Author:</strong>
@@ -106,68 +108,69 @@
       Base estimator for logistic regression estimation
     </td>
   </tr>
-<tr>
+<tr class="private">
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a href="parsimony.estimators.LinearRegression_L1_L2_TV-class.html" class="summary-name">LinearRegression_L1_L2_TV</a><br />
-      Parameters
-----------
-l : Non-negative float.
+        <a href="parsimony.estimators.LinearRegression-class.html" class="summary-name" onclick="show_private();">LinearRegression</a><br />
+      Linear regression:
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="parsimony.estimators.Lasso-class.html" class="summary-name" onclick="show_private();">Lasso</a><br />
+      Linear regression with an L1 penalty:
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="parsimony.estimators.ElasticNet-class.html" class="summary-name" onclick="show_private();">ElasticNet</a><br />
+      Linear regression with L1 and L2 penalties:
     </td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a href="parsimony.estimators.RidgeRegression_L1_TV-class.html" class="summary-name">RidgeRegression_L1_TV</a><br />
-      Parameters
-----------
-l : Non-negative float.
+        <a href="parsimony.estimators.LinearRegressionL1L2TV-class.html" class="summary-name">LinearRegressionL1L2TV</a><br />
+      Linear regression with L1, L2 and TV penalties:
     </td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a href="parsimony.estimators.RidgeRegression_L1_GL-class.html" class="summary-name">RidgeRegression_L1_GL</a><br />
-      Parameters
-    ----------
-    l : Non-negative float.
+        <a href="parsimony.estimators.LinearRegressionL1L2GL-class.html" class="summary-name">LinearRegressionL1L2GL</a><br />
+      Linear regression with L1, L2 and Group lasso penalties:
     </td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a href="parsimony.estimators.RidgeLogisticRegression_L1_TV-class.html" class="summary-name">RidgeLogisticRegression_L1_TV</a><br />
-      Minimize RidgeLogisticRegression (re-weighted log-likelihood
-aka cross-entropy) with L1 and TV penalties:
-Ridge (re-weighted) log-likelihood (cross-entropy):
-f(beta, X, y) = - Sum wi * (yi * log(pi) + (1 &#8722; yi) * log(1 &#8722; pi))
-                + k/2 * ||beta||^2_2
-                + l * ||beta||_1
-                + g * TV(beta)
-With pi = p(y=1|xi, beta) = 1 / (1 + exp(-xi' beta)) and wi: sample i
-weight
+        <a href="parsimony.estimators.LogisticRegressionL1L2TV-class.html" class="summary-name">LogisticRegressionL1L2TV</a><br />
+      Logistic regression (re-weighted log-likelihood aka.
     </td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a href="parsimony.estimators.RidgeLogisticRegression_L1_GL-class.html" class="summary-name">RidgeLogisticRegression_L1_GL</a><br />
-      Minimises RidgeLogisticRegression (re-weighted log-likelihood aka.
+        <a href="parsimony.estimators.LogisticRegressionL1L2GL-class.html" class="summary-name">LogisticRegressionL1L2GL</a><br />
+      Logistic regression (re-weighted log-likelihood aka.
     </td>
   </tr>
 <tr>
     <td width="15%" align="right" valign="top" class="summary">
       <span class="summary-type">&nbsp;</span>
     </td><td class="summary">
-        <a href="parsimony.estimators.RidgeRegression_SmoothedL1TV-class.html" class="summary-name">RidgeRegression_SmoothedL1TV</a><br />
-      Parameters
-----------
-l : Non-negative float.
+        <a href="parsimony.estimators.LinearRegressionL2SmoothedL1TV-class.html" class="summary-name">LinearRegressionL2SmoothedL1TV</a><br />
+      Linear regression with L2 and simultaneously smoothed L1 and TV
+penalties:
     </td>
   </tr>
 </table>
@@ -222,7 +225,7 @@ l : Non-negative float.
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Mon Mar 10 10:21:48 2014
+    Generated by Epydoc 3.0.1 on Tue Apr 22 16:29:17 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

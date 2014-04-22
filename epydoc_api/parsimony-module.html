@@ -66,7 +66,7 @@
         BSD 3-clause.
       </p>
       <p><strong>Version:</strong>
-        0.1.4
+        0.1.8
       </p>
 </div><!-- ==================== SUBMODULES ==================== -->
 <a name="section-Submodules"></a>
@@ -87,10 +87,6 @@
 </tr>
   <tr><td class="summary">
   <ul class="nomargin">
-    <li class="private"> <strong class="uidlink"><a href="parsimony._algorithms-module.html">parsimony._algorithms</a></strong>: <em class="summary">The :mod:`parsimony.algorithms` module includes several algorithms 
-        used throughout the package.</em>    </li>
-    <li class="private"> <strong class="uidlink"><a href="parsimony._functions-module.html">parsimony._functions</a></strong>: <em class="summary">The :mod:`parsimony.functions` module contains several functions 
-        used throughout the package.</em>    </li>
     <li class="private"> <strong class="uidlink"><a href="parsimony._tv-module.html">parsimony._tv</a></strong>: <em class="summary">Created on Thu Feb 8 09:22:00 2013</em>
     <ul class="private">
     <li class="private"> <strong class="uidlink"><a href="parsimony._tv.tv_utils-module.html" onclick="show_private();">parsimony._tv.tv_utils</a></strong>: <em class="summary">Created on Fri Sep 13 18:48:16 2013</em>    </li>
@@ -100,20 +96,33 @@
     <ul>
     <li> <strong class="uidlink"><a href="parsimony.algorithms.bases-module.html">parsimony.algorithms.bases</a></strong>: <em class="summary">The :mod:`parsimony.algorithms.bases` module includes several base 
         classes for using and creating algorithms.</em>    </li>
+    <li> <strong class="uidlink"><a href="parsimony.algorithms.deflation-module.html">parsimony.algorithms.deflation</a></strong>: <em class="summary">The :mod:`parsimony.algorithms.deflation` module contains deflation
+        procedures.</em>    </li>
     <li> <strong class="uidlink"><a href="parsimony.algorithms.explicit-module.html">parsimony.algorithms.explicit</a></strong>: <em class="summary">The :mod:`parsimony.algorithms.explicit` module includes several 
         algorithms that minimises an explicit loss function.</em>    </li>
     <li> <strong class="uidlink"><a href="parsimony.algorithms.implicit-module.html">parsimony.algorithms.implicit</a></strong>: <em class="summary">The :mod:`parsimony.algorithms.implicit` module includes several 
         algorithms that minimises an implicit loss function.</em>    </li>
     <li> <strong class="uidlink"><a href="parsimony.algorithms.multiblock-module.html">parsimony.algorithms.multiblock</a></strong>: <em class="summary">The :mod:`parsimony.algorithms` module includes several algorithms 
         used throughout the package.</em>    </li>
-    <li> <strong class="uidlink"><a href="parsimony.algorithms.utils-module.html">parsimony.algorithms.utils</a></strong>    </li>
+    <li> <strong class="uidlink"><a href="parsimony.algorithms.utils-module.html">parsimony.algorithms.utils</a></strong>: <em class="summary">The :mod:`parsimony.algorithms.utils` module includes algorithm 
+        specific code.</em>    </li>
     </ul>
     </li>
     <li> <strong class="uidlink"><a href="parsimony.datasets-module.html">parsimony.datasets</a></strong>: <em class="summary">Created on Mon Apr 22 11:31:13 2013</em>
     <ul>
     <li> <strong class="uidlink"><a href="parsimony.datasets.Russett-module.html">parsimony.datasets.Russett</a></strong>: <em class="summary">Created on Mon Apr 22 11:13:02 2013</em>    </li>
-    <li class="private"> <strong class="uidlink"><a href="parsimony.datasets.samples_generator_nostruct-module.html" onclick="show_private();">parsimony.datasets.samples_generator_nostruct</a></strong>: <em class="summary">Created on Sun Jul 21 12:29:03 2013</em>    </li>
-    <li class="private"> <strong class="uidlink"><a href="parsimony.datasets.samples_generator_struct-module.html" onclick="show_private();">parsimony.datasets.samples_generator_struct</a></strong>: <em class="summary">Created on Wed Aug  7 10:35:12 2013</em>    </li>
+    <li> <strong class="uidlink"><a href="parsimony.datasets.classification-module.html">parsimony.datasets.classification</a></strong>: <em class="summary">Created on Mon Apr 22 11:31:13 2013</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.datasets.classification.dice5-module.html">parsimony.datasets.classification.dice5</a></strong>: <em class="summary">Created on Tue Mar 18 10:56:04 2014</em>    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.datasets.regression-module.html">parsimony.datasets.regression</a></strong>: <em class="summary">Created on Mon Apr 22 11:31:13 2013</em>
+    <ul>
+    <li> <strong class="uidlink"><a href="parsimony.datasets.regression.dice5-module.html">parsimony.datasets.regression.dice5</a></strong>: <em class="summary">Created on Tue Mar 18 10:57:39 2014</em>    </li>
+    </ul>
+    </li>
+    <li> <strong class="uidlink"><a href="parsimony.datasets.samples_generator_nostruct-module.html">parsimony.datasets.samples_generator_nostruct</a></strong>: <em class="summary">Created on Sun Jul 21 12:29:03 2013</em>    </li>
+    <li> <strong class="uidlink"><a href="parsimony.datasets.samples_generator_struct-module.html">parsimony.datasets.samples_generator_struct</a></strong>: <em class="summary">Created on Wed Aug  7 10:35:12 2013</em>    </li>
     <li> <strong class="uidlink"><a href="parsimony.datasets.simulated-module.html">parsimony.datasets.simulated</a></strong>: <em class="summary">Created on Mon Jun 18 09:26:14 2013</em>
     <ul>
     <li> <strong class="uidlink"><a href="parsimony.datasets.simulated.beta-module.html">parsimony.datasets.simulated.beta</a></strong>: <em class="summary">Created on Thu Sep 26 10:12:56 2013</em>    </li>
@@ -128,24 +137,13 @@
     <li> <strong class="uidlink"><a href="parsimony.datasets.simulated.utils-module.html">parsimony.datasets.simulated.utils</a></strong>: <em class="summary">Created on Thu Sep 26 10:50:17 2013</em>    </li>
     </ul>
     </li>
+    <li class="private"> <strong class="uidlink"><a href="parsimony.datasets.utils-module.html" onclick="show_private();">parsimony.datasets.utils</a></strong>: <em class="summary">Created on Wed Aug  7 10:35:12 2013</em>    </li>
     </ul>
     </li>
-    <li> <strong class="uidlink"><a href="parsimony.estimators-module.html">parsimony.estimators</a></strong>: <em class="summary">Created on Sat Nov  2 15:19:17 2013</em>    </li>
+    <li> <strong class="uidlink"><a href="parsimony.estimators-module.html">parsimony.estimators</a></strong>: <em class="summary">Estimators encapsulates a loss function with penalties and a 
+        corresponding algorithm.</em>    </li>
     <li class="private"> <strong class="uidlink"><a href="parsimony.functions-module.html" onclick="show_private();">parsimony.functions</a></strong>: <em class="summary">Created on Tue Jan 21 14:54:28 2014</em>
     <ul class="private">
-    <li class="private"> <strong class="uidlink"><a href="parsimony.functions._helper-module.html">parsimony.functions._helper</a></strong>: <em class="summary">Created on Tue Jan 21 14:44:25 2014</em>
-    <ul class="private">
-    <li> <strong class="uidlink"><a href="parsimony.functions._helper.gl-module.html">parsimony.functions._helper.gl</a></strong>: <em class="summary">Created on Tue Jan 21 14:26:06 2014</em>    </li>
-    <li> <strong class="uidlink"><a href="parsimony.functions._helper.tv-module.html">parsimony.functions._helper.tv</a></strong>: <em class="summary">Created on Fri Sep 13 18:48:16 2013</em>    </li>
-    </ul>
-    </li>
-    <li class="private"> <strong class="uidlink"><a href="parsimony.functions._objectives-module.html">parsimony.functions._objectives</a></strong>: <em class="summary">Created on Tue Jan 21 14:54:28 2014</em>
-    <ul class="private">
-    <li class="private"> <strong class="uidlink"><a href="parsimony.functions._objectives.functions-module.html" onclick="show_private();">parsimony.functions._objectives.functions</a></strong>: <em class="summary">The :mod:`parsimony.functions.objectives.functions` module contains
-        rady-made common combinations of loss functions and penalties that 
-        can be used right away to analyse real data.</em>    </li>
-    </ul>
-    </li>
     <li class="private"> <strong class="uidlink"><a href="parsimony.functions.combinedfunctions-module.html" onclick="show_private();">parsimony.functions.combinedfunctions</a></strong>: <em class="summary">The :mod:`parsimony.functions.objectives.functions` module contains
         rady-made common combinations of loss functions and penalties that 
         can be used right away to analyse real data.</em>    </li>
@@ -179,6 +177,11 @@
         smoothed using Nesterov's technique.</em>    </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.interfaces-module.html">parsimony.functions.nesterov.interfaces</a></strong>: <em class="summary">The :mod:`parsimony.functions.nesterov.interfaces` module contains 
         the necessary interfaces for Nesterov functions.</em>    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.l1-module.html">parsimony.functions.nesterov.l1</a></strong>: <em class="summary">The :mod:`parsimony.functions.nesterov.L1` module contains the loss
+        function for the L1 penalty, smoothed using Nesterov's technique.</em>    </li>
+    <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.l1tv-module.html">parsimony.functions.nesterov.l1tv</a></strong>: <em class="summary">The :mod:`parsimony.functions.nesterov.L1TV` module contains the 
+        loss function for the L1 + TV penalty, smoothed together using 
+        Nesterov's technique.</em>    </li>
     <li> <strong class="uidlink"><a href="parsimony.functions.nesterov.tv-module.html">parsimony.functions.nesterov.tv</a></strong>: <em class="summary">The :mod:`parsimony.functions.nesterov.tv` module contains the loss
         function and helper functions for Total variation, TV, smoothed 
         using Nesterov's technique.</em>    </li>
@@ -198,8 +201,9 @@
     <li> <strong class="uidlink"><a href="parsimony.tests.test_fast_svd-module.html">parsimony.tests.test_fast_svd</a></strong>: <em class="summary">Created on Thu Nov 14 10:23:53 2013</em>    </li>
     <li> <strong class="uidlink"><a href="parsimony.tests.test_functions-module.html">parsimony.tests.test_functions</a></strong>: <em class="summary">Created on Fri Nov 22 10:42:07 2013</em>    </li>
     <li> <strong class="uidlink"><a href="parsimony.tests.test_group_lasso-module.html">parsimony.tests.test_group_lasso</a></strong>: <em class="summary">Created on Mon Feb 24 11:03:30 2014</em>    </li>
+    <li> <strong class="uidlink"><a href="parsimony.tests.test_linear_regression-module.html">parsimony.tests.test_linear_regression</a></strong>: <em class="summary">Created on Thu Feb 27 09:21:23 2014</em>    </li>
     <li> <strong class="uidlink"><a href="parsimony.tests.test_logistic_regression-module.html">parsimony.tests.test_logistic_regression</a></strong>: <em class="summary">Created on Tue Mar  4 10:33:40 2014</em>    </li>
-    <li> <strong class="uidlink"><a href="parsimony.tests.test_regression-module.html">parsimony.tests.test_regression</a></strong>: <em class="summary">Created on Thu Feb 27 09:21:23 2014</em>    </li>
+    <li> <strong class="uidlink"><a href="parsimony.tests.test_nesterov_functions-module.html">parsimony.tests.test_nesterov_functions</a></strong>: <em class="summary">Created on Tue Apr 15 15:58:38 2014</em>    </li>
     <li> <strong class="uidlink"><a href="parsimony.tests.test_simulations-module.html">parsimony.tests.test_simulations</a></strong>: <em class="summary">Created on Fri Feb 28 15:28:08 2014</em>    </li>
     <li> <strong class="uidlink"><a href="parsimony.tests.test_total_variation-module.html">parsimony.tests.test_total_variation</a></strong>: <em class="summary">Created on Wed Feb 26 16:17:15 2014</em>    </li>
     <li class="private"> <strong class="uidlink"><a href="parsimony.tests.tests-module.html" onclick="show_private();">parsimony.tests.tests</a></strong>: <em class="summary">The :mod:`parsimony.tests.tests` module contains basic 
@@ -211,6 +215,7 @@
     <li class="private"> <strong class="uidlink"><a href="parsimony.utils._math-module.html">parsimony.utils._math</a></strong>: <em class="summary">Created on Tue Jul 30 21:07:07 2013</em>    </li>
     <li> <strong class="uidlink">parsimony.utils.check_arrays</strong>    </li>
     <li> <strong class="uidlink"><a href="parsimony.utils.check_arrays%27-module.html">parsimony.utils.check_arrays'</a></strong>: <em class="summary">Created on Mon Jul 29 17:37:17 2013</em>    </li>
+    <li class="private"> <strong class="uidlink"><a href="parsimony.utils.classif_label-module.html" onclick="show_private();">parsimony.utils.classif_label</a></strong>: <em class="summary">Created on Mon Mar 10 13:52:23 2014</em>    </li>
     <li> <strong class="uidlink"><a href="parsimony.utils.consts-module.html">parsimony.utils.consts</a></strong>: <em class="summary">Created on Mon Nov 25 11:26:45 2013</em>    </li>
     <li> <strong class="uidlink"><a href="parsimony.utils.maths-module.html">parsimony.utils.maths</a></strong>: <em class="summary">Created on Tue Jul 30 20:55:58 2013</em>    </li>
     <li class="private"> <strong class="uidlink"><a href="parsimony.utils.plot-module.html" onclick="show_private();">parsimony.utils.plot</a></strong>: <em class="summary">Created on Mon Jan  6 14:13:42 2014</em>    </li>
@@ -274,7 +279,7 @@
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Mon Mar 10 10:21:48 2014
+    Generated by Epydoc 3.0.1 on Tue Apr 22 16:29:17 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

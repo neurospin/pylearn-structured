@@ -69,7 +69,7 @@ object --+
 <dl><dt>Known Subclasses:</dt>
 <dd>
       <ul class="subclass-list">
-<li><a href="parsimony.functions.combinedfunctions.CombinedFunction-class.html">combinedfunctions.CombinedFunction</a></li><li>, <a href="parsimony.functions.combinedfunctions.PCA_L1_TV-class.html">combinedfunctions.PCA_L1_TV</a></li><li>, <a href="parsimony.functions.combinedfunctions.RR_L1_TV-class.html">combinedfunctions.RR_L1_TV</a></li><li>, <a href="parsimony.functions.combinedfunctions.RR_SmoothedL1TV-class.html">combinedfunctions.RR_SmoothedL1TV</a></li><li>, <a href="parsimony.functions.losses.LinearRegression-class.html">losses.LinearRegression</a></li><li>, <a href="parsimony.functions.losses.RidgeLogisticRegression-class.html">losses.RidgeLogisticRegression</a></li><li>, <a href="parsimony.functions.losses.RidgeRegression-class.html">losses.RidgeRegression</a></li><li>, <a href="parsimony.functions.functions.CombinedFunction-class.html">functions.CombinedFunction</a></li><li>, <a href="parsimony.functions.functions.PCA_L1_TV-class.html">functions.PCA_L1_TV</a></li><li>, <a href="parsimony.functions.functions.RR_L1_TV-class.html">functions.RR_L1_TV</a></li><li>, <a href="parsimony.functions.functions.RR_SmoothedL1TV-class.html">functions.RR_SmoothedL1TV</a></li><li>, <a href="parsimony.functions.multiblock.interfaces.MultiblockFunction-class.html">multiblock.interfaces.MultiblockFunction</a></li><li>, <a href="parsimony.functions._objectives.functions.RR_L1_TV-class.html">_objectives.functions.RR_L1_TV</a></li><li>, <a href="parsimony.functions._objectives.functions.RR_SmoothedL1TV-class.html">_objectives.functions.RR_SmoothedL1TV</a></li><li>, <a href="parsimony.functions._objectives.functions.CombinedFunction-class.html">_objectives.functions.CombinedFunction</a></li>  </ul>
+<li><a href="parsimony.functions.combinedfunctions.CombinedFunction-class.html">combinedfunctions.CombinedFunction</a></li><li>, <a href="parsimony.functions.combinedfunctions.LinearRegressionL1L2TV-class.html">combinedfunctions.LinearRegressionL1L2TV</a></li><li>, <a href="parsimony.functions.combinedfunctions.LinearRegressionL2SmoothedL1TV-class.html">combinedfunctions.LinearRegressionL2SmoothedL1TV</a></li><li>, <a href="parsimony.functions.combinedfunctions.PrincipalComponentAnalysisL1TV-class.html">combinedfunctions.PrincipalComponentAnalysisL1TV</a></li><li>, <a href="parsimony.functions.losses.LinearFunction-class.html">losses.LinearFunction</a></li><li>, <a href="parsimony.functions.losses.LinearRegression-class.html">losses.LinearRegression</a></li><li>, <a href="parsimony.functions.losses.RidgeLogisticRegression-class.html">losses.RidgeLogisticRegression</a></li><li>, <a href="parsimony.functions.losses.RidgeRegression-class.html">losses.RidgeRegression</a></li><li>, <a href="parsimony.functions.functions.CombinedFunction-class.html">functions.CombinedFunction</a></li><li>, <a href="parsimony.functions.functions.PCA_L1_TV-class.html">functions.PCA_L1_TV</a></li><li>, <a href="parsimony.functions.functions.RR_L1_TV-class.html">functions.RR_L1_TV</a></li><li>, <a href="parsimony.functions.functions.RR_SmoothedL1TV-class.html">functions.RR_SmoothedL1TV</a></li><li>, <a href="parsimony.functions.multiblock.interfaces.MultiblockFunction-class.html">multiblock.interfaces.MultiblockFunction</a></li><li class="private">, <a href="parsimony.functions.multiblock.losses.MultiblockFunctionWrapper-class.html" onclick="show_private();">multiblock.losses.MultiblockFunctionWrapper</a></li>  </ul>
 </dd></dl>
 
 <hr />
@@ -143,6 +143,13 @@ object --+
       Metaclass for defining Abstract Base Classes (ABCs).
     </td>
   </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="_abc_negative_cache_version"></a><span class="summary-name">_abc_negative_cache_version</span> = <code title="10">10</code>
+    </td>
+  </tr>
   <tr>
     <td colspan="2" class="summary">
     <p class="indent-wrapped-lines"><b>Inherited from <code><a href="parsimony.functions.interfaces.Function-class.html">Function</a></code></b>:
@@ -151,7 +158,6 @@ object --+
     <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="parsimony.functions.interfaces.Function-class.html">Function</a></code></b> (private):
       <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_cache" onclick="show_private();">_abc_cache</a></code>,
       <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_negative_cache" onclick="show_private();">_abc_negative_cache</a></code>,
-      <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_negative_cache_version" onclick="show_private();">_abc_negative_cache_version</a></code>,
       <code><a href="parsimony.functions.interfaces.Function-class.html#_abc_registry" onclick="show_private();">_abc_registry</a></code>
       </p></div>
     </td>
@@ -208,7 +214,7 @@ object --+
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Mon Mar 10 10:21:49 2014
+    Generated by Epydoc 3.0.1 on Tue Apr 22 16:29:18 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"

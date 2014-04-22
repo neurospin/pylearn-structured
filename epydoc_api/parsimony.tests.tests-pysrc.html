@@ -72,7 +72,7 @@
 <a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">unittest</tt> </tt>
 <a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">abc</tt> </tt>
 <a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">os</tt> </tt>
-<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">re</tt> </tt>
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-comment">#import re</tt> </tt>
 <a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"> </tt>
 <a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"><tt class="py-name">__all__</tt> <tt class="py-op">=</tt> <tt class="py-op">[</tt><tt class="py-string">"TestCase"</tt><tt class="py-op">,</tt> <tt class="py-string">"test_all"</tt><tt class="py-op">]</tt> </tt>
 <a name="TestCase"></a><div id="TestCase-def"><a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"> </tt>
@@ -90,9 +90,8 @@
 <a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line"><tt class="py-docstring">        def test_1(self):</tt> </tt>
 <a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line"><tt class="py-docstring">            assert True</tt> </tt>
 <a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
-<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line">    <tt id="link-0" class="py-name" targets="Variable parsimony._functions.AtomicFunction.__metaclass__=parsimony._functions.AtomicFunction-class.html#__metaclass__,Variable parsimony._functions.CompositeFunction.__metaclass__=parsimony._functions.CompositeFunction-class.html#__metaclass__,Variable parsimony._functions.MultiblockFunction.__metaclass__=parsimony._functions.MultiblockFunction-class.html#__metaclass__,Variable parsimony.estimators.LogisticRegressionEstimator.__metaclass__=parsimony.estimators.LogisticRegressionEstimator-class.html#__metaclass__,Variable parsimony.estimators.RegressionEstimator.__metaclass__=parsimony.estimators.RegressionEstimator-class.html#__metaclass__,Variable parsimony.functions.interfaces.AtomicFunction.__metaclass__=parsimony.functions.interfaces.AtomicFunction-class.html#__metaclass__,Variable parsimony.functions.interfaces.CompositeFunction.__metaclass__=parsimony.functions.interfaces.CompositeFunction-class.html#__metaclass__,Variable parsimony.functions.multiblock.interfaces.MultiblockFunction.__metaclass__=parsimony.functions.multiblock.interfaces.MultiblockFunction-class.html#__metaclass__"><a title="parsimony._functions.AtomicFunction.__metaclass__
-parsimony._functions.CompositeFunction.__metaclass__
-parsimony._functions.MultiblockFunction.__metaclass__
+<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line">    <tt id="link-0" class="py-name" targets="Variable parsimony.algorithms.bases.ExplicitAlgorithm.__metaclass__=parsimony.algorithms.bases.ExplicitAlgorithm-class.html#__metaclass__,Variable parsimony.algorithms.bases.ImplicitAlgorithm.__metaclass__=parsimony.algorithms.bases.ImplicitAlgorithm-class.html#__metaclass__,Variable parsimony.estimators.LogisticRegressionEstimator.__metaclass__=parsimony.estimators.LogisticRegressionEstimator-class.html#__metaclass__,Variable parsimony.estimators.RegressionEstimator.__metaclass__=parsimony.estimators.RegressionEstimator-class.html#__metaclass__,Variable parsimony.functions.interfaces.AtomicFunction.__metaclass__=parsimony.functions.interfaces.AtomicFunction-class.html#__metaclass__,Variable parsimony.functions.interfaces.CompositeFunction.__metaclass__=parsimony.functions.interfaces.CompositeFunction-class.html#__metaclass__,Variable parsimony.functions.multiblock.interfaces.MultiblockFunction.__metaclass__=parsimony.functions.multiblock.interfaces.MultiblockFunction-class.html#__metaclass__"><a title="parsimony.algorithms.bases.ExplicitAlgorithm.__metaclass__
+parsimony.algorithms.bases.ImplicitAlgorithm.__metaclass__
 parsimony.estimators.LogisticRegressionEstimator.__metaclass__
 parsimony.estimators.RegressionEstimator.__metaclass__
 parsimony.functions.interfaces.AtomicFunction.__metaclass__
@@ -153,44 +152,46 @@ parsimony.functions.multiblock.interfaces.MultiblockFunction.__metaclass__" clas
 </div><div id="TestCase.tearDownClass-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="TestCase.tearDownClass-expanded"><a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line">        <tt class="py-docstring">"""From unittest.</tt> </tt>
 <a name="L88"></a><tt class="py-lineno"> 88</tt>  <tt class="py-line"><tt class="py-docstring">        """</tt> </tt>
 <a name="L89"></a><tt class="py-lineno"> 89</tt>  <tt class="py-line">        <tt class="py-name">cls</tt><tt class="py-op">.</tt><tt id="link-5" class="py-name" targets="Class Method parsimony.tests.tests.TestCase.teardown_class()=parsimony.tests.tests.TestCase-class.html#teardown_class"><a title="parsimony.tests.tests.TestCase.teardown_class" class="py-name" href="#" onclick="return doclink('link-5', 'teardown_class', 'link-5');">teardown_class</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
-</div></div><a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line"> </tt>
-<a name="test_all"></a><div id="test_all-def"><a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line"><tt class="py-comment"># TODO: Wait for Nose issue #732: https://github.com/nose-devs/nose/issues/732</tt> </tt>
-<a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line"><tt class="py-comment">#    @nottest</tt> </tt>
-<a name="L93"></a><tt class="py-lineno"> 93</tt>  <tt class="py-line"><tt class="py-comment">#    def runTest(self):</tt> </tt>
-<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line"><tt class="py-comment">#        """Runs all unit tests.</tt> </tt>
-<a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line"><tt class="py-comment">#</tt> </tt>
-<a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line"><tt class="py-comment">#        From baseclass "unittest.TestCase".</tt> </tt>
-<a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line"><tt class="py-comment">#        """</tt> </tt>
-<a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line"><tt class="py-comment">#        RE_TEST = re.compile("[Tt]est[-_]")</tt> </tt>
-<a name="L99"></a><tt class="py-lineno"> 99</tt>  <tt class="py-line"><tt class="py-comment">#        for attr in dir(self):</tt> </tt>
-<a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line"><tt class="py-comment">#            if callable(getattr(self, attr)) and RE_TEST.match(attr):</tt> </tt>
-<a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line"><tt class="py-comment">#                getattr(self, attr)()</tt> </tt>
-<a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line"> </tt>
-<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line"> </tt>
-<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line"><tt class="py-decorator">@</tt><tt class="py-decorator">nottest</tt> </tt>
-<a name="L105"></a><tt class="py-lineno">105</tt> <a class="py-toggle" href="#" id="test_all-toggle" onclick="return toggle('test_all');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.tests.tests-module.html#test_all">test_all</a><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
-</div><div id="test_all-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="test_all-expanded"><a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line"> </tt>
-<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line">    <tt class="py-comment"># Find parsimony directory.</tt> </tt>
-<a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line">    <tt class="py-comment"># TODO: There is a better way to do this!</tt> </tt>
-<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line">    <tt class="py-name">testdir</tt> <tt class="py-op">=</tt> <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">path</tt><tt class="py-op">.</tt><tt class="py-name">dirname</tt><tt class="py-op">(</tt><tt class="py-name">__file__</tt><tt class="py-op">)</tt> </tt>
-<a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">testdir</tt><tt class="py-op">)</tt> <tt class="py-op">==</tt> <tt class="py-number">0</tt><tt class="py-op">:</tt> </tt>
-<a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line">        <tt class="py-name">testdir</tt> <tt class="py-op">=</tt> <tt class="py-string">".."</tt> </tt>
-<a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line">    <tt class="py-keyword">elif</tt> <tt class="py-name">testdir</tt><tt class="py-op">[</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt> <tt class="py-op">==</tt> <tt class="py-string">'/'</tt><tt class="py-op">:</tt> </tt>
-<a name="L113"></a><tt class="py-lineno">113</tt>  <tt class="py-line">        <tt class="py-name">testdir</tt> <tt class="py-op">+=</tt> <tt class="py-string">".."</tt> </tt>
-<a name="L114"></a><tt class="py-lineno">114</tt>  <tt class="py-line">    <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
-<a name="L115"></a><tt class="py-lineno">115</tt>  <tt class="py-line">        <tt class="py-name">testdir</tt> <tt class="py-op">+=</tt> <tt class="py-string">"/.."</tt> </tt>
-<a name="L116"></a><tt class="py-lineno">116</tt>  <tt class="py-line"> </tt>
-<a name="L117"></a><tt class="py-lineno">117</tt>  <tt class="py-line">    <tt class="py-comment"># --exclude='^playhouse\\.py$'</tt> </tt>
-<a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line">    <tt class="py-name">exec_string</tt> <tt class="py-op">=</tt> <tt class="py-string">"nosetests --with-doctest --doctest-tests "</tt> <tt class="py-op">+</tt> \ </tt>
-<a name="L119"></a><tt class="py-lineno">119</tt>  <tt class="py-line">                  <tt class="py-string">"--with-coverage -vv -w %s"</tt> \ </tt>
-<a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line">                  <tt class="py-op">%</tt> <tt class="py-op">(</tt><tt class="py-name">testdir</tt><tt class="py-op">,</tt><tt class="py-op">)</tt> </tt>
-<a name="L121"></a><tt class="py-lineno">121</tt>  <tt class="py-line"> </tt>
-<a name="L122"></a><tt class="py-lineno">122</tt>  <tt class="py-line">    <tt class="py-keyword">print</tt> <tt class="py-string">"Running: "</tt> <tt class="py-op">+</tt> <tt class="py-name">exec_string</tt> </tt>
-<a name="L123"></a><tt class="py-lineno">123</tt>  <tt class="py-line">    <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-name">exec_string</tt><tt class="py-op">)</tt> </tt>
-</div><a name="L124"></a><tt class="py-lineno">124</tt>  <tt class="py-line"> </tt>
-<a name="L125"></a><tt class="py-lineno">125</tt>  <tt class="py-line"><tt class="py-keyword">if</tt> <tt class="py-name">__name__</tt> <tt class="py-op">==</tt> <tt class="py-string">"__main__"</tt><tt class="py-op">:</tt> </tt>
-<a name="L126"></a><tt class="py-lineno">126</tt>  <tt class="py-line">    <tt id="link-6" class="py-name" targets="Function parsimony.tests.tests.test_all()=parsimony.tests.tests-module.html#test_all"><a title="parsimony.tests.tests.test_all" class="py-name" href="#" onclick="return doclink('link-6', 'test_all', 'link-6');">test_all</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
-<a name="L127"></a><tt class="py-lineno">127</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+</div><a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line"> </tt>
+<a name="TestCase.runTest"></a><div id="TestCase.runTest-def"><a name="L91"></a><tt class="py-lineno"> 91</tt> <a class="py-toggle" href="#" id="TestCase.runTest-toggle" onclick="return toggle('TestCase.runTest');">-</a><tt class="py-line">    <tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.tests.tests.TestCase-class.html#runTest">runTest</a><tt class="py-op">(</tt><tt class="py-param">self</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="TestCase.runTest-collapsed" style="display:none;" pad="+++" indent="++++++++"></div><div id="TestCase.runTest-expanded"><a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line">        <tt class="py-keyword">pass</tt> </tt>
+</div></div><a name="L93"></a><tt class="py-lineno"> 93</tt>  <tt class="py-line"><tt class="py-comment"># TODO: Wait for Nose issue #732: https://github.com/nose-devs/nose/issues/732</tt> </tt>
+<a name="test_all"></a><div id="test_all-def"><a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line"><tt class="py-comment">#    @nottest</tt> </tt>
+<a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line"><tt class="py-comment">#    def runTest(self):</tt> </tt>
+<a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line"><tt class="py-comment">#        """Runs all unit tests.</tt> </tt>
+<a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line"><tt class="py-comment">#</tt> </tt>
+<a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line"><tt class="py-comment">#        From baseclass "unittest.TestCase".</tt> </tt>
+<a name="L99"></a><tt class="py-lineno"> 99</tt>  <tt class="py-line"><tt class="py-comment">#        """</tt> </tt>
+<a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line"><tt class="py-comment">#        RE_TEST = re.compile("[Tt]est[-_]")</tt> </tt>
+<a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line"><tt class="py-comment">#        for attr in dir(self):</tt> </tt>
+<a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line"><tt class="py-comment">#            if callable(getattr(self, attr)) and RE_TEST.match(attr):</tt> </tt>
+<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line"><tt class="py-comment">#                getattr(self, attr)()</tt> </tt>
+<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line"> </tt>
+<a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line"> </tt>
+<a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line"><tt class="py-decorator">@</tt><tt class="py-decorator">nottest</tt> </tt>
+<a name="L107"></a><tt class="py-lineno">107</tt> <a class="py-toggle" href="#" id="test_all-toggle" onclick="return toggle('test_all');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="parsimony.tests.tests-module.html#test_all">test_all</a><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="test_all-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="test_all-expanded"><a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line"> </tt>
+<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line">    <tt class="py-comment"># Find parsimony directory.</tt> </tt>
+<a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line">    <tt class="py-comment"># TODO: There is a better way to do this!</tt> </tt>
+<a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line">    <tt class="py-name">testdir</tt> <tt class="py-op">=</tt> <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">path</tt><tt class="py-op">.</tt><tt class="py-name">dirname</tt><tt class="py-op">(</tt><tt class="py-name">__file__</tt><tt class="py-op">)</tt> </tt>
+<a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">testdir</tt><tt class="py-op">)</tt> <tt class="py-op">==</tt> <tt class="py-number">0</tt><tt class="py-op">:</tt> </tt>
+<a name="L113"></a><tt class="py-lineno">113</tt>  <tt class="py-line">        <tt class="py-name">testdir</tt> <tt class="py-op">=</tt> <tt class="py-string">".."</tt> </tt>
+<a name="L114"></a><tt class="py-lineno">114</tt>  <tt class="py-line">    <tt class="py-keyword">elif</tt> <tt class="py-name">testdir</tt><tt class="py-op">[</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">]</tt> <tt class="py-op">==</tt> <tt class="py-string">'/'</tt><tt class="py-op">:</tt> </tt>
+<a name="L115"></a><tt class="py-lineno">115</tt>  <tt class="py-line">        <tt class="py-name">testdir</tt> <tt class="py-op">+=</tt> <tt class="py-string">".."</tt> </tt>
+<a name="L116"></a><tt class="py-lineno">116</tt>  <tt class="py-line">    <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L117"></a><tt class="py-lineno">117</tt>  <tt class="py-line">        <tt class="py-name">testdir</tt> <tt class="py-op">+=</tt> <tt class="py-string">"/.."</tt> </tt>
+<a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line"> </tt>
+<a name="L119"></a><tt class="py-lineno">119</tt>  <tt class="py-line">    <tt class="py-comment"># --exclude='^playhouse\\.py$'</tt> </tt>
+<a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line">    <tt class="py-name">exec_string</tt> <tt class="py-op">=</tt> <tt class="py-string">"nosetests --with-doctest --doctest-tests "</tt> <tt class="py-op">+</tt> \ </tt>
+<a name="L121"></a><tt class="py-lineno">121</tt>  <tt class="py-line">                  <tt class="py-string">"--with-coverage -vv -w %s"</tt> \ </tt>
+<a name="L122"></a><tt class="py-lineno">122</tt>  <tt class="py-line">                  <tt class="py-op">%</tt> <tt class="py-op">(</tt><tt class="py-name">testdir</tt><tt class="py-op">,</tt><tt class="py-op">)</tt> </tt>
+<a name="L123"></a><tt class="py-lineno">123</tt>  <tt class="py-line"> </tt>
+<a name="L124"></a><tt class="py-lineno">124</tt>  <tt class="py-line">    <tt class="py-keyword">print</tt> <tt class="py-string">"Running: "</tt> <tt class="py-op">+</tt> <tt class="py-name">exec_string</tt> </tt>
+<a name="L125"></a><tt class="py-lineno">125</tt>  <tt class="py-line">    <tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">system</tt><tt class="py-op">(</tt><tt class="py-name">exec_string</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L126"></a><tt class="py-lineno">126</tt>  <tt class="py-line"> </tt>
+<a name="L127"></a><tt class="py-lineno">127</tt>  <tt class="py-line"><tt class="py-keyword">if</tt> <tt class="py-name">__name__</tt> <tt class="py-op">==</tt> <tt class="py-string">"__main__"</tt><tt class="py-op">:</tt> </tt>
+<a name="L128"></a><tt class="py-lineno">128</tt>  <tt class="py-line">    <tt id="link-6" class="py-name" targets="Function parsimony.tests.tests.test_all()=parsimony.tests.tests-module.html#test_all"><a title="parsimony.tests.tests.test_all" class="py-name" href="#" onclick="return doclink('link-6', 'test_all', 'link-6');">test_all</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L129"></a><tt class="py-lineno">129</tt>  <tt class="py-line"> </tt><script type="text/javascript">
 <!--
 expandto(location.href);
 // -->
@@ -223,7 +224,7 @@ expandto(location.href);
 <table border="0" cellpadding="0" cellspacing="0" width="100%%">
   <tr>
     <td align="left" class="footer">
-    Generated by Epydoc 3.0.1 on Mon Mar 10 10:21:51 2014
+    Generated by Epydoc 3.0.1 on Tue Apr 22 16:29:19 2014
     </td>
     <td align="right" class="footer">
       <a target="mainFrame" href="http://epydoc.sourceforge.net"
