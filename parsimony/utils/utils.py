@@ -269,7 +269,7 @@ def optimal_shrinkage(X, T=None):
         l = max(0, min(1, l))
 
         tau.append(l)
-        print "tau %d: %f" % (i, l)
+        print "tau %f" % (l,)
 
     return tau
 

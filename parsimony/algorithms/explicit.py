@@ -57,6 +57,18 @@ class GradientDescent(bases.ExplicitAlgorithm,
                       bases.InformationAlgorithm):
     """The gradient descent algorithm.
 
+    Parameters
+    ----------
+    eps : Positive float. Tolerance for the stopping criterion.
+
+    info : Information. If, and if so what, extra run information should be
+            returned. Default is None, which is replaced by Information(),
+            which means that no run information is computed nor returned.
+
+    max_iter : Positive integer. Maximum allowed number of iterations.
+
+    min_iter : Positive integer. Minimum number of iterations.
+
     Examples
     --------
     >>> from parsimony.algorithms.explicit import GradientDescent
@@ -84,19 +96,6 @@ class GradientDescent(bases.ExplicitAlgorithm,
 
     def __init__(self, eps=consts.TOLERANCE,
                  info=None, max_iter=20000, min_iter=1):
-        """
-        Parameters
-        ----------
-        eps : Positive float. Tolerance for the stopping criterion.
-
-        info : Information. If, and if so what, extra run information should be
-                returned. Default is None, which is replaced by Information(),
-                which means that no run information is computed nor returned.
-
-        max_iter : Positive integer. Maximum allowed number of iterations.
-
-        min_iter : Positive integer. Minimum number of iterations.
-        """
         super(GradientDescent, self).__init__(info=info,
                                               max_iter=max_iter,
                                               min_iter=min_iter)
@@ -377,7 +376,7 @@ class FISTA(bases.ExplicitAlgorithm,
         if self.info.allows(Info.ok):
             self.info[Info.ok] = False
 
-        step = function.step(beta)
+#        step = function.step(beta)
 
         z = betanew = betaold = beta
 
@@ -388,7 +387,7 @@ class FISTA(bases.ExplicitAlgorithm,
         if self.info.allows(Info.converged):
             self.info[Info.converged] = False
 
-        for i in xrange(1, self.max_iter + 1):
+        for i in xrange(1, max(self.min_iter, self.max_iter) + 1):
             if self.info.allows(Info.t):
                 tm = utils.time_cpu()
 
@@ -472,7 +471,7 @@ class CONESTA(bases.ExplicitAlgorithm,
                      Info.converged]
 
     def __init__(self, mu_start=None, mu_min=consts.TOLERANCE,
-                 tau=0.5, dynamic=True,
+                 tau=0.5, dynamic=False,
 
                  eps=consts.TOLERANCE,
                  info=None, max_iter=10000, min_iter=1):
@@ -508,6 +507,20 @@ class CONESTA(bases.ExplicitAlgorithm,
         self.mu_min = mu_min
         self.tau = tau
         self.dynamic = dynamic
+
+        if dynamic:
+            self.INTERFACES = [nesterov_interfaces.NesterovFunction,
+                               interfaces.Gradient,
+                               interfaces.StepSize,
+                               interfaces.ProximalOperator,
+                               interfaces.Continuation,
+                               interfaces.DualFunction]
+        else:
+            self.INTERFACES = [nesterov_interfaces.NesterovFunction,
+                               interfaces.Gradient,
+                               interfaces.StepSize,
+                               interfaces.ProximalOperator,
+                               interfaces.Continuation]
 
         self.eps = eps
 
@@ -631,8 +644,6 @@ class CONESTA(bases.ExplicitAlgorithm,
             function.set_mu(mu_new)
 
             i = i + 1
-
-#        print "total number of iterations:", self.num_iter
 
         if self.info.allows(Info.num_iter):
             self.info[Info.num_iter] = i + 1

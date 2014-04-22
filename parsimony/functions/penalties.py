@@ -1057,7 +1057,8 @@ class RGCCAConstraint(QuadraticConstraint,
                                    eps=consts.TOLERANCE,
                                    max_iter=30)
 
-            class F(interfaces.Function):
+            class F(interfaces.Function,
+                    interfaces.Gradient):
 
                 def __init__(self, tau, S, c):
                     self.tau = tau
