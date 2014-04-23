@@ -411,8 +411,7 @@ class MultiblockFunctionWrapper(interfaces.CompositeFunction,
 
         Parameters
         ----------
-        w : Numpy array (p-by-1). The parameter at which to evaluate the
-                function.
+        w : Numpy array (p-by-1). The point at which to evaluate the function.
         """
         return self.function.f(self.w[:self.index] + \
                                [w] + \

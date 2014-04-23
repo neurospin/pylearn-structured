@@ -26,9 +26,7 @@ import parsimony.utils as utils
 
 __all__ = ["LinearRegression", "RidgeRegression",
            "LogisticRegression", "RidgeLogisticRegression",
-           "LatentVariableVariance"]
-
-# TODO: Add penalty_start and mean to all of these!
+           "LatentVariableVariance", "LinearFunction"]
 
 
 class LinearRegression(interfaces.CompositeFunction,
@@ -52,6 +50,7 @@ class LinearRegression(interfaces.CompositeFunction,
         """
         self.X = X
         self.y = y
+
         self.mean = bool(mean)
 
         self.reset()
@@ -182,7 +181,6 @@ class RidgeRegression(interfaces.CompositeFunction,
         f(x) = (0.5 / n) * ||Xb - y||²_2 + lambda * 0.5 * ||b||²_2,
 
     where ||.||²_2 is the L2 norm.
-
     """
     # TODO: Inherit from LinearRegression and add an L2 constraint instead!
     def __init__(self, X, y, k, penalty_start=0, mean=True):
@@ -205,6 +203,7 @@ class RidgeRegression(interfaces.CompositeFunction,
         self.X = X
         self.y = y
         self.k = float(k)
+
         self.penalty_start = int(penalty_start)
         self.mean = bool(mean)
 
@@ -659,7 +658,7 @@ class LatentVariableVariance(interfaces.Function,
                                interfaces.Gradient,
                                interfaces.StepSize,
                                interfaces.LipschitzContinuousGradient):
-
+    # TODO: Handle mean here?
     def __init__(self, X, unbiased=True):
 
         self.X = X
@@ -781,15 +780,83 @@ class LatentVariableVariance(interfaces.Function,
         """
         return 1.0 / self.L()
 
-#class AnonymousFunction(interfaces.AtomicFunction):
-#
-#    def __init__(self, f):
-#
-#        self._f = f
-#
-#    def f(self, x):
-#
-#        return self._f(x)
+
+class LinearFunction(interfaces.CompositeFunction,
+                     interfaces.Gradient,
+                     interfaces.LipschitzContinuousGradient,
+                     interfaces.StepSize):
+    """A linear function.
+    """
+    def __init__(self, a):
+        """
+        Parameters
+        ----------
+        a : Numpy array (p-by-1). The slope.
+        """
+        self.a = a
+
+        self.reset()
+
+    def reset(self):
+        """Free any cached computations from previous use of this Function.
+
+        From the interface "Function".
+        """
+        pass
+
+    def f(self, x):
+        """Function value.
+
+        From the interface "Function".
+
+        Parameters
+        ----------
+        beta : Numpy array. Regression coefficient vector. The point at which
+                to evaluate the function.
+        """
+        f = np.dot(self.a.T, x)
+
+        return f
+
+    def grad(self, x):
+        """Gradient of the function at beta.
+
+        From the interface "Gradient".
+
+        Parameters
+        ----------
+        x : The point at which to evaluate the gradient.
+        """
+        grad = self.a
+
+        return grad
+
+    def L(self):
+        """Lipschitz constant of the gradient.
+
+        From the interface "LipschitzContinuousGradient".
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.functions.losses import LinearFunction
+        >>>
+        >>> np.random.seed(42)
+        >>> a = np.random.rand(10, 15)
+        >>> f = LinearFunction(a)
+        >>> L = f.L()
+        >>> L_ = f.approx_L((15, 1), 10)
+        >>> L >= L_
+        True
+        >>> L - L_
+        0.0
+        """
+        return 0.0
+
+    def step(self, beta=None, index=0):
+        """The step size to use in descent methods.
+        """
+        return 1.0
 
 
 if __name__ == "__main__":

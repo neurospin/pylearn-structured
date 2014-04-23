@@ -135,8 +135,8 @@ def load(n_samples=100, shape=(30, 30, 1),
     #########################################################################
     ## 2. Build Objects
     if objects is None:
-        objects = dice_five_with_union_of_pairs(shape, coef_info=1.,
-                                                coef_noise=sigma_pix)
+        objects = dice_five_with_union_of_pairs(shape, beta=1.,
+                                                std=sigma_pix)
     #########################################################################
     ## 3. Object-level structured signal
     X3d, support = ObjImage.object_model(objects, X3d)
@@ -155,7 +155,7 @@ def load(n_samples=100, shape=(30, 30, 1),
 
     for k in xrange(len(objects)):
         o = objects[k]
-        beta3d[o.get_mask()] += o.coef_info
+        beta3d[o.get_mask()] += o.beta
     beta3d = ndimage.gaussian_filter(beta3d, sigma=sigma_spatial_smoothing)
     beta = beta3d.ravel()
     # Fix a scaling to get the desire r2, ie.:
@@ -191,23 +191,23 @@ def load(n_samples=100, shape=(30, 30, 1),
 
 ############################################################################
 ## Objects builder
-def dice_five_with_union_of_pairs(shape, coef_info, coef_noise):
+def dice_five_with_union_of_pairs(shape, std, beta):
     """Seven objects, five dot + union1 = dots 1 + 2 and union2 = dots 4 + 5
-    1, 3 and 4 have coef_info
-    2, 5  have coef_info = -coef_info/2
-    union1 and union2 have coef_info = 0
+    1, 3 and 4 have beta == beta
+    2, 5  have beta = -beta/2
+    union1 and union2 have beta = 0
 
     Examples
     --------
     #shape = (5, 5, 1)
-    coef_info = 1
-    coef_noise = 1
+    beta = 1
+    std = 1
     noise = np.zeros(shape)
     info = np.zeros(shape)
-    for o in dice_five_with_union_of_pairs(shape, coef_info, coef_noise):
-       noise[o.get_mask()] += o.coef_noise
-       info[o.get_mask()] += o.coef_info
-       print o.coef_noise, o.coef_info
+    for o in dice_five_with_union_of_pairs(shape, beta, std):
+       noise[o.get_mask()] += o.std
+       info[o.get_mask()] += o.beta
+       print o.std, o.beta
     plot = plt.subplot(121)
     import matplotlib.pyplot as plt
     cax = plot.matshow(noise.squeeze())
@@ -225,24 +225,24 @@ def dice_five_with_union_of_pairs(shape, coef_info, coef_noise):
     s_obj = np.max([1, np.floor(np.max(shape) / 7)])
     k = 1
     c1 = np.floor((k * nx / 4., ny / 4., nz / 2.))
-    d1 = Dot(center=c1, size=s_obj, shape=shape, coef_info=coef_info,
-             coef_noise=coef_noise)
+    d1 = Dot(center=c1, size=s_obj, shape=shape, beta=beta,
+             std=std)
     c2 = np.floor((k * nx / 4., ny - (ny / 4.), nz / 2.))
-    d2 = Dot(center=c2, size=s_obj, shape=shape, coef_info=-coef_info,
-             coef_noise=0)
-    union1 = ObjImage(mask=d1.get_mask() + d2.get_mask(), coef_info=0,
-              coef_noise=coef_noise)
+    d2 = Dot(center=c2, size=s_obj, shape=shape, beta=-beta,
+             std=0)
+    union1 = ObjImage(mask=d1.get_mask() + d2.get_mask(), beta=0,
+              std=std)
     k = 3
     c4 = np.floor((k * nx / 4., ny / 4., nz / 2.))
-    d4 = Dot(center=c4, size=s_obj, shape=shape, coef_info=coef_info,
-             coef_noise=coef_noise)
+    d4 = Dot(center=c4, size=s_obj, shape=shape, beta=beta,
+             std=std)
     c5 = np.floor((k * nx / 4., ny - (ny / 4.), nz / 2.))
-    d5 = Dot(center=c5, size=s_obj, shape=shape, coef_info=-coef_info,
-             coef_noise=0)
-    union2 = ObjImage(mask=d4.get_mask() + d5.get_mask(), coef_info=0,
-             coef_noise=coef_noise)
+    d5 = Dot(center=c5, size=s_obj, shape=shape, beta=-beta,
+             std=0)
+    union2 = ObjImage(mask=d4.get_mask() + d5.get_mask(), beta=0,
+             std=std)
     ## dot in the middle
     c3 = np.floor((nx / 2., ny / 2., nz / 2.))
-    d3 = Dot(center=c3, size=s_obj, shape=shape, coef_info=coef_info,
-             coef_noise=coef_noise * 2)
+    d3 = Dot(center=c3, size=s_obj, shape=shape, beta=beta,
+             std=std * 2)
     return [d1, d2, union1, d4, d5, union2, d3]

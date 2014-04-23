@@ -206,7 +206,7 @@ class TestSimulations(TestCase):
         import parsimony.algorithms.explicit as explicit
         import parsimony.start_vectors as start_vectors
         import parsimony.estimators as estimators
-        from parsimony.functions import RR_L1_TV
+        from parsimony.functions import LinearRegressionL1L2TV
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
 
@@ -450,14 +450,15 @@ class TestSimulations(TestCase):
 #        plot.show()
 
         max_iter = 5000
-        estimator = estimators.RidgeRegression_L1_TV(k, l, g,
-                     A, mu=mu,
-                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
-                     penalty_start=1,
-                     mean=False)
+        estimator = estimators.LinearRegressionL1L2TV(l, k, g, A=A, mu=mu,
+                                      algorithm=explicit.FISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      penalty_start=1,
+                                      mean=False)
         estimator.fit(X, y)
-        function = RR_L1_TV(X, y, k, l, g, A=A, mu=estimator.mu,
-                            penalty_start=1)
+        function = LinearRegressionL1L2TV(X, y, k, l, g, A=A, mu=estimator.mu,
+                                          penalty_start=1)
 
         err = np.linalg.norm(estimator.beta - beta_star) \
                     / np.linalg.norm(beta_star)
@@ -483,7 +484,7 @@ class TestSimulations(TestCase):
         import parsimony.algorithms.explicit as explicit
         import parsimony.start_vectors as start_vectors
         import parsimony.estimators as estimators
-        from parsimony.functions import RR_L1_GL
+        from parsimony.functions import LinearRegressionL1L2GL
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
 
@@ -729,14 +730,15 @@ class TestSimulations(TestCase):
 #        plot.show()
 
         max_iter = 2500
-        estimator = estimators.RidgeRegression_L1_GL(k, l, g,
-                     A, mu=mu,
-                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
-                     penalty_start=1,
-                     mean=False)
+        estimator = estimators.LinearRegressionL1L2GL(l, k, g, A=A, mu=mu,
+                                      algorithm=explicit.FISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      penalty_start=1,
+                                      mean=False)
         estimator.fit(X, y)
-        function = RR_L1_GL(X, y, k, l, g, A=A, mu=estimator.mu,
-                            penalty_start=1)
+        function = LinearRegressionL1L2GL(X, y, l, k, g, A=A, mu=estimator.mu,
+                                          penalty_start=1)
 
         err = np.linalg.norm(estimator.beta - beta_star) \
                 / np.linalg.norm(beta_star)
@@ -762,7 +764,7 @@ class TestSimulations(TestCase):
 #        import parsimony.algorithms.explicit as explicit
 #        import parsimony.start_vectors as start_vectors
 #        import parsimony.estimators as estimators
-#        from parsimony.functions import RR_L1_TV
+#        from parsimony.functions import LinearRegressionL1L2TV
 #
 #        start_vector = start_vectors.RandomStartVector(normalise=True)
 #
@@ -1010,8 +1012,8 @@ class TestSimulations(TestCase):
 #                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
 #                     penalty_start=1)
 #        estimator.fit(X, y)
-#        function = RR_L1_TV(X, y, k, l, g, A=A, mu=estimator.mu,
-#                            penalty_start=1)
+#        function = LinearRegressionL1L2TV(X, y, k, l, g, A=A, mu=estimator.mu,
+#                                          penalty_start=1)
 #
 #        err = np.linalg.norm(estimator.beta - beta_star) \
 #                    / np.linalg.norm(beta_star)
@@ -1036,7 +1038,7 @@ class TestSimulations(TestCase):
 #        import parsimony.datasets.simulated.l1_l2_glmu as l1_l2_glmu
 #        import parsimony.algorithms.explicit as explicit
 #        import parsimony.start_vectors as start_vectors
-#        from parsimony.functions import RR_L1_GL
+#        from parsimony.functions import LinearRegressionL1L2GL
 #
 #        start_vector = start_vectors.RandomStartVector(normalise=True)
 #
@@ -1286,8 +1288,8 @@ class TestSimulations(TestCase):
 #                     algorithm=explicit.FISTA(eps=eps, max_iter=max_iter),
 #                     penalty_start=1)
 #        estimator.fit(X, y)
-#        function = RR_L1_GL(X, y, k, l, g, A=A, mu=estimator.mu,
-#                            penalty_start=1)
+#        function = LinearRegressionL1L2GL(X, y, l, k, g, A=A, mu=estimator.mu,
+#                                          penalty_start=1)
 #
 #        err = np.linalg.norm(estimator.beta - beta_star) \
 #                / np.linalg.norm(beta_star)

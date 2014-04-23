@@ -131,7 +131,7 @@ class NesterovFunction(object):
         Returns
         -------
         old_mu : Non-negative float. The old regularisation constant for the
-                smoothing that was overwritten and is no longer used.
+                smoothing that was overwritten and no longer is used.
         """
         old_mu = self.get_mu()
 

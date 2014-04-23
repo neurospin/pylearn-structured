@@ -23,15 +23,18 @@ Created on Thu Feb 20 22:12:00 2014
 """
 import copy
 
+import numpy as np
+
 from . import bases
 import parsimony.utils as utils
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
+from parsimony.utils import LimitedDict, Info
 import parsimony.functions.interfaces as interfaces
 import parsimony.functions.multiblock.interfaces as multiblock_interfaces
 import parsimony.functions.multiblock.losses as mb_losses
 
-__all__ = ["MultiblockProjectedGradientMethod"]
+__all__ = ["MultiblockFISTA"]
 
 
 #class GeneralisedMultiblockISTA(ExplicitAlgorithm):
@@ -78,143 +81,176 @@ __all__ = ["MultiblockProjectedGradientMethod"]
 #        return w
 
 
-class MultiblockProjectedGradientMethod(bases.ExplicitAlgorithm):
+class MultiblockFISTA(bases.ExplicitAlgorithm,
+                      bases.IterativeAlgorithm,
+                      bases.InformationAlgorithm):
     """ The projected gradient algorithm with alternating minimisations in a
     multiblock setting.
+
+    Parameters
+    ----------
+    info : LimitedDict. If, and if so what, extra run information should be
+            returned by the algorithm. Default is None, which is replaced by
+            LimitedDict(), which means that no run information is computed nor
+            returned.
+
+    eps : Positive float. Tolerance for the stopping criterion.
+
+    outer_iter : Positive integer. Maximum allowed number of inner loop
+            iterations.
+
+    max_iter : Positive integer. Maximum allowed number of iterations.
+
+    min_iter : Positive integer. Minimum number of iterations.
     """
     INTERFACES = [multiblock_interfaces.MultiblockFunction,
                   multiblock_interfaces.MultiblockGradient,
                   multiblock_interfaces.MultiblockProjectionOperator,
                   multiblock_interfaces.MultiblockStepSize]
 
-    def __init__(self, step=None, output=False,
-                 eps=consts.TOLERANCE,
-                 outer_iter=25, max_iter=consts.MAX_ITER, min_iter=1):
+    PROVIDED_INFO = [Info.ok,
+                     Info.num_iter,
+                     Info.t,
+                     Info.f,
+                     Info.converged]
 
-        self.step = step
-        self.output = output
-        self.eps = eps
+    def __init__(self, info=None, outer_iter=20,
+                 eps=consts.TOLERANCE,
+                 max_iter=consts.MAX_ITER, min_iter=1):
+
+        super(MultiblockFISTA, self).__init__(info=info,
+                                              max_iter=max_iter,
+                                              min_iter=min_iter)
+
         self.outer_iter = outer_iter
-        self.max_iter = max_iter
-        self.min_iter = min_iter
+        self.eps = eps
 
         import parsimony.algorithms.explicit as algorithms
-        self.fista = algorithms.FISTA(step=self.step,
-                                      output=self.output,
-                                      eps=self.eps,
-                                      max_iter=self.max_iter,
-                                      min_iter=self.min_iter)
+        # Copy the allowed info keys for FISTA.
+        self.fista_info = LimitedDict()
+        for nfo in self.info.allowed_keys():
+            if nfo in algorithms.FISTA.PROVIDED_INFO:
+                self.fista_info.add_key(nfo)
+        if not self.fista_info.allows(Info.num_iter):
+            self.fista_info.add_key(Info.num_iter)
+        if not self.fista_info.allows(Info.converged):
+            self.fista_info.add_key(Info.converged)
 
+        self.algorithm = algorithms.FISTA(info=self.fista_info,
+                                          eps=self.eps,
+                                          max_iter=self.max_iter,
+                                          min_iter=self.min_iter)
+#        self.algorithm = algorithms.StaticCONESTA(mu_start=1.0,
+#                                                  info=self.info,
+#                                                  eps=self.eps,
+#                                                  max_iter=self.max_iter,
+#                                                  min_iter=self.min_iter)
+
+    @bases.check_compatibility
     def run(self, function, w):
 
-        self.check_compatibility(function, self.INTERFACES)
+        self.info.clear()
 
-        print "outer_iter:", self.outer_iter
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = False
+        if self.info.allows(Info.t):
+            t = [0.0]
+        if self.info.allows(Info.f):
+            f = [function.f(w)]
+        if self.info.allows(Info.converged):
+            self.info[Info.converged] = False
+
         print "len(w):", len(w)
         print "max_iter:", self.max_iter
 
-#        z = w_old = w
+        num_iter = [0] * len(w)
+#        w_old = [0] * len(w)
 
-        if self.output:
-            f = [function.f(w)]
-            print "f:", f[-1]
+#        it = 0
+#        while True:
+        for it in xrange(1, self.outer_iter + 1):
 
-        t = [1.0] * len(w)
-
-        w_old = [0] * len(w)
-
-        for it in xrange(self.outer_iter):  # TODO: Get number of iterations!
             all_converged = True
+
             for i in xrange(len(w)):
-                converged = False
                 print "it: %d, i: %d" % (it, i)
 
-#                func = mb_losses.MultiblockFunctionWrapper(function, w, i)
+#                for j in xrange(len(w)):
+#                    w_old[j] = w[j]
 
-#                if self.output:
-#                    w[i], output = self.fista.run(func, w[i])
-#
-#                    f = f + output["f"]
-#                else:
-#                    w[i] = self.fista.run(func, w[i])
+                func = mb_losses.MultiblockFunctionWrapper(function, w, i)
+                self.fista_info.clear()
+#                self.algorithm.set_params(max_iter=self.max_iter - num_iter[i])
+#                w[i] = self.algorithm.run(func, w_old[i])
+                w[i] = self.algorithm.run(func, w[i])
 
-                for j in xrange(len(w)):
-                    w_old[j] = w[j]
+                if Info.num_iter in self.fista_info:
+                    num_iter[i] += self.fista_info[Info.num_iter]
+                if Info.t in self.fista_info:
+                    tval = self.fista_info[Info.t]
+                if Info.f in self.fista_info:
+                    fval = self.fista_info[Info.f]
 
-                for k in xrange(self.max_iter):
-#                    print "it: %d, i: %d, k: %d" % (it, i, k)
+#                if Info.converged in self.fista_info:
+#                    if not self.fista_info[Info.converged] \
+#                            or self.fista_info[Info.num_iter] > 1:
+#                        all_converged = False
 
-                    z = w[i] + ((k - 2.0) / (k + 1.0)) * (w[i] - w_old[i])
+#                if maths.norm(w_old[i] - w[i]) < self.eps:
+#                    converged = True
+#                    break
 
-#                    _t = utils.time_cpu()
-                    t[i] = function.step(w[:i] + [z] + w[i + 1:], i)
-#                    t[i] = func.step(z)
-#                    print "step:", utils.time_cpu() - _t
-
-                    w_old[i] = w[i]
-
-#                    _t = utils.time_cpu()
-                    grad = function.grad(w_old[:i] + [z] + w_old[i + 1:], i)
-#                    grad = func.grad(z)
-                    w[i] = z - t[i] * grad
-#                    print "grad:", utils.time_cpu() - _t
-
-#                    _t = utils.time_cpu()
-                    w[i] = function.prox(w, i, t[i])
-#                    w[i] = func.prox(w[i], t[i])
-#                    print "proj:", utils.time_cpu() - _t
-
-                    if self.output:
-#                        _t = utils.time_cpu()
-                        f_ = function.f(w)
-#                        print "   f:", utils.time_cpu() - _t
-#                        print "f:", f_
-#                        improvement = f_ - f[-1]
-#                        if improvement > 0.0:
-#                            print "INCREASE!!:", improvement
-#                            # If this happens there are two possible reasons:
-#                            if abs(improvement) <= consts.TOLERANCE:
-#                                # 1. The function is actually converged, and
-#                                #         the "increase" is because of
-#                                #         precision errors. This happens
-#                                #         sometimes.
-#                                pass
-#                            else:
-#                                # 2. There is an error and the function
-#                                #         actually increased. Does this
-#                                #         happen? If so, we need to
-#                                #         investigate! Possible errors are:
-#                                #          * The gradient is wrong.
-#                                #          * The step size is too large.
-#                                #          * Other reasons?
-#                                print "ERROR! Function increased!"
-#
-#                            # Either way, we stop and regroup if it happens.
-##                            break
-
-                        f.append(f_)
-
-                    err = maths.norm(z - w[i])
-                    if err < t[i] * self.eps and k + 1 >= self.min_iter:
-                        converged = True
-                        break
+                if self.info.allows(Info.t):
+                    t = t + tval
+                if self.info.allows(Info.f):
+                    f = f + fval
 
                 print "l0 :", maths.norm0(w[i]), \
                     ", l1 :", maths.norm1(w[i]), \
                     ", l2²:", maths.norm(w[i]) ** 2.0
-                if self.output:
-                    print "f:", f[-1]
 
-                if not converged:
+            print "f:", fval[-1]
+
+            for i in xrange(len(w)):
+
+                # Take one ISTA step for use in the stopping criterion.
+                step = function.step(w, i)
+                w_tilde = function.prox(w[:i] +
+                                        [w[i] - step * function.grad(w, i)] +
+                                        w[i + 1:], i, step)
+
+#                func = mb_losses.MultiblockFunctionWrapper(function, w, i)
+#                step2 = func.step(w[i])
+#                w_tilde2 = func.prox(w[i] - step2 * func.grad(w[i]), step2)
+#
+#                print "diff:", maths.norm(w_tilde - w_tilde2)
+
+                print "err:", maths.norm(w[i] - w_tilde) * (1.0 / step)
+                if (1.0 / step) * maths.norm(w[i] - w_tilde) > self.eps:
                     all_converged = False
+                    break
 
             if all_converged:
                 print "All converged!"
+
+                if self.info.allows(Info.converged):
+                    self.info[Info.converged] = True
+
                 break
 
-        if self.output:
-#            output = {"t": t, "f": f}
-            output = {"f": f}
-            return (w, output)
-        else:
-            return w
+#            # If all blocks have used max_iter iterations, stop.
+#            if np.all(np.asarray(num_iter) >= self.max_iter):
+#                break
+
+#            it += 1
+
+        if self.info.allows(Info.num_iter):
+            self.info[Info.num_iter] = num_iter
+        if self.info.allows(Info.t):
+            self.info[Info.t] = t
+        if self.info.allows(Info.f):
+            self.info[Info.f] = f
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = True
+
+        return w

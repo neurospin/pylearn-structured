@@ -18,62 +18,97 @@ ParsimonY contains the following features:
         * _CO_ntinuation of _NEST_sterov’s smoothing _A_lgorithm (conesta)
         * Excessive gap method
     * Estimators
-        * RidgeRegression_L1_TV
-        * RidgeRegression_L1_GL
-        * RidgeRegression_SmoothedL1TV
+        * LinearRegression
+        * Lasso
+        * ElasticNet
+        * LinearRegressionL1L2TV
+        * LinearRegressionL1L2GL
+        * LogisticRegressionL1L2TL
+        * LogisticRegressionL1L2GL
+        * LinearRegressionL2SmoothedL1TV
 
 Installation
 ------------
-Download pylearn-parsimony, and then goto the directory:
+The reference environment for pylearn-parsimony is Ubuntu 12.04 LTS with
+Python 2.7.3, Numpy 1.6.1 and Scipy 0.9.0. More recent versions likely work,
+but have not been tested thoroughly.
 
+Unless you already have Numpy and Scipy installed, you need to install them:
 ```
-$ sudo apt-get install python-numpy python-scipy python-nose python-matplotlib
+$ sudo apt-get install python-numpy python-scipy
+```
+
+In order to run the tests, you may also need to install Nose:
+```
+$ sudo apt-get install python-nose
+```
+
+In order to show plots, you may need to install Matplotlib:
+```
+$ sudo apt-get install python-matplotlib
+```
+
+To install: Download pylearn-parsimony. Goto the download directory and type:
+```
 $ sudo python setup.py install
 ```
 
 Quick start
 -----------
 
-To quick start, we first build a simulated dataset `X` and `y`.
+A simple example: We first build a simulated dataset `X` and `y`.
 
 ```python
 import numpy as np
-np.random.seed(seed=1)
-shape = (4, 4, 1)  # Three-dimension matrix
+np.random.seed(42)
+shape = (1, 4, 4)  # Three-dimension matrix
 num_samples = 10  # The number of samples
 num_ft = shape[0] * shape[1] * shape[2] # The number of features per sample
-# Define X randomly as simulated data
-X_raw = np.random.random((num_samples, shape[0], shape[1], shape[2]))
-X = np.reshape(X_raw, (num_samples, num_ft))
-beta = np.random.random((num_ft, 1)) # Define beta randomly
-# Define y by adding noise
-y = np.dot(X, beta) + 0.001 * np.random.random((num_samples, 1))
+# Randomly generate X
+X = np.random.rand(num_samples, num_ft)
+beta = np.random.rand(num_ft, 1) # Define beta
+# Add noise to y
+y = np.dot(X, beta) + 0.001 * np.random.rand(num_samples, 1)
 X_train = X[0:6, :]
 y_train = y[0:6]
 X_test = X[6:10, :]
 y_test = y[6:10]
 ```
 
-We build a simple estimator using the function OLS (ordinary least squares)
-minimized by FISTA algorithm.
+We build a simple estimator using the OLS (ordinary least squares) loss
+function and minimize using Gradient descent.
 
 ```python
 import parsimony.estimators as estimators
 import parsimony.algorithms as algorithms
-import parsimony.tv
+ols = estimators.LinearRegression(algorithm_params=dict(max_iter=1000))
+```
+Then we fit the model, estimate beta, and predict on test set.
+```python
+res = ols.fit(X_train, y_train)
+print "Estimated beta error = ", np.linalg.norm(ols.beta - beta)
+print "Prediction error = ", np.linalg.norm(ols.predict(X_test) - y_test)
+```
+
+Now we build an estimator with the OLS loss function and a Total Variation
+penalty and minimize using FISTA.
+```python
+import parsimony.estimators as estimators
+import parsimony.algorithms as algorithms
+import parsimony.functions.nesterov.tv as tv
 k = 0.0  # l2 ridge regression coefficient
 l = 0.0  # l1 lasso coefficient
-g = 0.0  # tv coefficient
-A, n_compacts = parsimony.tv.A_from_shape(shape)  # Memory allocation for TV
-ols_estimator = estimators.RidgeRegression_L1_TV(
-		    k, l, g, A,
-		    algorithm=algorithms.FISTA(max_iter=1000))
+g = 1.0  # tv coefficient
+A, n_compacts = tv.A_from_shape(shape)  # Memory allocation for TV
+olstv = estimators.LinearRegressionL1L2TV(k, l, g, A, mu=0.0001,
+                                         algorithm=algorithms.explicit.FISTA(),
+                                         algorithm_params=dict(max_iter=1000))
 ```
-Therefore we can fit model, estimate beta, and predict on test part.
+We fit the model, estimate beta, and predict on the test set.
 ```python
-res = ols_estimator.fit(X_train, y_train)
-print "Estimated beta error = ", np.linalg.norm(ols_estimator.beta - beta)
-print "Prediction error = ", np.linalg.norm(ols_estimator.predict(X_test) - y_test)
+res = olstv.fit(X_train, y_train)
+print "Estimated beta error = ", np.linalg.norm(olstv.beta - beta)
+print "Prediction error = ", np.linalg.norm(olstv.predict(X_test) - y_test)
 ```
 
 Important links

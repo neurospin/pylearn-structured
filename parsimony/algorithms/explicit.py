@@ -57,6 +57,18 @@ class GradientDescent(bases.ExplicitAlgorithm,
                       bases.InformationAlgorithm):
     """The gradient descent algorithm.
 
+    Parameters
+    ----------
+    eps : Positive float. Tolerance for the stopping criterion.
+
+    info : Information. If, and if so what, extra run information should be
+            returned. Default is None, which is replaced by Information(),
+            which means that no run information is computed nor returned.
+
+    max_iter : Positive integer. Maximum allowed number of iterations.
+
+    min_iter : Positive integer. Minimum number of iterations.
+
     Examples
     --------
     >>> from parsimony.algorithms.explicit import GradientDescent
@@ -84,19 +96,6 @@ class GradientDescent(bases.ExplicitAlgorithm,
 
     def __init__(self, eps=consts.TOLERANCE,
                  info=None, max_iter=20000, min_iter=1):
-        """
-        Parameters
-        ----------
-        eps : Positive float. Tolerance for the stopping criterion.
-
-        info : Information. If, and if so what, extra run information should be
-                returned. Default is None, which is replaced by Information(),
-                which means that no run information is computed nor returned.
-
-        max_iter : Positive integer. Maximum allowed number of iterations.
-
-        min_iter : Positive integer. Minimum number of iterations.
-        """
         super(GradientDescent, self).__init__(info=info,
                                               max_iter=max_iter,
                                               min_iter=min_iter)
@@ -169,7 +168,7 @@ class ISTA(bases.ExplicitAlgorithm,
     Examples
     --------
     >>> from parsimony.algorithms.explicit import ISTA
-    >>> from parsimony.functions import RR_L1_TV
+    >>> from parsimony.functions import LinearRegressionL1L2TV
     >>> import scipy.sparse as sparse
     >>> import numpy as np
     >>>
@@ -177,7 +176,8 @@ class ISTA(bases.ExplicitAlgorithm,
     >>> X = np.random.rand(100, 50)
     >>> y = np.random.rand(100, 1)
     >>> A = sparse.csr_matrix((50, 50))  # Unused here
-    >>> function = RR_L1_TV(X, y, k=0.0, l=0.0, g=0.0, A=A, mu=0.0)
+    >>> function = LinearRegressionL1L2TV(X, y, l=0.0, k=0.0, g=0.0,
+    ...                                   A=A, mu=0.0)
     >>> ista = ISTA(max_iter=10000)
     >>> beta1 = ista.run(function, np.random.rand(50, 1))
     >>> beta2 = np.dot(np.linalg.pinv(X), y)
@@ -188,7 +188,8 @@ class ISTA(bases.ExplicitAlgorithm,
     >>> X = np.random.rand(100, 50)
     >>> y = np.random.rand(100, 1)
     >>> A = sparse.csr_matrix((50, 50))  # Unused here
-    >>> function = RR_L1_TV(X, y, k=0.0, l=0.1, g=0.0, A=A, mu=0.0)
+    >>> function = LinearRegressionL1L2TV(X, y, l=0.1, k=0.0, g=0.0,
+    ...                                   A=A, mu=0.0)
     >>> ista = ISTA(max_iter=10000)
     >>> beta1 = ista.run(function, np.random.rand(50, 1))
     >>> beta2 = np.dot(np.linalg.pinv(X), y)
@@ -297,7 +298,7 @@ class FISTA(bases.ExplicitAlgorithm,
     Example
     -------
     >>> from parsimony.algorithms.explicit import FISTA
-    >>> from parsimony.functions import RR_L1_TV
+    >>> from parsimony.functions import LinearRegressionL1L2TV
     >>> import scipy.sparse as sparse
     >>> import numpy as np
     >>>
@@ -305,7 +306,8 @@ class FISTA(bases.ExplicitAlgorithm,
     >>> X = np.random.rand(100, 50)
     >>> y = np.random.rand(100, 1)
     >>> A = sparse.csr_matrix((50, 50))  # Unused here
-    >>> function = RR_L1_TV(X, y, k=0.0, l=0.0, g=0.0, A=A, mu=0.0)
+    >>> function = LinearRegressionL1L2TV(X, y, k=0.0, l=0.0, g=0.0,
+    ...                                   A=A, mu=0.0)
     >>> fista = FISTA(max_iter=10000)
     >>> beta1 = fista.run(function, np.random.rand(50, 1))
     >>> beta2 = np.dot(np.linalg.pinv(X), y)
@@ -316,7 +318,8 @@ class FISTA(bases.ExplicitAlgorithm,
     >>> X = np.random.rand(100, 50)
     >>> y = np.random.rand(100, 1)
     >>> A = sparse.csr_matrix((50, 50))  # Unused here
-    >>> function = RR_L1_TV(X, y, k=0.0, l=0.1, g=0.0, A=A, mu=0.0)
+    >>> function = LinearRegressionL1L2TV(X, y, k=0.0, l=0.1, g=0.0,
+    ...                                   A=A, mu=0.0)
     >>> fista = FISTA(max_iter=10000)
     >>> beta1 = fista.run(function, np.random.rand(50, 1))
     >>> beta2 = np.dot(np.linalg.pinv(X), y)
@@ -373,7 +376,7 @@ class FISTA(bases.ExplicitAlgorithm,
         if self.info.allows(Info.ok):
             self.info[Info.ok] = False
 
-        step = function.step(beta)
+#        step = function.step(beta)
 
         z = betanew = betaold = beta
 
@@ -384,7 +387,7 @@ class FISTA(bases.ExplicitAlgorithm,
         if self.info.allows(Info.converged):
             self.info[Info.converged] = False
 
-        for i in xrange(1, self.max_iter + 1):
+        for i in xrange(1, max(self.min_iter, self.max_iter) + 1):
             if self.info.allows(Info.t):
                 tm = utils.time_cpu()
 
@@ -417,7 +420,7 @@ class FISTA(bases.ExplicitAlgorithm,
 #                print "sc err:", (1.0 / step) * maths.norm(betanew - z)
 #                print "eps   :", self.eps
 
-                if (1.0 / stop_step) * maths.norm(betanew - stop_z) < self.eps \
+                if (1. / stop_step) * maths.norm(betanew - stop_z) < self.eps \
                         and i >= self.min_iter:
 
                     if self.info.allows(Info.converged):
@@ -468,7 +471,7 @@ class CONESTA(bases.ExplicitAlgorithm,
                      Info.converged]
 
     def __init__(self, mu_start=None, mu_min=consts.TOLERANCE,
-                 tau=0.5, dynamic=True,
+                 tau=0.5, dynamic=False,
 
                  eps=consts.TOLERANCE,
                  info=None, max_iter=10000, min_iter=1):
@@ -504,6 +507,20 @@ class CONESTA(bases.ExplicitAlgorithm,
         self.mu_min = mu_min
         self.tau = tau
         self.dynamic = dynamic
+
+        if dynamic:
+            self.INTERFACES = [nesterov_interfaces.NesterovFunction,
+                               interfaces.Gradient,
+                               interfaces.StepSize,
+                               interfaces.ProximalOperator,
+                               interfaces.Continuation,
+                               interfaces.DualFunction]
+        else:
+            self.INTERFACES = [nesterov_interfaces.NesterovFunction,
+                               interfaces.Gradient,
+                               interfaces.StepSize,
+                               interfaces.ProximalOperator,
+                               interfaces.Continuation]
 
         self.eps = eps
 
@@ -572,11 +589,11 @@ class CONESTA(bases.ExplicitAlgorithm,
 
             self.mu_min = min(self.mu_min, mu[-1])
             tmin = min(tmin, tnew)
-            function.set_mu(self.mu_min)
+            old_mu = function.set_mu(self.mu_min)
             # Take one ISTA step for use in the stopping criterion.
             beta_tilde = function.prox(beta - tmin * function.grad(beta),
                                        tmin)
-            function.set_mu(mu[-1])
+            function.set_mu(old_mu)
 
             if (1.0 / tmin) * maths.norm(beta - beta_tilde) < self.eps:
                 if self.info.allows(Info.converged):
@@ -591,7 +608,8 @@ class CONESTA(bases.ExplicitAlgorithm,
                 gap_time = utils.time_cpu()
 
             if self.dynamic:
-                G_new = function.gap(beta)
+                G_new = function.gap(beta, eps=eps_plus,
+                                     max_iter=self.max_iter - self.num_iter)
 
                 # TODO: Warn if G_new < 0.
                 G_new = abs(G_new)  # Just in case ...
@@ -626,8 +644,6 @@ class CONESTA(bases.ExplicitAlgorithm,
             function.set_mu(mu_new)
 
             i = i + 1
-
-#        print "total number of iterations:", self.num_iter
 
         if self.info.allows(Info.num_iter):
             self.info[Info.num_iter] = i + 1

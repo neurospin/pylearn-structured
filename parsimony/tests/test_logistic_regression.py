@@ -6,7 +6,6 @@ Created on Tue Mar  4 10:33:40 2014
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
-import unittest
 from nose.tools import assert_less, assert_equal, assert_almost_equal
 
 import numpy as np
@@ -14,7 +13,7 @@ import numpy as np
 from tests import TestCase
 import parsimony.utils.consts as consts
 
-# TODO: Test penalty_start and mean.
+# TODO: Test penalty_start.
 
 # TODO: Test total variation.
 
@@ -84,32 +83,6 @@ class TestLogisticRegression(TestCase):
 #            print beta_spams
 
         except ImportError:
-#            beta_spams = np.asarray(
-#                    [[-1.01027835], [0.04541433], [-0.36492995], [0.61694659],
-#                     [0.31352106], [-0.45514542], [-0.06516154], [0.16322194],
-#                     [1.57370712], [1.01770363], [-1.18053922], [0.94475217],
-#                     [1.09808833], [0.68986878], [-0.59109072], [-0.35280848],
-#                     [1.13403386], [1.60746596], [-0.51702108], [0.40298098],
-#                     [0.06973893], [1.38913351], [0.31263145], [0.25254335],
-#                     [1.65984054], [0.19778432], [1.20301178], [1.37325924],
-#                     [-0.81674455], [0.65926444], [-0.59679473], [0.38773981],
-#                     [-0.58720461], [-0.48949141], [0.55399832], [0.75475734],
-#                     [-0.93326053], [-0.55721247], [0.94682476], [0.59778018],
-#                     [0.08025665], [0.09741072], [-0.75940411], [1.00956122],
-#                     [0.86698692], [0.22242015], [0.08627418], [0.10561352],
-#                     [0.50026322], [1.54323783], [0.43163912], [1.81605466],
-#                     [-0.39638692], [0.08939998], [-1.10451808], [-0.93858999],
-#                     [-0.68055786], [-0.24316492], [0.60939807], [-1.20860996],
-#                     [0.96899678], [1.11948487], [0.64488373], [-0.65170164],
-#                     [0.33778775], [-0.1380265], [-0.04784483], [-0.02324114],
-#                     [0.55396485], [0.53091428], [-0.06142249], [-1.481608],
-#                     [-1.09504543], [-1.2885626], [0.4204063], [0.691696],
-#                     [-0.23795757], [1.13300874], [-0.02437729], [0.61871999],
-#                     [0.95775709], [1.586174], [1.0027941], [0.84361898],
-#                     [0.25268826], [-0.72440374], [-0.96623248], [-1.153285],
-#                     [0.60933874], [-0.35755106], [-0.30428306], [-0.11095325],
-#                     [0.84154014], [-0.27480962], [-0.95924936], [0.54482999],
-#                     [-1.41566245], [0.3111633], [-0.25463532], [0.8865664]])
 
             beta_spams = np.asarray(
                     [[0.52689775], [-2.21446548], [-1.68294898], [-1.22239288],
@@ -131,10 +104,13 @@ class TestLogisticRegression(TestCase):
                      [1.69009136]])
 
         mu = None
-        logreg_est = estimators.RidgeLogisticRegression_L1_TV(
-                       k=0.0, l=0.0, g=0.0,
-                       A=A, class_weight=None, mu=mu, mean=True,
-                       algorithm=explicit.ISTA(eps=eps, max_iter=max_iter))
+        logreg_est = estimators.LogisticRegressionL1L2TV(0.0, 0.0, 0.0,
+                                      A=A, mu=mu,
+                                      class_weight=None,
+                                      algorithm=explicit.ISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      mean=True)
         logreg_est.fit(X, y)
 
         re = maths.norm(beta - beta_spams) / maths.norm(beta_spams)
@@ -172,7 +148,7 @@ class TestLogisticRegression(TestCase):
                                 "the correct function value.",
                             places=5)
 
-    def test_logistic_regression_l1(self):
+    def test_l1(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
 
         from parsimony.functions import CombinedFunction
@@ -243,24 +219,7 @@ class TestLogisticRegression(TestCase):
 #            print beta_spams
 
         except ImportError:
-#            beta_spams = np.asarray(
-#                    [[-1.15299513], [0.], [0.], [0.], [0.], [0.], [0.], [0.],
-#                     [1.6052226], [0.86846838], [-0.30706116], [0.31483119],
-#                     [0.91018498], [0.07378518], [0.], [0.], [0.91509995],
-#                     [0.79327426], [0.], [0.31663264], [0.], [0.74234398],
-#                     [0.], [0.], [1.36178271], [0.], [0.], [0.62679508],
-#                     [-0.63081276], [0.], [0.], [0.], [0.], [0.], [0.],
-#                     [0.74699032], [-0.23479909], [0.], [0.], [0.], [0.], [0.],
-#                     [-0.21076412], [0.], [0.], [0.], [0.], [0.], [0.],
-#                     [1.68165668], [0.], [2.09181095], [0.], [0.],
-#                     [-0.66720945], [-0.0173993], [-0.12982041], [0.], [0.],
-#                     [-0.90838118], [0.], [0.64843176], [0.], [0.], [0.], [0.],
-#                     [0.], [0.], [0.], [0.], [0.], [-0.94676745],
-#                     [-1.52904001], [-1.09095236], [0.], [0.], [0.],
-#                     [0.42959206], [0.], [0.], [0.23419629], [1.28258911],
-#                     [0.], [0.], [0.], [0.], [-1.00708153], [-0.58957659],
-#                     [0.10385635], [0.], [0.], [0.], [0.13107728], [0.], [0.],
-#                     [0.32741694], [-1.52896011], [0.], [0.], [0.55867497]])
+
             beta_spams = np.asarray(
                     [[0.], [-2.88026664], [-1.75569266], [-0.10270371], [0.],
                      [0.], [0.80004525], [0.], [0.], [-0.53624278], [0.], [0.],
@@ -277,10 +236,12 @@ class TestLogisticRegression(TestCase):
                      [0.15781433]])
 
         mu = None
-        logreg_est = estimators.RidgeLogisticRegression_L1_TV(
-                    k=k, l=l, g=0.0,
-                    A=A, class_weight=None, mu=mu,
-                    algorithm=explicit.ISTA(eps=eps, max_iter=max_iter))
+        logreg_est = estimators.LogisticRegressionL1L2TV(l, k, g,
+                                      A=A, mu=mu,
+                                      algorithm=explicit.ISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      class_weight=None)
         logreg_est.fit(X, y)
 
         re = maths.norm(beta - beta_spams) / maths.norm(beta_spams)
@@ -318,7 +279,7 @@ class TestLogisticRegression(TestCase):
                                 "the correct function value.",
                             places=5)
 
-    def test_logistic_regression_l1_intercept(self):
+    def test_l1_intercept(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
 
         from parsimony.functions import CombinedFunction
@@ -392,6 +353,7 @@ class TestLogisticRegression(TestCase):
 #            print beta_spams
 
         except ImportError:
+
             beta_spams = np.asarray(
                     [[0.], [-2.84363846], [-1.76319723], [-0.08899283], [0.],
                      [0.], [0.82070549], [0.], [0.], [-0.55865068], [0.], [0.],
@@ -411,11 +373,13 @@ class TestLogisticRegression(TestCase):
                                 beta_spams[0:p - 1, :]))
 
         mu = None
-        logreg_est = estimators.RidgeLogisticRegression_L1_TV(
-                    k=k, l=l, g=0.0,
-                    A=A, class_weight=None, mu=mu,
-                    algorithm=explicit.ISTA(eps=eps, max_iter=max_iter),
-                    penalty_start=1)
+        logreg_est = estimators.LogisticRegressionL1L2TV(l, k, g,
+                                      A=A, mu=mu,
+                                      algorithm=explicit.ISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      penalty_start=1,
+                                      class_weight=None)
         logreg_est.fit(X_parsimony, y)
 
         re = maths.norm(beta - beta_spams) / maths.norm(beta_spams)
@@ -447,7 +411,7 @@ class TestLogisticRegression(TestCase):
         assert_less(err, 5e-3, msg="The found regression vector does not " \
                                    "give the correct function value.")
 
-    def test_logistic_regression_l2(self):
+    def test_l2(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
 
         from parsimony.functions import CombinedFunction
@@ -518,6 +482,7 @@ class TestLogisticRegression(TestCase):
 #            print beta_spams
 
         except ImportError:
+
             beta_spams = np.asarray(
                     [[5.33853917e-02], [-1.42699512e-01], [-8.72668527e-02],
                      [-3.65487726e-02], [2.83354831e-02], [1.13264613e-02],
@@ -543,10 +508,12 @@ class TestLogisticRegression(TestCase):
                      [5.40284401e-02]])
 
         mu = None
-        logreg_est = estimators.RidgeLogisticRegression_L1_TV(
-                    k=k, l=l, g=0.0,
-                    A=A, class_weight=None, mu=mu,
-                    algorithm=explicit.ISTA(eps=eps, max_iter=max_iter))
+        logreg_est = estimators.LogisticRegressionL1L2TV(l, k, g,
+                                      A=A, mu=mu,
+                                      algorithm=explicit.ISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      class_weight=None)
         logreg_est.fit(X, y)
 
         re = maths.norm(beta - beta_spams) / maths.norm(beta_spams)
@@ -584,7 +551,7 @@ class TestLogisticRegression(TestCase):
                                 "the correct function value.",
                             places=5)
 
-    def test_logistic_regression_l2_intercept(self):
+    def test_l2_intercept(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
 
         from parsimony.functions import CombinedFunction
@@ -658,6 +625,7 @@ class TestLogisticRegression(TestCase):
 #            print beta_spams
 
         except ImportError:
+
             beta_spams = np.asarray(
                     [[0.05313997], [-0.14296077], [-0.08703832], [-0.03643685],
                      [0.028458], [0.01129562], [0.00812442], [-0.02348346],
@@ -681,11 +649,13 @@ class TestLogisticRegression(TestCase):
                                 beta_spams[0:p - 1, :]))
 
         mu = None
-        logreg_est = estimators.RidgeLogisticRegression_L1_TV(
-                    k=k, l=l, g=0.0,
-                    A=A, class_weight=None, mu=mu,
-                    algorithm=explicit.ISTA(eps=eps, max_iter=max_iter),
-                    penalty_start=1)
+        logreg_est = estimators.LogisticRegressionL1L2TV(l, k, g,
+                                      A=A, mu=mu,
+                                      algorithm=explicit.ISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      penalty_start=1,
+                                      class_weight=None)
         logreg_est.fit(X_parsimony, y)
 
         re = maths.norm(beta - beta_spams) / maths.norm(beta_spams)
@@ -717,7 +687,7 @@ class TestLogisticRegression(TestCase):
         assert_less(err, 5e-6, msg="The found regression vector does not " \
                                    "give the correct function value.")
 
-    def test_logistic_regression_gl(self):
+    def test_gl(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
 
         from parsimony.functions import CombinedFunction
@@ -789,6 +759,7 @@ class TestLogisticRegression(TestCase):
                                     **params)
 
         except ImportError:
+
             beta_spams = np.asarray(
                     [[-0.72542349], [0.02830505], [-0.21973781], [0.41495258],
                      [0.229409], [-0.32370782], [-0.15752327], [0.0632292],
@@ -817,13 +788,14 @@ class TestLogisticRegression(TestCase):
                      [-1.05972579], [0.19986263], [-0.1638552], [0.6232789]])
 
 #        mu = None
-        logreg_est = estimators.RidgeLogisticRegression_L1_GL(k=k, l=l, g=g,
-                           A=A,
-                           class_weight=None,
-                           mu=mu,
-                           algorithm=explicit.ISTA(eps=eps, max_iter=max_iter),
-                           penalty_start=0,
-                           mean=True)
+        logreg_est = estimators.LogisticRegressionL1L2GL(l, k, g,
+                                      A=A, mu=mu,
+                                      algorithm=explicit.ISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      penalty_start=0,
+                                      mean=True,
+                                      class_weight=None)
         logreg_est.fit(X, y)
 
         re = maths.norm(beta - beta_spams) / maths.norm(beta_spams)
@@ -861,7 +833,7 @@ class TestLogisticRegression(TestCase):
                                 "the correct function value.",
                             places=5)
 
-    def test_logistic_regression_l1_l2(self):
+    def test_l1_l2(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
 
         from parsimony.functions import CombinedFunction
@@ -934,30 +906,6 @@ class TestLogisticRegression(TestCase):
 #            print beta_spams
 
         except ImportError:
-#            beta_spams = np.asarray(
-#                    [[-0.02529761], [0.], [0.], [0.0334721], [0.05321362],
-#                     [-0.01287593], [0.], [0.], [0.05285862], [0.04136545],
-#                     [-0.03874372], [0.02097468], [0.02078901], [0.05317634],
-#                     [0.], [-0.01038235], [0.06953451], [0.05629869],
-#                     [-0.01385761], [0.0197789], [0.], [0.01531954], [0.],
-#                     [0.], [0.0979065], [0.], [0.03202502], [0.00465224],
-#                     [-0.07322855], [0.], [-0.02333038], [0.], [-0.0219676],
-#                     [0.], [0.00073144], [0.02900314], [-0.0364214],
-#                     [-0.00497983], [0.02181465], [0.], [-0.02216263], [0.],
-#                     [-0.02871861], [0.00014289], [0.02549944], [0.01219949],
-#                     [0.], [0.], [0.01284684], [0.07015268], [0.],
-#                     [0.09246748], [-0.004762], [0.], [-0.01817149],
-#                     [-0.02119763], [-0.00932684], [0.], [0.02950021],
-#                     [-0.04073497], [0.02537134], [0.02957037], [-0.00782987],
-#                     [-0.03301447], [0.], [0.], [0.01734085], [0.00280076],
-#                     [0.], [0.], [0.], [-0.06911439], [-0.08260008],
-#                     [-0.06254957], [0.02925817], [0.02162837], [0.],
-#                     [0.04903786], [0.], [0.03930223], [0.00839264],
-#                     [0.03145341], [0.04055641], [0.0379336], [0.],
-#                     [-0.05476343], [-0.02684736], [-0.05647316], [0.],
-#                     [-0.0181865], [0.], [0.], [0.0096403], [-0.01322636],
-#                     [0.], [0.02832135], [-0.01693505], [0.], [0.],
-#                     [0.02531008]])
 
             beta_spams = np.asarray(
                     [[0.01865551], [-0.08688886], [-0.03926606], [0.], [0.],
@@ -975,10 +923,12 @@ class TestLogisticRegression(TestCase):
                      [-0.03927743], [0.], [0.01994069], [0.00128412]])
 
         mu = None
-        logreg_est = estimators.RidgeLogisticRegression_L1_TV(
-                    k=k, l=l, g=g,
-                    A=A, class_weight=None, mu=mu,
-                    algorithm=explicit.ISTA(eps=eps, max_iter=max_iter))
+        logreg_est = estimators.LogisticRegressionL1L2TV(l, k, g,
+                                      A=A, mu=mu,
+                                      algorithm=explicit.ISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      class_weight=None)
         logreg_est.fit(X, y)
 
         re = maths.norm(beta - beta_spams) / maths.norm(beta_spams)
@@ -1016,7 +966,7 @@ class TestLogisticRegression(TestCase):
                                 "the correct function value.",
                             places=5)
 
-    def test_logistic_regression_l1_l2_intercept(self):
+    def test_l1_l2_intercept(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
 
         from parsimony.functions import CombinedFunction
@@ -1092,6 +1042,7 @@ class TestLogisticRegression(TestCase):
 #            print beta_spams
 
         except ImportError:
+
             beta_spams = np.asarray(
                     [[0.01813849], [-0.08774061], [-0.0387066], [0.], [0.],
                      [0.], [0.], [0.], [0.], [-0.01840827], [-0.00395561],
@@ -1112,11 +1063,13 @@ class TestLogisticRegression(TestCase):
                                 beta_spams[0:p - 1, :]))
 
         mu = None
-        logreg_est = estimators.RidgeLogisticRegression_L1_TV(
-                          k=k, l=l, g=g,
-                          A=A, mu=mu,
-                          algorithm=explicit.ISTA(eps=eps, max_iter=max_iter),
-                          class_weight=None, penalty_start=1, mean=True)
+        logreg_est = estimators.LogisticRegressionL1L2TV(l, k, g,
+                                    A=A, mu=mu,
+                                    algorithm=explicit.ISTA(eps=eps,
+                                                            max_iter=max_iter),
+                                    penalty_start=1,
+                                    mean=True,
+                                    class_weight=None)
         logreg_est.fit(X_parsimony, y)
 
         re = maths.norm(beta - beta_spams)
@@ -1148,7 +1101,7 @@ class TestLogisticRegression(TestCase):
         assert_less(err, 5e-15, msg="The found regression vector does not " \
                                     "give the correct function value.")
 
-    def test_logistic_regression_l1_gl(self):
+    def test_l1_gl(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
 
         from parsimony.functions import CombinedFunction
@@ -1222,6 +1175,7 @@ class TestLogisticRegression(TestCase):
                                     **params)
 
         except ImportError:
+
             beta_spams = np.asarray(
                     [[-0.49445071], [0.], [0.], [0.], [0.], [0.], [0.], [0.],
                      [0.90020246], [0.40967343], [-0.17363366], [0.],
@@ -1242,16 +1196,14 @@ class TestLogisticRegression(TestCase):
                      [0.], [0.], [0.19439507]])
 
 #        mu = None
-        logreg_est = estimators.RidgeLogisticRegression_L1_GL(
-                           k=k,
-                           l=l,
-                           g=g,
-                           A=A,
-                           class_weight=None,
-                           mu=mu,
-                           algorithm=explicit.ISTA(eps=eps, max_iter=max_iter),
-                           penalty_start=0,
-                           mean=True)
+        logreg_est = estimators.LogisticRegressionL1L2GL(l, k, g,
+                                      A=A, mu=mu,
+                                      algorithm=explicit.ISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      penalty_start=0,
+                                      mean=True,
+                                      class_weight=None)
         logreg_est.fit(X, y)
 
         re = maths.norm(beta - beta_spams) / maths.norm(beta_spams)
@@ -1420,7 +1372,7 @@ class TestLogisticRegression(TestCase):
 #        assert_less(err, 5e-9,
 #                    msg="The found regression vector is not correct.")
 
-    def test_logistic_regression_large(self):
+    def test_large(self):
 
         import parsimony.algorithms.explicit as explicit
         import parsimony.estimators as estimators
@@ -1458,15 +1410,12 @@ class TestLogisticRegression(TestCase):
         g = 1.618
 
         mu = None
-        logreg_static = estimators.RidgeLogisticRegression_L1_TV(
-                           k=k,
-                           l=l,
-                           g=g,
-                           A=A,
-                           class_weight=None,
-                           mu=mu,
-                           algorithm=explicit.StaticCONESTA(eps=eps,
-                                                            max_iter=max_iter))
+        logreg_static = estimators.LogisticRegressionL1L2TV(l, k, g,
+                                      A=A, mu=mu,
+                                      algorithm=explicit.StaticCONESTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      class_weight=None)
         logreg_static.fit(X, y)
         err = logreg_static.score(X, y)
 #        print err
@@ -1474,15 +1423,12 @@ class TestLogisticRegression(TestCase):
                      msg="The found regression vector is not correct.")
 
         mu = None
-        logreg_dynamic = estimators.RidgeLogisticRegression_L1_TV(
-                          k=k,
-                          l=l,
-                          g=g,
-                          A=A,
-                          class_weight=None,
-                          mu=mu,
-                          algorithm=explicit.DynamicCONESTA(eps=eps,
-                                                            max_iter=max_iter))
+        logreg_dynamic = estimators.LogisticRegressionL1L2TV(l, k, g,
+                                      A=A, mu=mu,
+                                      algorithm=explicit.DynamicCONESTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      class_weight=None)
         logreg_dynamic.fit(X, y)
         err = logreg_dynamic.score(X, y)
 #        print err
@@ -1490,15 +1436,12 @@ class TestLogisticRegression(TestCase):
                      msg="The found regression vector is not correct.")
 
         mu = 5e-4
-        logreg_fista = estimators.RidgeLogisticRegression_L1_TV(
-                          k=k,
-                          l=l,
-                          g=g,
-                          A=A,
-                          class_weight=None,
-                          mu=mu,
-                          algorithm=explicit.FISTA(eps=eps,
-                                                   max_iter=max_iter))
+        logreg_fista = estimators.LogisticRegressionL1L2TV(l, k, g,
+                                      A=A, mu=mu,
+                                      algorithm=explicit.FISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      class_weight=None)
         logreg_fista.fit(X, y)
         err = logreg_fista.score(X, y)
 #        print err
@@ -1506,15 +1449,12 @@ class TestLogisticRegression(TestCase):
                      msg="The found regression vector is not correct.")
 
         mu = 5e-4
-        logreg_ista = estimators.RidgeLogisticRegression_L1_TV(
-                          k=k,
-                          l=l,
-                          g=g,
-                          A=A,
-                          class_weight=None,
-                          mu=mu,
-                          algorithm=explicit.ISTA(eps=eps,
-                                                  max_iter=max_iter))
+        logreg_ista = estimators.LogisticRegressionL1L2TV(l, k, g,
+                                      A=A, mu=mu,
+                                      algorithm=explicit.ISTA(),
+                                      algorithm_params=dict(eps=eps,
+                                                            max_iter=max_iter),
+                                      class_weight=None)
         logreg_ista.fit(X, y)
         err = logreg_ista.score(X, y)
 #        print err
@@ -1522,4 +1462,5 @@ class TestLogisticRegression(TestCase):
                      msg="The found regression vector is not correct.")
 
 if __name__ == "__main__":
+    import unittest
     unittest.main()

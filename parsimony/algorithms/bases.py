@@ -37,6 +37,8 @@ __all__ = ["BaseAlgorithm", "check_compatibility",
 
 class BaseAlgorithm(object):
 
+    __metaclass__ = abc.ABCMeta
+
     @staticmethod
     def check_compatibility(function, required_interfaces):
         """Check if the function considered implements the given interfaces.

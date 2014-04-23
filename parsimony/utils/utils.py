@@ -269,7 +269,7 @@ def optimal_shrinkage(X, T=None):
         l = max(0, min(1, l))
 
         tau.append(l)
-        print "tau %d: %f" % (i, l)
+        print "tau %f" % (l,)
 
     return tau
 
@@ -310,29 +310,6 @@ class AnonymousClass(object):
         return self.__dict__ != other.__dict__
 
 
-class Enum(object):
-    """Used to declare enumerated constants.
-
-    Supposed to be similar to and used as the Enum class introduced in
-    Python 3.4.
-    """
-    def __init__(self, name, *sequential, **named):
-#        self.__dict__["_Enum__name"] = name
-        seq_pairs = zip(sequential, range(len(sequential)))
-        values = {k: EnumItem(name, k, v) for k, v in seq_pairs}
-        for k, v in named:
-            values[k] = EnumItem(name, k, v)
-        enums = dict(values)  # , **named)
-        for k, v in enums.items():
-            self.__dict__[k] = v
-
-    def __setattr__(self, name, value):  # Read-only.
-        raise TypeError("Enum attributes are read-only.")
-
-    def __str__(self):
-        return "Enum: " + str(self.__dict__.keys())
-
-
 class EnumItem(object):
     def __init__(self, cls_name, name, value):
         self.cls_name = cls_name
@@ -356,6 +333,30 @@ class EnumItem(object):
     def __repr__(self):
         return "EnumItem('%s', '%s', %d)" % (self.cls_name, self.name,
                                              self.value)
+
+
+class Enum(object):
+    """Used to declare enumerated constants.
+
+    Supposed to be similar to and used as the Enum class introduced in
+    Python 3.4.
+    """
+    def __init__(self, name, *sequential, **named):
+#        self.__dict__["_Enum__name"] = name
+        seq_pairs = zip(sequential, range(len(sequential)))
+        values = {k: EnumItem(name, k, v) for k, v in seq_pairs}
+        for k, v in named:
+            values[k] = EnumItem(name, k, v)
+        enums = dict(values)  # , **named)
+        for k, v in enums.items():
+            self.__dict__[k] = v
+
+    def __setattr__(self, name, value):  # Read-only.
+        raise TypeError("Enum attributes are read-only.")
+
+    def __str__(self):
+        return "Enum: " + str(self.__dict__.keys())
+
 
 Info = Enum("Info", "ok", "num_iter", "t", "f", "gap", "mu", "bound", "beta",
                     "converged")

@@ -8,7 +8,7 @@ Created on Wed Feb 26 16:17:15 2014
 """
 import numpy as np
 
-from .tests import TestCase
+from parsimony.tests import TestCase
 
 
 class TestTotalVariation(TestCase):
@@ -60,8 +60,9 @@ class TestTotalVariation(TestCase):
 
         beta_parsimony = beta_start
         for mu in mus:
-#            function = functions.RR_L1_GL(X, y, k, l, g, A=A, mu=mu,
-#                                          penalty_start=0)
+#            function = functions.LinearRegressionL1L2GL(X, y, l, k, g,
+#                                                        A=A, mu=mu,
+#                                                        penalty_start=0)
 
             function = CombinedFunction()
             function.add_function(functions.losses.LinearRegression(X, y,
@@ -129,8 +130,9 @@ class TestTotalVariation(TestCase):
 
         beta_parsimony = beta_start
         for mu in mus:
-#            function = functions.RR_L1_GL(X, y, k, l, g, A=A, mu=mu,
-#                                          penalty_start=0)
+#            function = functions.LinearRegressionL1L2GL(X, y, l, k, g,
+#                                                        A=A, mu=mu,
+#                                                        penalty_start=0)
 
             function = CombinedFunction()
             function.add_function(functions.losses.LinearRegression(X, y,
@@ -197,8 +199,9 @@ class TestTotalVariation(TestCase):
 
         beta_parsimony = beta_start
         for mu in mus:
-#            function = functions.RR_L1_GL(X, y, k, l, g, A=A, mu=mu,
-#                                          penalty_start=0)
+#            function = functions.LinearRegressionL1L2GL(X, y, l, k, g,
+#                                                        A=A, mu=mu,
+#                                                        penalty_start=0)
 
             function = CombinedFunction()
             function.add_function(functions.losses.LinearRegression(X, y,
@@ -268,8 +271,9 @@ class TestTotalVariation(TestCase):
 
         beta_parsimony = beta_start
         for mu in mus:
-#            function = functions.RR_L1_GL(X, y, k, l, g, A=A, mu=mu,
-#                                          penalty_start=0)
+#            function = functions.LinearRegressionL1L2GL(X, y, l, k, g,
+#                                                        A=A, mu=mu,
+#                                                        penalty_start=0)
 
             function = CombinedFunction()
             function.add_function(functions.losses.LinearRegression(X, y,
