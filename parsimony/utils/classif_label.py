@@ -14,10 +14,12 @@ def class_weight_to_sample_weight(class_weight, y):
     ----------
     class_weight : dict, 'auto' or None
         If 'auto', class weights will be given inverse proportional
-        to the frequency of the class in the data.
+        to the frequency of the class in the data. sample_weight will sum
+        to n_sample.
         If a dictionary is given, keys are classes and values
-        are corresponding class weights.
-        If None is given, the class weights will be uniform.
+        are corresponding class weights. With two classes in {1, 0},
+        class_weight = {0:0.5, 1:0.5} is equivalent to class_weight == "auto"
+        If None is given, the class weights will be uniform sample_weight==1.
 
     y : array-like, shape (n_samples,)
         Array of original class labels per sample;
@@ -29,37 +31,36 @@ def class_weight_to_sample_weight(class_weight, y):
 
     Example
     -------
-    >>> y = np.r_[np.ones(1), np.ones(2)*2, np.zeros(2)]
+    >>> y = [1, 1, 1, 0, 0, 2]
     >>> w = class_weight_to_sample_weight("auto", y)
+    >>> print w.sum() == len(y)
+    True
     >>> print ["%i:%.2f" % (l, np.sum(w[y==l])) for l in np.unique(y)]
-    ['0:1.50', '1:1.50', '2:1.50']
-    >>> print class_weight_to_sample_weight({1:10, 2:100, 0:1}, y)
-    [  10.  100.  100.    1.    1.]
+    ['0:2.00', '1:2.00', '2:2.00']
+    >>> y = [1, 1, 1, 0, 0, 2]
+    >>> w2 = class_weight_to_sample_weight({0:1./3, 1:1./3, 2:1./3}, y)
+    >>> np.all(w2 == w)
+    True
     """
-    # Import error caused by circular imports.
-    #from ..preprocessing import LabelEncoder
-    classes = np.unique(y)
     if class_weight is None or len(class_weight) == 0:
         # uniform class weights
-        weight = np.ones(y.shape, dtype=np.float64)
-    elif class_weight == 'auto':
-        # Find the weight of each class as present in y.
-        # inversely proportional to the number of samples in the class
-        count_inv = 1. / np.bincount(y.astype(int).ravel())
-        weight = count_inv[np.searchsorted(classes, y)] / np.mean(count_inv)
+        return np.ones(y.shape, dtype=np.float64)
+    # wik = n / nk * pk
+    # pk: desire prior of class k (sum pk == 1)
+    y = np.asarray(y)
+    classes = np.unique(y)
+    nk = np.bincount(y.astype(int).ravel())
+    n = float(y.shape[0])
+    if class_weight == 'auto':
+        pk = 1. / classes.shape[0]
     else:
-        # user-defined dictionary
-        weight = np.ones(y.shape, dtype=np.float64)
         if not isinstance(class_weight, dict):
             raise ValueError("class_weight must be dict, 'auto', or None,"
                              " got: %r" % class_weight)
-        for c in class_weight:
-            mask = y == c
-            if mask.sum() == 0:
-                raise ValueError("Class label %d not present." % c)
-            else:
-                weight[mask] = class_weight[c]
-    return weight
+        pk = np.array([class_weight[k] for k in classes])
+    wk = n / nk * pk
+    sample_weight = wk[np.searchsorted(classes, y)]
+    return sample_weight
 
 
 def check_labels(y):
