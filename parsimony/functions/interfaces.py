@@ -182,7 +182,6 @@ class CombinedProjectionOperator(Function, ProjectionOperator):
         return proj
 
 
-# TODO: This should be in the NesterovFunction interface, right?
 class Continuation(object):
 
     __metaclass__ = abc.ABCMeta
@@ -190,6 +189,14 @@ class Continuation(object):
     @abc.abstractmethod
     def mu_opt(self, eps):
         """The optimal value of mu given epsilon.
+
+        Parameters
+        ----------
+        eps : Positive float. The desired precision.
+
+        Returns
+        -------
+        mu : Positive float. The optimal regularisation parameter.
         """
         raise NotImplementedError('Abstract method "mu_opt" must be '
                                   'specialised!')
@@ -197,6 +204,14 @@ class Continuation(object):
     @abc.abstractmethod
     def eps_opt(self, mu):
         """The optimal value of epsilon given mu.
+
+        Parameters
+        ----------
+        mu : Positive float. The regularisation constant of the smoothing.
+
+        Returns
+        -------
+        eps : Positive float. The optimal precision.
         """
         raise NotImplementedError('Abstract method "eps_opt" must be '
                                   'specialised!')
@@ -204,6 +219,14 @@ class Continuation(object):
     @abc.abstractmethod
     def eps_max(self, mu):
         """The maximum value of epsilon.
+
+        Parameters
+        ----------
+        mu : Positive float. The regularisation constant of the smoothing.
+
+        Returns
+        -------
+        eps : Positive float. The upper limit, the maximum, precision.
         """
         raise NotImplementedError('Abstract method "eps_max" must be '
                                   'specialised!')

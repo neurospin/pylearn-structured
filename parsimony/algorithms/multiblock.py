@@ -96,7 +96,7 @@ class MultiblockFISTA(bases.ExplicitAlgorithm,
 
     eps : Positive float. Tolerance for the stopping criterion.
 
-    outer_iter : Positive integer. Maximum allowed number of inner loop
+    outer_iter : Positive integer. Maximum allowed number of outer loop
             iterations.
 
     max_iter : Positive integer. Maximum allowed number of iterations.
@@ -199,6 +199,179 @@ class MultiblockFISTA(bases.ExplicitAlgorithm,
 #                if maths.norm(w_old[i] - w[i]) < self.eps:
 #                    converged = True
 #                    break
+
+                if self.info.allows(Info.t):
+                    t = t + tval
+                if self.info.allows(Info.f):
+                    f = f + fval
+
+                print "l0 :", maths.norm0(w[i]), \
+                    ", l1 :", maths.norm1(w[i]), \
+                    ", l2²:", maths.norm(w[i]) ** 2.0
+
+            print "f:", fval[-1]
+
+            for i in xrange(len(w)):
+
+                # Take one ISTA step for use in the stopping criterion.
+                step = function.step(w, i)
+                w_tilde = function.prox(w[:i] +
+                                        [w[i] - step * function.grad(w, i)] +
+                                        w[i + 1:], i, step)
+
+#                func = mb_losses.MultiblockFunctionWrapper(function, w, i)
+#                step2 = func.step(w[i])
+#                w_tilde2 = func.prox(w[i] - step2 * func.grad(w[i]), step2)
+#
+#                print "diff:", maths.norm(w_tilde - w_tilde2)
+
+                print "err:", maths.norm(w[i] - w_tilde) * (1.0 / step)
+                if (1.0 / step) * maths.norm(w[i] - w_tilde) > self.eps:
+                    all_converged = False
+                    break
+
+            if all_converged:
+                print "All converged!"
+
+                if self.info.allows(Info.converged):
+                    self.info[Info.converged] = True
+
+                break
+
+#            # If all blocks have used max_iter iterations, stop.
+#            if np.all(np.asarray(num_iter) >= self.max_iter):
+#                break
+
+#            it += 1
+
+        if self.info.allows(Info.num_iter):
+            self.info[Info.num_iter] = num_iter
+        if self.info.allows(Info.t):
+            self.info[Info.t] = t
+        if self.info.allows(Info.f):
+            self.info[Info.f] = f
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = True
+
+        return w
+
+
+class MultiblockCONESTA(bases.ExplicitAlgorithm,
+                        bases.IterativeAlgorithm,
+                        bases.InformationAlgorithm):
+    """An alternating minimising multiblock algorithm that utilises CONESTA in
+    the inner minimisation.
+
+    Parameters
+    ----------
+    info : LimitedDict. If, and if so what, extra run information should be
+            returned by the algorithm. Default is None, which is replaced by
+            LimitedDict(), which means that no run information is computed nor
+            returned.
+
+    eps : Positive float. Tolerance for the stopping criterion.
+
+    outer_iter : Positive integer. Maximum allowed number of outer loop
+            iterations.
+
+    max_iter : Positive integer. Maximum allowed number of iterations.
+
+    min_iter : Positive integer. Minimum number of iterations.
+    """
+    INTERFACES = [multiblock_interfaces.MultiblockFunction,
+                  multiblock_interfaces.MultiblockGradient,
+                  multiblock_interfaces.MultiblockProjectionOperator,
+                  multiblock_interfaces.MultiblockStepSize]
+
+    PROVIDED_INFO = [Info.ok,
+                     Info.num_iter,
+                     Info.t,
+                     Info.f,
+                     Info.converged]
+
+    def __init__(self, mu_start=None, mu_min=consts.TOLERANCE,
+                 tau=0.5, outer_iter=20,
+                 info=None, eps=consts.TOLERANCE,
+                 max_iter=consts.MAX_ITER, min_iter=1):
+
+        super(MultiblockCONESTA, self).__init__(info=info,
+                                                max_iter=max_iter,
+                                                min_iter=min_iter)
+
+        self.outer_iter = outer_iter
+        self.eps = eps
+
+        # Copy the allowed info keys for FISTA.
+        import parsimony.algorithms.explicit as algorithms
+        self.alg_info = LimitedDict()
+        for nfo in self.info.allowed_keys():
+            if nfo in algorithms.FISTA.PROVIDED_INFO:
+                self.alg_info.add_key(nfo)
+        if not self.alg_info.allows(Info.num_iter):
+            self.alg_info.add_key(Info.num_iter)
+        if not self.alg_info.allows(Info.converged):
+            self.alg_info.add_key(Info.converged)
+
+        self.fista = algorithms.FISTA(info=self.alg_info,
+                                      eps=self.eps,
+                                      max_iter=self.max_iter,
+                                      min_iter=self.min_iter)
+        self.conesta = algorithms.NaiveCONESTA(mu_start=mu_start,
+                                               mu_min=mu_min,
+                                               tau=tau,
+
+                                               eps=self.eps,
+                                               info=self.alg_info,
+                                               max_iter=self.max_iter,
+                                               min_iter=self.min_iter)
+
+    @bases.check_compatibility
+    def run(self, function, w):
+
+        self.info.clear()
+
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = False
+        if self.info.allows(Info.t):
+            t = []
+        if self.info.allows(Info.f):
+            f = []
+        if self.info.allows(Info.converged):
+            self.info[Info.converged] = False
+
+        print "len(w):", len(w)
+        print "max_iter:", self.max_iter
+
+        num_iter = [0] * len(w)
+
+        for it in xrange(1, self.outer_iter + 1):
+
+            all_converged = True
+
+            for i in xrange(len(w)):
+                print "it: %d, i: %d" % (it, i)
+
+                if function.has_nesterov_function(i):
+                    func = mb_losses.MultiblockNesterovFunctionWrapper(
+                                                                function, w, i)
+                    algorithm = self.conesta
+                else:
+                    func = mb_losses.MultiblockFunctionWrapper(function, w, i)
+                    algorithm = self.fista
+
+                self.alg_info.clear()
+#                self.algorithm.set_params(max_iter=self.max_iter - num_iter[i])
+#                w[i] = self.algorithm.run(func, w_old[i])
+                if i == 1:
+                    pass
+                w[i] = algorithm.run(func, w[i])
+
+                if Info.num_iter in self.alg_info:
+                    num_iter[i] += self.alg_info[Info.num_iter]
+                if Info.t in self.alg_info:
+                    tval = self.alg_info[Info.t]
+                if Info.f in self.alg_info:
+                    fval = self.alg_info[Info.f]
 
                 if self.info.allows(Info.t):
                     t = t + tval

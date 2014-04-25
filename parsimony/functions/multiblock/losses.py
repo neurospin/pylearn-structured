@@ -9,58 +9,66 @@ Created on Tue Feb  4 08:51:43 2014
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
+import abc
 import numbers
 
 import numpy as np
 
+import parsimony.utils as utils
 import parsimony.functions.interfaces as interfaces
 import parsimony.utils.consts as consts
 import interfaces as mb_interfaces
+import parsimony.functions.nesterov.interfaces as n_interfaces
 
-__all__ = ["CombinedMultiblockFunction", "LatentVariableCovariance"]
+__all__ = ["CombinedMultiblockFunction",
+           "MultiblockFunctionWrapper", "MultiblockNesterovFunctionWrapper",
+           "LatentVariableCovariance"]
 
 
 class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
                                  mb_interfaces.MultiblockGradient,
                                  mb_interfaces.MultiblockProximalOperator,
                                  mb_interfaces.MultiblockProjectionOperator,
+#                                 mb_interfaces.MultiblockContinuation,
                                  mb_interfaces.MultiblockStepSize):
     """Combines one or more loss functions, any number of penalties and zero
     or one proximal operator.
 
     This function thus represents
 
-        f(x) = f_1(x) [ + f_2(x) ... ] [ + p_1(x) ... ] [ + P_1(x) ...],
+        f(x) = g_1(x) [ + g_2(x) ... ] [ + d_1(x) ... ] [ + N_1(x) ...]
+           [ + h_1(x) ...],
 
     subject to [ C_1(x) <= c_1,
                  C_2(x) <= c_2,
                  ... ],
 
-    where f_i are differentiable Functions that may be multiblock, p_j are
-    differentiable penalties and P_k are a ProximalOperators. All functions
-    and penalties must thus be Gradient, unless they are ProximalOperators.
+    where g_i are differentiable Functions that may be multiblock, d_j are
+    differentiable penalties, h_k are a ProximalOperators and N_l are
+    NesterovFunctions. All functions and penalties must thus have Gradients,
+    unless they are ProximalOperators.
 
-    If no ProximalOperator is given, then prox is the identity.
+    If no ProximalOperator is given, prox is the identity.
+
+    Parameters
+    ----------
+    X : List of numpy arrays. The blocks of data in the multiblock model.
+
+    functions : List of lists of lists. A function matrix, with element
+            i,j connecting block i to block j.
+
+    penalties : A list of lists. Element i of the outer list is also a list
+            that contains the penalties for block i.
+
+    prox : A list of lists. Element i of the outer list is also a list that
+            contains the penalties that can be expressed as proximal operators
+            for block i.
+
+    constraints : A list of lists. Element i of the outer list is also a list
+            that contains the constraints for block i.
     """
     def __init__(self, X, functions=[], penalties=[], prox=[], constraints=[]):
-        """
-        Parameters
-        ----------
-        X : List of numpy arrays. The blocks of data in the multiblock model.
 
-        functions : List of lists of lists. A function matrix, with elements
-                i,j connecting block i to block j.
-
-        penalties : A list of lists. Element i of the outer list contains the
-                penalties for block i.
-
-        prox : A list of lists. Element i of the outer list contains the
-                penalties that can be expressed as proximal operators for
-                block i.
-
-        constraints : A list of lists. Element i of the outer list contains
-                the constraints for block i.
-        """
         self.K = len(X)
         self.X = X
 
@@ -70,21 +78,40 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
                 self._f[i] = [0] * self.K
                 for j in xrange(self.K):
                     self._f[i][j] = list()
+        else:
+            self._f = functions
 
         if len(penalties) != self.K:
             self._p = [0] * self.K
+            self._N = [0] * self.K
             for i in xrange(self.K):
                 self._p[i] = list()
+                self._N[i] = list()
+        else:
+            self._p = [0] * self.K
+            self._N = [0] * self.K
+            for i in xrange(self.K):
+                self._p[i] = list()
+                self._N[i] = list()
+                for di in penalties[i]:
+                    if isinstance(di, n_interfaces.NesterovFunction):
+                        self._N[i].append(di)
+                    else:
+                        self._p[i].append(di)
 
         if len(prox) != self.K:
             self._prox = [0] * self.K
             for i in xrange(self.K):
                 self._prox[i] = list()
+        else:
+            self._prox = prox
 
         if len(constraints) != self.K:
             self._c = [0] * self.K
             for i in xrange(self.K):
                 self._c[i] = list()
+        else:
+            self._c = constraints
 
     def reset(self):
 
@@ -97,6 +124,10 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
             for pik in pi:
                 pik.reset()
 
+        for Ni in self._N:
+            for Nik in Ni:
+                Nik.reset()
+
         for proxi in self._prox:
             for proxik in proxi:
                 proxik.reset()
@@ -106,7 +137,7 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
                 cik.reset()
 
     def add_function(self, function, i, j):
-        """Add a function between blocks i and j.
+        """Add a function that connects blocks i and j.
 
         Parameters
         ----------
@@ -132,8 +163,18 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
         if not isinstance(penalty, interfaces.Gradient):
             raise ValueError("Penalties must have gradients.")
 
-        self._p[i].append(penalty)
+        if isinstance(penalty, n_interfaces.NesterovFunction):
+            self._N[i].append(penalty)
+        else:
+            if not isinstance(penalty, interfaces.Gradient):
+                if isinstance(penalty, interfaces.ProximalOperator):
+                    self._prox[i].append(penalty)
+                else:
+                    raise ValueError("Non-smooth and no proximal operator.")
+            else:
+                self._p[i].append(penalty)
 
+#    @utils.deprecated("add_penalty")
     def add_prox(self, penalty, i):
 
         if not isinstance(penalty, interfaces.ProximalOperator):
@@ -149,6 +190,10 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
             raise ValueError("Constraints must have projection operators.")
 
         self._c[i].append(constraint)
+
+    def has_nesterov_function(self, index):
+
+        return len(self._N[index]) > 0
 
     def f(self, w):
         """Function value.
@@ -170,6 +215,11 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
             pi = self._p[i]
             for k in xrange(len(pi)):
                 val += pi[k].f(w[i])
+
+        for i in xrange(len(self._N)):
+            Ni = self._N[i]
+            for k in xrange(len(Ni)):
+                val += Ni[k].f(w[i])
 
         for i in xrange(len(self._prox)):
             proxi = self._prox[i]
@@ -218,6 +268,10 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
         pi = self._p[index]
         for k in xrange(len(pi)):
             grad += pi[k].grad(w[index])
+
+        Ni = self._N[index]
+        for k in xrange(len(Ni)):
+            grad += Ni[k].grad(w[index])
 
         return grad
 
@@ -296,7 +350,7 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
         all_lipschitz = True
         L = 0.0
 
-        # Add gradients from the loss functions.
+        # Add Lipschitz constants from the loss functions.
         fi = self._f[index]
         for j in xrange(len(fi)):
             fij = fi[j]
@@ -326,8 +380,8 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
                 for k in xrange(len(fij)):
                     fijk = fij[k]
                     if isinstance(fijk, interfaces.Gradient):
-                        # We shouldn't do anything here, right? This means e.g.
-                        # that this (block i) is the y of a logistic
+                        # We shouldn't do anything here, right? This means that
+                        # this (block i) is e.g. the y in a logistic
                         # regression.
                         pass
                     elif isinstance(fijk, mb_interfaces.MultiblockGradient):
@@ -338,7 +392,7 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
                         else:
                             L += fijk.L(w, index)
 
-        # Add gradients from the penalties.
+        # Add Lipschitz constants from the penalties.
         pi = self._p[index]
         for k in xrange(len(pi)):
             if not isinstance(pi[k], interfaces.LipschitzContinuousGradient):
@@ -346,6 +400,14 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
                 break
             else:
                 L += pi[k].L()  # w[index])
+
+        Ni = self._N[index]
+        for k in xrange(len(Ni)):
+            if not isinstance(Ni[k], interfaces.LipschitzContinuousGradient):
+                all_lipschitz = False
+                break
+            else:
+                L += Ni[k].L()  # w[index])
 
         step = 0.0
         if all_lipschitz and L > 0.0:
@@ -456,6 +518,170 @@ class MultiblockFunctionWrapper(interfaces.CompositeFunction,
                                   [w] + \
                                   self.w[self.index + 1:],
                                   self.index)
+
+
+class MultiblockNesterovFunctionWrapper(MultiblockFunctionWrapper,
+                                        n_interfaces.NesterovFunction):
+
+    def __init__(self, function, w, index):
+        super(MultiblockNesterovFunctionWrapper, self).__init__(function,
+                                                                w,
+                                                                index)
+
+    def fmu(self, beta, mu=None):
+        """Returns the smoothed function value.
+
+        From the interface "NesterovFunction".
+
+        Parameters
+        ----------
+        beta : Numpy array. A weight vector.
+
+        mu : Non-negative float. The regularisation constant for the smoothing.
+        """
+        Ni = self.function._N[self.index]
+        f = 0.0
+        for N in Ni:
+            f += N.fmu(beta, mu=mu)
+
+        return f
+
+    def phi(self, alpha, beta):
+        """ Function value with known alpha.
+
+        From the interface "NesterovFunction".
+        """
+        raise NotImplementedError('Abstract method "phi" must be '
+                                  'specialised!')
+
+    def get_mu(self):
+        """Returns the regularisation constant for the smoothing.
+
+        From the interface "NesterovFunction".
+        """
+        Ni = self.function._N[self.index]
+        if len(Ni) == 0:
+            raise ValueError("No penalties are Nesterov functions.")
+
+        return Ni[0].get_mu()
+
+    def set_mu(self, mu):
+        """Sets the regularisation constant for the smoothing.
+
+        From the interface "NesterovFunction".
+
+        Parameters
+        ----------
+        mu : Non-negative float. The regularisation constant for the smoothing
+                to use from now on.
+
+        Returns
+        -------
+        old_mu : Non-negative float. The old regularisation constant for the
+                smoothing that was overwritten and no longer is used.
+        """
+        old_mu = self.get_mu()
+
+        Ni = self.function._N[self.index]
+        for N in Ni:
+            N.set_mu(mu)
+
+        return old_mu
+
+    def alpha(self, beta):
+        """ Dual variable of the Nesterov function.
+
+        From the interface "NesterovFunction".
+
+        Parameters
+        ----------
+        beta : Numpy array (p-by-1). The variable for which to compute the dual
+                variable alpha.
+        """
+        Ni = self.function._N[self.index]
+        alpha = []
+        for N in Ni:
+            alpha += N.alpha(beta)
+
+        return alpha
+
+    def A(self):
+        """ Linear operator of the Nesterov function.
+
+        From the interface "NesterovFunction".
+        """
+        Ni = self.function._N[self.index]
+        A = []
+        for N in Ni:
+            A += N.A()
+
+    def Aa(self, alpha):
+        """ Compute A'*alpha.
+
+        From the interface "NesterovFunction".
+
+        Parameters
+        ----------
+        alpha : Numpy array (x-by-1). The dual variable alpha.
+        """
+        A = self.A()
+        Aa = A[0].T.dot(alpha[0])
+        for i in xrange(1, len(A)):
+            Aa += A[i].T.dot(alpha[i])
+
+        return Aa
+
+    def project(self, alpha):
+        """ Projection onto the compact space of the Nesterov function.
+
+        From the interface "NesterovFunction".
+
+        Parameters
+        ----------
+        alpha : Numpy array (x-by-1). The not-yet-projected dual variable
+                alpha.
+        """
+        Ni = self.function._N[self.index]
+        a = []
+        i = 0
+        for N in Ni:
+            A = N.A()
+            a += N.project(alpha[i:len(A)])
+            i += len(A)
+
+        return a
+
+    def M(self):
+        """ The maximum value of the regularisation of the dual variable. We
+        have
+
+            M = max_{alpha in K} 0.5*|alpha|²_2.
+
+        From the interface "NesterovFunction".
+        """
+        Ni = self.function._N[self.index]
+        M = 0.0
+        for N in Ni:
+            M += N.M()
+
+        return M
+
+    def estimate_mu(self, beta):
+        """ Compute a "good" value of mu with respect to the given beta.
+
+        From the interface "NesterovFunction".
+
+        Parameters
+        ----------
+        beta : Numpy array (p-by-1). The primal variable at which to compute a
+                feasible value of mu.
+        """
+        Ni = self.function._N[self.index]
+        mu = consts.TOLERANCE
+        for N in Ni:
+            mu = max(mu, N.estimate_mu(beta))
+
+        return mu
 
 
 class LatentVariableCovariance(mb_interfaces.MultiblockFunction,

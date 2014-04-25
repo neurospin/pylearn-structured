@@ -18,7 +18,7 @@ from .. import interfaces
 __all__ = ["MultiblockFunction", "MultiblockGradient",
            "MultiblockLipschitzContinuousGradient",
            "MultiblockProximalOperator", "MultiblockProjectionOperator",
-           "MultiblockStepSize"]
+           "MultiblockContinuation", "MultiblockStepSize"]
 
 
 class MultiblockFunction(interfaces.CompositeFunction):
@@ -127,6 +127,62 @@ class MultiblockProjectionOperator(object):
         index : Non-negative integer. Which variable the step is for.
         """
         raise NotImplementedError('Abstract method "proj" must be '
+                                  'specialised!')
+
+
+class MultiblockContinuation(object):
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def mu_opt(self, eps, index):
+        """The optimal value of mu given epsilon.
+
+        Parameters
+        ----------
+        eps : Positive float. The desired precision.
+
+        index : Non-negative integer. Which block this is for.
+
+        Returns
+        -------
+        mu : Positive float. The optimal regularisation parameter.
+        """
+        raise NotImplementedError('Abstract method "mu_opt" must be '
+                                  'specialised!')
+
+    @abc.abstractmethod
+    def eps_opt(self, mu, index):
+        """The optimal value of epsilon given mu.
+
+        Parameters
+        ----------
+        mu : Positive float. The regularisation constant of the smoothing.
+
+        index : Non-negative integer. Which block this is for.
+
+        Returns
+        -------
+        eps : Positive float. The optimal precision.
+        """
+        raise NotImplementedError('Abstract method "eps_opt" must be '
+                                  'specialised!')
+
+    @abc.abstractmethod
+    def eps_max(self, mu, index):
+        """The maximum value of epsilon.
+
+        Parameters
+        ----------
+        mu : Positive float. The regularisation constant of the smoothing.
+
+        index : Non-negative integer. Which block this is for.
+
+        Returns
+        -------
+        eps : Positive float. The upper limit, the maximum, precision.
+        """
+        raise NotImplementedError('Abstract method "eps_max" must be '
                                   'specialised!')
 
 

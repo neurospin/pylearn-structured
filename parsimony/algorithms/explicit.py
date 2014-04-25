@@ -40,7 +40,7 @@ import parsimony.functions.nesterov.interfaces as nesterov_interfaces
 __all__ = ["GradientDescent",
 
            "ISTA", "FISTA",
-           "CONESTA", "StaticCONESTA", "DynamicCONESTA",
+           "CONESTA", "StaticCONESTA", "DynamicCONESTA", "NaiveCONESTA",
            "ExcessiveGapMethod",
 
            "Bisection", "NewtonRaphson",
@@ -539,6 +539,8 @@ class CONESTA(bases.ExplicitAlgorithm,
     @bases.check_compatibility
     def run(self, function, beta):
 
+        self.info.clear()
+
         if self.info.allows(Info.ok):
             self.info[Info.ok] = False
 
@@ -681,6 +683,168 @@ class DynamicCONESTA(CONESTA):
         kwargs["dynamic"] = True
 
         super(DynamicCONESTA, self).__init__(**kwargs)
+
+
+class NaiveCONESTA(bases.ExplicitAlgorithm,
+                   bases.IterativeAlgorithm,
+                   bases.InformationAlgorithm):
+    """A naïve implementation of COntinuation with NEsterov smoothing in a
+    Soft-Thresholding Algorithm, or CONESTA for short.
+
+    Parameters
+    ----------
+    mu_start : Non-negative float. An optional initial value of mu.
+
+    mu_min : Non-negative float. A "very small" mu to use when computing
+            the stopping criterion.
+
+    tau : Float, 0 < tau < 1. The rate at which eps is decreasing. Default
+            is 0.5.
+
+    eps : Positive float. Tolerance for the stopping criterion.
+
+    info : Information. If, and if so what, extra run information should be
+            returned. Default is None, which means that no run information is
+            computed. The returned information is saved in the info object.
+
+    max_iter : Positive integer. Maximum allowed number of iterations.
+
+    min_iter : Positive integer. Minimum number of iterations.
+    """
+    INTERFACES = [nesterov_interfaces.NesterovFunction,
+                  interfaces.Gradient,
+                  interfaces.StepSize,
+                  interfaces.ProximalOperator]
+
+    PROVIDED_INFO = [Info.ok,
+                     Info.num_iter,
+                     Info.t,
+                     Info.f,
+                     Info.mu,
+                     Info.converged]
+
+    def __init__(self, mu_start=None, mu_min=consts.TOLERANCE,
+                 tau=0.5,
+
+                 eps=consts.TOLERANCE,
+                 info=None, max_iter=10000, min_iter=1):
+
+        super(NaiveCONESTA, self).__init__(info=info,
+                                           max_iter=max_iter,
+                                           min_iter=min_iter)
+
+        self.mu_start = mu_start
+        self.mu_min = mu_min
+        self.tau = tau
+
+        self.eps = eps
+
+        # Copy the allowed info keys for FISTA.
+        fista_keys = []
+        for i in self.info.allowed_keys():
+            if i in FISTA.PROVIDED_INFO:
+                fista_keys.append(i)
+        self.fista_info = LimitedDict(fista_keys)
+        if not self.fista_info.allows(Info.num_iter):
+            self.fista_info.add_key(Info.num_iter)
+        self.fista = FISTA(eps=eps, max_iter=max_iter, min_iter=min_iter,
+                           info=self.fista_info)
+        self.num_iter = 0
+
+    @bases.check_compatibility
+    def run(self, function, beta):
+
+        self.info.clear()
+
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = False
+
+        if self.mu_start is None:
+            mu = function.estimate_mu(beta)
+        else:
+            mu = self.mu_start
+
+        eps = mu * function.M()  # No access to gamma, so we ignore it
+
+        function.set_mu(self.mu_min)
+        tmin = function.step(beta)
+        function.set_mu(mu)
+
+        if self.info.allows(Info.mu):
+            mu = [mu]
+
+        if self.info.allows(Info.t):
+            t = []
+        if self.info.allows(Info.f):
+            f = []
+        if self.info.allows(Info.converged):
+            self.info[Info.converged] = False
+
+        i = 0
+        while True:
+            tnew = function.step(beta)
+            self.fista.set_params(step=tnew, eps=eps,
+                                  max_iter=self.max_iter - self.num_iter)
+            self.fista_info.clear()
+            beta = self.fista.run(function, beta)
+
+            # This must always be true here!
+            if Info.num_iter in self.fista_info:
+                self.num_iter += self.fista_info[Info.num_iter]
+            if self.fista_info.allows(Info.t) and (Info.t in self.fista_info):
+                tval = self.fista_info[Info.t]
+            if self.fista_info.allows(Info.f) and (Info.f in self.fista_info):
+                fval = self.fista_info[Info.f]
+
+            if self.info.allows(Info.t):
+                t = t + tval
+            if self.info.allows(Info.f):
+                f = f + fval
+
+            old_mu = function.set_mu(self.mu_min)
+            # Take one ISTA step for use in the stopping criterion.
+            beta_tilde = function.prox(beta - tmin * function.grad(beta),
+                                       tmin)
+            function.set_mu(old_mu)
+
+            if (1.0 / tmin) * maths.norm(beta - beta_tilde) < self.eps:
+                if self.info.allows(Info.converged):
+                    self.info[Info.converged] = True
+                break
+
+            if self.num_iter >= self.max_iter:
+                break
+
+            eps = max(self.tau * eps, consts.TOLERANCE)
+
+#            if eps <= consts.TOLERANCE:
+#                break
+
+            if self.info.allows(Info.mu):
+                mu_new = max(self.mu_min, self.tau * mu[-1])
+                mu = mu + [mu_new] * len(fval)
+
+            else:
+                mu_new = max(self.mu_min, self.tau * mu)
+                mu = mu_new
+
+            print "eps:", eps, ", mu:", mu_new
+            function.set_mu(mu_new)
+
+            i = i + 1
+
+        if self.info.allows(Info.num_iter):
+            self.info[Info.num_iter] = i + 1
+        if self.info.allows(Info.t):
+            self.info[Info.t] = t
+        if self.info.allows(Info.f):
+            self.info[Info.f] = f
+        if self.info.allows(Info.mu):
+            self.info[Info.mu] = mu
+        if self.info.allows(Info.ok):
+            self.info[Info.ok] = True
+
+        return beta
 
 
 class ExcessiveGapMethod(bases.ExplicitAlgorithm,
@@ -1227,7 +1391,7 @@ class DykstrasProjectionAlgorithm(bases.ExplicitAlgorithm):
 
     def __init__(self, output=False,
                  eps=consts.TOLERANCE,
-                 max_iter=100, min_iter=1):
+                 max_iter=10000, min_iter=1):
                  # TODO: Investigate what is a good default value here!
 
         self.output = output

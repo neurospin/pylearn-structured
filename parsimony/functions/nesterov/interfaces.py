@@ -141,6 +141,11 @@ class NesterovFunction(object):
 
     def alpha(self, beta):
         """ Dual variable of the Nesterov function.
+
+        Parameters
+        ----------
+        beta : Numpy array (p-by-1). The variable for which to compute the dual
+                variable alpha.
         """
         if self.penalty_start > 0:
             beta_ = beta[self.penalty_start:, :]
@@ -164,7 +169,11 @@ class NesterovFunction(object):
         return self._A
 
     def Aa(self, alpha):
-        """ Compute A^\T\alpha.
+        """ Compute A'*alpha.
+
+        Parameters
+        ----------
+        alpha : Numpy array (x-by-1). The dual variable alpha.
         """
         A = self.A()
         Aa = A[0].T.dot(alpha[0])
@@ -174,8 +183,13 @@ class NesterovFunction(object):
         return Aa
 
     @abc.abstractmethod
-    def project(self, a):
+    def project(self, alpha):
         """ Projection onto the compact space of the Nesterov function.
+
+        Parameters
+        ----------
+        alpha : Numpy array (x-by-1). The not-yet-projected dual variable
+                alpha.
         """
         raise NotImplementedError('Abstract method "project" must be '
                                   'specialised!')
@@ -185,14 +199,19 @@ class NesterovFunction(object):
         """ The maximum value of the regularisation of the dual variable. We
         have
 
-            M = max_{\alpha \in K} 0.5*|\alpha|²_2.
+            M = max_{alpha in K} 0.5*|alpha|²_2.
         """
         raise NotImplementedError('Abstract method "M" must be '
                                   'specialised!')
 
     @abc.abstractmethod
     def estimate_mu(self, beta):
-        """ Compute a "good" value of \mu with respect to the given \beta.
+        """ Compute a "good" value of mu with respect to the given beta.
+
+        Parameters
+        ----------
+        beta : Numpy array (p-by-1). The primal variable at which to compute a
+                feasible value of mu.
         """
-        raise NotImplementedError('Abstract method "mu" must be '
+        raise NotImplementedError('Abstract method "estimate_mu" must be '
                                   'specialised!')

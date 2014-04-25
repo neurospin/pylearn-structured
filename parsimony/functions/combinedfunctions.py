@@ -1406,7 +1406,7 @@ class PrincipalComponentAnalysisL1TV(interfaces.CompositeFunction,
         return self.l1.prox(beta, factor)
 
     def estimate_mu(self, beta):
-        """Computes a "good" value of \mu with respect to the given \beta.
+        """Computes a "good" value of mu with respect to the given beta.
 
         From the interface "NesterovFunction".
         """
@@ -1416,14 +1416,14 @@ class PrincipalComponentAnalysisL1TV(interfaces.CompositeFunction,
         """The maximum value of the regularisation of the dual variable. We
         have
 
-            M = max_{\alpha \in K} 0.5*|\alpha|²_2.
+            M = max_{alpha in K} 0.5*|alpha|²_2.
 
         From the interface "NesterovFunction".
         """
         return self.tv.M()
 
     def mu_opt(self, eps):
-        """The optimal value of \mu given \epsilon.
+        """The optimal value of mu given epsilon.
 
         From the interface "Continuation".
         """
@@ -1442,7 +1442,7 @@ class PrincipalComponentAnalysisL1TV(interfaces.CompositeFunction,
              / (gM * Lg)
 
     def eps_opt(self, mu):
-        """The optimal value of \epsilon given \mu.
+        """The optimal value of epsilon given mu.
 
         From the interface "Continuation".
         """
@@ -1461,7 +1461,7 @@ class PrincipalComponentAnalysisL1TV(interfaces.CompositeFunction,
              / gA2
 
     def eps_max(self, mu):
-        """The maximum value of \epsilon.
+        """The maximum value of epsilon.
 
         From the interface "Continuation".
         """
