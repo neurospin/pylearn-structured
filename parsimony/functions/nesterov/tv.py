@@ -315,7 +315,7 @@ def A_from_shape(shape):
     Parameters
     ----------
     shape : List or tuple with 1, 2 or 3 elements. The shape of the 1D, 2D or
-            3D image. shape has the form (Z, Y, X), where Z is the number of
+            3D image. shape has the form (X, Y, Z), where Z is the number of
             "layers", Y is the number of rows and X is the number of columns.
             The shape does not involve any intercept variables.
     """

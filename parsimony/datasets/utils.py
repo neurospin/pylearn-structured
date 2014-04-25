@@ -53,20 +53,20 @@ class ObjImage(object):
     -----------
     mask: ???
 
-    coef_info: Float. The coefficient of information.
+    std: Float. Standard deviation of latent variable
 
-    coef_noise: Float. Coefficient of noise.
+    beta: Float. The coefficient of information.
     """
-    def __init__(self, mask=None, coef_info=.5, coef_noise=.5):
+    def __init__(self, mask=None, std=.5, beta=.5):
         self.mask = mask
-        self.coef_info = coef_info
-        self.coef_noise = coef_noise
+        self.beta = beta
+        self.std = std
 
-    def get_coef_info(self):
-        return self.coef_info
+    def get_beta(self):
+        return self.beta
 
-    def get_coef_noise(self):
-        return self.coef_noise
+    def get_std(self):
+        return self.std
 
     def get_mask(self):
         return self.mask
@@ -89,8 +89,8 @@ class ObjImage(object):
             obj_latent = np.random.normal(0, sigma_o, Xim.shape[0])
             obj_latent -= obj_latent.mean()  # - 0
             obj_latent /= obj_latent.std() * sigma_o
-            coef_noise = o.get_coef_noise()
-            Xim[:, mask_o] = (coef_noise * obj_latent + Xim[:, mask_o].T).T
+            std = o.get_std()
+            Xim[:, mask_o] = (std * obj_latent + Xim[:, mask_o].T).T
         return Xim, labels_im
 
 

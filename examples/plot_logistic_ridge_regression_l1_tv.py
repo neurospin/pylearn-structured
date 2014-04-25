@@ -9,8 +9,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import precision_recall_fscore_support
 from  parsimony import datasets
-import parsimony.functions.nesterov.tv as tv
-from parsimony.estimators import RidgeLogisticRegression_L1_TV
+import parsimony.functions.nesterov.tv as tv_helper
+from parsimony.estimators import LogisticRegressionL1L2TV
 from parsimony.algorithms.explicit import StaticCONESTA
 from sklearn.linear_model import LogisticRegression
 from parsimony.utils import plot_map2d
@@ -45,26 +45,24 @@ yte_pred_ridge = ridge.fit(Xtr, ytr).predict(Xte)
 _, recall_ridge, _, _ = precision_recall_fscore_support(yte, yte_pred_ridge, average=None)
 
 ###########################################################################
-## Use parsimony l2 penalized LogisticRegression: RidgeLogisticRegression_L1_TV with l1=tv=0
+## Use parsimony l2 penalized LogisticRegression: LogisticRegressionL1L2TV with l1=tv=0
 # Minimize:
 #    f(beta, X, y) = - loglik/n_train + k/2 * ||beta||^2_2 
-A, n_compacts = tv.A_from_shape(beta3d.shape)
-ridge2 = RidgeLogisticRegression_L1_TV(alpha, 0, 0, A, algorithm=StaticCONESTA(max_iter=100))#, algorithm=explicit.ISTA(eps=eps, max_iter=max_iter))
+A, n_compacts = tv_helper.A_from_shape(beta3d.shape)
+ridge2 = LogisticRegressionL1L2TV(0, alpha, 0, A, algorithm=StaticCONESTA(max_iter=500))
 yte_pred_ridge2 = ridge2.fit(Xtr, ytr).predict(Xte)
 _, recall_ridge2, _, _ = precision_recall_fscore_support(yte, yte_pred_ridge2, average=None)
 
 ###########################################################################
-## RidgeLogisticRegression_L1_TV
+## LogisticRegressionL1L2TV
 # Minimize:
 #    f(beta, X, y) = - loglik/n_train
 #                    + k/2 * ||beta||^2_2 
 #                    + l * ||beta||_1
 #                    + g * TV(beta)
-
-
-k, l, g = alpha * np.array((.1, .4, .5)) / 10 # l2, l1, tv penalties
-A, n_compacts = tv.A_from_shape(beta3d.shape)
-enettv = RidgeLogisticRegression_L1_TV(k, l, g, A, algorithm=StaticCONESTA(max_iter=100))
+l1, l2, tv = alpha * np.array((.4, .1, .5)) / 10 # l2, l1, tv penalties
+A, n_compacts = tv_helper.A_from_shape(beta3d.shape)
+enettv = LogisticRegressionL1L2TV(l1, l2, tv, A, algorithm=StaticCONESTA(max_iter=500))
 yte_pred_enettv = enettv.fit(Xtr, ytr).predict(Xte)
 _, recall_enettv, _, _ = precision_recall_fscore_support(yte, yte_pred_enettv, average=None)
 

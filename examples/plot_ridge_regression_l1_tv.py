@@ -9,8 +9,8 @@ Created on Mon Dec 23 15:00:10 2013
 import numpy as np
 import matplotlib.pyplot as plt
 from  parsimony import datasets
-import parsimony.functions.nesterov.tv as tv
-from parsimony.estimators import RidgeRegression_L1_TV
+import parsimony.functions.nesterov.tv as tv_helper
+from parsimony.estimators import LinearRegressionL1L2TV
 from parsimony.algorithms.explicit import StaticCONESTA
 from parsimony.utils import plot_map2d
 from sklearn.linear_model import ElasticNet
@@ -41,13 +41,13 @@ enet = ElasticNet(alpha=alpha, l1_ratio=l1_ratio)
 yte_pred_enet = enet.fit(Xtr, ytr).predict(Xte)
 
 ###########################################################################
-## Fit RidgeRegression_L1_TV
+## Fit LinearRegressionL1L2TV
 # 
-k, l, g = alpha * np.array((.1, .4, .5))  # l2, l1, tv penalties
-A, n_compacts = tv.A_from_shape(shape)
+l1, l2, tv = alpha * np.array((.4, .1, .5))  # l2, l1, tv penalties
+A, n_compacts = tv_helper.A_from_shape(shape)
 #import parsimony.functions as functions
 #functions.RR_L1_TV(X, y, k, l, g, A=A)
-enettv = RidgeRegression_L1_TV(k, l, g, A, algorithm=StaticCONESTA(max_iter=500))
+enettv = LinearRegressionL1L2TV(l1, l2, tv, A, algorithm=StaticCONESTA(max_iter=500))
 yte_pred_enettv = enettv.fit(Xtr, ytr).predict(Xte)
 
 ###########################################################################
