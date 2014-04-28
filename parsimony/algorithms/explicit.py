@@ -1218,6 +1218,24 @@ class NewtonRaphson(bases.ExplicitAlgorithm,
 
     Problems may also arise if the gradient is too small (e.g. at a stationary
     point) on the path to the root.
+
+    Parameters
+    ----------
+    force_negative : Boolean. Default is False. Will try to make the result
+            negative. It may fail if the function does not behave "nicely"
+            around the found point.
+
+    eps : Positive float. A small value used as the stopping criterion. The
+            stopping criterion will be fulfilled if it converges in less
+            than max_iter iterations.
+
+    info : Information. If, and if so what, extra run information should be
+            returned. Default is None, which means that no run information is
+            computed nor returned.
+
+    max_iter : Positive integer. Maximum allowed number of iterations.
+
+    min_iter : Positive integer. Minimum number of iterations. Default is 1.
     """
     INTERFACES = [interfaces.Function,
                   interfaces.Gradient]
@@ -1233,26 +1251,7 @@ class NewtonRaphson(bases.ExplicitAlgorithm,
 
                  eps=consts.TOLERANCE,
                  info=None, max_iter=30, min_iter=1):
-        """
-        Parameters
-        ----------
-        force_negative : Boolean. Default is False. Will try to make the result
-                negative. It may fail if the function does not behave "nicely"
-                around the found point.
 
-        eps : Positive float. A small value used as the stopping criterion. The
-                stopping criterion will be fulfilled if it converges in less
-                than max_iter iterations.
-
-        info : Information. If, and if so what, extra run information should be
-                returned. Default is None, which is replaced by Information(),
-                which means that no run information is computed nor returned.
-
-        max_iter : Positive integer. Maximum allowed number of iterations.
-
-        min_iter : Positive integer. Minimum number of iterations. Default is
-                1.
-        """
         super(NewtonRaphson, self).__init__(info=info,
                                             max_iter=max_iter,
                                             min_iter=min_iter)
@@ -1304,6 +1303,8 @@ class NewtonRaphson(bases.ExplicitAlgorithm,
                 and x < 0.0:
                 x = 0.0
 
+            # TODO: We seek a root, i.e. where f(x) = 0. The stopping criterion
+            #       should (could?) thus be abs(f(x)) <= eps!
             if (abs(x - x_) <= self.eps and i >= self.min_iter - 1) \
                     or i >= self.max_iter - 1:
                 if self.force_negative:
@@ -1322,7 +1323,7 @@ class NewtonRaphson(bases.ExplicitAlgorithm,
             i += 1
 
         if self.info.allows(Info.converged):
-            if abs(x - x_) <= self.eps:
+            if abs(x - x_) <= self.eps:  # TODO: Stopping criterion. See above!
                 self.info[Info.converged] = True
 
                 if self.force_negative:

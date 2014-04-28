@@ -168,7 +168,60 @@ class L1(interfaces.AtomicFunction,
 
         From the interface "ProjectionOperator".
         """
-        if self.feasible(beta):
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        p = beta_.shape[0]
+
+        abs_beta = np.absolute(beta_)
+        norm1 = np.sum(abs_beta)
+
+        if norm1 <= self.c:  # Feasible?
+            return beta
+
+        a = np.flipud(np.sort(abs_beta, axis=0)).ravel()
+        suma = np.cumsum(a)
+
+        phi = np.zeros((p + 1,))
+        np.multiply(a, np.arange(-1, -p - 1, -1), phi[:p])
+        phi[:p] += (suma - self.c)
+        phi[p] = suma[p - 1] - self.c
+
+        i = np.searchsorted(phi, 0.0)  # First positive (or zero).
+#        assert phi[i] >= 0.0
+        if phi[i] < 0.0:
+            # TODO: This should not be able to happen! Do we know it doesn't?
+            return self.__proj_old(beta)
+        i -= 1  # The last negative phi before positive (or zero).
+#        assert phi[i] < 0.0
+        if phi[i] >= 0.0:
+            # TODO: This should not be able to happen! Do we know it doesn't?
+            return self.__proj_old(beta)
+
+        l = a[i] + phi[i] / (i + 1)  # Find the Lagrange multiplier.
+
+        # The correction by eps is to nudge the L1 norm just below self.c.
+        eps = consts.FLOAT_EPSILON
+        l += eps
+
+        return (np.abs(beta_) > l) * (beta_ - l * np.sign(beta_ - l))
+
+    def __proj_old(self, beta):
+        """The corresponding projection operator.
+
+        From the interface "ProjectionOperator".
+        """
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        abs_beta = np.absolute(beta_)
+        norm1 = np.sum(abs_beta)
+
+        if norm1 <= self.c:  # Feasible?
             return beta
 
         from parsimony.algorithms.explicit import Bisection
@@ -184,20 +237,15 @@ class L1(interfaces.AtomicFunction,
                 self.c = c
 
             def f(self, l):
-                beta = (np.abs(self.beta) > l) \
+                beta = (abs_beta > l) \
                     * (self.beta - l * np.sign(self.beta - l))
 
                 return maths.norm1(beta) - self.c
 
-        if self.penalty_start > 0:
-            beta_ = beta[self.penalty_start:, :]
-        else:
-            beta_ = beta
-
         func = F(beta_, self.c)
         l = bisection.run(func, [0.0, np.max(np.abs(beta_))])
 
-        return (np.abs(beta_) > l) * (beta_ - l * np.sign(beta_ - l))
+        return (abs_beta > l) * (beta_ - l * np.sign(beta_ - l))
 
     def feasible(self, beta):
         """Feasibility of the constraint.
@@ -507,7 +555,7 @@ class LInf(interfaces.AtomicFunction,
                [ 0.5       ],
                [ 0.5       ]])
         >>> np.linalg.norm(linf_prox - linf_proj)
-        7.5691221815410567e-09
+        7.2392821740411278e-09
         """
         if self.penalty_start > 0:
             x_ = x[self.penalty_start:, :]
