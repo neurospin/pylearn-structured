@@ -33,8 +33,8 @@ class TotalVariation(interfaces.AtomicFunction,
 
         f(beta) = l * (TV(beta) - c),
 
-    where TV(beta) is the smoothed L1 function. The constrained version has the
-    form
+    where TV(beta) is the smoothed total variation function. The constrained
+    version has the form
 
         TV(beta) <= c.
     """
@@ -260,11 +260,11 @@ def A_from_mask(mask):
             variables.
     """
     while len(mask.shape) < 3:
-        mask = mask[:, np.newaxis]
-    # TODO: This is the wrong order of the dimensions. They should be reversed.
-    nx, ny, nz = mask.shape
+        mask = mask[np.newaxis, :]
+
+    nz, ny, nx = mask.shape
     mask = mask.astype(bool)
-    xyz_mask = np.where(mask)
+    zyx_mask = np.where(mask)
     Ax_i = list()
     Ax_j = list()
     Ax_v = list()
@@ -274,38 +274,50 @@ def A_from_mask(mask):
     Az_i = list()
     Az_j = list()
     Az_v = list()
-    n_compacts = 0
-    p = np.sum(mask)
+    num_compacts = 0
+#    p = np.sum(mask)
+
     # Mapping from image coordinate to flat masked array.
-    im2flat = np.zeros(mask.shape, dtype=int)
-    im2flat[:] = -1
-    im2flat[mask] = np.arange(p)
-    for pt in xrange(len(xyz_mask[0])):
+    def im2flat(sub, dims):
+        return sub[0] * dims[2] * dims[1] + \
+               sub[1] * dims[2] + \
+               sub[2]
+#    im2flat = np.zeros(mask.shape, dtype=int)
+#    im2flat[:] = -1
+#    im2flat[mask] = np.arange(p)
+#    im2flat[np.arange(p)] = np.arange(p)
+
+    for pt in xrange(len(zyx_mask[0])):
+
         found = False
-        x, y, z = xyz_mask[0][pt], xyz_mask[1][pt], xyz_mask[2][pt]
-        i_pt = im2flat[x, y, z]
-        if x + 1 < nx and mask[x + 1, y, z]:
-            found = True
-            Ax_i += [i_pt, i_pt]
-            Ax_j += [i_pt, im2flat[x + 1, y, z]]
-            Ax_v += [-1., 1.]
-        if y + 1 < ny and mask[x, y + 1, z]:
-            found = True
-            Ay_i += [i_pt, i_pt]
-            Ay_j += [i_pt, im2flat[x, y + 1, z]]
-            Ay_v += [-1., 1.]
-        if z + 1 < nz and mask[x, y, z + 1]:
+        z, y, x = zyx_mask[0][pt], zyx_mask[1][pt], zyx_mask[2][pt]
+        i_pt = im2flat((z, y, x), mask.shape)
+
+        if z + 1 < nz and mask[z + 1, y, x]:
             found = True
             Az_i += [i_pt, i_pt]
-            Az_j += [i_pt, im2flat[x, y, z + 1]]
+            Az_j += [i_pt, im2flat((z + 1, y, x), mask.shape)]
             Az_v += [-1., 1.]
-        if found:
-            n_compacts += 1
-    Ax = sparse.csr_matrix((Ax_v, (Ax_i, Ax_j)), shape=(p, p))
-    Ay = sparse.csr_matrix((Ay_v, (Ay_i, Ay_j)), shape=(p, p))
-    Az = sparse.csr_matrix((Az_v, (Az_i, Az_j)), shape=(p, p))
+        if y + 1 < ny and mask[z, y + 1, x]:
+            found = True
+            Ay_i += [i_pt, i_pt]
+            Ay_j += [i_pt, im2flat((z, y + 1, x), mask.shape)]
+            Ay_v += [-1., 1.]
+        if x + 1 < nx and mask[z, y, x + 1]:
+            found = True
+            Ax_i += [i_pt, i_pt]
+            Ax_j += [i_pt, im2flat((z, y, x + 1), mask.shape)]
+            Ax_v += [-1., 1.]
 
-    return [Ax, Ay, Az], n_compacts
+        if found:
+            num_compacts += 1
+
+    p = np.prod(mask.shape)
+    Az = sparse.csr_matrix((Az_v, (Az_i, Az_j)), shape=(p, p))
+    Ay = sparse.csr_matrix((Ay_v, (Ay_i, Ay_j)), shape=(p, p))
+    Ax = sparse.csr_matrix((Ax_v, (Ax_i, Ax_j)), shape=(p, p))
+
+    return [Ax, Ay, Az], num_compacts
 
 
 def A_from_shape(shape):
@@ -314,7 +326,7 @@ def A_from_shape(shape):
 
     Parameters
     ----------
-    shape : List or tuple with 1, 2 or 3 elements. The shape of the 1D, 2D or
+    shape : List or tuple with 1, 2 or 3 integers. The shape of the 1D, 2D or
             3D image. shape has the form (X,), (Y, X) or (Z, Y, X), where Z is
             the number of "layers", Y is the number of rows and X is the number
             of columns. The shape does not involve any intercept variables.

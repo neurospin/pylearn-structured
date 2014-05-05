@@ -9,8 +9,9 @@ Created on Mon Feb  3 11:32:00 2014
 import interfaces
 import gl
 import tv
+import grouptv
 import l1
 import l1tv
 
 
-__all__ = ["interfaces", "gl", "tv", "l1", "l1tv"]
+__all__ = ["interfaces", "gl", "tv", "grouptv", "l1", "l1tv"]
