@@ -352,6 +352,7 @@ class MultiblockCONESTA(bases.ExplicitAlgorithm,
                 print "it: %d, i: %d" % (it, i)
 
                 if function.has_nesterov_function(i):
+                    print "Block %d has a Nesterov function!" % (i,)
                     func = mb_losses.MultiblockNesterovFunctionWrapper(
                                                                 function, w, i)
                     algorithm = self.conesta

@@ -5,52 +5,19 @@
 -------------------------
 73: # TODO: Is this a good name?
 
-277: # TODO: Should we use a seed here so that we get deterministic results?
+259: # TODO: Should we use a seed here so that we get deterministic results?
 
-393: # TODO: Should we use a seed here so that we get deterministic results?
+373: # TODO: Should we use a seed here so that we get deterministic results?
 
-552: # TODO: Should we use a seed here so that we get deterministic results?
+489: # TODO: Should we use a seed here so that we get deterministic results?
 
-716: # TODO: Should we use a seed here so that we get deterministic results?
+648: # TODO: Should we use a seed here so that we get deterministic results?
 
-1030: # TODO: Should we use a seed here so that we get deterministic results?
+812: # TODO: Should we use a seed here so that we get deterministic results?
 
-1207: # TODO: Should we use a seed here so that we get deterministic results?
+1118: # TODO: Should we use a seed here so that we get deterministic results?
 
-./parsimony/algorithms/explicit.py:
-----------------------------------
-601: # TODO: Warn if G_new < 0.
-
-1030: # TODO: We already have f_mid, so we can return a better approximation
-1031: # here!
-
-1120: # TODO: Handle the other cases!
-
-1220: # TODO: Investigate what is a good default value here!
-
-1273: # TODO: Investigate what is a good default value here!
-
-1312: # TODO: Does the weights really matter when the function is the
-1313: # indicator function?
-
-1347: # TODO: Investigate what is a good default value here!
-
-./parsimony/algorithms/implicit.py:
-----------------------------------
-110: # TODO: Use module for this!
-111: #            t = np.random.rand(X.shape[0], 1)
-
-126: # TODO: Use module for this!
-127: #            v = np.random.rand(X.shape[1], 1)
-128: #            v /= maths.norm(v)
-
-188: # TODO: Use module for this!
-
-204: # TODO: Use module for this!
-
-./parsimony/algorithms/multiblock.py:
-------------------------------------
-126: for it in xrange(self.outer_iter):  # TODO: Get number of iterations!
+1290: # TODO: Should we use a seed here so that we get deterministic results?
 
 ./parsimony/utils/utils.py:
 --------------------------
@@ -60,18 +27,6 @@
 ---------------------------
 16: # TODO: MAX_ITER is heavily algorithm-dependent, so we have to think about if
 17: # we should include a package-wide maximum at all.
-
-./parsimony/datasets/regression/dice5.py:
-----------------------------------------
-32: # TODO: This is wrong. Shape should be Z, Y, X.
-
-./parsimony/functions/interfaces.py:
------------------------------------
-98: # TODO: Should all constraints have the projection operator?
-
-185: # TODO: This should be in the NesterovFunction interface, right?
-
-297: # TODO: Should L by default take a weight vector as argument?
 
 ./parsimony/functions/losses.py:
 -------------------------------
@@ -100,10 +55,20 @@
 
 ./parsimony/functions/penalties.py:
 ----------------------------------
-520: # TODO: Check if this is correct!
+195: # TODO: This should not be able to happen! Do we know it doesn't?
 
-1067: # TODO: We can share variables between f and df and speed up
-1068: # some shared computations.
+200: # TODO: This should not be able to happen! Do we know it doesn't?
+
+568: # TODO: Check if this is correct!
+
+1116: # TODO: We can share variables between f and df and speed up
+1117: # some shared computations.
+
+./parsimony/functions/interfaces.py:
+-----------------------------------
+98: # TODO: Should all constraints have the projection operator?
+
+320: # TODO: Should L by default take a weight vector as argument?
 
 ./parsimony/functions/combinedfunctions.py:
 ------------------------------------------
@@ -115,38 +80,20 @@
 
 628: # TODO: This is not good. Solve this better!
 
-1099: # TODO: This is not a good solution. Can we solve this in a better way?
+1105: # TODO: This is not a good solution. Can we solve this in a better way?
 
-1151: # TODO: Use max_iter here!!
+1157: # TODO: Use max_iter here!!
 
-1201: # TODO: Kernelise this function! See how I did in
-1202: # LinearRegressionL1L2TV._beta_hat.
+1207: # TODO: Kernelise this function! See how I did in
+1208: # LinearRegressionL1L2TV._beta_hat.
 
-1244: # TODO: Add this function or refactor API!
+1250: # TODO: Add this function or refactor API!
 
-1327: # TODO: This is not a nice solution. Can we solve it better?
+1333: # TODO: This is not a nice solution. Can we solve it better?
 
 ./parsimony/functions/multiblock/losses.py:
 ------------------------------------------
-581: # TODO: Check instead if it is a numpy array.
-
-./parsimony/functions/nesterov/l1tv.py:
---------------------------------------
-62: # WARNING: Number of non-zero rows may differ from p.
-
-149: # TODO: Instead of p, this should really be the number of non-zero
-150: # rows of A.
-
-161: # TODO: Add max_iter here!!
-
-./parsimony/functions/nesterov/L1TV.py:
---------------------------------------
-62: # WARNING: Number of non-zero rows may differ from p.
-
-149: # TODO: Instead of p, this should really be the number of non-zero
-150: # rows of A.
-
-161: # TODO: Add max_iter here!!
+806: # TODO: Check instead if it is a numpy array.
 
 ./parsimony/functions/nesterov/tv.py:
 ------------------------------------
@@ -158,11 +105,50 @@
 
 162: # TODO: Add max_iter here!
 
-264: # TODO: This is the wrong order of the dimensions. They should be reversed.
+./parsimony/functions/nesterov/L1TV.py:
+--------------------------------------
+62: # WARNING: Number of non-zero rows may differ from p.
 
-./parsimony/tests/test_simulations.py:
--------------------------------------
-117: # TODO: Not done. Add more!!
+149: # TODO: Instead of p, this should really be the number of non-zero
+150: # rows of A.
+
+161: # TODO: Add max_iter here!!
+
+./parsimony/functions/nesterov/l1tv.py:
+--------------------------------------
+62: # WARNING: Number of non-zero rows may differ from p.
+
+149: # TODO: Instead of p, this should really be the number of non-zero
+150: # rows of A.
+
+161: # TODO: Add max_iter here!!
+
+./parsimony/functions/nesterov/grouptv.py:
+-----------------------------------------
+158: # TODO: This only work if the elements of self._A are scipy.sparse. We
+159: # should allow dense matrices as well.
+
+165: # TODO: Add max_iter here!
+
+./parsimony/datasets/simulated/grad.py:
+--------------------------------------
+50: # TODO: Should be RandomUniform(-1, 1) here!
+
+79: # TODO: Should be RandomUniform(-1, 1) here!
+
+./parsimony/datasets/regression/dice5.py:
+----------------------------------------
+32: # TODO: This is wrong. Shape should be Z, Y, X.
+
+./parsimony/tests/test_logistic_regression.py:
+---------------------------------------------
+16: # TODO: Test penalty_start.
+
+18: # TODO: Test total variation.
+
+./parsimony/tests/spamsdata.py:
+------------------------------
+71: # TODO: Don't use print directly.
 
 ./parsimony/tests/tests.py:
 --------------------------
@@ -180,13 +166,43 @@
 
 110: # TODO: There is a better way to do this!
 
-./parsimony/tests/test_logistic_regression.py:
----------------------------------------------
-16: # TODO: Test penalty_start.
+./parsimony/tests/test_simulations.py:
+-------------------------------------
+117: # TODO: Not done. Add more!!
 
-18: # TODO: Test total variation.
+./parsimony/algorithms/explicit.py:
+----------------------------------
+616: # TODO: Warn if G_new < 0.
 
-./parsimony/tests/spamsdata.py:
-------------------------------
-71: # TODO: Don't use print directly.
+1205: # TODO: We already have f_mid, so we can return a better approximation
+1206: # here!
+
+1294: # TODO: Handle the other cases!
+
+1306: # TODO: We seek a root, i.e. where f(x) = 0. The stopping criterion
+1307: #       should (could?) thus be abs(f(x)) <= eps!
+
+1326: if abs(x - x_) <= self.eps:  # TODO: Stopping criterion. See above!
+
+1396: # TODO: Investigate what is a good default value here!
+
+1449: # TODO: Investigate what is a good default value here!
+
+1488: # TODO: Does the weights really matter when the function is the
+1489: # indicator function?
+
+1523: # TODO: Investigate what is a good default value here!
+
+./parsimony/algorithms/implicit.py:
+----------------------------------
+110: # TODO: Use module for this!
+111: #            t = np.random.rand(X.shape[0], 1)
+
+126: # TODO: Use module for this!
+127: #            v = np.random.rand(X.shape[1], 1)
+128: #            v /= maths.norm(v)
+
+188: # TODO: Use module for this!
+
+204: # TODO: Use module for this!
 

@@ -13,8 +13,8 @@ from utils import TOLERANCE
 from utils import RandomUniform, ConstantValue
 from utils import norm2
 
-__all__ = ['grad_l1', 'grad_l1mu', 'grad_l2', 'grad_l2', "grad_l2_squared",
-           'grad_tv', 'grad_tvmu']
+__all__ = ["grad_l1", "grad_l1mu", "grad_l2", "grad_l2", "grad_l2_squared",
+           "grad_tv", "grad_tvmu", "grad_grouptvmu"]
 
 
 def grad_l1(beta, rng=RandomUniform(-1, 1)):
@@ -47,6 +47,7 @@ def grad_l1mu(beta, mu):
     return alpha
 
 
+# TODO: Should be RandomUniform(-1, 1) here!
 def grad_l2(beta, rng=np.random.rand):
     """Sub-gradient of the function
 
@@ -75,16 +76,11 @@ def grad_l2_squared(beta, rng=None):
     return beta
 
 
+# TODO: Should be RandomUniform(-1, 1) here!
 def grad_tv(beta, A, rng=np.random.rand):
     beta_flat = beta.ravel()
     Ab = np.vstack([Ai.dot(beta_flat) for Ai in A]).T
     Ab_norm2 = np.sqrt(np.sum(Ab ** 2.0, axis=1))
-#    print beta
-#    print A[0].toarray()
-#    print A[1].toarray()
-#    print A[2].toarray()
-#    print Ab
-#    print Ab_norm2
 
     upper = Ab_norm2 > TOLERANCE
     grad_Ab_norm2 = Ab
@@ -92,20 +88,13 @@ def grad_tv(beta, A, rng=np.random.rand):
 
     lower = Ab_norm2 <= TOLERANCE
     n_lower = lower.sum()
-#    m = 0.57735026918962584
-#    test_rand_flat = ((rng(beta.shape[0], 1) * m) - (m / 2.0)).ravel()
-#    test_Ab = np.vstack([Ai.dot(test_rand_flat) for Ai in A]).T
-#    print test_Ab
 
     if n_lower:
         D = len(A)
         vec_rnd = (rng(n_lower, D) * 2.0) - 1.0
-#        vec_rnd = test_Ab[lower, :]
         norm_vec = np.sqrt(np.sum(vec_rnd ** 2.0, axis=1))
         a = rng(n_lower)
         grad_Ab_norm2[lower] = (vec_rnd.T * (a / norm_vec)).T
-#        print grad_Ab_norm2[lower]
-#        print lower
 
     grad = np.vstack([A[i].T.dot(grad_Ab_norm2[:, i]) for i in xrange(len(A))])
     grad = grad.sum(axis=0)
@@ -115,10 +104,31 @@ def grad_tv(beta, A, rng=np.random.rand):
 
 def grad_gl(beta, A, rng=RandomUniform(-1, 1)):
 
-    return _grad_Nesterov(beta, A, rng, grad_l2)
+    return _Nesterov_grad(beta, A, rng, grad_l2)
 
 
-def _grad_Nesterov(beta, A, rng=RandomUniform(-1, 1), grad_norm=grad_l2):
+def grad_tvmu(beta, A, mu):
+
+    alpha = _Nestetov_alpha(beta, A, mu, _Nesterov_TV_project)
+
+    return _Nesterov_grad_smoothed(A, alpha)
+
+
+def grad_glmu(beta, A, mu):
+
+    alpha = _Nestetov_alpha(beta, A, mu, _Nesterov_project)
+
+    return _Nesterov_grad_smoothed(A, alpha)
+
+
+def grad_grouptvmu(beta, A, mu):
+
+    alpha = _Nestetov_alpha(beta, A, mu, _Nesterov_GroupTV_project)
+
+    return _Nesterov_grad_smoothed(A, alpha)
+
+
+def _Nesterov_grad(beta, A, rng=RandomUniform(-1, 1), grad_norm=grad_l2):
 
     grad_Ab = 0
     for i in xrange(len(A)):
@@ -129,18 +139,13 @@ def _grad_Nesterov(beta, A, rng=RandomUniform(-1, 1), grad_norm=grad_l2):
     return grad_Ab
 
 
-def grad_tvmu(beta, A, mu):
+def _Nesterov_grad_smoothed(A, alpha):
 
-    alpha = _Nestetov_alpha(beta, A, mu, _tv_project)
+    Aa = A[0].T.dot(alpha[0])
+    for i in xrange(1, len(A)):
+        Aa += A[i].T.dot(alpha[i])
 
-    return _grad_Nesterov_smoothed(A, alpha)
-
-
-def grad_glmu(beta, A, mu):
-
-    alpha = _Nestetov_alpha(beta, A, mu, _Nesterov_project)
-
-    return _grad_Nesterov_smoothed(A, alpha)
+    return Aa
 
 
 def _Nestetov_alpha(beta, A, mu, proj):
@@ -168,10 +173,8 @@ def _Nesterov_project(alpha):
     return alpha
 
 
-def _tv_project(alpha):
-    """ Projection onto the compact space of the Nesterov function.
-
-    From the interface "NesterovFunction".
+def _Nesterov_TV_project(alpha):
+    """ Projection onto the compact space of the smoothed TV function.
     """
     ax = alpha[0]
     ay = alpha[1]
@@ -187,13 +190,27 @@ def _tv_project(alpha):
     return [ax, ay, az]
 
 
-def _grad_Nesterov_smoothed(A, alpha):
+def _Nesterov_GroupTV_project(a):
+    """ Projection onto the compact space of the smoothed Group TV function.
+    """
+    for g in xrange(0, len(a), 3):
 
-    Aa = A[0].T.dot(alpha[0])
-    for i in xrange(1, len(A)):
-        Aa += A[i].T.dot(alpha[i])
+        ax = a[g + 0]
+        ay = a[g + 1]
+        az = a[g + 2]
+        anorm = ax ** 2.0 + ay ** 2.0 + az ** 2.0
+        i = anorm > 1.0
 
-    return Aa
+        anorm_i = anorm[i] ** 0.5  # Square root is taken here. Faster.
+        ax[i] = np.divide(ax[i], anorm_i)
+        ay[i] = np.divide(ay[i], anorm_i)
+        az[i] = np.divide(az[i], anorm_i)
+
+        a[g + 0] = ax
+        a[g + 1] = ay
+        a[g + 2] = az
+
+    return a
 
 
 if __name__ == '__main__':
