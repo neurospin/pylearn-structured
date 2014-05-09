@@ -98,7 +98,7 @@
 <p>We build a simple simulated dataset for the regression problem
 <img class="math" src="images/math/7b092047e27618310678effd4c689969a8a3d878.png" alt="y = X \beta + noise"/>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">parsimony.start_vectors</span> <span class="kn">as</span> <span class="nn">start_vectors</span>
+<span class="kn">import</span> <span class="nn">parsimony.utils.start_vectors</span> <span class="kn">as</span> <span class="nn">start_vectors</span>
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
 <span class="c"># Three-dimensional matrix is defined as:</span>
 <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
@@ -111,7 +111,7 @@
 <span class="c"># Define beta randomly</span>
 <span class="n">start_vector</span> <span class="o">=</span> <span class="n">start_vectors</span><span class="o">.</span><span class="n">RandomStartVector</span><span class="p">(</span><span class="n">normalise</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                                                <span class="n">limits</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-<span class="n">beta</span> <span class="o">=</span> <span class="n">start_vector</span><span class="o">.</span><span class="n">get_vector</span><span class="p">((</span><span class="n">num_ft</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">start_vector</span><span class="o">.</span><span class="n">get_vector</span><span class="p">(</span><span class="n">num_ft</span><span class="p">)</span>
 <span class="n">beta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">beta</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
 <span class="c"># Define y by adding noise</span>
