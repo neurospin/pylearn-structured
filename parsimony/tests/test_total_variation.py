@@ -20,7 +20,7 @@ class TestTotalVariation(TestCase):
         import parsimony.functions as functions
         import parsimony.functions.nesterov.tv as tv
         import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(42)
 
@@ -35,7 +35,7 @@ class TestTotalVariation(TestCase):
         g = 1.1
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
 
         alpha = 1.0
         Sigma = alpha * np.eye(p, p) \
@@ -53,7 +53,7 @@ class TestTotalVariation(TestCase):
         eps = 1e-8
         max_iter = 12500
 
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
         fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -89,7 +89,7 @@ class TestTotalVariation(TestCase):
         import parsimony.functions as functions
         import parsimony.functions.nesterov.tv as tv
         import parsimony.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(1337)
 
@@ -104,7 +104,7 @@ class TestTotalVariation(TestCase):
         g = 0.9
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
 
         alpha = 1.0
         Sigma = alpha * np.eye(p, p) \
@@ -123,7 +123,7 @@ class TestTotalVariation(TestCase):
         eps = 1e-8
         max_iter = 17700
 
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
         fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -159,7 +159,7 @@ class TestTotalVariation(TestCase):
         import parsimony.functions as functions
         import parsimony.functions.nesterov.tv as tv
         import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(42)
 
@@ -174,7 +174,7 @@ class TestTotalVariation(TestCase):
         g = 1.1
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
 
         alpha = 1.0
         Sigma = alpha * np.eye(p, p) \
@@ -192,7 +192,7 @@ class TestTotalVariation(TestCase):
         eps = 1e-8
         max_iter = 5300
 
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
         fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -230,7 +230,7 @@ class TestTotalVariation(TestCase):
         import parsimony.functions as functions
         import parsimony.functions.nesterov.tv as tv
         import parsimony.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(42)
 
@@ -245,7 +245,7 @@ class TestTotalVariation(TestCase):
         g = 1.1
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
 
         alpha = 1.0
         Sigma = alpha * np.eye(p, p) \
@@ -264,7 +264,7 @@ class TestTotalVariation(TestCase):
         eps = 1e-8
         max_iter = 5300
 
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
         fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))

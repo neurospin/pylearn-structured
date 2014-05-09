@@ -20,7 +20,7 @@ class TestGroupLasso(TestCase):
         import parsimony.functions as functions
         import parsimony.functions.nesterov.gl as gl
         import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(42)
 
@@ -36,7 +36,7 @@ class TestGroupLasso(TestCase):
         g = 1.0
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
 
         alpha = 1.0
         Sigma = alpha * np.eye(p, p) \
@@ -52,7 +52,7 @@ class TestGroupLasso(TestCase):
         eps = 1e-8
         max_iter = 8500
 
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
         fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -132,7 +132,7 @@ class TestGroupLasso(TestCase):
         import parsimony.functions as functions
         import parsimony.functions.nesterov.gl as gl
         import parsimony.datasets.simulated.l1_l2_glmu as l1_l2_glmu
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(42)
 
@@ -148,7 +148,7 @@ class TestGroupLasso(TestCase):
         g = 0.9
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
 
         alpha = 1.0
         Sigma = alpha * np.eye(p, p) \
@@ -166,7 +166,7 @@ class TestGroupLasso(TestCase):
         eps = 1e-8
         max_iter = 18000
 
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         mus = [5e-0, 5e-2, 5e-4, 5e-6, 5e-8]
         fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -246,7 +246,7 @@ class TestGroupLasso(TestCase):
         import parsimony.functions as functions
         import parsimony.functions.nesterov.gl as gl
         import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(42)
 
@@ -262,7 +262,7 @@ class TestGroupLasso(TestCase):
         g = 1.1
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
 
         alpha = 1.0
         Sigma = alpha * np.eye(p, p) \
@@ -278,7 +278,7 @@ class TestGroupLasso(TestCase):
         eps = 1e-8
         max_iter = 8000
 
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
         fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -314,7 +314,7 @@ class TestGroupLasso(TestCase):
         import parsimony.functions as functions
         import parsimony.functions.nesterov.gl as gl
         import parsimony.datasets.simulated.l1_l2_glmu as l1_l2_glmu
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(314)
 
@@ -330,7 +330,7 @@ class TestGroupLasso(TestCase):
         g = 0.9
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
 
         alpha = 1.0
         Sigma = alpha * np.eye(p, p) \
@@ -348,7 +348,7 @@ class TestGroupLasso(TestCase):
         eps = 1e-8
         max_iter = 15000
 
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         mus = [5e-0, 5e-2, 5e-4, 5e-6, 5e-8]
         fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -384,7 +384,7 @@ class TestGroupLasso(TestCase):
         import parsimony.functions as functions
         import parsimony.functions.nesterov.gl as gl
         import parsimony.datasets.simulated.l1_l2_glmu as l1_l2_glmu
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(314)
 
@@ -400,7 +400,7 @@ class TestGroupLasso(TestCase):
         g = 2.718
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
 
         alpha = 1.0
         Sigma = alpha * np.eye(p, p) \
@@ -418,7 +418,7 @@ class TestGroupLasso(TestCase):
         eps = 1e-8
         max_iter = 5000
 
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         mus = [5e-0, 5e-2, 5e-4, 5e-6, 5e-8]
         fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -456,7 +456,7 @@ class TestGroupLasso(TestCase):
         import parsimony.functions as functions
         import parsimony.functions.nesterov.gl as gl
         import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(42)
 
@@ -472,7 +472,7 @@ class TestGroupLasso(TestCase):
         g = 2.718
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
 
         alpha = 1.0
         Sigma = alpha * np.eye(p, p) \
@@ -488,7 +488,7 @@ class TestGroupLasso(TestCase):
         eps = 1e-8
         max_iter = 10000
 
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         mus = [5e-0, 5e-2, 5e-4, 5e-6, 5e-8]
         fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))

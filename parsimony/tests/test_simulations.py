@@ -27,7 +27,7 @@ class TestSimulations(TestCase):
         import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
         import parsimony.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
         import parsimony.algorithms.explicit as explicit
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
 
@@ -46,7 +46,7 @@ class TestSimulations(TestCase):
         M = np.random.multivariate_normal(mean, Sigma, n)
         e = np.random.randn(n, 1)
 
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
         beta = np.sort(beta, axis=0)
         beta[0:5, :] = 0.0
 
@@ -74,7 +74,7 @@ class TestSimulations(TestCase):
                   + np.linspace(v, v * 1.05, 2).tolist()
         for L in lagranges:
             fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
-            beta_start = start_vector.get_vector((p, 1))
+            beta_start = start_vector.get_vector(p)
 
             beta_nonsmooth_penalty = beta_start
             function = None
@@ -204,7 +204,7 @@ class TestSimulations(TestCase):
 #        import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
         import parsimony.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
         import parsimony.algorithms.explicit as explicit
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
         from parsimony.functions import LinearRegressionL1L2TV
 
@@ -226,7 +226,7 @@ class TestSimulations(TestCase):
         M = np.hstack((np.ones((n, 1)), X0))
         e = 0.1 * np.random.randn(n, 1)
 
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
         beta = np.sort(beta, axis=0)
         beta[0:5, :] = 0.0
         beta = np.flipud(beta)
@@ -251,7 +251,7 @@ class TestSimulations(TestCase):
 #        print "opt:", v
         lagranges = np.linspace(v * 0.5, v, 3).tolist()[:-1] \
                   + np.linspace(v, v * 1.5, 3).tolist()
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
         beta_nonsmooth_penalty = beta_start
         for L in lagranges:
             fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -302,7 +302,7 @@ class TestSimulations(TestCase):
 #        print "opt:", v
         lagranges = np.linspace(v * 0.5, v, 3).tolist()[:-1] \
                   + np.linspace(v, v * 1.5, 3).tolist()
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
         beta_nonsmooth_penalty = beta_start
         for L in lagranges:
             fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -353,7 +353,7 @@ class TestSimulations(TestCase):
 #        print "opt:", v
         lagranges = np.linspace(v * 0.5, v, 3).tolist()[:-1] \
                   + np.linspace(v, v * 1.5, 3).tolist()
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
         beta_nonsmooth_penalty = beta_start
         for L in lagranges:
             fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -405,7 +405,7 @@ class TestSimulations(TestCase):
 #        print "opt:", v
         lagranges = np.linspace(v * 0.5, v, 3).tolist()[:-1] \
                   + np.linspace(v, v * 1.5, 3).tolist()
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
         beta_nonsmooth_penalty = beta_start
         for L in lagranges:
             fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -482,7 +482,7 @@ class TestSimulations(TestCase):
 #        import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
         import parsimony.datasets.simulated.l1_l2_glmu as l1_l2_glmu
         import parsimony.algorithms.explicit as explicit
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
         from parsimony.functions import LinearRegressionL1L2GL
 
@@ -504,7 +504,7 @@ class TestSimulations(TestCase):
         M = np.hstack((np.ones((n, 1)), X0))
         e = 0.1 * np.random.randn(n, 1)
 
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
         beta = np.sort(beta, axis=0)
         beta[0:5, :] = 0.0
         beta = np.flipud(beta)
@@ -531,7 +531,7 @@ class TestSimulations(TestCase):
 #        print "opt:", v
         lagranges = np.linspace(v * 0.5, v, 3).tolist()[:-1] \
                   + np.linspace(v, v * 1.5, 3).tolist()
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
         beta_nonsmooth_penalty = beta_start
         for L in lagranges:
             fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -582,7 +582,7 @@ class TestSimulations(TestCase):
 #        print "opt:", v
         lagranges = np.linspace(v * 0.5, v, 3).tolist()[:-1] \
                   + np.linspace(v, v * 1.5, 3).tolist()
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
         beta_nonsmooth_penalty = beta_start
         for L in lagranges:
             fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -633,7 +633,7 @@ class TestSimulations(TestCase):
 #        print "opt:", v
         lagranges = np.linspace(v * 0.5, v, 3).tolist()[:-1] \
                   + np.linspace(v, v * 1.5, 3).tolist()
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
         beta_nonsmooth_penalty = beta_start
         for L in lagranges:
             fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -685,7 +685,7 @@ class TestSimulations(TestCase):
 #        print "opt:", v
         lagranges = np.linspace(v * 0.5, v, 3).tolist()[:-1] \
                   + np.linspace(v, v * 1.5, 3).tolist()
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
         beta_nonsmooth_penalty = beta_start
         for L in lagranges:
             fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -762,7 +762,7 @@ class TestSimulations(TestCase):
 ##        import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
 #        import parsimony.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
 #        import parsimony.algorithms.explicit as explicit
-#        import parsimony.start_vectors as start_vectors
+#        import parsimony.utils.start_vectors as start_vectors
 #        import parsimony.estimators as estimators
 #        from parsimony.functions import LinearRegressionL1L2TV
 #
@@ -784,7 +784,7 @@ class TestSimulations(TestCase):
 #        M = np.hstack((np.ones((n, 1)), X0))
 #        e = 0.1 * np.random.randn(n, 1)
 #
-#        beta = start_vector.get_vector((p, 1))
+#        beta = start_vector.get_vector(p)
 #        beta = np.sort(beta, axis=0)
 #        beta[0:5, :] = 0.0
 #        beta = np.flipud(beta)
@@ -809,7 +809,7 @@ class TestSimulations(TestCase):
 ##        print "opt:", v
 #        lagranges = np.linspace(v * 0.5, v, 3).tolist()[:-1] \
 #                  + np.linspace(v, v * 1.5, 3).tolist()
-#        beta_start = start_vector.get_vector((p, 1))
+#        beta_start = start_vector.get_vector(p)
 #        beta_nonsmooth_penalty = beta_start
 #        for L in lagranges:
 #            fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -860,7 +860,7 @@ class TestSimulations(TestCase):
 ##        print "opt:", v
 #        lagranges = np.linspace(v * 0.5, v, 3).tolist()[:-1] \
 #                  + np.linspace(v, v * 1.5, 3).tolist()
-#        beta_start = start_vector.get_vector((p, 1))
+#        beta_start = start_vector.get_vector(p)
 #        beta_nonsmooth_penalty = beta_start
 #        for L in lagranges:
 #            fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -911,7 +911,7 @@ class TestSimulations(TestCase):
 ##        print "opt:", v
 #        lagranges = np.linspace(v * 0.5, v, 3).tolist()[:-1] \
 #                  + np.linspace(v, v * 1.5, 3).tolist()
-#        beta_start = start_vector.get_vector((p, 1))
+#        beta_start = start_vector.get_vector(p)
 #        beta_nonsmooth_penalty = beta_start
 #        for L in lagranges:
 #            fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -962,7 +962,7 @@ class TestSimulations(TestCase):
 ##        print "opt:", v
 #        lagranges = np.linspace(v * 0.5, v, 3).tolist()[:-1] \
 #                  + np.linspace(v, v * 1.5, 3).tolist()
-#        beta_start = start_vector.get_vector((p, 1))
+#        beta_start = start_vector.get_vector(p)
 #        beta_nonsmooth_penalty = beta_start
 #        for L in lagranges:
 #            fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -1037,7 +1037,7 @@ class TestSimulations(TestCase):
 #        from parsimony.functions import CombinedFunction
 #        import parsimony.datasets.simulated.l1_l2_glmu as l1_l2_glmu
 #        import parsimony.algorithms.explicit as explicit
-#        import parsimony.start_vectors as start_vectors
+#        import parsimony.utils.start_vectors as start_vectors
 #        from parsimony.functions import LinearRegressionL1L2GL
 #
 #        start_vector = start_vectors.RandomStartVector(normalise=True)
@@ -1058,7 +1058,7 @@ class TestSimulations(TestCase):
 #        M = np.hstack((np.ones((n, 1)), X0))
 #        e = 0.1 * np.random.randn(n, 1)
 #
-#        beta = start_vector.get_vector((p, 1))
+#        beta = start_vector.get_vector(p)
 #        beta = np.sort(beta, axis=0)
 #        beta[0:5, :] = 0.0
 #        beta = np.flipud(beta)
@@ -1085,7 +1085,7 @@ class TestSimulations(TestCase):
 ##        print "opt:", v
 #        lagranges = np.linspace(v * 0.5, v, 3).tolist()[:-1] \
 #                  + np.linspace(v, v * 1.5, 3).tolist()
-#        beta_start = start_vector.get_vector((p, 1))
+#        beta_start = start_vector.get_vector(p)
 #        beta_nonsmooth_penalty = beta_start
 #        for L in lagranges:
 #            fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -1136,7 +1136,7 @@ class TestSimulations(TestCase):
 ##        print "opt:", v
 #        lagranges = np.linspace(v * 0.5, v, 3).tolist()[:-1] \
 #                  + np.linspace(v, v * 1.5, 3).tolist()
-#        beta_start = start_vector.get_vector((p, 1))
+#        beta_start = start_vector.get_vector(p)
 #        beta_nonsmooth_penalty = beta_start
 #        for L in lagranges:
 #            fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -1187,7 +1187,7 @@ class TestSimulations(TestCase):
 ##        print "opt:", v
 #        lagranges = np.linspace(v * 0.5, v, 3).tolist()[:-1] \
 #                  + np.linspace(v, v * 1.5, 3).tolist()
-#        beta_start = start_vector.get_vector((p, 1))
+#        beta_start = start_vector.get_vector(p)
 #        beta_nonsmooth_penalty = beta_start
 #        for L in lagranges:
 #            fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -1238,7 +1238,7 @@ class TestSimulations(TestCase):
 ##        print "opt:", v
 #        lagranges = np.linspace(v * 0.5, v, 3).tolist()[:-1] \
 #                  + np.linspace(v, v * 1.5, 3).tolist()
-#        beta_start = start_vector.get_vector((p, 1))
+#        beta_start = start_vector.get_vector(p)
 #        beta_nonsmooth_penalty = beta_start
 #        for L in lagranges:
 #            fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))

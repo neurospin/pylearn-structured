@@ -26,7 +26,7 @@ class TestLogisticRegression(TestCase):
         import parsimony.functions.losses as losses
         import parsimony.functions.nesterov.tv as tv
         import parsimony.algorithms.explicit as explicit
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.estimators as estimators
 
@@ -54,7 +54,7 @@ class TestLogisticRegression(TestCase):
 
         gd = explicit.GradientDescent(eps=eps, max_iter=max_iter)
         lr = losses.LogisticRegression(X, y, mean=True)
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         beta = gd.run(lr, beta_start)
 
@@ -155,7 +155,7 @@ class TestLogisticRegression(TestCase):
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
         import parsimony.algorithms.explicit as explicit
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.estimators as estimators
         import parsimony.functions.nesterov.tv as tv
@@ -190,7 +190,7 @@ class TestLogisticRegression(TestCase):
         function = CombinedFunction()
         function.add_function(losses.LogisticRegression(X, y, mean=True))
         function.add_prox(penalties.L1(l))
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         beta = algorithm.run(function, beta_start)
 
@@ -286,7 +286,7 @@ class TestLogisticRegression(TestCase):
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
         import parsimony.algorithms.explicit as explicit
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.estimators as estimators
         import parsimony.functions.nesterov.tv as tv
@@ -324,7 +324,7 @@ class TestLogisticRegression(TestCase):
         function.add_function(losses.LogisticRegression(X_parsimony, y,
                                                         mean=True))
         function.add_prox(penalties.L1(l, penalty_start=1))
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         beta = algorithm.run(function, beta_start)
 
@@ -418,7 +418,7 @@ class TestLogisticRegression(TestCase):
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
         import parsimony.algorithms.explicit as explicit
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.estimators as estimators
         import parsimony.functions.nesterov.tv as tv
@@ -453,7 +453,7 @@ class TestLogisticRegression(TestCase):
         function = CombinedFunction()
         function.add_function(losses.LogisticRegression(X, y, mean=True))
         function.add_penalty(penalties.L2(k))
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         beta = gd.run(function, beta_start)
 
@@ -558,7 +558,7 @@ class TestLogisticRegression(TestCase):
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
         import parsimony.algorithms.explicit as explicit
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.estimators as estimators
         import parsimony.functions.nesterov.tv as tv
@@ -596,7 +596,7 @@ class TestLogisticRegression(TestCase):
         function.add_function(losses.LogisticRegression(X_parsimony, y,
                                                         mean=True))
         function.add_penalty(penalties.L2(k, penalty_start=1))
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         beta = gd.run(function, beta_start)
 
@@ -694,7 +694,7 @@ class TestLogisticRegression(TestCase):
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
         import parsimony.algorithms.explicit as explicit
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.functions.nesterov.gl as gl
         import parsimony.estimators as estimators
@@ -730,7 +730,7 @@ class TestLogisticRegression(TestCase):
         function.add_function(losses.LogisticRegression(X, y, mean=True))
         function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
                                                   penalty_start=0))
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         beta = algorithm.run(function, beta_start)
 
@@ -840,7 +840,7 @@ class TestLogisticRegression(TestCase):
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
         import parsimony.algorithms.explicit as explicit
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.estimators as estimators
         import parsimony.functions.nesterov.tv as tv
@@ -876,7 +876,7 @@ class TestLogisticRegression(TestCase):
         function.add_function(losses.LogisticRegression(X, y, mean=True))
         function.add_penalty(penalties.L2(k))
         function.add_prox(penalties.L1(l))
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         beta = algorithm.run(function, beta_start)
 
@@ -973,7 +973,7 @@ class TestLogisticRegression(TestCase):
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
         import parsimony.algorithms.explicit as explicit
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.estimators as estimators
         import parsimony.functions.nesterov.tv as tv
@@ -1012,7 +1012,7 @@ class TestLogisticRegression(TestCase):
         function.add_function(logreg)
         function.add_penalty(penalties.L2(k, penalty_start=1))
         function.add_prox(penalties.L1(l, penalty_start=1))
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         beta = algorithm.run(function, beta_start)
 
@@ -1108,7 +1108,7 @@ class TestLogisticRegression(TestCase):
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
         import parsimony.algorithms.explicit as explicit
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.functions.nesterov.gl as gl
         import parsimony.estimators as estimators
@@ -1145,7 +1145,7 @@ class TestLogisticRegression(TestCase):
         function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
                                                   penalty_start=0))
         function.add_prox(penalties.L1(l))
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         beta = algorithm.run(function, beta_start)
 
@@ -1251,7 +1251,7 @@ class TestLogisticRegression(TestCase):
 #        import parsimony.functions.losses as losses
 #        import parsimony.functions.penalties as penalties
 #        import parsimony.algorithms.explicit as explicit
-#        import parsimony.start_vectors as start_vectors
+#        import parsimony.utils.start_vectors as start_vectors
 #        import parsimony.utils.maths as maths
 #        import parsimony.functions.nesterov.gl as gl
 #        import parsimony.estimators as estimators
@@ -1287,7 +1287,7 @@ class TestLogisticRegression(TestCase):
 #
 #        algorithm = explicit.ISTA(eps=eps, max_iter=max_iter)
 #
-#        beta_start = start_vector.get_vector((p, 1))
+#        beta_start = start_vector.get_vector(p)
 #        beta = beta_start
 #        for mu in mus:
 #            function = CombinedFunction()

@@ -19,7 +19,7 @@ class TestAlgorithms(TestCase):
 
         import parsimony.estimators as estimators
         import parsimony.functions.nesterov.tv as tv
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
         import parsimony.algorithms.explicit as explicit
 
         import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
@@ -47,7 +47,7 @@ class TestAlgorithms(TestCase):
         M = np.random.multivariate_normal(mean, Sigma, n)
         e = np.random.randn(n, 1)
 
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
         beta = np.sort(beta, axis=0)
         beta[np.abs(beta) < 0.1] = 0.0
 
@@ -87,7 +87,7 @@ class TestAlgorithms(TestCase):
 
         import parsimony.estimators as estimators
         import parsimony.functions.nesterov.gl as gl
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
         import parsimony.algorithms.explicit as explicit
 
         import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
@@ -123,7 +123,7 @@ class TestAlgorithms(TestCase):
                 or np.max(np.abs(np.dot(M.T, e))) > n:
             e = np.random.randn(n, 1)
 
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
         beta = np.sort(beta, axis=0)
         beta[np.abs(beta) < 0.05] = 0.0
         if penalty_start > 0:

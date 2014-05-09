@@ -21,7 +21,7 @@ class TestL1(TestCase):
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
         import parsimony.functions.nesterov as nesterov
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
         import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
@@ -39,7 +39,7 @@ class TestL1(TestCase):
         M = np.random.multivariate_normal(mean, Sigma, n)
         e = np.random.randn(n, 1)
 
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
         beta[np.abs(beta) < 0.1] = 0.0
 
         l = 0.618
@@ -77,7 +77,7 @@ class TestL1(TestCase):
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
         import parsimony.functions.nesterov as nesterov
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
         import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
@@ -95,7 +95,7 @@ class TestL1(TestCase):
         M = np.random.multivariate_normal(mean, Sigma, n)
         e = np.random.randn(n, 1)
 
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
         beta[np.abs(beta) < 0.1] = 0.0
 
         l = 0.618

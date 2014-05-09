@@ -31,7 +31,7 @@ except ValueError:
     import parsimony.algorithms.bases as bases  # When run as a program
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
-import parsimony.start_vectors as start_vectors
+import parsimony.utils.start_vectors as start_vectors
 
 __all__ = ["FastSVD", "FastSparseSVD", "FastSVDProduct"]
 
@@ -109,7 +109,7 @@ class FastSVD(bases.ImplicitAlgorithm):
             K = np.dot(X, X.T)
             # TODO: Use module for this!
 #            t = np.random.rand(X.shape[0], 1)
-            t = start_vector.get_vector((X.shape[0], 1))
+            t = start_vector.get_vector(X.shape[0])
             for it in xrange(max_iter):
                 t_ = t
                 t = np.dot(K, t_)
@@ -126,7 +126,7 @@ class FastSVD(bases.ImplicitAlgorithm):
             # TODO: Use module for this!
 #            v = np.random.rand(X.shape[1], 1)
 #            v /= maths.norm(v)
-            v = start_vector.get_vector((X.shape[1], 1))
+            v = start_vector.get_vector(X.shape[1])
             for it in xrange(max_iter):
                 v_ = v
                 v = np.dot(K, v_)
@@ -266,7 +266,7 @@ class FastSVDProduct(bases.ImplicitAlgorithm):
 
         if start_vector is None:
             start_vector = start_vectors.RandomStartVector(normalise=True)
-        v = start_vector.get_vector((Y.shape[1], 1))
+        v = start_vector.get_vector(Y.shape[1])
 
         for it in xrange(1, max_iter + 1):
             v_ = v

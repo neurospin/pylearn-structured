@@ -15,6 +15,7 @@ from .utils import LimitedDict, Info
 from .check_arrays import check_arrays
 from .plot import plot_map2d
 from .classif_label import class_weight_to_sample_weight, check_labels
+from . import start_vectors
 
 
 __all__ = ["maths", "consts",
@@ -23,5 +24,5 @@ __all__ = ["maths", "consts",
            "optimal_shrinkage", "AnonymousClass", "Enum",
            "plot_map2d",
            "class_weight_to_sample_weight", "check_labels",
-           "LimitedDict", "Info"
+           "LimitedDict", "Info", "start_vectors"
           ]

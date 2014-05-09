@@ -29,6 +29,7 @@ def grad_l1(beta, rng=RandomUniform(-1, 1)):
     grad[beta < -TOLERANCE] = -1.
     between = (beta >= -TOLERANCE) & (beta < TOLERANCE)
     grad[between] = rng(between.sum())
+
     return grad
 
 
@@ -57,12 +58,14 @@ def grad_l2(beta, rng=np.random.rand):
     """
     norm_beta = norm2(beta)
     if norm_beta > TOLERANCE:
+
         return beta / norm_beta
     else:
         D = beta.shape[0]
         u = (rng(D, 1) * 2.0) - 1.0  # [-1, 1]^D
         norm_u = norm2(u)
         a = rng()  # [0, 1]
+
         return u * (a / norm_u)
 
 

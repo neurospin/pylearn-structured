@@ -9,8 +9,7 @@ learning models for one, two or more blocks of data.
 """
 from . import algorithms
 from . import estimators
-from . import start_vectors
 
 __version__ = "0.1.8"
 
-__all__ = ["algorithms", "estimators", "start_vectors"]
+__all__ = ["algorithms", "estimators"]

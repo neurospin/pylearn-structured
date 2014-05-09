@@ -9,7 +9,7 @@ Created on Thu Mar 28 15:35:26 2013
 import abc
 import numpy as np
 
-import parsimony.utils.maths as maths
+from . import maths
 
 __all__ = ['BaseStartVector', 'IdentityStartVector', 'RandomStartVector',
            'OnesStartVector', 'ZerosStartVector']
@@ -39,7 +39,7 @@ class BaseStartVector(object):
             np.random.seed(seed)
 
     @abc.abstractmethod
-    def get_vector(self, shape):
+    def get_vector(self, size):
 
         raise NotImplementedError('Abstract method "get_vector" must be '
                                   'specialised!')
@@ -54,7 +54,7 @@ class IdentityStartVector(BaseStartVector):
 
     Examples
     --------
-    >>> from parsimony.start_vectors import IdentityStartVector
+    >>> from parsimony.utils.start_vectors import IdentityStartVector
     >>> start_vector = IdentityStartVector(np.array([[0.5], [2.0], [0.3],
     ...                                              [1.0]]))
     >>> start_vector.get_vector()
@@ -74,7 +74,7 @@ class IdentityStartVector(BaseStartVector):
 
         Examples
         --------
-        >>> from parsimony.start_vectors import IdentityStartVector
+        >>> from parsimony.utils.start_vectors import IdentityStartVector
         >>> start_vector = IdentityStartVector(np.array([[0.5], [2.0], [0.3],
         ...                                              [1.0]]))
         >>> start_vector.get_vector()
@@ -105,11 +105,11 @@ class RandomStartVector(BaseStartVector):
 
     Examples
     --------
-    >>> from parsimony.start_vectors import RandomStartVector
+    >>> from parsimony.utils.start_vectors import RandomStartVector
     >>>
     >>> # Without normalization
     >>> start_vector = RandomStartVector(normalise=False, seed=42)
-    >>> random = start_vector.get_vector((3, 1))
+    >>> random = start_vector.get_vector(3)
     >>> print random
     [[ 0.37454012]
      [ 0.95071431]
@@ -119,7 +119,7 @@ class RandomStartVector(BaseStartVector):
     >>>
     >>> # With normalization
     >>> start_vector_normalized = RandomStartVector(normalise=True, seed=2)
-    >>> random_normalized = start_vector_normalized.get_vector((3, 1))
+    >>> random_normalized = start_vector_normalized.get_vector(3)
     >>> print random_normalized
     [[ 0.62101956]
      [ 0.03692864]
@@ -130,7 +130,7 @@ class RandomStartVector(BaseStartVector):
     >>> # With limits
     >>> start_vector_normalized = RandomStartVector(normalise=True, seed=2,
     ...                                             limits=(-1, 1))
-    >>> random_limits = start_vector_normalized.get_vector((3, 1))
+    >>> random_limits = start_vector_normalized.get_vector(3)
     >>> print random_limits
     [[-0.1330817 ]
      [-0.98571123]
@@ -145,18 +145,19 @@ class RandomStartVector(BaseStartVector):
 
         self.limits = limits
 
-    def get_vector(self, shape):
+    def get_vector(self, size):
         """Return randomly generated vector of given shape.
 
         Parameters
         ----------
-        shape : List or tuple. Shape of the vector to generate.
+        size : Positive integer. Size of the vector to generate. The shape of
+                the output is (size, 1).
 
         Examples
         --------
-        >>> from parsimony.start_vectors import RandomStartVector
+        >>> from parsimony.utils.start_vectors import RandomStartVector
         >>> start_vector = RandomStartVector(normalise=False, seed=42)
-        >>> random = start_vector.get_vector((3, 1))
+        >>> random = start_vector.get_vector(3)
         >>> print random
         [[ 0.37454012]
          [ 0.95071431]
@@ -164,7 +165,7 @@ class RandomStartVector(BaseStartVector):
         >>>
         >>> start_vector = RandomStartVector(normalise=False, seed=1,
         ...                                  limits=(-1, 2))
-        >>> random = start_vector.get_vector((3, 1))
+        >>> random = start_vector.get_vector(3)
         >>> print random
         [[ 0.25106601]
          [ 1.16097348]
@@ -173,7 +174,8 @@ class RandomStartVector(BaseStartVector):
         l = float(self.limits[0])
         u = float(self.limits[1])
 
-        vector = np.random.rand(*shape) * (u - l) + l  # Random start vector.
+        size = int(size)
+        vector = np.random.rand(size, 1) * (u - l) + l  # Random vector.
 
         if self.normalise:
             return vector / maths.norm(vector)
@@ -191,11 +193,11 @@ class OnesStartVector(BaseStartVector):
 
     Examples
     --------
-    >>> from parsimony.start_vectors import OnesStartVector
+    >>> from parsimony.utils.start_vectors import OnesStartVector
 
     # Without normalization
     >>> start_vector = OnesStartVector(normalise=False)
-    >>> ones = start_vector.get_vector((3, 1))
+    >>> ones = start_vector.get_vector(3)
     >>> print ones
     [[ 1.]
      [ 1.]
@@ -205,7 +207,7 @@ class OnesStartVector(BaseStartVector):
 
     # With normalization
     >>> start_vector_normalized = OnesStartVector(normalise=True)
-    >>> ones_normalized = start_vector_normalized.get_vector((3, 1))
+    >>> ones_normalized = start_vector_normalized.get_vector(3)
     >>> print ones_normalized
     [[ 0.57735027]
      [ 0.57735027]
@@ -217,24 +219,26 @@ class OnesStartVector(BaseStartVector):
 
         super(OnesStartVector, self).__init__(normalise=normalise, **kwargs)
 
-    def get_vector(self, shape):
-        '''Return vector of ones of chosen shape
+    def get_vector(self, size):
+        """Return vector of ones of chosen shape
 
         Parameters
         ----------
-        shape : tuple. Size of the vector to generate
+        size : Positive integer. Size of the vector to generate. The shape of
+                the output is (size, 1).
 
         Examples
         --------
-        >>> from parsimony.start_vectors import OnesStartVector
+        >>> from parsimony.utils.start_vectors import OnesStartVector
         >>> start_vector = OnesStartVector()
-        >>> ones = start_vector.get_vector((3, 1))
+        >>> ones = start_vector.get_vector(3)
         >>> print ones
         [[ 1.]
          [ 1.]
          [ 1.]]
-        '''
-        vector = np.ones(shape)  # Using a vector of ones.
+        """
+        size = int(size)
+        vector = np.ones((size, 1))  # Using a vector of ones.
 
         if self.normalise:
             return vector / maths.norm(vector)
@@ -250,9 +254,9 @@ class ZerosStartVector(BaseStartVector):
 
     Examples
     --------
-    >>> from parsimony.start_vectors import ZerosStartVector
+    >>> from parsimony.utils.start_vectors import ZerosStartVector
     >>> start_vector = ZerosStartVector()
-    >>> zeros = start_vector.get_vector((3, 1))
+    >>> zeros = start_vector.get_vector(3)
     >>> print zeros
     [[ 0.]
      [ 0.]
@@ -264,24 +268,26 @@ class ZerosStartVector(BaseStartVector):
 
         super(ZerosStartVector, self).__init__(normalise=False, **kwargs)
 
-    def get_vector(self, shape):
+    def get_vector(self, size):
         """Return vector of zeros of chosen shape.
 
         Parameters
         ----------
-        shape : tuple. Size of the vector to generate
+        size : Positive integer. Size of the vector to generate. The shape of
+                the output is (size, 1).
 
         Examples
         --------
-        >>> from parsimony.start_vectors import ZerosStartVector
+        >>> from parsimony.utils.start_vectors import ZerosStartVector
         >>> start_vector = ZerosStartVector()
-        >>> zeros = start_vector.get_vector((3, 1))
+        >>> zeros = start_vector.get_vector(3)
         >>> print zeros
         [[ 0.]
          [ 0.]
          [ 0.]]
         """
-        w = np.zeros(shape)  # Using a vector of zeros.
+        size = int(size)
+        w = np.zeros((size, 1))  # Using a vector of zeros.
 
         return w
 

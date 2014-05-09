@@ -18,7 +18,7 @@ import parsimony.functions as functions
 import parsimony.functions.losses as losses
 import parsimony.functions.penalties as penalties
 import parsimony.algorithms.explicit as explicit
-import parsimony.start_vectors as start_vectors
+import parsimony.utils.start_vectors as start_vectors
 from parsimony.utils import check_arrays
 from parsimony.utils import class_weight_to_sample_weight, check_labels
 
@@ -258,7 +258,7 @@ class LinearRegression(RegressionEstimator):
 
         # TODO: Should we use a seed here so that we get deterministic results?
         if beta is None:
-            beta = self.start_vector.get_vector((X.shape[1], 1))
+            beta = self.start_vector.get_vector(X.shape[1])
 
         self.beta = self.algorithm.run(function, beta)
 
@@ -372,7 +372,7 @@ class Lasso(RegressionEstimator):
 
         # TODO: Should we use a seed here so that we get deterministic results?
         if beta is None:
-            beta = self.start_vector.get_vector((X.shape[1], 1))
+            beta = self.start_vector.get_vector(X.shape[1])
 
         self.beta = self.algorithm.run(function, beta)
 
@@ -488,7 +488,7 @@ class ElasticNet(RegressionEstimator):
 
         # TODO: Should we use a seed here so that we get deterministic results?
         if beta is None:
-            beta = self.start_vector.get_vector((X.shape[1], 1))
+            beta = self.start_vector.get_vector(X.shape[1])
 
         self.beta = self.algorithm.run(function, beta)
 
@@ -647,7 +647,7 @@ class LinearRegressionL1L2TV(RegressionEstimator):
 
         # TODO: Should we use a seed here so that we get deterministic results?
         if beta is None:
-            beta = self.start_vector.get_vector((X.shape[1], 1))
+            beta = self.start_vector.get_vector(X.shape[1])
 
         if self.mu is None:
             self.mu = function.estimate_mu(beta)
@@ -811,7 +811,7 @@ class LinearRegressionL1L2GL(RegressionEstimator):
 
         # TODO: Should we use a seed here so that we get deterministic results?
         if beta is None:
-            beta = self.start_vector.get_vector((X.shape[1], 1))
+            beta = self.start_vector.get_vector(X.shape[1])
 
         if self.mu is None:
             self.mu = function.estimate_mu(beta)
@@ -939,7 +939,7 @@ class LinearRegressionL1L2GL(RegressionEstimator):
 #
 #        # TODO: Should we use a seed here so that we get deterministic results?
 #        if beta is None:
-#            beta = self.start_vector.get_vector((X.shape[1], 1))
+#            beta = self.start_vector.get_vector(X.shape[1])
 #
 #        if self.mu is None:
 #            self.mu = self.function.estimate_mu(beta)
@@ -1117,7 +1117,7 @@ class LogisticRegressionL1L2TV(LogisticRegressionEstimator):
 
         # TODO: Should we use a seed here so that we get deterministic results?
         if beta is None:
-            beta = self.start_vector.get_vector((X.shape[1], 1))
+            beta = self.start_vector.get_vector(X.shape[1])
 
         if self.mu is None:
             self.mu = function.estimate_mu(beta)
@@ -1289,7 +1289,7 @@ class LogisticRegressionL1L2GL(LogisticRegressionEstimator):
 
         # TODO: Should we use a seed here so that we get deterministic results?
         if beta is None:
-            beta = self.start_vector.get_vector((X.shape[1], 1))
+            beta = self.start_vector.get_vector(X.shape[1])
 
         if self.mu is None:
             self.mu = function.estimate_mu(beta)

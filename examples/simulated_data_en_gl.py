@@ -23,7 +23,7 @@ import parsimony.algorithms as algorithms
 import parsimony.utils.maths as maths
 import parsimony.funcs.helper.gl as gl
 import parsimony.funcs.helper.tv as tv
-import parsimony.start_vectors as start_vectors
+import parsimony.utils.start_vectors as start_vectors
 
 import parsimony.datasets.simulated as simulated
 
@@ -72,7 +72,7 @@ for er in errs:
 #    function = functions.RR_L1_TV(X, y, k, l, g + er, A=Atv, mu=mu)
     function = functions.RR_L1_GL(X, y, k, l, g + er, A=Agl, mu=mu)
 
-    beta = start_vector.get_vector((X.shape[1], 1))
+    beta = start_vector.get_vector(X.shape[1])
     start_vector = start_vectors.IdentityStartVector(beta)
 
 #    conts = 10

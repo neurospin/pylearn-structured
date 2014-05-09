@@ -20,7 +20,7 @@ class TestGroupTotalVariation(TestCase):
         import parsimony.functions as functions
         import parsimony.functions.nesterov.grouptv as grouptv
         import parsimony.datasets.simulated.l1_l2_grouptvmu as l1_l2_grouptvmu
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(1337)
 
@@ -32,7 +32,7 @@ class TestGroupTotalVariation(TestCase):
         g = 0.9
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
 
         rects = [[(0, 5)], [(4, 10)], [(13, 15)]]
                               # 0 [ 5 ] 0
@@ -68,7 +68,7 @@ class TestGroupTotalVariation(TestCase):
         eps = 1e-5
         max_iter = 12000
 
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
         fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
@@ -103,7 +103,7 @@ class TestGroupTotalVariation(TestCase):
         import parsimony.functions as functions
         import parsimony.functions.nesterov.grouptv as grouptv
         import parsimony.datasets.simulated.l1_l2_grouptvmu as l1_l2_grouptvmu
-        import parsimony.start_vectors as start_vectors
+        import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(1337)
 
@@ -115,7 +115,7 @@ class TestGroupTotalVariation(TestCase):
         g = 1.618
 
         start_vector = start_vectors.ZerosStartVector()
-        beta = start_vector.get_vector((p, 1))
+        beta = start_vector.get_vector(p)
 
         rects = [[(0, 1), (0, 3)], [(1, 2), (3, 6)]]
 
@@ -143,7 +143,7 @@ class TestGroupTotalVariation(TestCase):
         eps = 1e-5
         max_iter = 10000
 
-        beta_start = start_vector.get_vector((p, 1))
+        beta_start = start_vector.get_vector(p)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
         fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
