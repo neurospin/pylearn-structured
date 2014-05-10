@@ -45,10 +45,18 @@ class Function(object):
         """
         pass
 
+    def get_params(self, *args):
+
+        ret = dict()
+        for k in args:
+            ret[k] = getattr(self, k)
+
+        return ret
+
     def set_params(self, **kwargs):
 
         for k in kwargs:
-            self.__setattr__(k, kwargs[k])
+            setattr(self, k, kwargs[k])
 
 
 class AtomicFunction(Function):

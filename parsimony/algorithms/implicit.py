@@ -107,8 +107,6 @@ class FastSVD(bases.ImplicitAlgorithm):
             v = V[[0], :].T
         elif M < N:
             K = np.dot(X, X.T)
-            # TODO: Use module for this!
-#            t = np.random.rand(X.shape[0], 1)
             t = start_vector.get_vector(X.shape[0])
             for it in xrange(max_iter):
                 t_ = t
@@ -123,9 +121,6 @@ class FastSVD(bases.ImplicitAlgorithm):
 
         else:
             K = np.dot(X.T, X)
-            # TODO: Use module for this!
-#            v = np.random.rand(X.shape[1], 1)
-#            v /= maths.norm(v)
             v = start_vector.get_vector(X.shape[1])
             for it in xrange(max_iter):
                 v_ = v
@@ -156,7 +151,8 @@ class FastSparseSVD(bases.ImplicitAlgorithm):
 
         max_iter : Integer. Maximum allowed number of iterations.
 
-        start_vector : Numpy array. The start vector.
+        start_vector : BaseStartVector. A start vector generator. Default is
+                to use a random start vector.
 
         Returns
         -------
@@ -181,12 +177,12 @@ class FastSparseSVD(bases.ImplicitAlgorithm):
                [ 0.42311297],
                [ 0.27656382]])
         """
+        if start_vector is None:
+            start_vector = start_vectors.RandomStartVector(normalise=True)
         M, N = X.shape
         if M < N:
             K = X.dot(X.T)
-    #        t = X.dot(p)
-            # TODO: Use module for this!
-            t = np.random.rand(X.shape[0], 1)
+            t = start_vector.get_vector(X.shape[0])
             for it in xrange(max_iter):
                 t_ = t
                 t = K.dot(t_)
@@ -201,10 +197,7 @@ class FastSparseSVD(bases.ImplicitAlgorithm):
 
         else:
             K = X.T.dot(X)
-            # TODO: Use module for this!
-            v = np.random.rand(X.shape[1], 1)
-            v /= maths.norm(v)
-    #        v = start_vectors.RandomStartVector().get_vector(X)
+            v = start_vector.get_vector(X.shape[1])
             for it in xrange(max_iter):
                 v_ = v
                 v = K.dot(v_)

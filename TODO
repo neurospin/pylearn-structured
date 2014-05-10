@@ -66,9 +66,9 @@
 
 ./parsimony/functions/interfaces.py:
 -----------------------------------
-98: # TODO: Should all constraints have the projection operator?
+106: # TODO: Should all constraints have the projection operator?
 
-320: # TODO: Should L by default take a weight vector as argument?
+328: # TODO: Should L by default take a weight vector as argument?
 
 ./parsimony/functions/combinedfunctions.py:
 ------------------------------------------
@@ -93,7 +93,7 @@
 
 ./parsimony/functions/multiblock/losses.py:
 ------------------------------------------
-806: # TODO: Check instead if it is a numpy array.
+821: # TODO: Check instead if it is a numpy array.
 
 ./parsimony/functions/nesterov/tv.py:
 ------------------------------------
@@ -132,9 +132,9 @@
 
 ./parsimony/datasets/simulated/grad.py:
 --------------------------------------
-50: # TODO: Should be RandomUniform(-1, 1) here!
+51: # TODO: Should be RandomUniform(-1, 1) here!
 
-79: # TODO: Should be RandomUniform(-1, 1) here!
+82: # TODO: Should be RandomUniform(-1, 1) here!
 
 ./parsimony/datasets/regression/dice5.py:
 ----------------------------------------
@@ -174,35 +174,24 @@
 ----------------------------------
 616: # TODO: Warn if G_new < 0.
 
-1205: # TODO: We already have f_mid, so we can return a better approximation
-1206: # here!
+775: # TODO: Fix this!
 
-1294: # TODO: Handle the other cases!
+1213: # TODO: We already have f_mid, so we can return a better approximation
+1214: # here!
 
-1306: # TODO: We seek a root, i.e. where f(x) = 0. The stopping criterion
-1307: #       should (could?) thus be abs(f(x)) <= eps!
+1302: # TODO: Handle the other cases!
 
-1326: if abs(x - x_) <= self.eps:  # TODO: Stopping criterion. See above!
+1314: # TODO: We seek a root, i.e. where f(x) = 0. The stopping criterion
+1315: #       should (could?) thus be abs(f(x)) <= eps!
 
-1396: # TODO: Investigate what is a good default value here!
+1334: if abs(x - x_) <= self.eps:  # TODO: Stopping criterion. See above!
 
-1449: # TODO: Investigate what is a good default value here!
+1404: # TODO: Investigate what is a good default value here!
 
-1488: # TODO: Does the weights really matter when the function is the
-1489: # indicator function?
+1457: # TODO: Investigate what is a good default value here!
 
-1523: # TODO: Investigate what is a good default value here!
+1496: # TODO: Does the weights really matter when the function is the
+1497: # indicator function?
 
-./parsimony/algorithms/implicit.py:
-----------------------------------
-110: # TODO: Use module for this!
-111: #            t = np.random.rand(X.shape[0], 1)
-
-126: # TODO: Use module for this!
-127: #            v = np.random.rand(X.shape[1], 1)
-128: #            v /= maths.norm(v)
-
-188: # TODO: Use module for this!
-
-204: # TODO: Use module for this!
+1531: # TODO: Investigate what is a good default value here!
 

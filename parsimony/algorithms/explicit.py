@@ -764,7 +764,15 @@ class NaiveCONESTA(bases.ExplicitAlgorithm,
         else:
             mu = self.mu_start
 
-        eps = mu * function.M()  # No access to gamma, so we ignore it
+        l = sum(function.get_params("l")["l"])
+        # Warning! With one Nesterov function this is correct, but with more
+        # than one, it will not be correct!
+        eps = l * mu * function.M()
+        # Note that with more than one Nesterov function we let eps be
+        #     eps = mu * (l1 + ... + lN) * (M1 + ... + MN)
+        # Which is different from the true value:
+        #     eps = mu * (l1 * M1 + ... + lN * MN)
+        # TODO: Fix this!
 
         function.set_mu(self.mu_min)
         tmin = function.step(beta)

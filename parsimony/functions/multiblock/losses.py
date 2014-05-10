@@ -528,6 +528,21 @@ class MultiblockNesterovFunctionWrapper(MultiblockFunctionWrapper,
                                                                 w,
                                                                 index)
 
+    def get_params(self, *args):
+
+        Ni = self.function._N[self.index]
+
+        ret = dict()
+        for k in args:
+            params = []
+            for N in Ni:
+                value = getattr(N, k)
+                params.append(value)
+
+            ret[k] = params
+
+        return ret
+
     def fmu(self, beta, mu=None):
         """Returns the smoothed function value.
 
