@@ -204,8 +204,7 @@ class GroupTotalVariation(interfaces.AtomicFunction,
         A = self.A()
         n = 0
         for g in xrange(0, len(A), 3):
-            Ag = A[g]
-            n += Ag.shape[0]  # The number of rows of Ag, the gth group in A.
+            n += A[g].nnz  # The number of non-zero rows of Ag, the gth group.
 
         return float(n) / 2.0
 
