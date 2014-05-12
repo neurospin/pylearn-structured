@@ -407,10 +407,36 @@ class LinearRegressionL1L2TV(interfaces.CompositeFunction,
         """The maximum value of epsilon.
 
         From the interface "Continuation".
+
+        Parameters
+        ----------
+        mu : Positive float. The regularisation constant of the smoothing.
+
+        Returns
+        -------
+        eps : Positive float. The upper limit, the maximum, precision.
         """
         gM = self.tv.l * self.tv.M()
 
-        return mu * gM
+        return float(mu) * gM
+
+    def mu_max(self, eps):
+        """The maximum value of mu.
+
+        From the interface "Continuation".
+
+        Parameters
+        ----------
+        eps : Positive float. The maximum precision of the smoothing.
+
+        Returns
+        -------
+        mu : Positive float. The upper limit, the maximum, of the
+                regularisation constant of the smoothing.
+        """
+        gM = self.tv.l * self.tv.M()
+
+        return float(eps) / gM
 
     def betahat(self, alphak, betak,  # mu_min=consts.TOLERANCE,
                 eps=consts.TOLERANCE, max_iter=consts.MAX_ITER):
@@ -759,10 +785,36 @@ class LinearRegressionL1L2GL(LinearRegressionL1L2TV):
         """The maximum value of epsilon.
 
         From the interface "Continuation".
+
+        Parameters
+        ----------
+        mu : Positive float. The regularisation constant of the smoothing.
+
+        Returns
+        -------
+        eps : Positive float. The upper limit, the maximum, precision.
         """
         gM = self.gl.l * self.gl.M()
 
-        return mu * gM
+        return float(mu) * gM
+
+    def mu_max(self, eps):
+        """The maximum value of mu.
+
+        From the interface "Continuation".
+
+        Parameters
+        ----------
+        eps : Positive float. The maximum precision of the smoothing.
+
+        Returns
+        -------
+        mu : Positive float. The upper limit, the maximum, of the
+                regularisation constant of the smoothing.
+        """
+        gM = self.gl.l * self.gl.M()
+
+        return float(eps) / gM
 
     def betahat(self, alphak, betak,  # mu_min=consts.TOLERANCE,
                 eps=consts.TOLERANCE, max_iter=consts.MAX_ITER):
@@ -1464,10 +1516,36 @@ class PrincipalComponentAnalysisL1TV(interfaces.CompositeFunction,
         """The maximum value of epsilon.
 
         From the interface "Continuation".
+
+        Parameters
+        ----------
+        mu : Positive float. The regularisation constant of the smoothing.
+
+        Returns
+        -------
+        eps : Positive float. The upper limit, the maximum, precision.
         """
         gM = self.tv.l * self.tv.M()
 
-        return mu * gM
+        return float(mu) * gM
+
+    def mu_max(self, eps):
+        """The maximum value of mu.
+
+        From the interface "Continuation".
+
+        Parameters
+        ----------
+        eps : Positive float. The maximum precision of the smoothing.
+
+        Returns
+        -------
+        mu : Positive float. The upper limit, the maximum, of the
+                regularisation constant of the smoothing.
+        """
+        gM = self.tv.l * self.tv.M()
+
+        return float(eps) / gM
 
     def betahat(self, alphak, betak):
         """ Returns the beta that minimises the dual function. Used when we

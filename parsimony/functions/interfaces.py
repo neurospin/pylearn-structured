@@ -239,6 +239,22 @@ class Continuation(object):
         raise NotImplementedError('Abstract method "eps_max" must be '
                                   'specialised!')
 
+    @abc.abstractmethod
+    def mu_max(self, eps):
+        """The maximum value of mu.
+
+        Parameters
+        ----------
+        eps : Positive float. The maximum precision of the smoothing.
+
+        Returns
+        -------
+        mu : Positive float. The upper limit, the maximum, of the
+                regularisation constant of the smoothing.
+        """
+        raise NotImplementedError('Abstract method "mu_max" must be '
+                                  'specialised!')
+
 
 class Gradient(object):
 

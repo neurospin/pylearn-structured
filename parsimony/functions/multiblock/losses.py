@@ -521,7 +521,8 @@ class MultiblockFunctionWrapper(interfaces.CompositeFunction,
 
 
 class MultiblockNesterovFunctionWrapper(MultiblockFunctionWrapper,
-                                        n_interfaces.NesterovFunction):
+                                        n_interfaces.NesterovFunction,
+                                        interfaces.Continuation):
 
     def __init__(self, function, w, index):
         super(MultiblockNesterovFunctionWrapper, self).__init__(function,
@@ -698,11 +699,84 @@ class MultiblockNesterovFunctionWrapper(MultiblockFunctionWrapper,
 
         return mu
 
+    def mu_opt(self, eps):
+        """The optimal value of mu given epsilon.
+
+        Parameters
+        ----------
+        eps : Positive float. The desired precision.
+
+        Returns
+        -------
+        mu : Positive float. The optimal regularisation parameter.
+
+        From the interface "Continuation".
+        """
+        raise NotImplementedError('Abstract method "mu_opt" must be '
+                                  'specialised!')
+
+    def eps_opt(self, mu):
+        """The optimal value of epsilon given mu.
+
+        Parameters
+        ----------
+        mu : Positive float. The regularisation constant of the smoothing.
+
+        Returns
+        -------
+        eps : Positive float. The optimal precision.
+
+        From the interface "Continuation".
+        """
+        raise NotImplementedError('Abstract method "eps_opt" must be '
+                                  'specialised!')
+
+    def eps_max(self, mu):
+        """The maximum value of epsilon.
+
+        From the interface "Continuation".
+
+        Parameters
+        ----------
+        mu : Positive float. The regularisation constant of the smoothing.
+
+        Returns
+        -------
+        eps : Positive float. The upper limit, the maximum, precision.
+        """
+        Ni = self.function._N[self.index]
+        gM = 0.0
+        for N in Ni:
+            gM += N.l * N.M()
+
+        return float(mu) * gM
+
+    def mu_max(self, eps):
+        """The maximum value of mu.
+
+        From the interface "Continuation".
+
+        Parameters
+        ----------
+        eps : Positive float. The maximum precision of the smoothing.
+
+        Returns
+        -------
+        mu : Positive float. The upper limit, the maximum, of the
+                regularisation constant of the smoothing.
+        """
+        Ni = self.function._N[self.index]
+        gM = 0.0
+        for N in Ni:
+            gM += N.l * N.M()
+
+        return float(eps) / gM
+
 
 class LatentVariableCovariance(mb_interfaces.MultiblockFunction,
-                               mb_interfaces.MultiblockGradient,
-                               mb_interfaces.MultiblockLipschitzContinuousGradient,
-                               interfaces.Eigenvalues):
+                           mb_interfaces.MultiblockGradient,
+                           mb_interfaces.MultiblockLipschitzContinuousGradient,
+                           interfaces.Eigenvalues):
 
     def __init__(self, X, unbiased=True):
 
