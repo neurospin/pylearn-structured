@@ -6,8 +6,8 @@ Created on Mon Sep  9 14:16:37 2013
 @email:   tommy.loefstedt@cea.fr
 @license: BSD 3-clause.
 """
-
 import numpy as np
+
 from grad import grad_l1
 from grad import grad_l2_squared
 from grad import grad_tvmu

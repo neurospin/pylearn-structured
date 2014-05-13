@@ -6,7 +6,6 @@ Created on Thu Sep 26 10:50:17 2013
 @email:   tommy.loefstedt@cea.fr
 @license: BSD 3-clause.
 """
-
 import numpy as np
 
 __all__ = ['TOLERANCE', 'norm2', 'bisection_method',
@@ -35,7 +34,7 @@ class RandomUniform(object):
 
 
 class ConstantValue(object):
-    """Random like number generator that returns a constant value.
+    """Random-like number generator that returns a constant value.
 
     Example
     -------
