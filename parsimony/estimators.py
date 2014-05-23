@@ -339,7 +339,7 @@ class Lasso(RegressionEstimator):
                  mean=True):
 
         if algorithm is None:
-            algorithm = explicit.StaticCONESTA(**algorithm_params)
+            algorithm = explicit.FISTA(**algorithm_params)
         else:
             algorithm.set_params(**algorithm_params)
 
@@ -453,7 +453,7 @@ class ElasticNet(RegressionEstimator):
                  penalty_start=0, mean=True):
 
         if algorithm is None:
-            algorithm = explicit.StaticCONESTA(**algorithm_params)
+            algorithm = explicit.FISTA(**algorithm_params)
         else:
             algorithm.set_params(**algorithm_params)
 
