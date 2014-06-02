@@ -25,7 +25,7 @@ except ValueError:
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
 
-__all__ = ["ZeroFunction", "L0", "L1", "L2", "LInf",
+__all__ = ["ZeroFunction", "L0", "L1", "L2", "L2Squared", "LInf",
            "QuadraticConstraint", "RGCCAConstraint",
            "SufficientDescentCondition"]
 
@@ -649,13 +649,156 @@ class LInf(interfaces.AtomicFunction,
 
 
 class L2(interfaces.AtomicFunction,
-         interfaces.Gradient,
-         interfaces.LipschitzContinuousGradient,
          interfaces.Penalty,
          interfaces.Constraint,
          interfaces.ProximalOperator,
          interfaces.ProjectionOperator):
     """The proximal operator of the L2 function with a penalty formulation
+
+        f(\beta) = l * (0.5 * ||\beta||_2 - c),
+
+    where ||\beta||_2 is the L2 loss function. The constrained version has
+    the form
+
+        0.5 * ||\beta||_2 <= c.
+
+    Parameters
+    ----------
+    l : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the function.
+
+    c : Float. The limit of the constraint. The function is feasible if
+            0.5 * ||\beta||_2 <= c. The default value is c=0, i.e. the
+            default is a regularised formulation.
+
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to be exempt from penalisation. Equivalently, the first index
+            to be penalised. Default is 0, all columns are included.
+    """
+    def __init__(self, l=1.0, c=0.0, penalty_start=0):
+
+        self.l = float(l)
+        self.c = float(c)
+        self.penalty_start = int(penalty_start)
+
+    def f(self, beta):
+        """Function value.
+
+        From the interface "Function".
+        """
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        return self.l * (maths.norm(beta_) - self.c)
+
+    def prox(self, beta, factor=1.0):
+        """The corresponding proximal operator.
+
+        From the interface "ProximalOperator".
+        """
+        l = self.l * factor
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        norm = maths.norm(beta_)
+        if norm >= l:
+            beta_ *= (1.0 - l / norm) * beta_
+        else:
+            beta_ *= 0.0
+
+        if self.penalty_start > 0:
+            prox = np.vstack((beta[:self.penalty_start, :], beta_))
+        else:
+            prox = beta_
+
+        return prox
+
+    def proj(self, beta):
+        """The corresponding projection operator.
+
+        From the interface "ProjectionOperator".
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.functions.penalties import L2
+        >>> np.random.seed(42)
+        >>> l2 = L2(c=0.3183098861837907)
+        >>> y1 = l2.proj(np.random.rand(100, 1) * 2.0 - 1.0)
+        >>> np.linalg.norm(y1)
+        0.3183098861837908
+        >>> y2 = np.random.rand(100, 1) * 2.0 - 1.0
+        >>> l2.feasible(y2)
+        False
+        >>> l2.feasible(l2.proj(y2))
+        True
+        """
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        norm = maths.norm(beta_)
+
+        # Feasible?
+        if norm <= self.c:
+            return beta
+
+        # The correction by eps is to nudge the norm just below self.c.
+        eps = consts.FLOAT_EPSILON
+        beta_ *= self.c / (norm + eps)
+        proj = beta_
+        if self.penalty_start > 0:
+            proj = np.vstack((beta[:self.penalty_start, :], beta_))
+
+        return proj
+
+    def feasible(self, beta):
+        """Feasibility of the constraint.
+
+        From the interface "Constraint".
+
+        Parameters
+        ----------
+        beta : Numpy array. The variable to check for feasibility.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from parsimony.functions.penalties import L2
+        >>> np.random.seed(42)
+        >>> l2 = L2(c=0.3183098861837907)
+        >>> y1 = 0.1 * (np.random.rand(50, 1) * 2.0 - 1.0)
+        >>> l2.feasible(y1)
+        True
+        >>> y2 = 10.0 * (np.random.rand(50, 1) * 2.0 - 1.0)
+        >>> l2.feasible(y2)
+        False
+        >>> y3 = l2.proj(50.0 * np.random.rand(100, 1) * 2.0 - 1.0)
+        >>> l2.feasible(y3)
+        True
+        """
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        return maths.norm(beta_) <= self.c
+
+
+class L2Squared(interfaces.AtomicFunction,
+                interfaces.Gradient,
+                interfaces.LipschitzContinuousGradient,
+                interfaces.Penalty,
+                interfaces.Constraint,
+                interfaces.ProximalOperator,
+                interfaces.ProjectionOperator):
+    """The proximal operator of the squared L2 function with a penalty
+    formulation
 
         f(\beta) = l * (0.5 * ||\beta||²_2 - c),
 
@@ -703,15 +846,15 @@ class L2(interfaces.AtomicFunction,
         Example
         -------
         >>> import numpy as np
-        >>> from parsimony.functions.penalties import L2
+        >>> from parsimony.functions.penalties import L2Squared
         >>>
         >>> np.random.seed(42)
         >>> beta = np.random.rand(100, 1)
-        >>> l2 = L2(l=3.14159, c=2.71828)
+        >>> l2 = L2Squared(l=3.14159, c=2.71828)
         >>> np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
         1.3549757024941964e-10
         >>>
-        >>> l2 = L2(l=3.14159, c=2.71828, penalty_start=5)
+        >>> l2 = L2Squared(l=3.14159, c=2.71828, penalty_start=5)
         >>> np.linalg.norm(l2.grad(beta) - l2.approx_grad(beta, eps=1e-4))
         2.1291553983770027e-10
         """
@@ -765,9 +908,9 @@ class L2(interfaces.AtomicFunction,
         Examples
         --------
         >>> import numpy as np
-        >>> from parsimony.functions.penalties import L2
+        >>> from parsimony.functions.penalties import L2Squared
         >>> np.random.seed(42)
-        >>> l2 = L2(c=0.3183098861837907)
+        >>> l2 = L2Squared(c=0.3183098861837907)
         >>> y1 = l2.proj(np.random.rand(100, 1) * 2.0 - 1.0)
         >>> 0.5 * np.linalg.norm(y1) ** 2.0
         0.31830988618379052
@@ -811,9 +954,9 @@ class L2(interfaces.AtomicFunction,
         Examples
         --------
         >>> import numpy as np
-        >>> from parsimony.functions.penalties import L2
+        >>> from parsimony.functions.penalties import L2Squared
         >>> np.random.seed(42)
-        >>> l2 = L2(c=0.3183098861837907)
+        >>> l2 = L2Squared(c=0.3183098861837907)
         >>> y1 = 0.1 * (np.random.rand(50, 1) * 2.0 - 1.0)
         >>> l2.feasible(y1)
         True
