@@ -106,23 +106,33 @@ class TestCase(unittest.TestCase):
 @nottest
 def test_all():
 
-    # Find parsimony directory.
-    # TODO: There is a better way to do this!
     testdir = os.path.dirname(__file__)
-    if len(testdir) == 0:
-        testdir = ".."
-    elif testdir[-1] == '/':
-        testdir += ".."
-    else:
-        testdir += "/.."
 
-    # --exclude='^playhouse\\.py$'
+    # Find parsimony directory.
+    # TODO: Is there a better way to do this?
+    if len(testdir) == 0:
+        parsimonydir = "../parsimony"
+    elif testdir[-1] == '/':
+        parsimonydir = testdir + "../parsimony"
+    else:
+        parsimonydir = testdir + "/../parsimony"
+
+    exec_string = "nosetests --with-doctest --doctest-tests " + \
+                  "--with-coverage -vv -w %s" \
+                  % (parsimonydir,)
+
+    # First run doctests in parsimony.
+    print "Running: " + exec_string
+    os.system(exec_string)
+
     exec_string = "nosetests --with-doctest --doctest-tests " + \
                   "--with-coverage -vv -w %s" \
                   % (testdir,)
-
+    # Then run unit tests in test directory.
+    print
     print "Running: " + exec_string
     os.system(exec_string)
+
 
 if __name__ == "__main__":
     test_all()

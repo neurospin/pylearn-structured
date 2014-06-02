@@ -6,7 +6,7 @@ Created on Mon Feb 24 11:03:30 2014
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
-from .tests import TestCase
+from tests import TestCase
 
 
 class TestGroupLasso(TestCase):

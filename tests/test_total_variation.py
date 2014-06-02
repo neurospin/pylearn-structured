@@ -8,7 +8,7 @@ Created on Wed Feb 26 16:17:15 2014
 """
 import numpy as np
 
-from parsimony.tests import TestCase
+from tests import TestCase
 
 
 class TestTotalVariation(TestCase):

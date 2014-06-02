@@ -6,7 +6,7 @@ Created on Tue Apr 15 15:58:38 2014
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
-from parsimony.tests import TestCase
+from tests import TestCase
 
 
 class TestL1(TestCase):

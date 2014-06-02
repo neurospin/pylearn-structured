@@ -2,14 +2,19 @@
 """
 Created on Thu Nov 14 10:23:53 2013
 
-@author: jinpeng
+@author:  Jinpeng Li, Tommy Löfstedt
+@email:   jinpeng.li@cea.fr, lofstedt.tommy@gmail.com
+@license: BSD 3-clause.
 """
-
 import unittest
+
 import numpy as np
+
 from parsimony.algorithms.implicit import FastSVD
 from parsimony.algorithms.implicit import FastSparseSVD
 import parsimony.utils as utils
+
+from tests import TestCase
 
 
 def generate_sparse_matrix(shape, density=0.10):
@@ -39,7 +44,7 @@ def generate_sparse_matrix(shape, density=0.10):
     return sparse_mat
 
 
-class TestSVD(unittest.TestCase):
+class TestSVD(TestCase):
 
     def get_err_by_np_linalg_svd(self, computed_v, X):
         # svd from numpy array

@@ -8,7 +8,7 @@ Created on Fri Nov 22 10:42:07 2013
 """
 from nose.tools import assert_less
 
-from parsimony.tests import TestCase
+from tests import TestCase
 
 
 class TestAlgorithms(TestCase):
