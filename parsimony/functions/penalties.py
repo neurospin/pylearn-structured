@@ -772,7 +772,7 @@ class L2(interfaces.AtomicFunction,
         >>> from parsimony.functions.penalties import L2
         >>> np.random.seed(42)
         >>> l2 = L2(c=0.3183098861837907)
-        >>> y1 = 0.1 * (np.random.rand(50, 1) * 2.0 - 1.0)
+        >>> y1 = 0.01 * (np.random.rand(50, 1) * 2.0 - 1.0)
         >>> l2.feasible(y1)
         True
         >>> y2 = 10.0 * (np.random.rand(50, 1) * 2.0 - 1.0)
@@ -1444,3 +1444,7 @@ class SufficientDescentCondition(interfaces.Function,
 #            <= self.c2 * abs(grad_p)
 #
 #        return cond1 and cond2
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

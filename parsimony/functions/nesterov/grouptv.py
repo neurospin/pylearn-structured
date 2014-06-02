@@ -10,15 +10,12 @@ Created on Mon May  5 11:46:45 2014
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
-import math
-
 import scipy.sparse as sparse
 import numpy as np
 
 from .interfaces import NesterovFunction
 from .. import interfaces
 import parsimony.utils.consts as consts
-import parsimony.utils.maths as maths
 
 __all__ = ["GroupTotalVariation", "A_from_masks", "A_from_rects"]
 
@@ -264,7 +261,7 @@ def A_from_masks(masks, weights=None):
             weight = weights[g]
 
         # Compute group A matrix
-        Ag, _ = tv.A_from_mask(mask)
+        Ag, _ = tv.A_from_subset_mask(mask)
 
         # Include the weights
         if weight != 1.0 and weight != 1:
@@ -328,7 +325,7 @@ def A_from_rects(rects, shape, weights=None):
             weight = weights[g]
 
         # Compute group A matrix
-        Ag, _ = tv.A_from_mask(mask)
+        Ag, _ = tv.A_from_subset_mask(mask)
 
         # Include the weights
         if weight != 1.0 and weight != 1:

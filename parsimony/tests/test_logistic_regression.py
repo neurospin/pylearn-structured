@@ -452,7 +452,7 @@ class TestLogisticRegression(TestCase):
         gd = explicit.GradientDescent(eps=eps, max_iter=max_iter)
         function = CombinedFunction()
         function.add_function(losses.LogisticRegression(X, y, mean=True))
-        function.add_penalty(penalties.L2(k))
+        function.add_penalty(penalties.L2Squared(k))
         beta_start = start_vector.get_vector(p)
 
         beta = gd.run(function, beta_start)
@@ -595,7 +595,7 @@ class TestLogisticRegression(TestCase):
         function = CombinedFunction()
         function.add_function(losses.LogisticRegression(X_parsimony, y,
                                                         mean=True))
-        function.add_penalty(penalties.L2(k, penalty_start=1))
+        function.add_penalty(penalties.L2Squared(k, penalty_start=1))
         beta_start = start_vector.get_vector(p)
 
         beta = gd.run(function, beta_start)
@@ -874,7 +874,7 @@ class TestLogisticRegression(TestCase):
         algorithm = explicit.ISTA(eps=eps, max_iter=max_iter)
         function = CombinedFunction()
         function.add_function(losses.LogisticRegression(X, y, mean=True))
-        function.add_penalty(penalties.L2(k))
+        function.add_penalty(penalties.L2Squared(k))
         function.add_prox(penalties.L1(l))
         beta_start = start_vector.get_vector(p)
 
@@ -1010,7 +1010,7 @@ class TestLogisticRegression(TestCase):
         function = CombinedFunction()
         logreg = losses.LogisticRegression(X_parsimony, y, mean=True)
         function.add_function(logreg)
-        function.add_penalty(penalties.L2(k, penalty_start=1))
+        function.add_penalty(penalties.L2Squared(k, penalty_start=1))
         function.add_prox(penalties.L1(l, penalty_start=1))
         beta_start = start_vector.get_vector(p)
 

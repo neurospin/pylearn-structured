@@ -20,7 +20,7 @@ class TestSimulations(TestCase):
         from parsimony.functions.losses import LinearRegression
 #        from parsimony.functions.losses import RidgeRegression
         from parsimony.functions.penalties import L1
-        from parsimony.functions.penalties import L2
+        from parsimony.functions.penalties import L2Squared
         import parsimony.functions.nesterov.tv as tv
         from parsimony.functions import CombinedFunction
 
@@ -101,7 +101,7 @@ class TestSimulations(TestCase):
                 function.add_function(LinearRegression(X, y, mean=False))
                 function.add_penalty(tv.TotalVariation(l=L, A=A, mu=mu,
                                                        penalty_start=0))
-                function.add_penalty(L2(k))
+                function.add_penalty(L2Squared(k))
                 function.add_prox(L1(l))
                 beta_nonsmooth_penalty = \
                         fista.run(function, beta_nonsmooth_penalty)
@@ -175,7 +175,7 @@ class TestSimulations(TestCase):
 #            function.add_function(LinearRegression(X, y, mean=False))
 #            function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
 #                                                   penalty_start=0))
-#            function.add_penalty(L2(k))
+#            function.add_penalty(L2Squared(k))
 #            function.add_prox(L1(l))
 #            beta_smooth_penalty = \
 #                    fista.run(function, beta_smooth_penalty)
@@ -279,7 +279,7 @@ class TestSimulations(TestCase):
 #                function.add_function(LinearRegression(X, y, mean=False))
 #                function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
 #                                                       penalty_start=1))
-#                function.add_penalty(L2(k, penalty_start=1))
+#                function.add_penalty(L2Squared(k, penalty_start=1))
 #                function.add_prox(L1(L, penalty_start=1))
 #                beta_nonsmooth_penalty = \
 #                        fista.run(function, beta_nonsmooth_penalty)
@@ -330,7 +330,7 @@ class TestSimulations(TestCase):
 #                function.add_function(LinearRegression(X, y, mean=False))
 #                function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
 #                                                       penalty_start=1))
-#                function.add_penalty(L2(L, penalty_start=1))
+#                function.add_penalty(L2Squared(L, penalty_start=1))
 #                function.add_prox(L1(l, penalty_start=1))
 #                beta_nonsmooth_penalty = \
 #                        fista.run(function, beta_nonsmooth_penalty)
@@ -433,7 +433,7 @@ class TestSimulations(TestCase):
 #                function.add_function(LinearRegression(X, y, mean=False))
 #                function.add_penalty(tv.TotalVariation(l=L, A=A, mu=mu,
 #                                                       penalty_start=1))
-#                function.add_penalty(L2(k, penalty_start=1))
+#                function.add_penalty(L2Squared(k, penalty_start=1))
 #                function.add_prox(L1(l, penalty_start=1))
 #                beta_nonsmooth_penalty = \
 #                        fista.run(function, beta_nonsmooth_penalty)
@@ -494,7 +494,7 @@ class TestSimulations(TestCase):
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
         from parsimony.functions.penalties import L1
-        from parsimony.functions.penalties import L2
+        from parsimony.functions.penalties import L2Squared
         import parsimony.functions.nesterov.tv as tv
         from parsimony.functions import CombinedFunction
 
@@ -574,7 +574,7 @@ class TestSimulations(TestCase):
                 function.add_function(LinearRegression(X, y, mean=False))
                 function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
                                                        penalty_start=1))
-                function.add_penalty(L2(k, penalty_start=1))
+                function.add_penalty(L2Squared(k, penalty_start=1))
                 function.add_prox(L1(L, penalty_start=1))
                 beta_nonsmooth_penalty = \
                         fista.run(function, beta_nonsmooth_penalty)
@@ -625,7 +625,7 @@ class TestSimulations(TestCase):
                 function.add_function(LinearRegression(X, y, mean=False))
                 function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
                                                        penalty_start=1))
-                function.add_penalty(L2(L, penalty_start=1))
+                function.add_penalty(L2Squared(L, penalty_start=1))
                 function.add_prox(L1(l, penalty_start=1))
                 beta_nonsmooth_penalty = \
                         fista.run(function, beta_nonsmooth_penalty)
@@ -728,7 +728,7 @@ class TestSimulations(TestCase):
                 function.add_function(LinearRegression(X, y, mean=False))
                 function.add_penalty(tv.TotalVariation(l=L, A=A, mu=mu,
                                                        penalty_start=1))
-                function.add_penalty(L2(k, penalty_start=1))
+                function.add_penalty(L2Squared(k, penalty_start=1))
                 function.add_prox(L1(l, penalty_start=1))
                 beta_nonsmooth_penalty = \
                         fista.run(function, beta_nonsmooth_penalty)
@@ -854,7 +854,7 @@ class TestSimulations(TestCase):
 #                function.add_function(LinearRegression(X, y, mean=False))
 #                function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
 #                                                          penalty_start=1))
-#                function.add_penalty(L2(k, penalty_start=1))
+#                function.add_penalty(L2Squared(k, penalty_start=1))
 #                function.add_prox(L1(L, penalty_start=1))
 #                beta_nonsmooth_penalty = \
 #                        fista.run(function, beta_nonsmooth_penalty)
@@ -905,7 +905,7 @@ class TestSimulations(TestCase):
 #                function.add_function(LinearRegression(X, y, mean=False))
 #                function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
 #                                                          penalty_start=1))
-#                function.add_penalty(L2(L, penalty_start=1))
+#                function.add_penalty(L2Squared(L, penalty_start=1))
 #                function.add_prox(L1(l, penalty_start=1))
 #                beta_nonsmooth_penalty = \
 #                        fista.run(function, beta_nonsmooth_penalty)
@@ -1008,7 +1008,7 @@ class TestSimulations(TestCase):
 #                function.add_function(LinearRegression(X, y, mean=False))
 #                function.add_penalty(gl.GroupLassoOverlap(l=L, A=A, mu=mu,
 #                                                          penalty_start=1))
-#                function.add_penalty(L2(k, penalty_start=1))
+#                function.add_penalty(L2Squared(k, penalty_start=1))
 #                function.add_prox(L1(l, penalty_start=1))
 #                beta_nonsmooth_penalty = \
 #                        fista.run(function, beta_nonsmooth_penalty)
@@ -1069,7 +1069,7 @@ class TestSimulations(TestCase):
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
         from parsimony.functions.penalties import L1
-        from parsimony.functions.penalties import L2
+        from parsimony.functions.penalties import L2Squared
         import parsimony.functions.nesterov.gl as gl
         from parsimony.functions import CombinedFunction
 
@@ -1152,7 +1152,7 @@ class TestSimulations(TestCase):
                 function.add_function(LinearRegression(X, y, mean=False))
                 function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
                                                           penalty_start=1))
-                function.add_penalty(L2(k, penalty_start=1))
+                function.add_penalty(L2Squared(k, penalty_start=1))
                 function.add_prox(L1(L, penalty_start=1))
                 beta_nonsmooth_penalty = \
                         fista.run(function, beta_nonsmooth_penalty)
@@ -1203,7 +1203,7 @@ class TestSimulations(TestCase):
                 function.add_function(LinearRegression(X, y, mean=False))
                 function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
                                                           penalty_start=1))
-                function.add_penalty(L2(L, penalty_start=1))
+                function.add_penalty(L2Squared(L, penalty_start=1))
                 function.add_prox(L1(l, penalty_start=1))
                 beta_nonsmooth_penalty = \
                         fista.run(function, beta_nonsmooth_penalty)
@@ -1306,7 +1306,7 @@ class TestSimulations(TestCase):
                 function.add_function(LinearRegression(X, y, mean=False))
                 function.add_penalty(gl.GroupLassoOverlap(l=L, A=A, mu=mu,
                                                           penalty_start=1))
-                function.add_penalty(L2(k, penalty_start=1))
+                function.add_penalty(L2Squared(k, penalty_start=1))
                 function.add_prox(L1(l, penalty_start=1))
                 beta_nonsmooth_penalty = \
                         fista.run(function, beta_nonsmooth_penalty)
@@ -1430,7 +1430,7 @@ class TestSimulations(TestCase):
 #                function.add_function(LinearRegression(X, y, mean=False))
 #                function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
 #                                                       penalty_start=1))
-#                function.add_penalty(L2(k, penalty_start=1))
+#                function.add_penalty(L2Squared(k, penalty_start=1))
 #                function.add_prox(L1(L, penalty_start=1))
 #                beta_nonsmooth_penalty = \
 #                        fista.run(function, beta_nonsmooth_penalty)
@@ -1481,7 +1481,7 @@ class TestSimulations(TestCase):
 #                function.add_function(LinearRegression(X, y, mean=False))
 #                function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
 #                                                       penalty_start=1))
-#                function.add_penalty(L2(L, penalty_start=1))
+#                function.add_penalty(L2Squared(L, penalty_start=1))
 #                function.add_prox(L1(l, penalty_start=1))
 #                beta_nonsmooth_penalty = \
 #                        fista.run(function, beta_nonsmooth_penalty)
@@ -1583,7 +1583,7 @@ class TestSimulations(TestCase):
 #                function.add_function(LinearRegression(X, y, mean=False))
 #                function.add_penalty(tv.TotalVariation(l=L, A=A, mu=mu,
 #                                                       penalty_start=1))
-#                function.add_penalty(L2(k, penalty_start=1))
+#                function.add_penalty(L2Squared(k, penalty_start=1))
 #                function.add_prox(L1(l, penalty_start=1))
 #                beta_nonsmooth_penalty = \
 #                        fista.run(function, beta_nonsmooth_penalty)
@@ -1706,7 +1706,7 @@ class TestSimulations(TestCase):
 #                function.add_function(LinearRegression(X, y, mean=False))
 #                function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
 #                                                          penalty_start=1))
-#                function.add_penalty(L2(k, penalty_start=1))
+#                function.add_penalty(L2Squared(k, penalty_start=1))
 #                function.add_prox(L1(L, penalty_start=1))
 #                beta_nonsmooth_penalty = \
 #                        fista.run(function, beta_nonsmooth_penalty)
@@ -1757,7 +1757,7 @@ class TestSimulations(TestCase):
 #                function.add_function(LinearRegression(X, y, mean=False))
 #                function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
 #                                                          penalty_start=1))
-#                function.add_penalty(L2(L, penalty_start=1))
+#                function.add_penalty(L2Squared(L, penalty_start=1))
 #                function.add_prox(L1(l, penalty_start=1))
 #                beta_nonsmooth_penalty = \
 #                        fista.run(function, beta_nonsmooth_penalty)
@@ -1859,7 +1859,7 @@ class TestSimulations(TestCase):
 #                function.add_function(LinearRegression(X, y, mean=False))
 #                function.add_penalty(gl.GroupLassoOverlap(l=L, A=A, mu=mu,
 #                                                          penalty_start=1))
-#                function.add_penalty(L2(k, penalty_start=1))
+#                function.add_penalty(L2Squared(k, penalty_start=1))
 #                function.add_prox(L1(l, penalty_start=1))
 #                beta_nonsmooth_penalty = \
 #                        fista.run(function, beta_nonsmooth_penalty)

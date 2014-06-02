@@ -20,7 +20,8 @@ from .. import interfaces
 import parsimony.utils.consts as consts
 import parsimony.utils.maths as maths
 
-__all__ = ["TotalVariation", "A_from_mask", "A_from_shape"]
+__all__ = ["TotalVariation",
+           "A_from_mask", "A_from_subset_mask", "A_from_shape"]
 
 
 class TotalVariation(interfaces.AtomicFunction,
@@ -256,17 +257,20 @@ def A_from_mask(mask, offset=0):
 
     Parameters
     ----------
-    mask : Numpy array of integer.
-        The mask has the shape of the original data, non null value correspond
-        to columns of X. Groups may be defined using different values in the
-        mask. TV will apply within groups of the same value.
+    mask : Numpy array of integer. The mask has the shape as the original
+            data, non-null values correspond to columns of X. Groups may be
+            defined using different values in the mask. TV will be applied
+            within groups of the same value in the mask.
 
-    offset: Non-negative integer. The index of the first columns, variable
-        where TV apply. It is different from penalty_start which define where
-        penalisation apply. offset define where TV apply within penalisation.
-        Example X := [Intercept, Age, Weight, Image]. Intercept is not penalized,
-        TV do not apply on Age and Weight but only on Image. Thus:
-            penalty_start = 1, offset = 2 (skip Age and Weight).
+    offset: Non-negative integer. The index of the first column, variable,
+            where TV applies. This is different from penalty_start which
+            define where the penalty applies. The offset defines where TV
+            applies within the penalised variables.
+
+                Example: X := [Intercept, Age, Weight, Image]. Intercept is
+                not penalized, TV does not apply on Age and Weight but only on
+                Image. Thus: penalty_start = 1, offset = 2 (skip Age and
+                Weight).
     """
     while len(mask.shape) < 3:
         mask = mask[..., np.newaxis]
@@ -316,10 +320,12 @@ def A_from_mask(mask, offset=0):
     return [Ax, Ay, Az], n_compacts
 
 
-## TODO Merge  tommy__A_from_mask with A_from_mask
-def __tommy_A_from_mask(mask):
+def A_from_subset_mask(mask):
     """Generates the linear operator for the total variation Nesterov function
     from a mask for a 3D image.
+
+    The binary mask marks the variables that are supposed to be smoothed. The
+    mask has the same size as the input and output image.
 
     Parameters
     ----------

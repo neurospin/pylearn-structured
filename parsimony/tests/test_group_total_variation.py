@@ -82,7 +82,8 @@ class TestGroupTotalVariation(TestCase):
                                                              A=A, mu=mu,
                                                              penalty_start=0))
 
-            function.add_penalty(functions.penalties.L2(l=k, penalty_start=0))
+            function.add_penalty(functions.penalties.L2Squared(l=k,
+                                                             penalty_start=0))
 
             beta_parsimony = fista.run(function, beta_parsimony)
 

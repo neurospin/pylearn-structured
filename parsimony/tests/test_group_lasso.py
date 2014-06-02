@@ -432,7 +432,7 @@ class TestGroupLasso(TestCase):
             function = CombinedFunction()
             function.add_function(functions.losses.LinearRegression(X, y,
                                                                mean=False))
-            function.add_penalty(functions.penalties.L2(l=k))
+            function.add_penalty(functions.penalties.L2Squared(l=k))
             function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
                                                       penalty_start=0))
             function.add_prox(functions.penalties.L1(l=l))
@@ -502,7 +502,7 @@ class TestGroupLasso(TestCase):
             function = CombinedFunction()
             function.add_function(functions.losses.LinearRegression(X, y,
                                                                mean=False))
-            function.add_penalty(functions.penalties.L2(l=k))
+            function.add_penalty(functions.penalties.L2Squared(l=k))
             function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
                                                       penalty_start=0))
             function.add_prox(functions.penalties.L1(l=l))

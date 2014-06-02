@@ -352,7 +352,7 @@ class TestLinearRegression(TestCase):
 #        k = 0.318
 #        function = CombinedFunction()
 #        function.add_function(LinearRegression(X_parsimony, y, mean=True))
-#        function.add_penalty(L2(k, penalty_start=1))
+#        function.add_penalty(L2Squared(k, penalty_start=1))
 #
 #        gd = explicit.GradientDescent(eps=eps, max_iter=max_iter)
 #        beta_start = start_vector.get_vector(p)
@@ -673,7 +673,7 @@ class TestLinearRegression(TestCase):
 
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
-        from parsimony.functions.penalties import L2
+        from parsimony.functions.penalties import L2Squared
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
         import parsimony.algorithms.explicit as explicit
@@ -712,7 +712,7 @@ class TestLinearRegression(TestCase):
 
         function = CombinedFunction()
         function.add_function(LinearRegression(X, y, mean=False))
-        function.add_penalty(L2(k))
+        function.add_penalty(L2Squared(k))
         beta_penalty = fista.run(function, beta_start)
 
         mse = np.linalg.norm(beta_penalty - beta_star) \
@@ -729,7 +729,7 @@ class TestLinearRegression(TestCase):
 
         function = CombinedFunction()
         function.add_function(LinearRegression(X, y, mean=False))
-        function.add_prox(L2(k))
+        function.add_prox(L2Squared(k))
         beta_prox = fista.run(function, beta_start)
 
         mse = np.linalg.norm(beta_prox - beta_star) \
@@ -764,7 +764,7 @@ class TestLinearRegression(TestCase):
 
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
-        from parsimony.functions.penalties import L2
+        from parsimony.functions.penalties import L2Squared
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
         import parsimony.algorithms.explicit as explicit
@@ -806,7 +806,7 @@ class TestLinearRegression(TestCase):
 
         function = CombinedFunction()
         function.add_function(LinearRegression(X, y, mean=False))
-        function.add_penalty(L2(k, penalty_start=1))
+        function.add_penalty(L2Squared(k, penalty_start=1))
         beta_penalty = fista.run(function, beta_start)
 
         re = np.linalg.norm(beta_penalty - beta_star) \
@@ -823,7 +823,7 @@ class TestLinearRegression(TestCase):
 
         function = CombinedFunction()
         function.add_function(LinearRegression(X, y, mean=False))
-        function.add_prox(L2(k, penalty_start=1))
+        function.add_prox(L2Squared(k, penalty_start=1))
         beta_prox = fista.run(function, beta_start)
 
         re = np.linalg.norm(beta_prox - beta_star) \
@@ -1377,7 +1377,7 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
         from parsimony.functions.penalties import L1
-        from parsimony.functions.penalties import L2
+        from parsimony.functions.penalties import L2Squared
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
         import parsimony.algorithms.explicit as explicit
@@ -1417,7 +1417,7 @@ class TestLinearRegression(TestCase):
 
         function = CombinedFunction()
         function.add_function(LinearRegression(X, y, mean=False))
-        function.add_penalty(L2(k))
+        function.add_penalty(L2Squared(k))
         function.add_prox(L1(l))
         beta_penalty = fista.run(function, beta_start)
 
@@ -1685,7 +1685,7 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
 #        from parsimony.functions.penalties import L1
-        from parsimony.functions.penalties import L2
+        from parsimony.functions.penalties import L2Squared
         import parsimony.functions.nesterov.tv as tv
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
@@ -1736,7 +1736,7 @@ class TestLinearRegression(TestCase):
             function.add_function(LinearRegression(X, y, mean=False))
             function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
                                                    penalty_start=0))
-            function.add_penalty(L2(k))
+            function.add_penalty(L2Squared(k))
             beta_nonsmooth_penalty = \
                     fista.run(function, beta_nonsmooth_penalty)
 
@@ -1758,7 +1758,7 @@ class TestLinearRegression(TestCase):
             function.add_function(LinearRegression(X, y, mean=False))
             function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
                                                    penalty_start=0))
-            function.add_prox(L2(k))
+            function.add_prox(L2Squared(k))
             beta_nonsmooth_prox = fista.run(function, beta_nonsmooth_prox)
 
         mse = np.linalg.norm(beta_nonsmooth_prox - beta_star) \
@@ -1802,7 +1802,7 @@ class TestLinearRegression(TestCase):
             function.add_function(LinearRegression(X, y, mean=False))
             function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
                                                    penalty_start=0))
-            function.add_penalty(L2(k))
+            function.add_penalty(L2Squared(k))
             beta_smooth_penalty = \
                     fista.run(function, beta_smooth_penalty)
 
@@ -1824,7 +1824,7 @@ class TestLinearRegression(TestCase):
             function.add_function(LinearRegression(X, y, mean=False))
             function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
                                                    penalty_start=0))
-            function.add_prox(L2(k))
+            function.add_prox(L2Squared(k))
             beta_smooth_prox = fista.run(function, beta_smooth_prox)
 
         mse = np.linalg.norm(beta_smooth_prox - beta_star) \
@@ -1864,7 +1864,7 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
 #        from parsimony.functions.penalties import L1
-        from parsimony.functions.penalties import L2
+        from parsimony.functions.penalties import L2Squared
         import parsimony.functions.nesterov.gl as gl
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
@@ -1915,7 +1915,7 @@ class TestLinearRegression(TestCase):
             function.add_function(LinearRegression(X, y, mean=False))
             function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
                                                       penalty_start=0))
-            function.add_penalty(L2(k))
+            function.add_penalty(L2Squared(k))
             beta_nonsmooth_penalty = fista.run(function,
                                                beta_nonsmooth_penalty)
 
@@ -1937,7 +1937,7 @@ class TestLinearRegression(TestCase):
             function.add_function(LinearRegression(X, y, mean=False))
             function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
                                                       penalty_start=0))
-            function.add_prox(L2(k))
+            function.add_prox(L2Squared(k))
             beta_nonsmooth_prox = fista.run(function, beta_nonsmooth_prox)
 
         mse = np.linalg.norm(beta_nonsmooth_prox - beta_star) \
@@ -1982,7 +1982,7 @@ class TestLinearRegression(TestCase):
             function.add_function(LinearRegression(X, y, mean=False))
             function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
                                                       penalty_start=0))
-            function.add_penalty(L2(k))
+            function.add_penalty(L2Squared(k))
             beta_smooth_penalty = fista.run(function, beta_smooth_penalty)
 
         mse = np.linalg.norm(beta_smooth_penalty - beta_star) \
@@ -2003,7 +2003,7 @@ class TestLinearRegression(TestCase):
             function.add_function(LinearRegression(X, y, mean=False))
             function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
                                                       penalty_start=0))
-            function.add_prox(L2(k))
+            function.add_prox(L2Squared(k))
             beta_smooth_prox = fista.run(function, beta_smooth_prox)
 
         mse = np.linalg.norm(beta_smooth_prox - beta_star) \
@@ -2064,7 +2064,7 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
         from parsimony.functions.penalties import L1
-        from parsimony.functions.penalties import L2
+        from parsimony.functions.penalties import L2Squared
         import parsimony.functions.nesterov.tv as tv
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
@@ -2116,7 +2116,7 @@ class TestLinearRegression(TestCase):
             function.add_function(LinearRegression(X, y, mean=False))
             function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
                                                    penalty_start=0))
-            function.add_penalty(L2(k))
+            function.add_penalty(L2Squared(k))
             function.add_prox(L1(l))
             beta_nonsmooth_penalty = \
                     fista.run(function, beta_nonsmooth_penalty)
@@ -2163,7 +2163,7 @@ class TestLinearRegression(TestCase):
             function.add_function(LinearRegression(X, y, mean=False))
             function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
                                                    penalty_start=0))
-            function.add_penalty(L2(k))
+            function.add_penalty(L2Squared(k))
             function.add_prox(L1(l))
             beta_smooth_penalty = \
                     fista.run(function, beta_smooth_penalty)
@@ -2206,7 +2206,7 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.losses import RidgeRegression
         from parsimony.functions.penalties import L1
-        from parsimony.functions.penalties import L2
+        from parsimony.functions.penalties import L2Squared
         import parsimony.functions.nesterov.gl as gl
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
@@ -2257,7 +2257,7 @@ class TestLinearRegression(TestCase):
             function.add_function(LinearRegression(X, y, mean=False))
             function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
                                                       penalty_start=0))
-            function.add_penalty(L2(k))
+            function.add_penalty(L2Squared(k))
             function.add_prox(L1(l))
             beta_nonsmooth_penalty = fista.run(function,
                                                beta_nonsmooth_penalty)
@@ -2304,7 +2304,7 @@ class TestLinearRegression(TestCase):
             function.add_function(LinearRegression(X, y, mean=False))
             function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
                                                       penalty_start=0))
-            function.add_penalty(L2(k))
+            function.add_penalty(L2Squared(k))
             function.add_prox(L1(l))
             beta_smooth_penalty = fista.run(function, beta_smooth_penalty)
 
@@ -2375,7 +2375,7 @@ class TestLinearRegression(TestCase):
         import parsimony.utils.start_vectors as start_vectors
         from parsimony.functions import CombinedFunction
         from parsimony.functions.losses import LinearRegression
-        from parsimony.functions.penalties import L1, L2
+        from parsimony.functions.penalties import L1, L2Squared
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
 
@@ -2792,7 +2792,7 @@ class TestLinearRegression(TestCase):
         function.add_function(LinearRegression(X, y, mean=False))
         function.add_penalty(gl.GroupLassoOverlap(l=g, A=A,
                                                   penalty_start=0))
-        function.add_penalty(L2(l=k))
+        function.add_penalty(L2Squared(l=k))
         function.add_prox(L1(l=l))
 
         f_star = function.f(beta_star)

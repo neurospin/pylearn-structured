@@ -478,8 +478,8 @@ class ElasticNet(RegressionEstimator):
 
         function = functions.CombinedFunction()
         function.add_function(losses.LinearRegression(X, y, mean=self.mean))
-        function.add_penalty(penalties.L2(l=1.0 - self.l,
-                                          penalty_start=self.penalty_start))
+        function.add_penalty(penalties.L2Squared(l=1.0 - self.l,
+                                             penalty_start=self.penalty_start))
         function.add_prox(penalties.L1(l=self.l,
                                        penalty_start=self.penalty_start))
 

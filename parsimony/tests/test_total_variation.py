@@ -208,7 +208,7 @@ class TestTotalVariation(TestCase):
                                                                    mean=False))
             function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
                                                    penalty_start=0))
-            function.add_penalty(functions.penalties.L2(l=k))
+            function.add_penalty(functions.penalties.L2Squared(l=k))
             function.add_prox(functions.penalties.L1(l=l))
 
             beta_parsimony = fista.run(function, beta_parsimony)
@@ -280,7 +280,7 @@ class TestTotalVariation(TestCase):
                                                                mean=False))
             function.add_penalty(tv.TotalVariation(l=g, A=A, mu=mu,
                                                    penalty_start=0))
-            function.add_penalty(functions.penalties.L2(l=k))
+            function.add_penalty(functions.penalties.L2Squared(l=k))
             function.add_prox(functions.penalties.L1(l=l))
 
             beta_parsimony = fista.run(function, beta_parsimony)
