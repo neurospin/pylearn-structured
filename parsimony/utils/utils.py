@@ -22,7 +22,7 @@ import numpy as np
 time_cpu = clock  # UNIX-based system measures CPU time used.
 time_wall = time  # UNIX-based system measures time in seconds since the epoch.
 
-__all__ = ["time_cpu", "time_cpu", "deprecated", "approx_grad",
+__all__ = ["time_cpu", "time_wall", "deprecated", "approx_grad",
            "optimal_shrinkage", "AnonymousClass", "Enum",
            "LimitedDict", "Info"]
 
