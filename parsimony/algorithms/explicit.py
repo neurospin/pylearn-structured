@@ -580,7 +580,7 @@ class CONESTA(bases.ExplicitAlgorithm,
 #                                  conesta_stop=[self.mu_min])
             self.fista_info.clear()
             beta = self.FISTA.run(function, beta)
-
+            #print "CONESTA loop", i, "FISTA=",self.fista_info[Info.num_iter], "TOT iter:", self.num_iter
             # This must always be true here!
             if Info.num_iter in self.fista_info:
                 self.num_iter += self.fista_info[Info.num_iter]

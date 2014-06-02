@@ -62,11 +62,11 @@ def check_compatibility(f):
     """Automatically checks if a function implements a given set of interfaces.
     """
     @functools.wraps(f)
-    def wrapper(self, function, beta=None, *args, **kwargs):
+    def wrapper(self, function, *args, **kwargs):
 
         BaseAlgorithm.check_compatibility(function, self.INTERFACES)
 
-        return f(self, function, beta, *args, **kwargs)
+        return f(self, function, *args, **kwargs)
 
     return wrapper
 

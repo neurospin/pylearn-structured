@@ -250,7 +250,74 @@ class TotalVariation(interfaces.AtomicFunction,
         return np.max(np.sqrt(SS))
 
 
-def A_from_mask(mask):
+def A_from_mask(mask, offset=0):
+    """Generates the linear operator for the total variation Nesterov function
+    from a mask for a 3D image.
+
+    Parameters
+    ----------
+    mask : Numpy array of integer.
+        The mask has the shape of the original data, non null value correspond
+        to columns of X. Groups may be defined using different values in the
+        mask. TV will apply within groups of the same value.
+
+    offset: Non-negative integer. The index of the first columns, variable
+        where TV apply. It is different from penalty_start which define where
+        penalisation apply. offset define where TV apply within penalisation.
+        Example X := [Intercept, Age, Weight, Image]. Intercept is not penalized,
+        TV do not apply on Age and Weight but only on Image. Thus:
+            penalty_start = 1, offset = 2 (skip Age and Weight).
+    """
+    while len(mask.shape) < 3:
+        mask = mask[..., np.newaxis]
+    nx, ny, nz = mask.shape
+    mask_bool = mask != 0
+    xyz_mask = np.where(mask_bool)
+    Ax_i = list()
+    Ax_j = list()
+    Ax_v = list()
+    Ay_i = list()
+    Ay_j = list()
+    Ay_v = list()
+    Az_i = list()
+    Az_j = list()
+    Az_v = list()
+    n_compacts = 0
+    p = np.sum(mask_bool) + offset
+    # Mapping from image coordinate to flat masked array.
+    im2flat = np.zeros(mask.shape, dtype=int)
+    im2flat[:] = -1
+    im2flat[mask_bool] = np.arange(np.sum(mask_bool)) + offset
+    for pt in xrange(len(xyz_mask[0])):
+        found = False
+        x, y, z = xyz_mask[0][pt], xyz_mask[1][pt], xyz_mask[2][pt]
+        i_pt = im2flat[x, y, z]
+        val = mask[x, y, z]
+        if x + 1 < nx and (mask[x + 1, y, z] == val):
+            found = True
+            Ax_i += [i_pt, i_pt]
+            Ax_j += [i_pt, im2flat[x + 1, y, z]]
+            Ax_v += [-1, 1]
+        if y + 1 < ny and (mask[x, y + 1, z] == val):
+            found = True
+            Ay_i += [i_pt, i_pt]
+            Ay_j += [i_pt, im2flat[x, y + 1, z]]
+            Ay_v += [-1, 1]
+        if z + 1 < nz and (mask[x, y, z + 1] == val):
+            found = True
+            Az_i += [i_pt, i_pt]
+            Az_j += [i_pt, im2flat[x, y, z + 1]]
+            Az_v += [-1, 1]
+        if found:
+            n_compacts += 1
+    Ax = sparse.csr_matrix((Ax_v, (Ax_i, Ax_j)), shape=(p, p))
+    Ay = sparse.csr_matrix((Ay_v, (Ay_i, Ay_j)), shape=(p, p))
+    Az = sparse.csr_matrix((Az_v, (Az_i, Az_j)), shape=(p, p))
+    return [Ax, Ay, Az], n_compacts
+
+
+## TODO Merge  tommy__A_from_mask with A_from_mask
+def __tommy_A_from_mask(mask):
     """Generates the linear operator for the total variation Nesterov function
     from a mask for a 3D image.
 
