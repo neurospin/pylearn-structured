@@ -19,7 +19,7 @@ class TestGroupTotalVariation(TestCase):
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
         import parsimony.functions.nesterov.grouptv as grouptv
-        import parsimony.datasets.simulated.l1_l2_grouptvmu as l1_l2_grouptvmu
+        import parsimony.datasets.simulate.l1_l2_grouptvmu as l1_l2_grouptvmu
         import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(1337)
@@ -103,7 +103,7 @@ class TestGroupTotalVariation(TestCase):
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
         import parsimony.functions.nesterov.grouptv as grouptv
-        import parsimony.datasets.simulated.l1_l2_grouptvmu as l1_l2_grouptvmu
+        import parsimony.datasets.simulate.l1_l2_grouptvmu as l1_l2_grouptvmu
         import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(1337)

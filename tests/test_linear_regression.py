@@ -411,7 +411,7 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.penalties import L1
         from parsimony.functions import CombinedFunction
-        import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
+        import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
         import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
@@ -541,7 +541,7 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.losses import LinearRegression
         from parsimony.functions.penalties import L1
         from parsimony.functions import CombinedFunction
-        import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
+        import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
         import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
@@ -675,7 +675,7 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.losses import RidgeRegression
         from parsimony.functions.penalties import L2Squared
         from parsimony.functions import CombinedFunction
-        import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
+        import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
         import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
 
@@ -766,7 +766,7 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.losses import RidgeRegression
         from parsimony.functions.penalties import L2Squared
         from parsimony.functions import CombinedFunction
-        import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
+        import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
         import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
@@ -925,8 +925,8 @@ class TestLinearRegression(TestCase):
 #        from parsimony.functions.penalties import L2
         import parsimony.functions.nesterov.tv as tv
         from parsimony.functions import CombinedFunction
-        import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
-        import parsimony.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
+        import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
+        import parsimony.datasets.simulate.l1_l2_tvmu as l1_l2_tvmu
         import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
 
@@ -1015,8 +1015,8 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.losses import LinearRegression
         import parsimony.functions.nesterov.tv as tv
         from parsimony.functions import CombinedFunction
-        import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
-        import parsimony.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
+        import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
+        import parsimony.datasets.simulate.l1_l2_tvmu as l1_l2_tvmu
         import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
@@ -1151,8 +1151,8 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.losses import LinearRegression
         import parsimony.functions.nesterov.gl as gl
         from parsimony.functions import CombinedFunction
-        import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
-        import parsimony.datasets.simulated.l1_l2_glmu as l1_l2_glmu
+        import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
+        import parsimony.datasets.simulate.l1_l2_glmu as l1_l2_glmu
         import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
@@ -1262,8 +1262,8 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.losses import LinearRegression
         import parsimony.functions.nesterov.gl as gl
         from parsimony.functions import CombinedFunction
-        import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
-        import parsimony.datasets.simulated.l1_l2_glmu as l1_l2_glmu
+        import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
+        import parsimony.datasets.simulate.l1_l2_glmu as l1_l2_glmu
         import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
@@ -1379,7 +1379,7 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.penalties import L1
         from parsimony.functions.penalties import L2Squared
         from parsimony.functions import CombinedFunction
-        import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
+        import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
         import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
@@ -1472,8 +1472,8 @@ class TestLinearRegression(TestCase):
 #        from parsimony.functions.penalties import L2
         import parsimony.functions.nesterov.tv as tv
         from parsimony.functions import CombinedFunction
-        import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
-        import parsimony.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
+        import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
+        import parsimony.datasets.simulate.l1_l2_tvmu as l1_l2_tvmu
         import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
 
@@ -1572,8 +1572,8 @@ class TestLinearRegression(TestCase):
 #        from parsimony.functions.penalties import L2
         import parsimony.functions.nesterov.gl as gl
         from parsimony.functions import CombinedFunction
-        import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
-        import parsimony.datasets.simulated.l1_l2_glmu as l1_l2_glmu
+        import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
+        import parsimony.datasets.simulate.l1_l2_glmu as l1_l2_glmu
         import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
@@ -1688,8 +1688,8 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.penalties import L2Squared
         import parsimony.functions.nesterov.tv as tv
         from parsimony.functions import CombinedFunction
-        import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
-        import parsimony.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
+        import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
+        import parsimony.datasets.simulate.l1_l2_tvmu as l1_l2_tvmu
         import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
 
@@ -1867,8 +1867,8 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.penalties import L2Squared
         import parsimony.functions.nesterov.gl as gl
         from parsimony.functions import CombinedFunction
-        import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
-        import parsimony.datasets.simulated.l1_l2_glmu as l1_l2_glmu
+        import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
+        import parsimony.datasets.simulate.l1_l2_glmu as l1_l2_glmu
         import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
@@ -2067,8 +2067,8 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.penalties import L2Squared
         import parsimony.functions.nesterov.tv as tv
         from parsimony.functions import CombinedFunction
-        import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
-        import parsimony.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
+        import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
+        import parsimony.datasets.simulate.l1_l2_tvmu as l1_l2_tvmu
         import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
 
@@ -2209,8 +2209,8 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.penalties import L2Squared
         import parsimony.functions.nesterov.gl as gl
         from parsimony.functions import CombinedFunction
-        import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
-        import parsimony.datasets.simulated.l1_l2_glmu as l1_l2_glmu
+        import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
+        import parsimony.datasets.simulate.l1_l2_glmu as l1_l2_glmu
         import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
@@ -2369,9 +2369,9 @@ class TestLinearRegression(TestCase):
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions.nesterov.tv as tv
         import parsimony.functions.nesterov.gl as gl
-        import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
-        import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
-#        import parsimony.datasets.simulated.l1_l2_glmu as l1_l2_glmu
+        import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
+        import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
+#        import parsimony.datasets.simulate.l1_l2_glmu as l1_l2_glmu
         import parsimony.utils.start_vectors as start_vectors
         from parsimony.functions import CombinedFunction
         from parsimony.functions.losses import LinearRegression

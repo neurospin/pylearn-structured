@@ -22,7 +22,7 @@ class TestAlgorithms(TestCase):
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.algorithms.explicit as explicit
 
-        import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
+        import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
 
         start_vector = start_vectors.RandomStartVector(normalise=True,
                                                        limits=(-1, 1))
@@ -90,7 +90,7 @@ class TestAlgorithms(TestCase):
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.algorithms.explicit as explicit
 
-        import parsimony.datasets.simulated.l1_l2_gl as l1_l2_gl
+        import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
 
         start_vector = start_vectors.RandomStartVector(normalise=True,
                                                        limits=(-1, 1))

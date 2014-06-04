@@ -22,7 +22,7 @@ class TestL1(TestCase):
         import parsimony.functions.penalties as penalties
         import parsimony.functions.nesterov as nesterov
         import parsimony.utils.start_vectors as start_vectors
-        import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
+        import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
 
@@ -78,7 +78,7 @@ class TestL1(TestCase):
         import parsimony.functions.penalties as penalties
         import parsimony.functions.nesterov as nesterov
         import parsimony.utils.start_vectors as start_vectors
-        import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
+        import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
 

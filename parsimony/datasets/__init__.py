@@ -8,7 +8,7 @@ Created on Mon Apr 22 11:31:13 2013
 """
 
 import Russett
-import simulated
+import simulate
 import regression
 import classification
 
@@ -16,5 +16,5 @@ import classification
 #from .samples_generator_struct import make_regression_struct
 #from .samples_generator_struct import make_classification_struct
 
-__all__ = ['Russett', 'simulated',
+__all__ = ['Russett', 'simulate',
            'regression', 'classification']

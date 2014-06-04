@@ -18,7 +18,7 @@ import l1mu_l2_tvmu
 import regression
 import utils
 
-from .simulated import LinearRegressionData
+from .simulate import LinearRegressionData
 
 __all__ = ["LinearRegressionData",
            'beta', 'correlation_matrices', 'grad',

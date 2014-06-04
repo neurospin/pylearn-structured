@@ -19,7 +19,7 @@ class TestTotalVariation(TestCase):
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
         import parsimony.functions.nesterov.tv as tv
-        import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
+        import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
         import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(42)
@@ -88,7 +88,7 @@ class TestTotalVariation(TestCase):
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
         import parsimony.functions.nesterov.tv as tv
-        import parsimony.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
+        import parsimony.datasets.simulate.l1_l2_tvmu as l1_l2_tvmu
         import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(1337)
@@ -158,7 +158,7 @@ class TestTotalVariation(TestCase):
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
         import parsimony.functions.nesterov.tv as tv
-        import parsimony.datasets.simulated.l1_l2_tv as l1_l2_tv
+        import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
         import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(42)
@@ -229,7 +229,7 @@ class TestTotalVariation(TestCase):
         import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
         import parsimony.functions.nesterov.tv as tv
-        import parsimony.datasets.simulated.l1_l2_tvmu as l1_l2_tvmu
+        import parsimony.datasets.simulate.l1_l2_tvmu as l1_l2_tvmu
         import parsimony.utils.start_vectors as start_vectors
 
         np.random.seed(42)
