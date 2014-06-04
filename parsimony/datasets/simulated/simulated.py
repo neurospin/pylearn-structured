@@ -12,7 +12,7 @@ import numpy as np
 
 import utils
 
-__all__ = ["SimulatedData"]
+__all__ = ["SimulatedData", "LinearRegressionData"]
 
 
 class SimulatedData(object):
