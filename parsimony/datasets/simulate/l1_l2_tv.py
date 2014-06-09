@@ -2,11 +2,12 @@
 """
 Created on Tue Jul 16 12:32:00 2013
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
 @license: BSD 3-clause.
 """
-
 import numpy as np
 from grad import grad_l1
 from grad import grad_l2_squared

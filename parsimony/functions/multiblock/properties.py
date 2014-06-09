@@ -5,6 +5,8 @@ describes the functionality of the multiblock functions.
 
 Try to keep the inheritance tree loop-free unless absolutely impossible.
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 Created on Mon Feb  3 09:55:51 2014
 
 @author:  Tommy Löfstedt

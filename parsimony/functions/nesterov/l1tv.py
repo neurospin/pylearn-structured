@@ -5,6 +5,8 @@ for the L1 + TV penalty, smoothed together using Nesterov's technique.
 
 Created on Mon Feb  3 17:04:14 2014
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Tommy Löfstedt, Vincent Guillemot, Edouard Duchesnay and
           Fouad Hadj-Selem
 @email:   lofstedt.tommy@gmail.com, edouard.duchesnay@cea.fr

@@ -5,11 +5,12 @@ Use in terminal: ./generate_todo.py
 
 Created on Thu Jul 11 14:27:20 2013
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Tommy Löfstedt
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
-
 import os
 import re
 import string

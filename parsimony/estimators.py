@@ -4,6 +4,8 @@ algorithm.
 
 Created on Sat Nov  2 15:19:17 2013
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Tommy Löfstedt, Edouard Duchesnay
 @email:   lofstedt.tommy@gmail.com, edouard.duchesnay@cea.fr
 @license: BSD 3-clause.

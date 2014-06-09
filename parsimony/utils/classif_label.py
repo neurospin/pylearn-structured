@@ -2,10 +2,14 @@
 """
 Created on Mon Mar 10 13:52:23 2014
 
-@author:  edouard.duchesnay@cea.fr
-@license: BSD-3-Clause
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
+@author:  Edouard Duchesnay
+@email:   edouard.duchesnay@cea.fr
+@license: BSD 3-clause.
 """
 import numpy as np
+
 
 def class_weight_to_sample_weight(class_weight, y):
     """Estimate class weights for unbalanced datasets.

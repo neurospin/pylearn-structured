@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`parsimony.utils` module includes common functions and constants.
+The :mod:`parsimony.utils.utils` module includes common functions and
+constants.
 
 Please add anything useful or that you need throughout the whole package to
 this module.
 
 Created on Thu Feb 8 09:22:00 2013
+
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
 
 @author:  Tommy Löfstedt
 @email:   lofstedt.tommy@gmail.com

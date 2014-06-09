@@ -2,6 +2,8 @@
 """
 Created on Fri Feb 21 09:10:52 2014
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Tommy Löfstedt
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.

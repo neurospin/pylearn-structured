@@ -2,7 +2,7 @@
 """Bootstrap setuptools installation
 
 If you want to use setuptools in your package's setup.py, just include this
-file in the same directory with it, and add this to the top of your setup.py::
+file in the same directory with it, and add this to the top of your setup.py:
 
     from ez_setup import use_setuptools
     use_setuptools()
@@ -12,10 +12,13 @@ mirror, or use an alternate download directory, you can do so by supplying
 the appropriate options to ``use_setuptools()``.
 
 This file can also be run as a script to install or upgrade setuptools.
+
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
 """
 import sys
 DEFAULT_VERSION = "0.6c11"
-DEFAULT_URL     = "http://pypi.python.org/packages/%s/s/setuptools/" % sys.version[:3]
+DEFAULT_URL = "http://pypi.python.org/packages/%s/s/setuptools/" \
+            % sys.version[:3]
 
 md5_data = {
     'setuptools-0.6b1-py2.3.egg': '8822caf901250d848b996b7f25c6e6ca',

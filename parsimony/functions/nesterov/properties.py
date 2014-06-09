@@ -5,6 +5,8 @@ necessary properties for Nesterov functions.
 
 Created on Mon Feb  3 10:51:33 2014
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Tommy Löfstedt
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.

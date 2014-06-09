@@ -2,11 +2,16 @@
 """
 Created on Mon Jan  6 14:13:42 2014
 
-@author: edouard.duchesnay@cea.fr
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
+@author:  Edouard Duchesnay
+@email:   edouard.duchesnay@cea.fr
+@license: BSD 3-clause.
 """
 import numpy as np
 
-def plot_map2d(map2d, plot=None, title=None, limits=None, 
+
+def plot_map2d(map2d, plot=None, title=None, limits=None,
                center_cmap=True):
     import matplotlib.pyplot as plt
     if plot is None:
@@ -32,7 +37,7 @@ def plot_map2d(map2d, plot=None, title=None, limits=None,
     #    k += 1
     #ticks = np.array([-mi, -mi / 4 - mi / 2, 0, mx / 2, mx / 2,
     #                  mx]).round(k + 2)
-    cbar = plt.colorbar(cax)#, ticks=ticks)
+    cbar = plt.colorbar(cax)  # , ticks=ticks)
     cbar.set_clim(vmin=mi, vmax=mx)
     if title is not None:
         plt.title(title)

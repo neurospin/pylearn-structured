@@ -2,12 +2,14 @@
 """
 Created on Tue Jul 30 20:55:58 2013
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
-@license: TBD.
+@license: BSD 3-clause.
 """
-
 import numpy as np
+
 from parsimony.utils.consts import TOLERANCE
 
 __all__ = ['norm', 'norm1', 'norm0', 'normInf', 'corr']

@@ -2,9 +2,11 @@
 """
 Created on Mon Jul 29 17:37:17 2013
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Edouard Duchesnay
 @email:   edouard.duchesnay@cea.fr
-@license: TBD.
+@license: BSD 3-clause.
 """
 import numpy as np
 
@@ -19,8 +21,8 @@ def check_arrays(*arrays):
     Parameters
     ----------
     *arrays: Sequence of arrays or scipy.sparse matrices with same shape[0]
-            Python lists or tuples occurring in arrays are converted to 2D numpy
-            arrays.
+            Python lists or tuples occurring in arrays are converted to 2D
+            numpy arrays.
 
     Examples
     --------

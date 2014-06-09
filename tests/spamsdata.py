@@ -2,11 +2,12 @@
 """
 Created on Mon Dec 16 12:21:44 2013
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Jinpeng Li
 @email:   jinpeng.li@cea.fr
 @license: BSD 3-clause.
 """
-
 import numpy as np
 
 

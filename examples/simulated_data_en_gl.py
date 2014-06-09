@@ -11,6 +11,8 @@ been commented out.
 
 Created on Tue Jan 28 14:47:06 2014
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Tommy Löfstedt
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.

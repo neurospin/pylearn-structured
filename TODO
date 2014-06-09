@@ -3,152 +3,152 @@
 
 ./parsimony/estimators.py:
 -------------------------
-75: # TODO: Is this a good name?
+77: # TODO: Is this a good name?
 
-261: # TODO: Should we use a seed here so that we get deterministic results?
+263: # TODO: Should we use a seed here so that we get deterministic results?
 
-375: # TODO: Should we use a seed here so that we get deterministic results?
+377: # TODO: Should we use a seed here so that we get deterministic results?
 
-491: # TODO: Should we use a seed here so that we get deterministic results?
+493: # TODO: Should we use a seed here so that we get deterministic results?
 
-651: # TODO: Should we use a seed here so that we get deterministic results?
+653: # TODO: Should we use a seed here so that we get deterministic results?
 
-816: # TODO: Should we use a seed here so that we get deterministic results?
+818: # TODO: Should we use a seed here so that we get deterministic results?
 
-1124: # TODO: Should we use a seed here so that we get deterministic results?
+1126: # TODO: Should we use a seed here so that we get deterministic results?
 
-1297: # TODO: Should we use a seed here so that we get deterministic results?
+1299: # TODO: Should we use a seed here so that we get deterministic results?
 
 ./parsimony/utils/utils.py:
 --------------------------
-21: #TODO: This depends on the OS. We should try to be clever here ...
+24: #TODO: This depends on the OS. We should try to be clever here ...
 
 ./parsimony/utils/consts.py:
 ---------------------------
-16: # TODO: MAX_ITER is heavily algorithm-dependent, so we have to think about if
-17: # we should include a package-wide maximum at all.
+18: # TODO: MAX_ITER is heavily algorithm-dependent, so we have to think about if
+19: # we should include a package-wide maximum at all.
 
 ./parsimony/functions/losses.py:
 -------------------------------
-185: # TODO: Inherit from LinearRegression and add an L2 constraint instead!
+187: # TODO: Inherit from LinearRegression and add an L2 constraint instead!
 
-362: # TODO: Make the weights sparse.
-363: #weights = np.eye(self.X.shape[0])
+364: # TODO: Make the weights sparse.
+365: #weights = np.eye(self.X.shape[0])
 
-365: # TODO: Allow the weight vector to be a list.
+367: # TODO: Allow the weight vector to be a list.
 
-470: # TODO: Use FastSVD for speedup!
+472: # TODO: Use FastSVD for speedup!
 
-472: self._L = np.max(s) ** 2.0  # TODO: CHECK
+474: self._L = np.max(s) ** 2.0  # TODO: CHECK
 
-632: PWX = 0.5 * np.sqrt(self.weights) * self.X  # TODO: CHECK WITH FOUAD
-633: # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
-634: #PW = 0.5 * np.sqrt(self.W)
-635: #PWX = np.dot(PW, self.X)
-636: # TODO: Use FastSVD for speedup!
+634: PWX = 0.5 * np.sqrt(self.weights) * self.X  # TODO: CHECK WITH FOUAD
+635: # PW = 0.5 * np.eye(self.X.shape[0]) ## miss np.sqrt(self.W)
+636: #PW = 0.5 * np.sqrt(self.W)
+637: #PWX = np.dot(PW, self.X)
+638: # TODO: Use FastSVD for speedup!
 
-638: self._L = np.max(s) ** 2.0  # TODO: CHECK
+640: self._L = np.max(s) ** 2.0  # TODO: CHECK
 
-643: self._L += self.k  # TODO: CHECK
+645: self._L += self.k  # TODO: CHECK
 
-661: # TODO: Handle mean here?
+663: # TODO: Handle mean here?
 
 ./parsimony/functions/penalties.py:
 ----------------------------------
-195: # TODO: This should not be able to happen! Do we know it doesn't?
+197: # TODO: This should not be able to happen! Do we know it doesn't?
 
-200: # TODO: This should not be able to happen! Do we know it doesn't?
+202: # TODO: This should not be able to happen! Do we know it doesn't?
 
-568: # TODO: Check if this is correct!
+570: # TODO: Check if this is correct!
 
-1259: # TODO: We can share variables between f and df and speed up
-1260: # some shared computations.
+1261: # TODO: We can share variables between f and df and speed up
+1262: # some shared computations.
 
 ./parsimony/functions/properties.py:
 -----------------------------------
-106: # TODO: Should all constraints have the projection operator?
+108: # TODO: Should all constraints have the projection operator?
 
-344: # TODO: Should L by default take a weight vector as argument?
+346: # TODO: Should L by default take a weight vector as argument?
 
 ./parsimony/functions/combinedfunctions.py:
 ------------------------------------------
-35: # TODO: Add penalty_start and mean to all of these!
+37: # TODO: Add penalty_start and mean to all of these!
 
-107: # TODO: We currently only allow one proximal operator. Fix this!
+109: # TODO: We currently only allow one proximal operator. Fix this!
 
-160: # TODO: We currently only allow one proximal operator. Fix this!
+162: # TODO: We currently only allow one proximal operator. Fix this!
 
-654: # TODO: This is not good. Solve this better!
+656: # TODO: This is not good. Solve this better!
 
-1157: # TODO: This is not a good solution. Can we solve this in a better way?
+1159: # TODO: This is not a good solution. Can we solve this in a better way?
 
-1209: # TODO: Use max_iter here!!
+1211: # TODO: Use max_iter here!!
 
-1259: # TODO: Kernelise this function! See how I did in
-1260: # LinearRegressionL1L2TV._beta_hat.
+1261: # TODO: Kernelise this function! See how I did in
+1262: # LinearRegressionL1L2TV._beta_hat.
 
-1302: # TODO: Add this function or refactor API!
+1304: # TODO: Add this function or refactor API!
 
-1385: # TODO: This is not a nice solution. Can we solve it better?
+1387: # TODO: This is not a nice solution. Can we solve it better?
 
 ./parsimony/functions/multiblock/losses.py:
 ------------------------------------------
-895: # TODO: Check instead if it is a numpy array.
+897: # TODO: Check instead if it is a numpy array.
 
 ./parsimony/functions/nesterov/tv.py:
 ------------------------------------
-148: # TODO: This only work if the elements of self._A are scipy.sparse. We
-149: # should allow dense matrices as well.
+150: # TODO: This only work if the elements of self._A are scipy.sparse. We
+151: # should allow dense matrices as well.
 
-152: # TODO: Instead of p, this should really be the number of non-zero
-153: # rows of A.
+154: # TODO: Instead of p, this should really be the number of non-zero
+155: # rows of A.
 
-163: # TODO: Add max_iter here!
+165: # TODO: Add max_iter here!
 
 ./parsimony/functions/nesterov/l1tv.py:
 --------------------------------------
-62: # WARNING: Number of non-zero rows may differ from p.
+64: # WARNING: Number of non-zero rows may differ from p.
 
-149: # TODO: Instead of p, this should really be the number of non-zero
-150: # rows of A.
+151: # TODO: Instead of p, this should really be the number of non-zero
+152: # rows of A.
 
-161: # TODO: Add max_iter here!!
+163: # TODO: Add max_iter here!!
 
 ./parsimony/functions/nesterov/grouptv.py:
 -----------------------------------------
-155: # TODO: This only work if the elements of self._A are scipy.sparse. We
-156: # should allow dense matrices as well.
+157: # TODO: This only work if the elements of self._A are scipy.sparse. We
+158: # should allow dense matrices as well.
 
-162: # TODO: Add max_iter here!
+164: # TODO: Add max_iter here!
 
 ./parsimony/datasets/regression/dice5.py:
 ----------------------------------------
-32: # TODO: This is wrong. Shape should be Z, Y, X.
+35: # TODO: This is wrong. Shape should be Z, Y, X.
 
 ./parsimony/algorithms/primaldual.py:
 ------------------------------------
-200: # TODO: Warn if G_new < 0.
+202: # TODO: Warn if G_new < 0.
 
 ./parsimony/algorithms/utils.py:
 -------------------------------
-238: # TODO: We already have f_mid, so we can return a better approximation
-239: # here!
+240: # TODO: We already have f_mid, so we can return a better approximation
+241: # here!
 
-327: # TODO: Handle the other cases!
+329: # TODO: Handle the other cases!
 
-339: # TODO: We seek a root, i.e. where f(x) = 0. The stopping criterion
-340: #       should (could?) thus be abs(f(x)) <= eps!
+341: # TODO: We seek a root, i.e. where f(x) = 0. The stopping criterion
+342: #       should (could?) thus be abs(f(x)) <= eps!
 
-359: if abs(x - x_) <= self.eps:  # TODO: Stopping criterion. See above!
+361: if abs(x - x_) <= self.eps:  # TODO: Stopping criterion. See above!
 
 ./parsimony/algorithms/proximal.py:
 ----------------------------------
-380: # TODO: Investigate what is a good default value here!
+382: # TODO: Investigate what is a good default value here!
 
-433: # TODO: Investigate what is a good default value here!
+435: # TODO: Investigate what is a good default value here!
 
-472: # TODO: Does the weights really matter when the function is the
-473: # indicator function?
+474: # TODO: Does the weights really matter when the function is the
+475: # indicator function?
 
-507: # TODO: Investigate what is a good default value here!
+509: # TODO: Investigate what is a good default value here!
 

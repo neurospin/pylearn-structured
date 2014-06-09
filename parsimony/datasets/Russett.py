@@ -2,14 +2,15 @@
 """
 Created on Mon Apr 22 11:13:02 2013
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
-@license: TBD.
+@license: BSD 3-clause.
 """
+import numpy as np
 
 __all__ = ['load', 'labels']
-
-import numpy as np
 
 
 def load():

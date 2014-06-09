@@ -5,6 +5,8 @@ testing. It also has the ability to run all unit tests.
 
 Created on Wed Feb 19 14:55:58 2014
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Tommy Löfstedt
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.

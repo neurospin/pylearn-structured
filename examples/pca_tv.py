@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
+"""
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
 
+@author:  Fouad Hadj-Selem, Tommy Löfstedt
+@email:   fouad.hadjselem@cea.fr, tommy.loefstedt@cea.fr
+@license: BSD 3-clause.
+"""
 #import numpy.random
 import numpy as np
 import parsimony.datasets

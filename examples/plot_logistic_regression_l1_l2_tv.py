@@ -2,8 +2,11 @@
 """
 Created on Mon Dec 23 15:00:10 2013
 
-@author: edouard.duchesnay@cea.fr
-@license: BSD-3-Clause
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
+@author:  Edouard Duchesnay
+@email:   edouard.duchesnay@cea.fr
+@license: BSD 3-clause.
 """
 import numpy as np
 import matplotlib.pyplot as plt

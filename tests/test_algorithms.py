@@ -2,6 +2,8 @@
 """
 Created on Fri Nov 22 10:42:07 2013
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Jinpeng Li, Tommy Löfstedt
 @email:   jinpeng.li@cea.fr, lofstedt.tommy@gmail.com
 @license: BSD 3-clause.

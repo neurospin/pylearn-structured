@@ -2,17 +2,19 @@
 """
 Created on Tue Jun 18 09:22:40 2013
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
 @license: BSD 3-clause.
 """
+import random
+
+import numpy as np
 
 import correlation_matrices
 
 __all__ = ['load']
-
-import numpy as np
-import random
 
 
 def load(size=[[100, 100]], rho=[0.05], delta=0.1, eps=None, density=0.5,

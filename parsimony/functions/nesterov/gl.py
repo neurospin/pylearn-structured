@@ -6,6 +6,8 @@ Nesterov's technique.
 
 Created on Mon Feb  3 10:46:47 2014
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Tommy Löfstedt, Edouard Duchesnay
 @email:   lofstedt.tommy@gmail.com, edouard.duchesnay@cea.fr
 @license: BSD 3-clause.

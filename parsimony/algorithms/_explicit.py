@@ -19,6 +19,8 @@ Algorithms that don't fit well in either category should go in utils instead.
 
 Created on Thu Feb 20 17:50:40 2014
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Tommy Löfstedt
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.

@@ -3,6 +3,8 @@
 The :mod:`parsimony.functions.losses` module contains multiblock loss
 functions.
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 Created on Tue Feb  4 08:51:43 2014
 
 @author:  Tommy Löfstedt

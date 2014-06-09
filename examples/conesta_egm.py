@@ -2,11 +2,12 @@
 """
 Created on Wed Oct 23 09:45:35 2013
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Tommy Löfstedt
 @email:   tommy.loefstedt@cea.fr
 @license: BSD 3-clause.
 """
-
 import numpy as np
 import matplotlib.pyplot as plot
 from time import time

@@ -6,6 +6,8 @@ away to analyse real data.
 
 Created on Mon Apr 22 10:54:29 2013
 
+Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
+
 @author:  Tommy Löfstedt, Vincent Guillemot, Edouard Duchesnay and
           Fouad Hadj-Selem
 @email:   lofstedt.tommy@gmail.com, edouard.duchesnay@cea.fr
