@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`parsimony.functions.interfaces` module contains interfaces that
-describes the functionality of the functions.
+The :mod:`parsimony.functions.properties` module contains base classes that are
+used  to assign properties, i.e. functionality of the functions.
 
 Try to keep the inheritance tree loop-free unless absolutely impossible.
 

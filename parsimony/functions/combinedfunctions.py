@@ -13,8 +13,8 @@ Created on Mon Apr 22 10:54:29 2013
 """
 import numpy as np
 
-from . import interfaces
-import nesterov.interfaces as nesterov_interfaces
+from . import properties
+import nesterov.properties as nesterov_properties
 from .nesterov.l1 import L1 as SmoothedL1
 import nesterov
 from .nesterov.l1tv import L1TV
@@ -35,11 +35,11 @@ __all__ = ["CombinedFunction",
 # TODO: Add penalty_start and mean to all of these!
 
 
-class CombinedFunction(interfaces.CompositeFunction,
-                       interfaces.Gradient,
-                       interfaces.ProximalOperator,
-                       interfaces.ProjectionOperator,
-                       interfaces.StepSize):
+class CombinedFunction(properties.CompositeFunction,
+                       properties.Gradient,
+                       properties.ProximalOperator,
+                       properties.ProjectionOperator,
+                       properties.StepSize):
     """Combines one or more loss functions, any number of penalties and zero
     or one proximal operator.
 
@@ -82,23 +82,23 @@ class CombinedFunction(interfaces.CompositeFunction,
 
     def add_function(self, function):
 
-        if not isinstance(function, interfaces.Gradient):
+        if not isinstance(function, properties.Gradient):
             raise ValueError("Functions must have gradients.")
 
         self._f.append(function)
 
     def add_penalty(self, penalty):
 
-        if not isinstance(penalty, interfaces.Penalty):
+        if not isinstance(penalty, properties.Penalty):
             raise ValueError("Not a penalty.")
-        elif not isinstance(penalty, interfaces.Gradient):
+        elif not isinstance(penalty, properties.Gradient):
             raise ValueError("Penalties must have gradients.")
         else:
             self._p.append(penalty)
 
     def add_prox(self, penalty):
 
-        if not isinstance(penalty, interfaces.ProximalOperator):
+        if not isinstance(penalty, properties.ProximalOperator):
             raise ValueError("Not a proximal operator.")
         elif len(self._c) > 0:
             raise ValueError("Cannot have both ProximalOperator and " \
@@ -109,9 +109,9 @@ class CombinedFunction(interfaces.CompositeFunction,
 
     def add_constraint(self, constraint):
 
-        if not isinstance(constraint, interfaces.Constraint):
+        if not isinstance(constraint, properties.Constraint):
             raise ValueError("Not a constraint.")
-        elif not isinstance(constraint, interfaces.ProjectionOperator):
+        elif not isinstance(constraint, properties.ProjectionOperator):
             raise ValueError("Constraints must have projection operators.")
         elif not isinstance(self._prox, ZeroFunction):
             raise ValueError("Cannot have both ProjectionOperator and " \
@@ -174,12 +174,12 @@ class CombinedFunction(interfaces.CompositeFunction,
         """
         all_lipschitz = True
         for f in self._f:
-            if not isinstance(f, interfaces.LipschitzContinuousGradient):
+            if not isinstance(f, properties.LipschitzContinuousGradient):
                 all_lipschitz = False
                 break
 
         for p in self._p:
-            if not isinstance(p, interfaces.LipschitzContinuousGradient):
+            if not isinstance(p, properties.LipschitzContinuousGradient):
                 all_lipschitz = False
                 break
 
@@ -196,7 +196,7 @@ class CombinedFunction(interfaces.CompositeFunction,
         else:
             # If not all functions have Lipschitz continuous gradients, try
             # to find the step size through backtracking line search.
-            from parsimony.algorithms.explicit import BacktrackingLineSearch
+            from parsimony.algorithms.utils import BacktrackingLineSearch
             import parsimony.functions.penalties as penalties
 
             p = -self.grad(x)
@@ -207,15 +207,15 @@ class CombinedFunction(interfaces.CompositeFunction,
         return step
 
 
-class LinearRegressionL1L2TV(interfaces.CompositeFunction,
-                             interfaces.Gradient,
-                             interfaces.LipschitzContinuousGradient,
-                             nesterov_interfaces.NesterovFunction,
-                             interfaces.ProximalOperator,
-                             interfaces.Continuation,
-                             interfaces.DualFunction,
-                             interfaces.StronglyConvex,
-                             interfaces.StepSize):
+class LinearRegressionL1L2TV(properties.CompositeFunction,
+                             properties.Gradient,
+                             properties.LipschitzContinuousGradient,
+                             nesterov_properties.NesterovFunction,
+                             properties.ProximalOperator,
+                             properties.Continuation,
+                             properties.DualFunction,
+                             properties.StronglyConvex,
+                             properties.StepSize):
     """Combination (sum) of LinearRegression, L1, L2 and TotalVariation.
     """
     def __init__(self, X, y, k, l, g, A=None, mu=0.0, penalty_start=0,
@@ -484,7 +484,7 @@ class LinearRegressionL1L2TV(interfaces.CompositeFunction,
         beta_hat = betak
 
         from parsimony.functions import CombinedFunction
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
 #        import parsimony.functions.nesterov as nesterov
@@ -503,7 +503,7 @@ class LinearRegressionL1L2TV(interfaces.CompositeFunction,
         function.add_prox(penalties.L1(self.l1.l,
                                        penalty_start=self.penalty_start))
 
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter)
+        fista = proximal.FISTA(eps=eps, max_iter=max_iter)
         beta_hat_ = fista.run(function, beta_hat)
 
 #        print np.linalg.norm(beta_hat - beta_hat_)
@@ -875,7 +875,7 @@ class LinearRegressionL1L2GL(LinearRegressionL1L2TV):
         beta_hat = betak
 
         from parsimony.functions import CombinedFunction
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
 #        import parsimony.functions.nesterov as nesterov
@@ -894,7 +894,7 @@ class LinearRegressionL1L2GL(LinearRegressionL1L2TV):
         function.add_prox(penalties.L1(self.l1.l,
                                        penalty_start=self.penalty_start))
 
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter)
+        fista = proximal.FISTA(eps=eps, max_iter=max_iter)
         beta_hat_ = fista.run(function, beta_hat)
 
 #        print np.linalg.norm(beta_hat - beta_hat_)
@@ -1081,12 +1081,12 @@ class LogisticRegressionL1L2GL(LinearRegressionL1L2GL):
         self.reset()
 
 
-class LinearRegressionL2SmoothedL1TV(interfaces.CompositeFunction,
-                                     interfaces.LipschitzContinuousGradient,
-                                     nesterov_interfaces.NesterovFunction,
-                                     interfaces.GradientMap,
-                                     interfaces.DualFunction,
-                                     interfaces.StronglyConvex):
+class LinearRegressionL2SmoothedL1TV(properties.CompositeFunction,
+                                     properties.LipschitzContinuousGradient,
+                                     nesterov_properties.NesterovFunction,
+                                     properties.GradientMap,
+                                     properties.DualFunction,
+                                     properties.StronglyConvex):
     """Combination (sum) of Linear Regression, L2 and simultaneously smoothed
     L1 and TotalVariation.
 
@@ -1327,15 +1327,15 @@ class LinearRegressionL2SmoothedL1TV(interfaces.CompositeFunction,
         return self.h.project(a)
 
 
-class PrincipalComponentAnalysisL1TV(interfaces.CompositeFunction,
-               interfaces.Gradient,
-               interfaces.LipschitzContinuousGradient,
-               nesterov_interfaces.NesterovFunction,
-               interfaces.ProximalOperator,
-               interfaces.Continuation,
-               interfaces.DualFunction,
-               interfaces.StronglyConvex,
-               interfaces.StepSize):
+class PrincipalComponentAnalysisL1TV(properties.CompositeFunction,
+                                     properties.Gradient,
+                                     properties.LipschitzContinuousGradient,
+                                     nesterov_properties.NesterovFunction,
+                                     properties.ProximalOperator,
+                                     properties.Continuation,
+                                     properties.DualFunction,
+                                     properties.StronglyConvex,
+                                     properties.StepSize):
     """Combination (sum) of PCA (Variance), L1 and TotalVariation
     """
     def __init__(self, X, k, l, g, A=None, mu=0.0, penalty_start=0):

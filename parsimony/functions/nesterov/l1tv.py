@@ -15,20 +15,20 @@ import math
 import scipy.sparse as sparse
 import numpy as np
 
-from .interfaces import NesterovFunction
-from .. import interfaces
+from .properties import NesterovFunction
+from .. import properties
 import parsimony.utils.consts as consts
 import parsimony.utils.maths as maths
 import tv
-import L1
+import l1
 
 __all__ = ["L1TV", "A_from_mask", "A_from_shape"]
 
 
-class L1TV(interfaces.AtomicFunction,
+class L1TV(properties.AtomicFunction,
            NesterovFunction,
-           interfaces.Penalty,
-           interfaces.Eigenvalues):
+           properties.Penalty,
+           properties.Eigenvalues):
     """The proximal operator of the smoothed sum of the TV and L1 functions
 
         f(beta) = (l * L1(beta) + g * TV(beta))_mu,
@@ -155,7 +155,7 @@ class L1TV(interfaces.AtomicFunction,
 
         elif self._lambda_max is None:
 
-            from parsimony.algorithms.implicit import FastSparseSVD
+            from parsimony.algorithms.nipals import FastSparseSVD
 
             A = sparse.vstack(self.A()[1:])
             # TODO: Add max_iter here!!
@@ -272,7 +272,7 @@ def A_from_mask(mask, num_variables, penalty_start=0):
             Default is 0, all variables are included.
     """
     Atv, _ = tv.A_from_mask(mask)
-    Al1 = L1.A_from_variables(num_variables, penalty_start=penalty_start)
+    Al1 = l1.A_from_variables(num_variables, penalty_start=penalty_start)
 
     return Atv, Al1
 
@@ -296,6 +296,6 @@ def A_from_shape(shape, num_variables, penalty_start=0):
             Default is 0, all variables are included.
     """
     Atv, _ = tv.A_from_shape(shape)
-    Al1 = L1.A_from_variables(num_variables, penalty_start=penalty_start)
+    Al1 = l1.A_from_variables(num_variables, penalty_start=penalty_start)
 
     return Atv, Al1

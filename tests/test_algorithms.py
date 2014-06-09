@@ -20,7 +20,7 @@ class TestAlgorithms(TestCase):
         import parsimony.estimators as estimators
         import parsimony.functions.nesterov.tv as tv
         import parsimony.utils.start_vectors as start_vectors
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.primaldual as primaldual
 
         import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
 
@@ -58,7 +58,7 @@ class TestAlgorithms(TestCase):
 
         mu = None
         dynamic = estimators.LinearRegressionL1L2TV(l, k, g, A, mu=mu,
-                                      algorithm=explicit.DynamicCONESTA(),
+                                      algorithm=primaldual.DynamicCONESTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       mean=False)
@@ -88,7 +88,7 @@ class TestAlgorithms(TestCase):
         import parsimony.estimators as estimators
         import parsimony.functions.nesterov.gl as gl
         import parsimony.utils.start_vectors as start_vectors
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.primaldual as primaldual
 
         import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
 
@@ -137,7 +137,7 @@ class TestAlgorithms(TestCase):
 
         mu = None
         dynamic = estimators.LinearRegressionL1L2GL(l, k, g, A, mu=mu,
-                                      algorithm=explicit.DynamicCONESTA(),
+                                      algorithm=primaldual.DynamicCONESTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=penalty_start,

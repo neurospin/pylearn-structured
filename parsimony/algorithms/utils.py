@@ -22,7 +22,7 @@ except ValueError:
 from parsimony.utils import Info
 import parsimony.utils.consts as consts
 import parsimony.functions.penalties as penalties
-import parsimony.functions.interfaces as interfaces
+import parsimony.functions.properties as properties
 
 __all__ = ["Bisection", "NewtonRaphson",
            "BacktrackingLineSearch"]
@@ -37,7 +37,7 @@ class Bisection(bases.ExplicitAlgorithm,
     Assumes a function f(x) such that |f(x)|_2 < -eps if x is too small,
     |f(x)|_2 > eps if x is too large and |f(x)|_2 <= eps if x is just right.
     """
-    INTERFACES = [interfaces.Function]
+    INTERFACES = [properties.Function]
 
     PROVIDED_INFO = [Info.ok,
                      Info.num_iter,
@@ -270,8 +270,8 @@ class NewtonRaphson(bases.ExplicitAlgorithm,
 
     min_iter : Positive integer. Minimum number of iterations. Default is 1.
     """
-    INTERFACES = [interfaces.Function,
-                  interfaces.Gradient]
+    INTERFACES = [properties.Function,
+                  properties.Gradient]
 
     PROVIDED_INFO = [Info.ok,
                      Info.num_iter,
@@ -374,8 +374,8 @@ class NewtonRaphson(bases.ExplicitAlgorithm,
 class BacktrackingLineSearch(bases.ExplicitAlgorithm):
     """Finds a step length a that fulfills a given descent criterion.
     """
-    INTERFACES = [interfaces.Function,
-                  interfaces.Gradient]
+    INTERFACES = [properties.Function,
+                  properties.Gradient]
 
     def __init__(self, condition=None,
                  output=False,

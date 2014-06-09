@@ -13,19 +13,19 @@ Created on Mon May  5 11:46:45 2014
 import scipy.sparse as sparse
 import numpy as np
 
-from .interfaces import NesterovFunction
-from .. import interfaces
+from .properties import NesterovFunction
+from .. import properties
 import parsimony.utils.consts as consts
 
 __all__ = ["GroupTotalVariation", "A_from_masks", "A_from_rects"]
 
 
-class GroupTotalVariation(interfaces.AtomicFunction,
+class GroupTotalVariation(properties.AtomicFunction,
                           NesterovFunction,
-                          interfaces.Penalty,
-                          interfaces.Constraint,
-                          interfaces.Gradient,
-                          interfaces.LipschitzContinuousGradient):
+                          properties.Penalty,
+                          properties.Constraint,
+                          properties.Gradient,
+                          properties.LipschitzContinuousGradient):
     """The smoothed Group total variation (Group TV) function
 
         f(beta) = l * (GroupTV(beta) - c),
@@ -156,7 +156,7 @@ class GroupTotalVariation(interfaces.AtomicFunction,
         # should allow dense matrices as well.
         if self._lambda_max is None:
 
-            from parsimony.algorithms.implicit import FastSparseSVD
+            from parsimony.algorithms.nipals import FastSparseSVD
 
             A = sparse.vstack(self.A())
             # TODO: Add max_iter here!

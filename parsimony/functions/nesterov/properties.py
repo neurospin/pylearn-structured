@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`parsimony.functions.nesterov.interfaces` module contains the
-necessary interfaces for Nesterov functions.
+The :mod:`parsimony.functions.nesterov.properties` module contains the
+necessary properties for Nesterov functions.
 
 Created on Mon Feb  3 10:51:33 2014
 

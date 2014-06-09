@@ -8,6 +8,8 @@ Created on Mon Feb 24 11:03:30 2014
 """
 from tests import TestCase
 
+from parsimony.algorithms.proximal import FISTA
+
 
 class TestGroupLasso(TestCase):
 
@@ -16,7 +18,7 @@ class TestGroupLasso(TestCase):
 
         import numpy as np
         from parsimony.functions import CombinedFunction
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.functions as functions
         import parsimony.functions.nesterov.gl as gl
         import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
@@ -55,7 +57,7 @@ class TestGroupLasso(TestCase):
         beta_start = start_vector.get_vector(p)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
 
         beta_parsimony = beta_start
         for mu in mus:
@@ -128,7 +130,7 @@ class TestGroupLasso(TestCase):
 
         import numpy as np
         from parsimony.functions import CombinedFunction
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.functions as functions
         import parsimony.functions.nesterov.gl as gl
         import parsimony.datasets.simulate.l1_l2_glmu as l1_l2_glmu
@@ -169,7 +171,7 @@ class TestGroupLasso(TestCase):
         beta_start = start_vector.get_vector(p)
 
         mus = [5e-0, 5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
 
         beta_parsimony = beta_start
         for mu in mus:
@@ -242,7 +244,7 @@ class TestGroupLasso(TestCase):
 
         import numpy as np
         from parsimony.functions import CombinedFunction
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.functions as functions
         import parsimony.functions.nesterov.gl as gl
         import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
@@ -281,7 +283,7 @@ class TestGroupLasso(TestCase):
         beta_start = start_vector.get_vector(p)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
 
         beta_parsimony = beta_start
         for mu in mus:
@@ -310,7 +312,6 @@ class TestGroupLasso(TestCase):
 
         import numpy as np
         from parsimony.functions import CombinedFunction
-        import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
         import parsimony.functions.nesterov.gl as gl
         import parsimony.datasets.simulate.l1_l2_glmu as l1_l2_glmu
@@ -351,7 +352,7 @@ class TestGroupLasso(TestCase):
         beta_start = start_vector.get_vector(p)
 
         mus = [5e-0, 5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = FISTA(eps=eps, max_iter=max_iter / len(mus))
 
         beta_parsimony = beta_start
         for mu in mus:
@@ -380,7 +381,7 @@ class TestGroupLasso(TestCase):
 
         import numpy as np
         from parsimony.functions import CombinedFunction
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.functions as functions
         import parsimony.functions.nesterov.gl as gl
         import parsimony.datasets.simulate.l1_l2_glmu as l1_l2_glmu
@@ -421,7 +422,7 @@ class TestGroupLasso(TestCase):
         beta_start = start_vector.get_vector(p)
 
         mus = [5e-0, 5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
 
         beta_parsimony = beta_start
         for mu in mus:
@@ -452,7 +453,7 @@ class TestGroupLasso(TestCase):
 
         import numpy as np
         from parsimony.functions import CombinedFunction
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.functions as functions
         import parsimony.functions.nesterov.gl as gl
         import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
@@ -491,7 +492,7 @@ class TestGroupLasso(TestCase):
         beta_start = start_vector.get_vector(p)
 
         mus = [5e-0, 5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
 
         beta_parsimony = beta_start
         for mu in mus:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`parsimony.functions.interfaces` module contains interfaces that
+The :mod:`parsimony.functions.properties` module contains properties that
 describes the functionality of the multiblock functions.
 
 Try to keep the inheritance tree loop-free unless absolutely impossible.
@@ -13,7 +13,7 @@ Created on Mon Feb  3 09:55:51 2014
 """
 import abc
 
-from .. import interfaces
+from .. import properties
 
 __all__ = ["MultiblockFunction", "MultiblockGradient",
            "MultiblockLipschitzContinuousGradient",
@@ -21,7 +21,7 @@ __all__ = ["MultiblockFunction", "MultiblockGradient",
            "MultiblockContinuation", "MultiblockStepSize"]
 
 
-class MultiblockFunction(interfaces.CompositeFunction):
+class MultiblockFunction(properties.CompositeFunction):
     """ This is a function that is the combination (i.e. sum) of other
     multiblock, composite or atomic functions. The difference from
     CompositeFunction is that this function assumes that relevant functions

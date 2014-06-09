@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`parsimony.functions.objectives` module contains multiblock objective
+The :mod:`parsimony.functions.losses` module contains multiblock loss
 functions.
 
 Created on Tue Feb  4 08:51:43 2014
@@ -15,22 +15,22 @@ import numbers
 import numpy as np
 
 import parsimony.utils as utils
-import parsimony.functions.interfaces as interfaces
+import parsimony.functions.properties as properties
 import parsimony.utils.consts as consts
-import interfaces as mb_interfaces
-import parsimony.functions.nesterov.interfaces as n_interfaces
+import properties as mb_properties
+import parsimony.functions.nesterov.properties as n_properties
 
 __all__ = ["CombinedMultiblockFunction",
            "MultiblockFunctionWrapper", "MultiblockNesterovFunctionWrapper",
            "LatentVariableCovariance"]
 
 
-class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
-                                 mb_interfaces.MultiblockGradient,
-                                 mb_interfaces.MultiblockProximalOperator,
-                                 mb_interfaces.MultiblockProjectionOperator,
-#                                 mb_interfaces.MultiblockContinuation,
-                                 mb_interfaces.MultiblockStepSize):
+class CombinedMultiblockFunction(mb_properties.MultiblockFunction,
+                                 mb_properties.MultiblockGradient,
+                                 mb_properties.MultiblockProximalOperator,
+                                 mb_properties.MultiblockProjectionOperator,
+#                                 mb_properties.MultiblockContinuation,
+                                 mb_properties.MultiblockStepSize):
     """Combines one or more loss functions, any number of penalties and zero
     or one proximal operator.
 
@@ -94,7 +94,7 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
                 self._p[i] = list()
                 self._N[i] = list()
                 for di in penalties[i]:
-                    if isinstance(di, n_interfaces.NesterovFunction):
+                    if isinstance(di, n_properties.NesterovFunction):
                         self._N[i].append(di)
                     else:
                         self._p[i].append(di)
@@ -150,24 +150,24 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
         j : Non-negative integer. Index of the second block. Zero based, so 0
                 is the first block.
         """
-        if not isinstance(function, interfaces.Gradient):
-            if not isinstance(function, mb_interfaces.MultiblockGradient):
+        if not isinstance(function, properties.Gradient):
+            if not isinstance(function, mb_properties.MultiblockGradient):
                 raise ValueError("Functions must have gradients.")
 
         self._f[i][j].append(function)
 
     def add_penalty(self, penalty, i):
 
-        if not isinstance(penalty, interfaces.Penalty):
+        if not isinstance(penalty, properties.Penalty):
             raise ValueError("Not a penalty.")
-        if not isinstance(penalty, interfaces.Gradient):
+        if not isinstance(penalty, properties.Gradient):
             raise ValueError("Penalties must have gradients.")
 
-        if isinstance(penalty, n_interfaces.NesterovFunction):
+        if isinstance(penalty, n_properties.NesterovFunction):
             self._N[i].append(penalty)
         else:
-            if not isinstance(penalty, interfaces.Gradient):
-                if isinstance(penalty, interfaces.ProximalOperator):
+            if not isinstance(penalty, properties.Gradient):
+                if isinstance(penalty, properties.ProximalOperator):
                     self._prox[i].append(penalty)
                 else:
                     raise ValueError("Non-smooth and no proximal operator.")
@@ -177,16 +177,16 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
 #    @utils.deprecated("add_penalty")
     def add_prox(self, penalty, i):
 
-        if not isinstance(penalty, interfaces.ProximalOperator):
+        if not isinstance(penalty, properties.ProximalOperator):
             raise ValueError("Not a proximal operator.")
 
         self._prox[i].append(penalty)
 
     def add_constraint(self, constraint, i):
 
-        if not isinstance(constraint, interfaces.Constraint):
+        if not isinstance(constraint, properties.Constraint):
             raise ValueError("Not a constraint.")
-        if not isinstance(constraint, interfaces.ProjectionOperator):
+        if not isinstance(constraint, properties.ProjectionOperator):
             raise ValueError("Constraints must have projection operators.")
 
         self._c[i].append(constraint)
@@ -248,20 +248,20 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
             fij = fi[j]
             for k in xrange(len(fij)):
                 fijk = fij[k]
-                if isinstance(fijk, interfaces.Gradient):
+                if isinstance(fijk, properties.Gradient):
                     grad += fijk.grad(w[index])
-                elif isinstance(fijk, mb_interfaces.MultiblockGradient):
+                elif isinstance(fijk, mb_properties.MultiblockGradient):
                     grad += fijk.grad([w[index], w[j]], 0)
 
         for i in xrange(len(self._f)):
             fij = self._f[i][index]
             if i != index:  # Do not count these twice.
-                if isinstance(fij, interfaces.Gradient):
+                if isinstance(fij, properties.Gradient):
                     # We shouldn't do anything here, right? This means e.g.
                     # that this (block i) is the y of a logistic regression.
                     pass
 #                    grad += fij.grad(w[i])
-                elif isinstance(fij, mb_interfaces.MultiblockGradient):
+                elif isinstance(fij, mb_properties.MultiblockGradient):
                     grad += fij.grad([w[i], w[index]], 1)
 
         # Add gradients from the penalties.
@@ -328,7 +328,7 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
             proj_w = proj[0].proj(w[index])
 
         elif len(proj) == 2 and len(prox) == 0:
-            constraint = interfaces.CombinedProjectionOperator(proj)
+            constraint = properties.CombinedProjectionOperator(proj)
             proj_w = constraint.proj(w[index])
 
         else:
@@ -356,16 +356,16 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
             fij = fi[j]
             for k in xrange(len(fij)):
                 fijk = fij[k]
-                if isinstance(fijk, interfaces.Gradient):
+                if isinstance(fijk, properties.Gradient):
                     if not isinstance(fijk,
-                                      interfaces.LipschitzContinuousGradient):
+                                      properties.LipschitzContinuousGradient):
                         all_lipschitz = False
                         break
                     else:
                         L += fijk.L(w[index])
-                elif isinstance(fijk, mb_interfaces.MultiblockGradient):
+                elif isinstance(fijk, mb_properties.MultiblockGradient):
                     if not isinstance(fijk,
-                                      mb_interfaces.MultiblockLipschitzContinuousGradient):
+                                      mb_properties.MultiblockLipschitzContinuousGradient):
                         all_lipschitz = False
                         break
                     else:
@@ -379,14 +379,14 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
             if i != index:  # Do not visit these twice.
                 for k in xrange(len(fij)):
                     fijk = fij[k]
-                    if isinstance(fijk, interfaces.Gradient):
+                    if isinstance(fijk, properties.Gradient):
                         # We shouldn't do anything here, right? This means that
                         # this (block i) is e.g. the y in a logistic
                         # regression.
                         pass
-                    elif isinstance(fijk, mb_interfaces.MultiblockGradient):
+                    elif isinstance(fijk, mb_properties.MultiblockGradient):
                         if not isinstance(fijk,
-                                          mb_interfaces.MultiblockLipschitzContinuousGradient):
+                                          mb_properties.MultiblockLipschitzContinuousGradient):
                             all_lipschitz = False
                             break
                         else:
@@ -395,7 +395,7 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
         # Add Lipschitz constants from the penalties.
         pi = self._p[index]
         for k in xrange(len(pi)):
-            if not isinstance(pi[k], interfaces.LipschitzContinuousGradient):
+            if not isinstance(pi[k], properties.LipschitzContinuousGradient):
                 all_lipschitz = False
                 break
             else:
@@ -403,7 +403,7 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
 
         Ni = self._N[index]
         for k in xrange(len(Ni)):
-            if not isinstance(Ni[k], interfaces.LipschitzContinuousGradient):
+            if not isinstance(Ni[k], properties.LipschitzContinuousGradient):
                 all_lipschitz = False
                 break
             else:
@@ -415,8 +415,8 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
         else:
             # If all functions did not have Lipschitz continuous gradients,
             # try to find the step size through backtracking line search.
-            class F(interfaces.Function,
-                    interfaces.Gradient):
+            class F(properties.Function,
+                    properties.Gradient):
 
                 def __init__(self, func, w, index):
                     self.func = func
@@ -456,10 +456,10 @@ class CombinedMultiblockFunction(mb_interfaces.MultiblockFunction,
         return step
 
 
-class MultiblockFunctionWrapper(interfaces.CompositeFunction,
-                                interfaces.Gradient,
-                                interfaces.StepSize,
-                                interfaces.ProximalOperator):
+class MultiblockFunctionWrapper(properties.CompositeFunction,
+                                properties.Gradient,
+                                properties.StepSize,
+                                properties.ProximalOperator):
 
     def __init__(self, function, w, index):
         self.function = function
@@ -521,8 +521,8 @@ class MultiblockFunctionWrapper(interfaces.CompositeFunction,
 
 
 class MultiblockNesterovFunctionWrapper(MultiblockFunctionWrapper,
-                                        n_interfaces.NesterovFunction,
-                                        interfaces.Continuation):
+                                        n_properties.NesterovFunction,
+                                        properties.Continuation):
 
     def __init__(self, function, w, index):
         super(MultiblockNesterovFunctionWrapper, self).__init__(function,
@@ -773,10 +773,10 @@ class MultiblockNesterovFunctionWrapper(MultiblockFunctionWrapper,
         return float(eps) / gM
 
 
-class LatentVariableCovariance(mb_interfaces.MultiblockFunction,
-                           mb_interfaces.MultiblockGradient,
-                           mb_interfaces.MultiblockLipschitzContinuousGradient,
-                           interfaces.Eigenvalues):
+class LatentVariableCovariance(mb_properties.MultiblockFunction,
+                           mb_properties.MultiblockGradient,
+                           mb_properties.MultiblockLipschitzContinuousGradient,
+                           properties.Eigenvalues):
 
     def __init__(self, X, unbiased=True):
 
@@ -848,11 +848,11 @@ class LatentVariableCovariance(mb_interfaces.MultiblockFunction,
         return np.sum(s ** 2.0) / (self.n ** 2.0)
 
 
-class GeneralisedMultiblock(mb_interfaces.MultiblockFunction,
-                            mb_interfaces.MultiblockGradient,
-#                            mb_interfaces.MultiblockProximalOperator,
-                            mb_interfaces.MultiblockProjectionOperator,
-                            interfaces.StepSize,
+class GeneralisedMultiblock(mb_properties.MultiblockFunction,
+                            mb_properties.MultiblockGradient,
+#                            mb_properties.MultiblockProximalOperator,
+                            mb_properties.MultiblockProjectionOperator,
+                            properties.StepSize,
 #                            LipschitzContinuousGradient,
 #                            NesterovFunction, Continuation, DualFunction
                             ):
@@ -908,25 +908,25 @@ class GeneralisedMultiblock(mb_interfaces.MultiblockFunction,
         for j in xrange(len(fi)):
             fij = fi[j]
             if index != j:
-                if isinstance(fij, interfaces.Gradient):
+                if isinstance(fij, properties.Gradient):
                     grad += fij.grad(w[index])
-                elif isinstance(fij, mb_interfaces.MultiblockGradient):
+                elif isinstance(fij, mb_properties.MultiblockGradient):
                     grad += fij.grad([w[index], w[j]], 0)
 
         for i in xrange(len(self.functions)):
             fij = self.functions[i][index]
             if i != index:
-                if isinstance(fij, interfaces.Gradient):
+                if isinstance(fij, properties.Gradient):
                     # We shouldn't do anything here, right? This means e.g.
                     # that this (block i) is the y of a logistic regression.
                     pass
 #                    grad += fij.grad(w)
-                elif isinstance(fij, mb_interfaces.MultiblockGradient):
+                elif isinstance(fij, mb_properties.MultiblockGradient):
                     grad += fij.grad([w[i], w[index]], 1)
 
         fii = self.functions[index][index]
         for k in xrange(len(fii)):
-            if isinstance(fii[k], interfaces.Gradient):
+            if isinstance(fii[k], properties.Gradient):
                 grad += fii[k].grad(w[index])
 
         return grad
@@ -958,7 +958,7 @@ class GeneralisedMultiblock(mb_interfaces.MultiblockFunction,
 #        fii = self.functions[index][index]
         f = self.get_constraints(index)
         for k in xrange(len(f)):
-            if isinstance(f[k], interfaces.ProjectionOperator):
+            if isinstance(f[k], properties.ProjectionOperator):
                 w[index] = f[k].proj(w[index])
                 break
 
@@ -978,10 +978,10 @@ class GeneralisedMultiblock(mb_interfaces.MultiblockFunction,
         for j in xrange(len(fi)):
             if j != index and fi[j] is not None:
                 fij = fi[j]
-                if isinstance(fij, interfaces.LipschitzContinuousGradient):
+                if isinstance(fij, properties.LipschitzContinuousGradient):
                     L += fij.L()
                 elif isinstance(fij,
-                        mb_interfaces.MultiblockLipschitzContinuousGradient):
+                        mb_properties.MultiblockLipschitzContinuousGradient):
                     L += fij.L(w, index)
                 else:
                     all_lipschitz = False
@@ -992,10 +992,10 @@ class GeneralisedMultiblock(mb_interfaces.MultiblockFunction,
             for k in xrange(len(fii)):
                 if fi[j] is None:
                     continue
-                if isinstance(fii[k], interfaces.LipschitzContinuousGradient):
+                if isinstance(fii[k], properties.LipschitzContinuousGradient):
                     L += fii[k].L()
                 elif isinstance(fii[k],
-                        mb_interfaces.MultiblockLipschitzContinuousGradient):
+                        mb_properties.MultiblockLipschitzContinuousGradient):
                     L += fii[k].L(w, index)
                 else:
                     all_lipschitz = False
@@ -1006,8 +1006,8 @@ class GeneralisedMultiblock(mb_interfaces.MultiblockFunction,
         else:
             # If all functions did not have Lipschitz continuous gradients,
             # try to find the step size through backtracking line search.
-            class F(interfaces.Function,
-                    interfaces.Gradient):
+            class F(properties.Function,
+                    properties.Gradient):
                 def __init__(self, func, w, index):
                     self.func = func
                     self.w = w

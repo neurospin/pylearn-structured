@@ -10,6 +10,7 @@ from nose.tools import assert_less, assert_almost_equal
 
 import numpy as np
 
+from parsimony.algorithms.proximal import FISTA, ISTA
 import parsimony.utils.consts as consts
 from tests import TestCase
 
@@ -19,7 +20,7 @@ class TestLinearRegression(TestCase):
     def test_overdetermined(self):
 
         from parsimony.functions.losses import LinearRegression
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.gradient as gradient
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
 
@@ -40,7 +41,7 @@ class TestLinearRegression(TestCase):
 
         eps = 1e-8
         max_iter = 150
-        gd = explicit.GradientDescent(eps=eps, max_iter=max_iter)
+        gd = gradient.GradientDescent(eps=eps, max_iter=max_iter)
         linear_regression = LinearRegression(X, y, mean=False)
         beta_start = start_vector.get_vector(p)
 
@@ -61,7 +62,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 1e-6, "The found regression vector does not give " \
                                "the correct function value.")
 
-        lr = estimators.LinearRegression(algorithm=explicit.GradientDescent(),
+        lr = estimators.LinearRegression(algorithm=gradient.GradientDescent(),
                                       algorithm_params=dict(max_iter=max_iter),
                                       mean=False)
         lr.fit(X, y, beta_start)
@@ -80,7 +81,7 @@ class TestLinearRegression(TestCase):
     def test_underdetermined(self):
 
         from parsimony.functions.losses import LinearRegression
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.gradient as gradient
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
 
@@ -101,7 +102,7 @@ class TestLinearRegression(TestCase):
 
         eps = 1e-8
         max_iter = 300
-        gd = explicit.GradientDescent(eps=eps, max_iter=max_iter)
+        gd = gradient.GradientDescent(eps=eps, max_iter=max_iter)
         linear_regression = LinearRegression(X, y, mean=False)
         beta_start = start_vector.get_vector(p)
 
@@ -118,7 +119,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 1e-4, "The found regression vector does not give " \
                                "the correct function value.")
 
-        lr = estimators.LinearRegression(algorithm=explicit.GradientDescent(),
+        lr = estimators.LinearRegression(algorithm=gradient.GradientDescent(),
                                       algorithm_params=dict(max_iter=max_iter),
                                       mean=False)
         lr.fit(X, y, beta_start)
@@ -137,7 +138,7 @@ class TestLinearRegression(TestCase):
     def test_determined(self):
 
         from parsimony.functions.losses import LinearRegression
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.gradient as gradient
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
 
@@ -158,7 +159,7 @@ class TestLinearRegression(TestCase):
 
         eps = 1e-8
         max_iter = 7000
-        gd = explicit.GradientDescent(eps=eps, max_iter=max_iter)
+        gd = gradient.GradientDescent(eps=eps, max_iter=max_iter)
         linear_regression = LinearRegression(X, y, mean=False)
         beta_start = start_vector.get_vector(p)
 
@@ -175,7 +176,7 @@ class TestLinearRegression(TestCase):
         assert_less(err, 5e-5, "The found regression vector does not give " \
                                "the correct function value.")
 
-        lr = estimators.LinearRegression(algorithm=explicit.GradientDescent(),
+        lr = estimators.LinearRegression(algorithm=gradient.GradientDescent(),
                                       algorithm_params=dict(max_iter=max_iter),
                                       mean=False)
         lr.fit(X, y, beta_start)
@@ -194,7 +195,7 @@ class TestLinearRegression(TestCase):
     def test_intercept1(self):
 
         from parsimony.functions.losses import LinearRegression
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.gradient as gradient
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
 
@@ -219,7 +220,7 @@ class TestLinearRegression(TestCase):
 
         eps = 1e-8
         max_iter = 1000
-        gd = explicit.GradientDescent(eps=eps, max_iter=max_iter)
+        gd = gradient.GradientDescent(eps=eps, max_iter=max_iter)
         linear_regression = LinearRegression(X_parsimony, y, mean=True)
         beta_start = start_vector.get_vector(p)
 
@@ -301,7 +302,7 @@ class TestLinearRegression(TestCase):
         assert_less(ferr, 5e-5, msg="The found regression vector does not " \
                                     "give the correct function value.")
 
-        lr = estimators.LinearRegression(algorithm=explicit.GradientDescent(),
+        lr = estimators.LinearRegression(algorithm=gradient.GradientDescent(),
                                       algorithm_params=dict(max_iter=max_iter),
                                       mean=True)
         lr.fit(X_parsimony, y, beta_start)
@@ -324,7 +325,7 @@ class TestLinearRegression(TestCase):
 #        from parsimony.functions.combinedfunctions import CombinedFunction
 #        from parsimony.functions.losses import LinearRegression
 #        from parsimony.functions.penalties import L2
-#        import parsimony.algorithms.explicit as explicit
+#        import parsimony.algorithms.gradient as gradient
 #        import parsimony.utils.start_vectors as start_vectors
 #
 #        np.random.seed(42)
@@ -354,7 +355,7 @@ class TestLinearRegression(TestCase):
 #        function.add_function(LinearRegression(X_parsimony, y, mean=True))
 #        function.add_penalty(L2Squared(k, penalty_start=1))
 #
-#        gd = explicit.GradientDescent(eps=eps, max_iter=max_iter)
+#        gd = gradient.GradientDescent(eps=eps, max_iter=max_iter)
 #        beta_start = start_vector.get_vector(p)
 #        beta_parsimony = gd.run(function, beta_start)
 #
@@ -412,7 +413,6 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.penalties import L1
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
-        import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
 
@@ -443,7 +443,7 @@ class TestLinearRegression(TestCase):
 
         eps = 1e-8
         max_iter = 3800
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter)
+        fista = FISTA(eps=eps, max_iter=max_iter)
         linear_regression = LinearRegression(X, y, mean=False)
         l1 = L1(l=l)
         function = CombinedFunction()
@@ -457,7 +457,7 @@ class TestLinearRegression(TestCase):
         mu = consts.TOLERANCE
         reg_est = estimators.LinearRegressionL1L2TV(
                                       l, k, g, A, mu=mu,
-                                      algorithm=explicit.FISTA(),
+                                      algorithm=FISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       mean=False)
@@ -472,13 +472,13 @@ class TestLinearRegression(TestCase):
 #        rreg_est.fit(X, y)
 
         rreg_est_2 = estimators.LinearRegressionL1L2GL(l, k, g, A=A, mu=mu,
-                                      algorithm=explicit.FISTA(),
+                                      algorithm=FISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       mean=False)
         rreg_est_2.fit(X, y)
 
-        lasso = estimators.Lasso(l, algorithm=explicit.FISTA(),
+        lasso = estimators.Lasso(l, algorithm=FISTA(),
                                     algorithm_params=dict(eps=eps,
                                                           max_iter=max_iter),
                                     mean=False)
@@ -542,7 +542,6 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.penalties import L1
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
-        import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
 
@@ -575,7 +574,7 @@ class TestLinearRegression(TestCase):
 
         eps = 1e-8
         max_iter = 3800
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter)
+        fista = FISTA(eps=eps, max_iter=max_iter)
         function = CombinedFunction()
         function.add_function(LinearRegression(X, y, mean=False))
         function.add_prox(L1(l=l, penalty_start=1))
@@ -587,7 +586,7 @@ class TestLinearRegression(TestCase):
         mu = consts.TOLERANCE
         reg_est = estimators.LinearRegressionL1L2TV(
                                       l, k, g, A, mu=mu,
-                                      algorithm=explicit.FISTA(),
+                                      algorithm=FISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=1,
@@ -603,14 +602,14 @@ class TestLinearRegression(TestCase):
 #        rreg_est.fit(X, y)
 
         rreg_est_2 = estimators.LinearRegressionL1L2GL(l, k, g, A=A, mu=mu,
-                                      algorithm=explicit.FISTA(),
+                                      algorithm=FISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=1,
                                       mean=False)
         rreg_est_2.fit(X, y)
 
-        lasso = estimators.Lasso(l, algorithm=explicit.FISTA(),
+        lasso = estimators.Lasso(l, algorithm=FISTA(),
                                     algorithm_params=dict(eps=eps,
                                                           max_iter=max_iter),
                                     penalty_start=1,
@@ -676,7 +675,6 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.penalties import L2Squared
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
-        import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
@@ -707,7 +705,7 @@ class TestLinearRegression(TestCase):
         eps = 1e-8
         max_iter = 6000
 
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter)
+        fista = FISTA(eps=eps, max_iter=max_iter)
         beta_start = start_vector.get_vector(p)
 
         function = CombinedFunction()
@@ -767,7 +765,6 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.penalties import L2Squared
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
-        import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
 
@@ -801,7 +798,7 @@ class TestLinearRegression(TestCase):
         eps = 1e-8
         max_iter = 1500
 
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter)
+        fista = FISTA(eps=eps, max_iter=max_iter)
         beta_start = start_vector.get_vector(p)
 
         function = CombinedFunction()
@@ -858,7 +855,7 @@ class TestLinearRegression(TestCase):
         mu = consts.TOLERANCE
         reg_est = estimators.LinearRegressionL1L2TV(
                                       l, k, g, A, mu=mu,
-                                      algorithm=explicit.FISTA(),
+                                      algorithm=FISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=1,
@@ -898,7 +895,7 @@ class TestLinearRegression(TestCase):
 #                               "the correct function value.")
 
         rreg_est_2 = estimators.LinearRegressionL1L2GL(l, k, g, A=A, mu=mu,
-                                      algorithm=explicit.FISTA(),
+                                      algorithm=FISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=1,
@@ -927,7 +924,6 @@ class TestLinearRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
         import parsimony.datasets.simulate.l1_l2_tvmu as l1_l2_tvmu
-        import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
@@ -964,7 +960,7 @@ class TestLinearRegression(TestCase):
                                         A=A, snr=snr)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = FISTA(eps=eps, max_iter=max_iter / len(mus))
         beta_start = start_vector.get_vector(p)
 
         beta_nonsmooth = beta_start
@@ -1017,8 +1013,8 @@ class TestLinearRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
         import parsimony.datasets.simulate.l1_l2_tvmu as l1_l2_tvmu
-        import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
+        import parsimony.algorithms.primaldual as primaldual
         import parsimony.estimators as estimators
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
@@ -1056,7 +1052,7 @@ class TestLinearRegression(TestCase):
                                         A=A, snr=snr, intercept=True)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = FISTA(eps=eps, max_iter=max_iter / len(mus))
         beta_start = start_vector.get_vector(p)
 
         beta_nonsmooth = beta_start
@@ -1107,7 +1103,7 @@ class TestLinearRegression(TestCase):
         mu = mu_min
         reg_est = estimators.LinearRegressionL1L2TV(
                                       l, k, g, A, mu=mu,
-                                      algorithm=explicit.StaticCONESTA(),
+                                      algorithm=primaldual.StaticCONESTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=1,
@@ -1127,7 +1123,7 @@ class TestLinearRegression(TestCase):
                                "the correct function value.")
 
         rreg_est = estimators.LinearRegressionL1L2TV(l, k, g, A=A, mu=mu,
-                                      algorithm=explicit.StaticCONESTA(),
+                                      algorithm=primaldual.StaticCONESTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=1,
@@ -1153,9 +1149,9 @@ class TestLinearRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
         import parsimony.datasets.simulate.l1_l2_glmu as l1_l2_glmu
-        import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
+        import parsimony.algorithms.primaldual as primaldual
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
 
@@ -1190,7 +1186,7 @@ class TestLinearRegression(TestCase):
                                         A=A, snr=snr)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = FISTA(eps=eps, max_iter=max_iter / len(mus))
         beta_start = start_vector.get_vector(p)
 
         beta_nonsmooth = beta_start
@@ -1238,7 +1234,7 @@ class TestLinearRegression(TestCase):
 
         max_iter = 6500
         est = estimators.LinearRegressionL1L2GL(l, k, g, A=A, mu=mu,
-                                      algorithm=explicit.StaticCONESTA(),
+                                      algorithm=primaldual.StaticCONESTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=0,
@@ -1264,9 +1260,9 @@ class TestLinearRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
         import parsimony.datasets.simulate.l1_l2_glmu as l1_l2_glmu
-        import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
+        import parsimony.algorithms.primaldual as primaldual
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
 
@@ -1303,7 +1299,7 @@ class TestLinearRegression(TestCase):
                                         A=A, snr=snr, intercept=True)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = FISTA(eps=eps, max_iter=max_iter / len(mus))
         beta_start = start_vector.get_vector(p)
 
         beta_nonsmooth = beta_start
@@ -1353,7 +1349,7 @@ class TestLinearRegression(TestCase):
         max_iter = 5000
         rreg_est = estimators.LinearRegressionL1L2GL(l, k, g,
                                       A=A, mu=mu,
-                                      algorithm=explicit.StaticCONESTA(),
+                                      algorithm=primaldual.StaticCONESTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=1,
@@ -1380,7 +1376,7 @@ class TestLinearRegression(TestCase):
         from parsimony.functions.penalties import L2Squared
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.primaldual as primaldual
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
 
@@ -1412,7 +1408,7 @@ class TestLinearRegression(TestCase):
         eps = 1e-8
         max_iter = 400
 
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter)
+        fista = FISTA(eps=eps, max_iter=max_iter)
         beta_start = start_vector.get_vector(p)
 
         function = CombinedFunction()
@@ -1451,7 +1447,7 @@ class TestLinearRegression(TestCase):
                                "the correct function value.")
 
         lasso = estimators.ElasticNet(l,
-                                      algorithm=explicit.FISTA(),
+                                      algorithm=primaldual.FISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       mean=False)
@@ -1474,7 +1470,6 @@ class TestLinearRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
         import parsimony.datasets.simulate.l1_l2_tvmu as l1_l2_tvmu
-        import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
@@ -1511,7 +1506,7 @@ class TestLinearRegression(TestCase):
                                         A=A, snr=snr)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = FISTA(eps=eps, max_iter=max_iter / len(mus))
         beta_start = start_vector.get_vector(p)
 
         beta_nonsmooth_penalty = beta_start
@@ -1538,7 +1533,7 @@ class TestLinearRegression(TestCase):
                                "the correct function value.")
 
         max_iter = 2700
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = FISTA(eps=eps, max_iter=max_iter / len(mus))
         mu_min = mus[-1]
         X, y, beta_star = l1_l2_tvmu.load(l=l, k=k, g=g, beta=beta, M=M, e=e,
                                           A=A, mu=mu_min, snr=snr)
@@ -1574,7 +1569,7 @@ class TestLinearRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
         import parsimony.datasets.simulate.l1_l2_glmu as l1_l2_glmu
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.primaldual as primaldual
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
 
@@ -1611,7 +1606,7 @@ class TestLinearRegression(TestCase):
                                         A=A, snr=snr)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = FISTA(eps=eps, max_iter=max_iter / len(mus))
         beta_start = start_vector.get_vector(p)
 
         beta_nonsmooth = beta_start
@@ -1661,7 +1656,7 @@ class TestLinearRegression(TestCase):
 
         max_iter = 2600
         est = estimators.LinearRegressionL1L2GL(l, k, g, A=A, mu=mu,
-                                      algorithm=explicit.StaticCONESTA(),
+                                      algorithm=primaldual.StaticCONESTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=0,
@@ -1690,7 +1685,6 @@ class TestLinearRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
         import parsimony.datasets.simulate.l1_l2_tvmu as l1_l2_tvmu
-        import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
@@ -1727,7 +1721,7 @@ class TestLinearRegression(TestCase):
                                         A=A, snr=snr)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = FISTA(eps=eps, max_iter=max_iter / len(mus))
         beta_start = start_vector.get_vector(p)
 
         beta_nonsmooth_penalty = beta_start
@@ -1869,7 +1863,7 @@ class TestLinearRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
         import parsimony.datasets.simulate.l1_l2_glmu as l1_l2_glmu
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.primaldual as primaldual
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
 
@@ -1906,7 +1900,7 @@ class TestLinearRegression(TestCase):
                                         A=A, snr=snr)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = FISTA(eps=eps, max_iter=max_iter / len(mus))
         beta_start = start_vector.get_vector(p)
 
         beta_nonsmooth_penalty = beta_start
@@ -2040,7 +2034,7 @@ class TestLinearRegression(TestCase):
 
         max_iter = 900
         est = estimators.LinearRegressionL1L2GL(l, k, g, A=A, mu=mu,
-                                      algorithm=explicit.StaticCONESTA(),
+                                      algorithm=primaldual.StaticCONESTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=0,
@@ -2069,7 +2063,6 @@ class TestLinearRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
         import parsimony.datasets.simulate.l1_l2_tvmu as l1_l2_tvmu
-        import parsimony.algorithms.explicit as explicit
         import parsimony.utils.start_vectors as start_vectors
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
@@ -2106,7 +2099,7 @@ class TestLinearRegression(TestCase):
                                         A=A, snr=snr)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = FISTA(eps=eps, max_iter=max_iter / len(mus))
         beta_start = start_vector.get_vector(p)
 
         beta_nonsmooth_penalty = beta_start
@@ -2211,7 +2204,7 @@ class TestLinearRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.datasets.simulate.l1_l2_gl as l1_l2_gl
         import parsimony.datasets.simulate.l1_l2_glmu as l1_l2_glmu
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.primaldual as primaldual
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
 
@@ -2248,7 +2241,7 @@ class TestLinearRegression(TestCase):
                                         A=A, snr=snr)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = FISTA(eps=eps, max_iter=max_iter / len(mus))
         beta_start = start_vector.get_vector(p)
 
         beta_nonsmooth_penalty = beta_start
@@ -2343,7 +2336,7 @@ class TestLinearRegression(TestCase):
 
         max_iter = 700
         est = estimators.LinearRegressionL1L2GL(l, k, g, A=A, mu=mu,
-                                      algorithm=explicit.StaticCONESTA(),
+                                      algorithm=primaldual.StaticCONESTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=0,
@@ -2366,7 +2359,8 @@ class TestLinearRegression(TestCase):
 
         import numpy as np
         import parsimony.estimators as estimators
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.gradient as gradient
+        import parsimony.algorithms.primaldual as primaldual
         import parsimony.functions.nesterov.tv as tv
         import parsimony.functions.nesterov.gl as gl
         import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
@@ -2403,7 +2397,7 @@ class TestLinearRegression(TestCase):
                                         A=A, snr=snr)
 
         lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
-                                          algorithm=explicit.FISTA(),
+                                          algorithm=FISTA(),
                                           algorithm_params=dict(max_iter=1000),
                                           mean=False)
         lr.fit(X, y)
@@ -2433,7 +2427,7 @@ class TestLinearRegression(TestCase):
                                         A=A, snr=snr)
 
         lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
-                                          algorithm=explicit.FISTA(),
+                                          algorithm=FISTA(),
                                           algorithm_params=dict(max_iter=1000),
                                           mean=False)
         lr.fit(X, y)
@@ -2463,7 +2457,7 @@ class TestLinearRegression(TestCase):
                                         A=A, snr=snr)
 
         lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
-                                          algorithm=explicit.FISTA(),
+                                          algorithm=FISTA(),
                                           algorithm_params=dict(max_iter=1000),
                                           mean=False)
         lr.fit(X, y)
@@ -2498,7 +2492,7 @@ class TestLinearRegression(TestCase):
         k = 0.0
         g = 0.0
         lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
-                                          algorithm=explicit.FISTA(),
+                                          algorithm=FISTA(),
                                           algorithm_params=dict(max_iter=1000))
         lr.fit(X, y)
         score = lr.score(X, y)
@@ -2509,7 +2503,7 @@ class TestLinearRegression(TestCase):
                             places=5)
 
         np.random.seed(42)
-        lr = estimators.LinearRegression(algorithm=explicit.GradientDescent(),
+        lr = estimators.LinearRegression(algorithm=gradient.GradientDescent(),
                                       algorithm_params=dict(max_iter=10000))
         lr.fit(X, y)
         score = lr.score(X, y)
@@ -2524,7 +2518,7 @@ class TestLinearRegression(TestCase):
         g = 0.0
         np.random.seed(42)
         lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
-                                          algorithm=explicit.FISTA(),
+                                          algorithm=FISTA(),
                                           algorithm_params=dict(max_iter=1000),
                                           mean=False)
         lr.fit(X, y)
@@ -2540,7 +2534,7 @@ class TestLinearRegression(TestCase):
         g = 0.0
         np.random.seed(42)
         lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
-                                          algorithm=explicit.FISTA(),
+                                          algorithm=FISTA(),
                                           algorithm_params=dict(max_iter=1000),
                                           mean=False)
         lr.fit(X, y)
@@ -2556,7 +2550,7 @@ class TestLinearRegression(TestCase):
         g = 2.718
         np.random.seed(42)
         lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
-                                          algorithm=explicit.FISTA(),
+                                          algorithm=FISTA(),
                                           algorithm_params=dict(max_iter=1000),
                                           mean=False)
         lr.fit(X, y)
@@ -2572,7 +2566,7 @@ class TestLinearRegression(TestCase):
         g = 0.0
         np.random.seed(42)
         lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
-                                          algorithm=explicit.FISTA(),
+                                          algorithm=FISTA(),
                                           algorithm_params=dict(max_iter=1000),
                                           mean=False)
         lr.fit(X, y)
@@ -2588,7 +2582,7 @@ class TestLinearRegression(TestCase):
         g = 2.718
         np.random.seed(42)
         lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
-                                          algorithm=explicit.FISTA(),
+                                          algorithm=FISTA(),
                                           algorithm_params=dict(max_iter=1000),
                                           mean=False)
         lr.fit(X, y)
@@ -2603,7 +2597,7 @@ class TestLinearRegression(TestCase):
         k = 1.0 - 0.618
         g = 2.718
         lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
-                                          algorithm=explicit.FISTA(),
+                                          algorithm=FISTA(),
                                           algorithm_params=dict(max_iter=1000),
                                           mean=False)
         lr.fit(X, y)
@@ -2618,7 +2612,7 @@ class TestLinearRegression(TestCase):
         k = 1.0 - l
         g = 2.718
         lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
-                                          algorithm=explicit.ISTA(),
+                                          algorithm=ISTA(),
                                           algorithm_params=dict(max_iter=1000),
                                           mean=False)
         lr.fit(X, y)
@@ -2633,7 +2627,7 @@ class TestLinearRegression(TestCase):
         k = 1.0 - l
         g = 2.718
         lr = estimators.LinearRegressionL1L2TV(l, k, g, A,
-                                       algorithm=explicit.FISTA(),
+                                       algorithm=FISTA(),
                                        algorithm_params=dict(max_iter=1000),
                                        mean=False)
         lr.fit(X, y)
@@ -2678,7 +2672,7 @@ class TestLinearRegression(TestCase):
                                         A=A, snr=snr)
 
         est = estimators.LinearRegressionL1L2GL(l, k, g, A=A, mu=None,
-                                      algorithm=explicit.StaticCONESTA(),
+                                      algorithm=primaldual.StaticCONESTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=6500),
                                       penalty_start=0,
@@ -2710,7 +2704,7 @@ class TestLinearRegression(TestCase):
                                         A=A, snr=snr)
 
         est = estimators.LinearRegressionL1L2GL(l, k, g, A=A, mu=None,
-                                      algorithm=explicit.StaticCONESTA(),
+                                      algorithm=primaldual.StaticCONESTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=5800),
                                       penalty_start=0,
@@ -2743,7 +2737,7 @@ class TestLinearRegression(TestCase):
                                         A=A, snr=snr)
 
         est = estimators.LinearRegressionL1L2GL(l, k, g, A=A, mu=None,
-                                      algorithm=explicit.StaticCONESTA(),
+                                      algorithm=primaldual.StaticCONESTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=900),
                                       penalty_start=0,
@@ -2776,7 +2770,7 @@ class TestLinearRegression(TestCase):
                                         A=A, snr=snr)
 
         est = estimators.LinearRegressionL1L2GL(l, k, g, A=A, mu=None,
-                                      algorithm=explicit.StaticCONESTA(),
+                                      algorithm=primaldual.StaticCONESTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=1200),
                                       penalty_start=0,
@@ -2804,7 +2798,9 @@ class TestLinearRegression(TestCase):
 
     def test_large(self):
 
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.primaldual as primaldual
+        import parsimony.algorithms.proximal as proximal
+        import parsimony.algorithms.gradient as gradient
         import parsimony.estimators as estimators
         import parsimony.functions.nesterov.tv as tv
 
@@ -2839,7 +2835,7 @@ class TestLinearRegression(TestCase):
 
         mu = None
         logreg_static = estimators.LinearRegressionL1L2TV(l, k, g, A, mu=mu,
-                                      algorithm=explicit.StaticCONESTA(),
+                                      algorithm=primaldual.StaticCONESTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       mean=False)
@@ -2852,7 +2848,7 @@ class TestLinearRegression(TestCase):
 
         mu = None
         logreg_dynamic = estimators.LinearRegressionL1L2TV(l, k, g, A, mu=mu,
-                                      algorithm=explicit.DynamicCONESTA(),
+                                      algorithm=primaldual.DynamicCONESTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       mean=False)
@@ -2865,7 +2861,7 @@ class TestLinearRegression(TestCase):
 
         mu = 5e-4
         logreg_fista = estimators.LinearRegressionL1L2TV(l, k, g, A, mu=mu,
-                                      algorithm=explicit.FISTA(),
+                                      algorithm=proximal.FISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       mean=False)
@@ -2878,7 +2874,7 @@ class TestLinearRegression(TestCase):
 
         mu = 5e-4
         logreg_ista = estimators.LinearRegressionL1L2TV(l, k, g, A, mu=mu,
-                                      algorithm=explicit.ISTA(),
+                                      algorithm=proximal.ISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       mean=False)
@@ -2890,7 +2886,7 @@ class TestLinearRegression(TestCase):
                      places=5)
 
         np.random.seed(42)
-        lr = estimators.LinearRegression(algorithm=explicit.GradientDescent(),
+        lr = estimators.LinearRegression(algorithm=gradient.GradientDescent(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       mean=False)

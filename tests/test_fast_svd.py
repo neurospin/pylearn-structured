@@ -10,8 +10,8 @@ import unittest
 
 import numpy as np
 
-from parsimony.algorithms.implicit import FastSVD
-from parsimony.algorithms.implicit import FastSparseSVD
+from parsimony.algorithms.nipals import FastSVD
+from parsimony.algorithms.nipals import FastSparseSVD
 import parsimony.utils as utils
 
 from tests import TestCase

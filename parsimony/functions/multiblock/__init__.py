@@ -6,8 +6,8 @@ Created on Tue Jan 21 14:54:28 2014
 @email:   lofstedt.tommy@gmail.com, edouard.duchesnay@cea.fr
 @license: BSD 3-clause.
 """
-from . import interfaces
+from . import properties
 from . import losses
 from . import combinedfunctions
 
-__all__ = ["interfaces", "losses", "combinedfunctions"]
+__all__ = ["properties", "losses", "combinedfunctions"]

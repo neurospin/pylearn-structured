@@ -9,6 +9,7 @@ Created on Wed May  7 11:19:32 2014
 import numpy as np
 
 from tests import TestCase
+from parsimony.algorithms.proximal import FISTA
 
 
 class TestGroupTotalVariation(TestCase):
@@ -16,7 +17,6 @@ class TestGroupTotalVariation(TestCase):
     def test_smooth_1D_l2(self):
 
         from parsimony.functions import CombinedFunction
-        import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
         import parsimony.functions.nesterov.grouptv as grouptv
         import parsimony.datasets.simulate.l1_l2_grouptvmu as l1_l2_grouptvmu
@@ -71,7 +71,7 @@ class TestGroupTotalVariation(TestCase):
         beta_start = start_vector.get_vector(p)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = FISTA(eps=eps, max_iter=max_iter / len(mus))
 
         beta_parsimony = beta_start
         for mu in mus:
@@ -100,7 +100,6 @@ class TestGroupTotalVariation(TestCase):
     def test_smooth_2D_l1(self):
 
         from parsimony.functions import CombinedFunction
-        import parsimony.algorithms.explicit as explicit
         import parsimony.functions as functions
         import parsimony.functions.nesterov.grouptv as grouptv
         import parsimony.datasets.simulate.l1_l2_grouptvmu as l1_l2_grouptvmu
@@ -147,7 +146,7 @@ class TestGroupTotalVariation(TestCase):
         beta_start = start_vector.get_vector(p)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = FISTA(eps=eps, max_iter=max_iter / len(mus))
 
         beta_parsimony = beta_start
         for mu in mus:

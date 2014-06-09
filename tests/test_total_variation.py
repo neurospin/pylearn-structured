@@ -16,7 +16,7 @@ class TestTotalVariation(TestCase):
     def test_nonsmooth(self):
 
         from parsimony.functions import CombinedFunction
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.functions as functions
         import parsimony.functions.nesterov.tv as tv
         import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
@@ -56,7 +56,7 @@ class TestTotalVariation(TestCase):
         beta_start = start_vector.get_vector(p)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
 
         beta_parsimony = beta_start
         for mu in mus:
@@ -85,7 +85,7 @@ class TestTotalVariation(TestCase):
     def test_smooth(self):
 
         from parsimony.functions import CombinedFunction
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.functions as functions
         import parsimony.functions.nesterov.tv as tv
         import parsimony.datasets.simulate.l1_l2_tvmu as l1_l2_tvmu
@@ -126,7 +126,7 @@ class TestTotalVariation(TestCase):
         beta_start = start_vector.get_vector(p)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
 
         beta_parsimony = beta_start
         for mu in mus:
@@ -155,7 +155,7 @@ class TestTotalVariation(TestCase):
     def test_combo_nonsmooth(self):
 
         from parsimony.functions import CombinedFunction
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.functions as functions
         import parsimony.functions.nesterov.tv as tv
         import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
@@ -195,7 +195,7 @@ class TestTotalVariation(TestCase):
         beta_start = start_vector.get_vector(p)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
 
         beta_parsimony = beta_start
         for mu in mus:
@@ -226,7 +226,7 @@ class TestTotalVariation(TestCase):
     def test_combo_smooth(self):
 
         from parsimony.functions import CombinedFunction
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.functions as functions
         import parsimony.functions.nesterov.tv as tv
         import parsimony.datasets.simulate.l1_l2_tvmu as l1_l2_tvmu
@@ -267,7 +267,7 @@ class TestTotalVariation(TestCase):
         beta_start = start_vector.get_vector(p)
 
         mus = [5e-2, 5e-4, 5e-6, 5e-8]
-        fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+        fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
 
         beta_parsimony = beta_start
         for mu in mus:

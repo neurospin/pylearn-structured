@@ -1,19 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-The :mod:`parsimony.algorithms` module includes several algorithms used
-throughout the package.
+The :mod:`parsimony.algorithms.multiblock` module includes several multiblock
+algorithms.
 
 Algorithms may not store states. I.e., if they are classes, do not keep
 references to objects with state in the algorithm objects. It should be
-possible to copy and share algorithms between estimators, and thus they should
-not depend on any state.
-
-There are currently two types of algorithms: implicit and explicit. The
-difference is whether they run directly on the data (implicit) or if they have
-an actual loss function than is minimised (explicit). Implicit algorithms take
-the data as input, and then run on the data. Explicit algorithms take a loss
-function and a start vector as input, and then minimise the function value
-starting from the point of the start vector.
+possible to copy and share algorithms between e.g. estimators, and thus they
+should not depend on any state.
 
 Created on Thu Feb 20 22:12:00 2014
 
@@ -21,8 +14,6 @@ Created on Thu Feb 20 22:12:00 2014
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
-import copy
-
 import numpy as np
 
 from . import bases
@@ -30,8 +21,8 @@ import parsimony.utils as utils
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
 from parsimony.utils import LimitedDict, Info
-import parsimony.functions.interfaces as interfaces
-import parsimony.functions.multiblock.interfaces as multiblock_interfaces
+#import parsimony.functions.properties as properties
+import parsimony.functions.multiblock.properties as multiblock_properties
 import parsimony.functions.multiblock.losses as mb_losses
 
 __all__ = ["MultiblockFISTA"]
@@ -103,10 +94,10 @@ class MultiblockFISTA(bases.ExplicitAlgorithm,
 
     min_iter : Positive integer. Minimum number of iterations.
     """
-    INTERFACES = [multiblock_interfaces.MultiblockFunction,
-                  multiblock_interfaces.MultiblockGradient,
-                  multiblock_interfaces.MultiblockProjectionOperator,
-                  multiblock_interfaces.MultiblockStepSize]
+    INTERFACES = [multiblock_properties.MultiblockFunction,
+                  multiblock_properties.MultiblockGradient,
+                  multiblock_properties.MultiblockProjectionOperator,
+                  multiblock_properties.MultiblockStepSize]
 
     PROVIDED_INFO = [Info.ok,
                      Info.num_iter,
@@ -278,10 +269,10 @@ class MultiblockCONESTA(bases.ExplicitAlgorithm,
 
     min_iter : Positive integer. Minimum number of iterations.
     """
-    INTERFACES = [multiblock_interfaces.MultiblockFunction,
-                  multiblock_interfaces.MultiblockGradient,
-                  multiblock_interfaces.MultiblockProjectionOperator,
-                  multiblock_interfaces.MultiblockStepSize]
+    INTERFACES = [multiblock_properties.MultiblockFunction,
+                  multiblock_properties.MultiblockGradient,
+                  multiblock_properties.MultiblockProjectionOperator,
+                  multiblock_properties.MultiblockStepSize]
 
     PROVIDED_INFO = [Info.ok,
                      Info.num_iter,

@@ -55,7 +55,7 @@ class FastSVD(bases.ImplicitAlgorithm):
         Examples
         --------
         >>> import numpy as np
-        >>> from parsimony.algorithms.implicit import FastSVD
+        >>> from parsimony.algorithms.nipals import FastSVD
         >>>
         >>> np.random.seed(0)
         >>> X = np.random.random((10, 10))
@@ -152,7 +152,7 @@ class FastSparseSVD(bases.ImplicitAlgorithm):
         Example
         -------
         >>> import numpy as np
-        >>> from parsimony.algorithms.implicit import FastSparseSVD
+        >>> from parsimony.algorithms.nipals import FastSparseSVD
         >>> np.random.seed(0)
         >>> X = np.random.random((10,10))
         >>> fast_sparse_svd = FastSparseSVD()
@@ -234,7 +234,7 @@ class FastSVDProduct(bases.ImplicitAlgorithm):
         Example
         -------
         >>> import numpy as np
-        >>> from parsimony.algorithms.implicit import FastSVDProduct
+        >>> from parsimony.algorithms.nipals import FastSVDProduct
         >>> np.random.seed(0)
         >>> X = np.random.random((15,10))
         >>> Y = np.random.random((10,5))

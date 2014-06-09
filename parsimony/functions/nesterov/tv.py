@@ -15,8 +15,8 @@ import math
 import scipy.sparse as sparse
 import numpy as np
 
-from .interfaces import NesterovFunction
-from .. import interfaces
+from .properties import NesterovFunction
+from .. import properties
 import parsimony.utils.consts as consts
 import parsimony.utils.maths as maths
 
@@ -24,12 +24,12 @@ __all__ = ["TotalVariation",
            "A_from_mask", "A_from_subset_mask", "A_from_shape"]
 
 
-class TotalVariation(interfaces.AtomicFunction,
+class TotalVariation(properties.AtomicFunction,
                      NesterovFunction,
-                     interfaces.Penalty,
-                     interfaces.Constraint,
-                     interfaces.Gradient,
-                     interfaces.LipschitzContinuousGradient):
+                     properties.Penalty,
+                     properties.Constraint,
+                     properties.Gradient,
+                     properties.LipschitzContinuousGradient):
     """The smoothed Total variation (TV) function
 
         f(beta) = l * (TV(beta) - c),
@@ -157,7 +157,7 @@ class TotalVariation(interfaces.AtomicFunction,
 
         elif self._lambda_max is None:
 
-            from parsimony.algorithms.implicit import FastSparseSVD
+            from parsimony.algorithms.nipals import FastSparseSVD
 
             A = sparse.vstack(self.A())
             # TODO: Add max_iter here!

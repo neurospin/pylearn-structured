@@ -17,8 +17,10 @@ import parsimony.utils.consts as consts
 import parsimony.functions as functions
 import parsimony.functions.losses as losses
 import parsimony.functions.penalties as penalties
-import parsimony.algorithms.explicit as explicit
 import parsimony.utils.start_vectors as start_vectors
+import parsimony.algorithms.gradient as gradient
+import parsimony.algorithms.proximal as proximal
+import parsimony.algorithms.primaldual as primaldual
 from parsimony.utils import check_arrays
 from parsimony.utils import class_weight_to_sample_weight, check_labels
 
@@ -212,7 +214,7 @@ class LinearRegression(RegressionEstimator):
     --------
     >>> import numpy as np
     >>> import parsimony.estimators as estimators
-    >>> import parsimony.algorithms.explicit as explicit
+    >>> import parsimony.algorithms.gradient as gradient
     >>>
     >>> np.random.seed(42)
     >>>
@@ -220,7 +222,7 @@ class LinearRegression(RegressionEstimator):
     >>> p = 16
     >>> X = np.random.rand(n, p)
     >>> y = np.random.rand(n, 1)
-    >>> lr = estimators.LinearRegression(algorithm=explicit.GradientDescent(),
+    >>> lr = estimators.LinearRegression(algorithm=gradient.GradientDescent(),
     ...                                  algorithm_params=dict(max_iter=1000),
     ...                                  mean=False)
     >>> error = lr.fit(X, y).score(X, y)
@@ -232,7 +234,7 @@ class LinearRegression(RegressionEstimator):
                  mean=True):
 
         if algorithm is None:
-            algorithm = explicit.GradientDescent(**algorithm_params)
+            algorithm = gradient.GradientDescent(**algorithm_params)
         else:
             algorithm.set_params(**algorithm_params)
 
@@ -315,7 +317,7 @@ class Lasso(RegressionEstimator):
     --------
     >>> import numpy as np
     >>> import parsimony.estimators as estimators
-    >>> import parsimony.algorithms.explicit as explicit
+    >>> import parsimony.algorithms.proximal as proximal
     >>> import parsimony.functions.nesterov.tv as total_variation
     >>> n = 10
     >>> p = 16
@@ -325,7 +327,7 @@ class Lasso(RegressionEstimator):
     >>> y = np.random.rand(n, 1)
     >>> l1 = 0.1  # L1 coefficient
     >>> lasso = estimators.Lasso(l1,
-    ...                          algorithm=explicit.FISTA(),
+    ...                          algorithm=proximal.FISTA(),
     ...                          algorithm_params=dict(max_iter=1000),
     ...                          mean=False)
     >>> error = lasso.fit(X, y).score(X, y)
@@ -339,7 +341,7 @@ class Lasso(RegressionEstimator):
                  mean=True):
 
         if algorithm is None:
-            algorithm = explicit.FISTA(**algorithm_params)
+            algorithm = proximal.FISTA(**algorithm_params)
         else:
             algorithm.set_params(**algorithm_params)
 
@@ -431,7 +433,7 @@ class ElasticNet(RegressionEstimator):
     --------
     >>> import numpy as np
     >>> import parsimony.estimators as estimators
-    >>> import parsimony.algorithms.explicit as explicit
+    >>> import parsimony.algorithms.proximal as proximal
     >>> import parsimony.functions.nesterov.tv as total_variation
     >>> n = 10
     >>> p = 16
@@ -441,7 +443,7 @@ class ElasticNet(RegressionEstimator):
     >>> y = np.random.rand(n, 1)
     >>> l = 0.1  # Regularisation coefficient
     >>> en = estimators.ElasticNet(l,
-    ...                            algorithm=explicit.FISTA(),
+    ...                            algorithm=proximal.FISTA(),
     ...                            algorithm_params=dict(max_iter=1000),
     ...                            mean=False)
     >>> error = en.fit(X, y).score(X, y)
@@ -453,7 +455,7 @@ class ElasticNet(RegressionEstimator):
                  penalty_start=0, mean=True):
 
         if algorithm is None:
-            algorithm = explicit.FISTA(**algorithm_params)
+            algorithm = proximal.FISTA(**algorithm_params)
         else:
             algorithm.set_params(**algorithm_params)
 
@@ -554,7 +556,8 @@ class LinearRegressionL1L2TV(RegressionEstimator):
     --------
     >>> import numpy as np
     >>> import parsimony.estimators as estimators
-    >>> import parsimony.algorithms.explicit as explicit
+    >>> import parsimony.algorithms.primaldual as primaldual
+    >>> import parsimony.algorithms.proximal as proximal
     >>> import parsimony.functions.nesterov.tv as total_variation
     >>> shape = (1, 4, 4)
     >>> n = 10
@@ -568,28 +571,28 @@ class LinearRegressionL1L2TV(RegressionEstimator):
     >>> tv = 1.0  # TV coefficient
     >>> A, n_compacts = total_variation.A_from_shape(shape)
     >>> lr = estimators.LinearRegressionL1L2TV(l1, l2, tv, A,
-    ...                        algorithm=explicit.StaticCONESTA(max_iter=1000),
+    ...                        algorithm=primaldual.StaticCONESTA(max_iter=1000),
     ...                        mean=False)
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
     error =  0.0683839364837
     >>> lr = estimators.LinearRegressionL1L2TV(l1, l2, tv, A,
-    ...                       algorithm=explicit.DynamicCONESTA(max_iter=1000),
+    ...                       algorithm=primaldual.DynamicCONESTA(max_iter=1000),
     ...                       mean=False)
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
     error =  0.0683839265093
     >>> lr = estimators.LinearRegressionL1L2TV(l1, l2, tv, A,
-    ...                                algorithm=explicit.FISTA(max_iter=1000),
+    ...                                algorithm=proximal.FISTA(max_iter=1000),
     ...                                mean=False)
     >>> lr = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
     error =  1.58175771272
     >>> lr = estimators.LinearRegressionL1L2TV(l1, l2, tv, A,
-    ...                                 algorithm=explicit.ISTA(max_iter=1000),
+    ...                                 algorithm=proximal.ISTA(max_iter=1000),
     ...                                 mean=False)
     >>> lr = lr.fit(X, y)
     >>> error = lr.score(X, y)
@@ -603,7 +606,7 @@ class LinearRegressionL1L2TV(RegressionEstimator):
                  mean=True):
 
         if algorithm is None:
-            algorithm = explicit.StaticCONESTA(**algorithm_params)
+            algorithm = primaldual.StaticCONESTA(**algorithm_params)
         else:
             algorithm.set_params(**algorithm_params)
 
@@ -713,7 +716,8 @@ class LinearRegressionL1L2GL(RegressionEstimator):
     --------
     >>> import numpy as np
     >>> import parsimony.estimators as estimators
-    >>> import parsimony.algorithms.explicit as explicit
+    >>> import parsimony.algorithms.primaldual as primaldual
+    >>> import parsimony.algorithms.proximal as proximal
     >>> import parsimony.functions.nesterov.gl as group_lasso
     >>> n = 10
     >>> p = 15
@@ -727,7 +731,7 @@ class LinearRegressionL1L2GL(RegressionEstimator):
     >>> groups = [range(0, 10), range(5, 15)]
     >>> A = group_lasso.A_from_groups(p, groups, weights=None, penalty_start=0)
     >>> lr = estimators.LinearRegressionL1L2GL(l1, l2, gl, A,
-    ...                                   algorithm=explicit.StaticCONESTA(),
+    ...                                   algorithm=primaldual.StaticCONESTA(),
     ...                                   algorithm_params=dict(max_iter=1000),
     ...                                   mean=False)
     >>> res = lr.fit(X, y)
@@ -735,15 +739,15 @@ class LinearRegressionL1L2GL(RegressionEstimator):
     >>> print "error = ", error
     error =  0.610191919564
     >>> lr = estimators.LinearRegressionL1L2GL(l1, l2, gl, A,
-    ...                                   algorithm=explicit.DynamicCONESTA(),
-    ...                                   algorithm_params=dict(max_iter=1000),
-    ...                                   mean=False)
+    ...                                  algorithm=primaldual.DynamicCONESTA(),
+    ...                                  algorithm_params=dict(max_iter=1000),
+    ...                                  mean=False)
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
     error =  0.610280682745
     >>> lr = estimators.LinearRegressionL1L2GL(l1, l2, gl, A,
-    ...                                   algorithm=explicit.FISTA(),
+    ...                                   algorithm=proximal.FISTA(),
     ...                                   algorithm_params=dict(max_iter=1000),
     ...                                   mean=False)
     >>> lr = lr.fit(X, y)
@@ -751,7 +755,7 @@ class LinearRegressionL1L2GL(RegressionEstimator):
     >>> print "error = ", error
     error =  10.7465249393
     >>> lr = estimators.LinearRegressionL1L2GL(l1, l2, gl, A,
-    ...                                   algorithm=explicit.ISTA(),
+    ...                                   algorithm=proximal.ISTA(),
     ...                                   algorithm_params=dict(max_iter=1000),
     ...                                   mean=False)
     >>> lr = lr.fit(X, y)
@@ -766,7 +770,7 @@ class LinearRegressionL1L2GL(RegressionEstimator):
                  mean=True):
 
         if algorithm is None:
-            algorithm = explicit.StaticCONESTA(**algorithm_params)
+            algorithm = primaldual.StaticCONESTA(**algorithm_params)
         else:
             algorithm.set_params(**algorithm_params)
 
@@ -851,10 +855,10 @@ class LinearRegressionL1L2GL(RegressionEstimator):
 #
 #    algorithm : ExplicitAlgorithm. The algorithm that should be applied.
 #            Should be one of:
-#                1. algorithms.StaticCONESTA()
-#                2. algorithms.DynamicCONESTA()
-#                3. algorithms.FISTA()
-#                4. algorithms.ISTA()
+#                1. StaticCONESTA()
+#                2. DynamicCONESTA()
+#                3. FISTA()
+#                4. ISTA()
 #
 #    penalty_start : Non-negative integer. The number of columns, variables
 #            etc., to be exempt from penalisation. Equivalently, the first
@@ -867,7 +871,8 @@ class LinearRegressionL1L2GL(RegressionEstimator):
 #    --------
 ##    >>> import numpy as np
 ##    >>> import parsimony.estimators as estimators
-##    >>> import parsimony.algorithms.explicit as explicit
+##    >>> import parsimony.algorithms.primaldual as primaldual
+##    >>> import parsimony.algorithms.proximal as proximal
 ##    >>> import parsimony.functions.nesterov.tv as tv
 ##    >>> shape = (1, 4, 4)
 ##    >>> num_samples = 10
@@ -880,28 +885,28 @@ class LinearRegressionL1L2GL(RegressionEstimator):
 ##    >>> g = 1.0  # tv coefficient
 ##    >>> A, n_compacts = tv.A_from_shape(shape)
 ##    >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
-##    ...                     algorithm=explicit.StaticCONESTA(max_iter=1000))
+##    ...                     algorithm=primaldual.StaticCONESTA(max_iter=1000))
 ##    >>> res = ridge_l1_tv.fit(X, y)
 ##    >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
 ##    >>> print "error = ", error
 ##    error =  4.70079220678
 ##    >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
-##    ...                     algorithm=explicit.DynamicCONESTA(max_iter=1000))
+##    ...                     algorithm=primaldual.DynamicCONESTA(max_iter=1000))
 ##    >>> res = ridge_l1_tv.fit(X, y)
 ##    >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
 ##    >>> print "error = ", error
 ##    error =  4.70096544168
 ##    >>> ridge_l1_tv = estimators.RidgeRegression_L1_TV(k, l, g, A,
-##    ...                     algorithm=explicit.FISTA(max_iter=1000))
+##    ...                     algorithm=proximal.FISTA(max_iter=1000))
 ##    >>> res = ridge_l1_tv.fit(X, y)
 ##    >>> error = np.sum(np.abs(np.dot(X, ridge_l1_tv.beta) - y))
 ##    >>> print "error = ", error
 ##    error =  4.24400179809
 #    """
 #    def __init__(self, k, l, g, A, mu=None,
-#                 algorithm=explicit.StaticCONESTA(),
-##                 algorithm=algorithms.DynamicCONESTA()):
-##                 algorithm=algorithms.FISTA()):
+#                 algorithm=StaticCONESTA(),
+##                 algorithm=DynamicCONESTA()):
+##                 algorithm=FISTA()):
 #                 penalty_start=0, mean=True):
 #
 #        super(RidgeRegression_L1_GL, self).__init__(algorithm=algorithm)
@@ -1019,7 +1024,8 @@ class LogisticRegressionL1L2TV(LogisticRegressionEstimator):
     --------
     >>> import numpy as np
     >>> import parsimony.estimators as estimators
-    >>> import parsimony.algorithms.explicit as explicit
+    >>> import parsimony.algorithms.primaldual as primaldual
+    >>> import parsimony.algorithms.proximal as proximal
     >>> import parsimony.functions.nesterov.tv as total_variation
     >>> shape = (1, 4, 4)
     >>> n = 10
@@ -1033,21 +1039,21 @@ class LogisticRegressionL1L2TV(LogisticRegressionEstimator):
     >>> tv = 1.0  # TV coefficient
     >>> A, n_compacts = total_variation.A_from_shape(shape)
     >>> lr = estimators.LogisticRegressionL1L2TV(l1, l2, tv, A,
-    ...                        algorithm=explicit.StaticCONESTA(max_iter=1000),
+    ...                        algorithm=primaldual.StaticCONESTA(max_iter=1000),
     ...                        mean=False)
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
     error =  0.7
     >>> lr = estimators.LogisticRegressionL1L2TV(l1, l2, tv, A,
-    ...                                algorithm=explicit.FISTA(max_iter=1000),
+    ...                                algorithm=proximal.FISTA(max_iter=1000),
     ...                                mean=False)
     >>> lr = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
     error =  0.7
     >>> lr = estimators.LogisticRegressionL1L2TV(l1, l2, tv, A,
-    ...                                 algorithm=explicit.ISTA(max_iter=1000),
+    ...                                 algorithm=proximal.ISTA(max_iter=1000),
     ...                                 mean=False)
     >>> lr = lr.fit(X, y)
     >>> error = lr.score(X, y)
@@ -1062,7 +1068,7 @@ class LogisticRegressionL1L2TV(LogisticRegressionEstimator):
                  mean=True):
 
         if algorithm is None:
-            algorithm = explicit.StaticCONESTA(**algorithm_params)
+            algorithm = primaldual.StaticCONESTA(**algorithm_params)
         else:
             algorithm.set_params(**algorithm_params)
 
@@ -1073,7 +1079,7 @@ class LogisticRegressionL1L2TV(LogisticRegressionEstimator):
         self.l2 = float(l2)
         self.tv = float(tv)
 
-        if isinstance(algorithm, explicit.CONESTA) \
+        if isinstance(algorithm, primaldual.CONESTA) \
                 and self.tv < consts.TOLERANCE:
             warnings.warn("The TV parameter should be positive.")
 
@@ -1190,7 +1196,8 @@ class LogisticRegressionL1L2GL(LogisticRegressionEstimator):
     --------
     >>> import numpy as np
     >>> import parsimony.estimators as estimators
-    >>> import parsimony.algorithms.explicit as explicit
+    >>> import parsimony.algorithms.primaldual as primaldual
+    >>> import parsimony.algorithms.proximal as proximal
     >>> import parsimony.functions.nesterov.gl as group_lasso
     >>>
     >>> np.random.seed(42)
@@ -1206,21 +1213,21 @@ class LogisticRegressionL1L2GL(LogisticRegressionEstimator):
     >>> l2 = 0.9  # Ridge coefficient
     >>> tv = 1.0  # TV coefficient
     >>> lr = estimators.LogisticRegressionL1L2GL(l1, l2, tv, A=A,
-    ...                        algorithm=explicit.StaticCONESTA(max_iter=1000),
+    ...                        algorithm=primaldual.StaticCONESTA(max_iter=1000),
     ...                        mean=False)
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
     error =  0.7
     >>> lr = estimators.LogisticRegressionL1L2GL(l1, l2, tv, A=A,
-    ...                                algorithm=explicit.FISTA(max_iter=1000),
+    ...                                algorithm=proximal.FISTA(max_iter=1000),
     ...                                mean=False)
     >>> lr = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
     error =  0.7
     >>> lr = estimators.LogisticRegressionL1L2GL(l1, l2, tv, A,
-    ...                                 algorithm=explicit.ISTA(max_iter=1000),
+    ...                                 algorithm=proximal.ISTA(max_iter=1000),
     ...                                 mean=False)
     >>> lr = lr.fit(X, y)
     >>> error = lr.score(X, y)
@@ -1236,7 +1243,7 @@ class LogisticRegressionL1L2GL(LogisticRegressionEstimator):
                  mean=True):
 
         if algorithm is None:
-            algorithm = explicit.StaticCONESTA(**algorithm_params)
+            algorithm = primaldual.StaticCONESTA(**algorithm_params)
         else:
             algorithm.set_params(**algorithm_params)
 
@@ -1247,7 +1254,7 @@ class LogisticRegressionL1L2GL(LogisticRegressionEstimator):
         self.l2 = float(l2)
         self.gl = float(gl)
 
-        if isinstance(algorithm, explicit.CONESTA) \
+        if isinstance(algorithm, primaldual.CONESTA) \
                 and self.gl < consts.TOLERANCE:
             warnings.warn("The GL parameter should be positive.")
 
@@ -1352,7 +1359,7 @@ class LinearRegressionL2SmoothedL1TV(RegressionEstimator):
     --------
     >>> import numpy as np
     >>> import parsimony.estimators as estimators
-    >>> import parsimony.algorithms.explicit as explicit
+    >>> import parsimony.algorithms.primaldual as primaldual
     >>> import parsimony.functions.nesterov.l1tv as l1tv
     >>> shape = (1, 4, 4)
     >>> n = 10
@@ -1367,7 +1374,7 @@ class LinearRegressionL2SmoothedL1TV(RegressionEstimator):
     >>> Atv, Al1 = l1tv.A_from_shape(shape, p, penalty_start=0)
     >>> lr = estimators.LinearRegressionL2SmoothedL1TV(l1, l2, tv,
     ...                 Atv=Atv, Al1=Al1,
-    ...                 algorithm=explicit.ExcessiveGapMethod(),
+    ...                 algorithm=primaldual.ExcessiveGapMethod(),
     ...                 algorithm_params=dict(max_iter=1000))
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
@@ -1381,7 +1388,7 @@ class LinearRegressionL2SmoothedL1TV(RegressionEstimator):
                  mean=True):
 
         if algorithm is None:
-            algorithm = explicit.ExcessiveGapMethod(**algorithm_params)
+            algorithm = primaldual.ExcessiveGapMethod(**algorithm_params)
         else:
             algorithm.set_params(**algorithm_params)
 

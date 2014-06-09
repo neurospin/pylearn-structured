@@ -13,20 +13,20 @@ Created on Mon Feb  3 17:00:56 2014
 import numpy as np
 import scipy.sparse as sparse
 
-from .interfaces import NesterovFunction
-from .. import interfaces
+from .properties import NesterovFunction
+from .. import properties
 import parsimony.utils.consts as consts
 import parsimony.utils.maths as maths
 
 __all__ = ["L1", "A_from_variables"]
 
 
-class L1(interfaces.AtomicFunction,
+class L1(properties.AtomicFunction,
          NesterovFunction,
-         interfaces.Penalty,
-         interfaces.Constraint,
-         interfaces.Gradient,
-         interfaces.LipschitzContinuousGradient):
+         properties.Penalty,
+         properties.Constraint,
+         properties.Gradient,
+         properties.LipschitzContinuousGradient):
     """The proximal operator of the smoothed L1 function
 
         f(beta) = l * (L1mu(beta) - c),

@@ -24,8 +24,7 @@ from parsimony.utils import LimitedDict, Info
 import parsimony.utils as utils
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
-import parsimony.functions.interfaces as interfaces
-import parsimony.functions.nesterov.interfaces as nesterov_interfaces
+import parsimony.functions.properties as properties
 
 __all__ = ["ISTA", "FISTA",
 
@@ -41,7 +40,7 @@ class ISTA(bases.ExplicitAlgorithm,
 
     Examples
     --------
-    >>> from parsimony.algorithms.explicit import ISTA
+    >>> from parsimony.algorithms.proximal import ISTA
     >>> from parsimony.functions import LinearRegressionL1L2TV
     >>> import scipy.sparse as sparse
     >>> import numpy as np
@@ -74,10 +73,10 @@ class ISTA(bases.ExplicitAlgorithm,
     >>> np.linalg.norm(beta1.ravel(), 0)
     7
     """
-    INTERFACES = [interfaces.Function,
-                  interfaces.Gradient,
-                  interfaces.StepSize,
-                  interfaces.ProximalOperator]
+    INTERFACES = [properties.Function,
+                  properties.Gradient,
+                  properties.StepSize,
+                  properties.ProximalOperator]
 
     PROVIDED_INFO = [Info.ok,
                      Info.num_iter,
@@ -171,7 +170,7 @@ class FISTA(bases.ExplicitAlgorithm,
 
     Example
     -------
-    >>> from parsimony.algorithms.explicit import FISTA
+    >>> from parsimony.algorithms.proximal import FISTA
     >>> from parsimony.functions import LinearRegressionL1L2TV
     >>> import scipy.sparse as sparse
     >>> import numpy as np
@@ -204,10 +203,10 @@ class FISTA(bases.ExplicitAlgorithm,
     >>> np.linalg.norm(beta1.ravel(), 0)
     7
     """
-    INTERFACES = [interfaces.Function,
-                  interfaces.Gradient,
-                  interfaces.StepSize,
-                  interfaces.ProximalOperator]
+    INTERFACES = [properties.Function,
+                  properties.Gradient,
+                  properties.StepSize,
+                  properties.ProximalOperator]
 
     PROVIDED_INFO = [Info.ok,
                      Info.num_iter,
@@ -327,8 +326,8 @@ class FISTA(bases.ExplicitAlgorithm,
 #    """ The Alternating direction method of multipliers, where the functions
 #    have projection operators onto the corresponding convex sets.
 #    """
-#    INTERFACES = [interfaces.Function,
-#                  interfaces.ProjectionOperator]
+#    INTERFACES = [properties.Function,
+#                  properties.ProjectionOperator]
 #
 #    def __init__(self, output=False,
 #                 eps=consts.TOLERANCE,
@@ -372,8 +371,8 @@ class DykstrasProjectionAlgorithm(bases.ExplicitAlgorithm):
     The functions have projection operators (ProjectionOperator.proj) onto the
     corresponding convex sets.
     """
-    INTERFACES = [interfaces.Function,
-                  interfaces.ProjectionOperator]
+    INTERFACES = [properties.Function,
+                  properties.ProjectionOperator]
 
     def __init__(self, output=False,
                  eps=consts.TOLERANCE,
@@ -425,8 +424,8 @@ class ParallelDykstrasProjectionAlgorithm(bases.ExplicitAlgorithm):
     The functions have projection operators (ProjectionOperator.proj) onto the
     respective convex sets.
     """
-    INTERFACES = [interfaces.Function,
-                  interfaces.ProjectionOperator]
+    INTERFACES = [properties.Function,
+                  properties.ProjectionOperator]
 
     def __init__(self, output=False,
                  eps=consts.TOLERANCE,
@@ -498,9 +497,9 @@ class ParallelDykstrasProximalAlgorithm(bases.ExplicitAlgorithm):
     The functions have projection operators (ProjectionOperator.proj) onto the
     respective convex sets or proximal operators (ProximalOperator.prox).
     """
-    INTERFACES = [interfaces.Function,
-                  interfaces.OR(interfaces.ProjectionOperator,
-                                interfaces.ProximalOperator)]
+    INTERFACES = [properties.Function,
+                  properties.OR(properties.ProjectionOperator,
+                                properties.ProximalOperator)]
 
     def __init__(self, output=False,
                  eps=consts.TOLERANCE,

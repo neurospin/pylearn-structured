@@ -17,7 +17,7 @@ class TestL1(TestCase):
 
         import parsimony.utils.consts as consts
         from parsimony.functions import CombinedFunction
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
         import parsimony.functions.nesterov as nesterov
@@ -62,7 +62,7 @@ class TestL1(TestCase):
                                             penalty_start=penalty_start))
 #        function.add_prox(penalties.L1(l, penalty_start=penalty_start))
 
-        fista = explicit.FISTA(eps=mu_min, max_iter=20000)
+        fista = proximal.FISTA(eps=mu_min, max_iter=20000)
         beta = fista.run(function, beta)
 
         assert np.linalg.norm(beta - beta_star) < 5e-2
@@ -73,7 +73,7 @@ class TestL1(TestCase):
 
         import parsimony.utils.consts as consts
         from parsimony.functions import CombinedFunction
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
         import parsimony.functions.nesterov as nesterov
@@ -116,7 +116,7 @@ class TestL1(TestCase):
 #                                            penalty_start=penalty_start))
         function.add_prox(penalties.L1(l, penalty_start=penalty_start))
 
-        fista = explicit.FISTA(eps=consts.TOLERANCE, max_iter=7800)
+        fista = proximal.FISTA(eps=consts.TOLERANCE, max_iter=7800)
         beta = fista.run(function, beta)
 
         assert np.linalg.norm(beta - beta_star) < 5e-2

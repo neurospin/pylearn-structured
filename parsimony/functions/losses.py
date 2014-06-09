@@ -3,7 +3,7 @@
 The :mod:`parsimony.functions.losses` module contains the loss functions used
 throughout the package. These represent mathematical functions and should thus
 have properties used by the corresponding algorithms. These properties are
-defined in :mod:`parsimony.functions.interfaces`.
+defined in :mod:`parsimony.functions.properties`.
 
 Loss functions should be stateless. Loss functions may be shared and copied
 and should therefore not hold anything that cannot be recomputed the next time
@@ -19,9 +19,9 @@ Created on Mon Apr 22 10:54:29 2013
 import numpy as np
 
 try:
-    from . import interfaces  # Only works when imported as a package.
+    from . import properties  # Only works when imported as a package.
 except ValueError:
-    import parsimony.functions.interfaces as interfaces  # Run as a script
+    import parsimony.functions.properties as properties  # Run as a script
 import parsimony.utils as utils
 
 __all__ = ["LinearRegression", "RidgeRegression",
@@ -29,10 +29,10 @@ __all__ = ["LinearRegression", "RidgeRegression",
            "LatentVariableVariance", "LinearFunction"]
 
 
-class LinearRegression(interfaces.CompositeFunction,
-                       interfaces.Gradient,
-                       interfaces.LipschitzContinuousGradient,
-                       interfaces.StepSize):
+class LinearRegression(properties.CompositeFunction,
+                       properties.Gradient,
+                       properties.LipschitzContinuousGradient,
+                       properties.StepSize):
     """The Linear regression loss function.
     """
     def __init__(self, X, y, mean=True):
@@ -133,7 +133,7 @@ class LinearRegression(interfaces.CompositeFunction,
         """
         if self._L is None:
 
-            from parsimony.algorithms.implicit import FastSVD
+            from parsimony.algorithms.nipals import FastSVD
 
             # Rough limits for when FastSVD is faster than np.linalg.svd.
             n, p = self.X.shape
@@ -171,11 +171,11 @@ class LinearRegression(interfaces.CompositeFunction,
         return 1.0 / self.L()
 
 
-class RidgeRegression(interfaces.CompositeFunction,
-                      interfaces.Gradient,
-                      interfaces.LipschitzContinuousGradient,
-                      interfaces.StronglyConvex,
-                      interfaces.StepSize):
+class RidgeRegression(properties.CompositeFunction,
+                      properties.Gradient,
+                      properties.LipschitzContinuousGradient,
+                      properties.StronglyConvex,
+                      properties.StepSize):
     """The Ridge Regression function, i.e. a representation of
 
         f(x) = (0.5 / n) * ||Xb - y||²_2 + lambda * 0.5 * ||b||²_2,
@@ -329,10 +329,10 @@ class RidgeRegression(interfaces.CompositeFunction,
         return 1.0 / self.L()
 
 
-class LogisticRegression(interfaces.AtomicFunction,
-                         interfaces.Gradient,
-                         interfaces.LipschitzContinuousGradient,
-                         interfaces.StepSize):
+class LogisticRegression(properties.AtomicFunction,
+                         properties.Gradient,
+                         properties.LipschitzContinuousGradient,
+                         properties.StepSize):
     """The Logistic Regression loss function.
 
     (Re-weighted) Log-likelihood (cross-entropy):
@@ -486,10 +486,10 @@ class LogisticRegression(interfaces.AtomicFunction,
         return 1.0 / self.L()
 
 
-class RidgeLogisticRegression(interfaces.CompositeFunction,
-                              interfaces.Gradient,
-                              interfaces.LipschitzContinuousGradient,
-                              interfaces.StepSize):
+class RidgeLogisticRegression(properties.CompositeFunction,
+                              properties.Gradient,
+                              properties.LipschitzContinuousGradient,
+                              properties.StepSize):
     """The Logistic Regression loss function.
 
     Ridge (re-weighted) log-likelihood (cross-entropy):
@@ -654,10 +654,10 @@ class RidgeLogisticRegression(interfaces.CompositeFunction,
         return 1.0 / self.L()
 
 
-class LatentVariableVariance(interfaces.Function,
-                               interfaces.Gradient,
-                               interfaces.StepSize,
-                               interfaces.LipschitzContinuousGradient):
+class LatentVariableVariance(properties.Function,
+                             properties.Gradient,
+                             properties.StepSize,
+                             properties.LipschitzContinuousGradient):
     # TODO: Handle mean here?
     def __init__(self, X, unbiased=True):
 
@@ -681,7 +681,7 @@ class LatentVariableVariance(interfaces.Function,
         Examples
         --------
         >>> import numpy as np
-        >>> from parsimony.algorithms.implicit import FastSVD
+        >>> from parsimony.algorithms.nipals import FastSVD
         >>> from parsimony.functions.losses import LatentVariableVariance
         >>>
         >>> np.random.seed(1337)
@@ -733,7 +733,7 @@ class LatentVariableVariance(interfaces.Function,
         Examples
         --------
         >>> import numpy as np
-        >>> from parsimony.algorithms.implicit import FastSVD
+        >>> from parsimony.algorithms.nipals import FastSVD
         >>> from parsimony.functions.losses import LatentVariableVariance
         >>>
         >>> np.random.seed(1337)
@@ -747,7 +747,7 @@ class LatentVariableVariance(interfaces.Function,
         47025.080978684106
         """
         if self._lambda_max is None:
-            from parsimony.algorithms.implicit import FastSVD
+            from parsimony.algorithms.nipals import FastSVD
             v = FastSVD().run(self.X, max_iter=1000)
             us = np.dot(self.X, v)
 
@@ -765,7 +765,7 @@ class LatentVariableVariance(interfaces.Function,
         Examples
         --------
         >>> import numpy as np
-        >>> from parsimony.algorithms.implicit import FastSVD
+        >>> from parsimony.algorithms.nipals import FastSVD
         >>> from parsimony.functions.losses import LatentVariableVariance
         >>>
         >>> np.random.seed(42)
@@ -781,10 +781,10 @@ class LatentVariableVariance(interfaces.Function,
         return 1.0 / self.L()
 
 
-class LinearFunction(interfaces.CompositeFunction,
-                     interfaces.Gradient,
-                     interfaces.LipschitzContinuousGradient,
-                     interfaces.StepSize):
+class LinearFunction(properties.CompositeFunction,
+                     properties.Gradient,
+                     properties.LipschitzContinuousGradient,
+                     properties.StepSize):
     """A linear function.
     """
     def __init__(self, a):

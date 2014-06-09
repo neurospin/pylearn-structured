@@ -25,8 +25,9 @@ from parsimony.utils import LimitedDict, Info
 import parsimony.utils as utils
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
-import parsimony.functions.interfaces as interfaces
-import parsimony.functions.nesterov.interfaces as nesterov_interfaces
+import parsimony.functions.properties as properties
+import parsimony.functions.nesterov.properties as nesterov_properties
+from proximal import FISTA
 
 __all__ = ["CONESTA", "StaticCONESTA", "DynamicCONESTA", "NaiveCONESTA",
            "ExcessiveGapMethod"]
@@ -38,12 +39,12 @@ class CONESTA(bases.ExplicitAlgorithm,
     """COntinuation with NEsterov smoothing in a Soft-Thresholding Algorithm,
     or CONESTA for short.
     """
-    INTERFACES = [nesterov_interfaces.NesterovFunction,
-                  interfaces.Gradient,
-                  interfaces.StepSize,
-                  interfaces.ProximalOperator,
-                  interfaces.Continuation,
-                  interfaces.DualFunction]
+    INTERFACES = [nesterov_properties.NesterovFunction,
+                  properties.Gradient,
+                  properties.StepSize,
+                  properties.ProximalOperator,
+                  properties.Continuation,
+                  properties.DualFunction]
 
     PROVIDED_INFO = [Info.ok,
                      Info.num_iter,
@@ -92,18 +93,18 @@ class CONESTA(bases.ExplicitAlgorithm,
         self.dynamic = dynamic
 
         if dynamic:
-            self.INTERFACES = [nesterov_interfaces.NesterovFunction,
-                               interfaces.Gradient,
-                               interfaces.StepSize,
-                               interfaces.ProximalOperator,
-                               interfaces.Continuation,
-                               interfaces.DualFunction]
+            self.INTERFACES = [nesterov_properties.NesterovFunction,
+                               properties.Gradient,
+                               properties.StepSize,
+                               properties.ProximalOperator,
+                               properties.Continuation,
+                               properties.DualFunction]
         else:
-            self.INTERFACES = [nesterov_interfaces.NesterovFunction,
-                               interfaces.Gradient,
-                               interfaces.StepSize,
-                               interfaces.ProximalOperator,
-                               interfaces.Continuation]
+            self.INTERFACES = [nesterov_properties.NesterovFunction,
+                               properties.Gradient,
+                               properties.StepSize,
+                               properties.ProximalOperator,
+                               properties.Continuation]
 
         self.eps = eps
 
@@ -294,11 +295,11 @@ class NaiveCONESTA(bases.ExplicitAlgorithm,
 
     min_iter : Positive integer. Minimum number of iterations.
     """
-    INTERFACES = [nesterov_interfaces.NesterovFunction,
-                  interfaces.Gradient,
-                  interfaces.StepSize,
-                  interfaces.ProximalOperator,
-                  interfaces.Continuation]
+    INTERFACES = [nesterov_properties.NesterovFunction,
+                  properties.Gradient,
+                  properties.StepSize,
+                  properties.ProximalOperator,
+                  properties.Continuation]
 
     PROVIDED_INFO = [Info.ok,
                      Info.num_iter,
@@ -437,11 +438,11 @@ class ExcessiveGapMethod(bases.ExplicitAlgorithm,
                          bases.InformationAlgorithm):
     """Nesterov's excessive gap method for strongly convex functions.
     """
-    INTERFACES = [nesterov_interfaces.NesterovFunction,
-                  interfaces.LipschitzContinuousGradient,
-                  interfaces.GradientMap,
-                  interfaces.DualFunction,
-                  interfaces.StronglyConvex]
+    INTERFACES = [nesterov_properties.NesterovFunction,
+                  properties.LipschitzContinuousGradient,
+                  properties.GradientMap,
+                  properties.DualFunction,
+                  properties.StronglyConvex]
 
     PROVIDED_INFO = [Info.ok,
                      Info.num_iter,

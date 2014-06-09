@@ -29,7 +29,7 @@ class TestSimulations(TestCase):
 #        import parsimony.datasets.simulate.l1_l2_tv as l1_l2_tv
 #        import parsimony.datasets.simulate.l1_l2_tvmu as l1_l2_tvmu
 
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.utils.start_vectors as start_vectors
 
         start_vector = start_vectors.RandomStartVector(normalise=True)
@@ -91,7 +91,7 @@ class TestSimulations(TestCase):
         lagranges = np.linspace(v * 0.95, v, 2).tolist()[:-1] \
                   + np.linspace(v, v * 1.05, 2).tolist()
         for L in lagranges:
-            fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+            fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
             beta_start = start_vector.get_vector(p)
 
             beta_nonsmooth_penalty = beta_start
@@ -469,7 +469,7 @@ class TestSimulations(TestCase):
 #
 #        max_iter = 5000
 #        estimator = estimators.LinearRegressionL1L2TV(l, k, g, A=A, mu=mu,
-#                                      algorithm=explicit.FISTA(),
+#                                      algorithm=proximal.FISTA(),
 #                                      algorithm_params=dict(eps=eps,
 #                                                            max_iter=max_iter),
 #                                      penalty_start=1,
@@ -498,7 +498,7 @@ class TestSimulations(TestCase):
         import parsimony.functions.nesterov.tv as tv
         from parsimony.functions import CombinedFunction
 
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
         from parsimony.functions import LinearRegressionL1L2TV
@@ -567,7 +567,7 @@ class TestSimulations(TestCase):
         beta_start = start_vector.get_vector(p)
         beta_nonsmooth_penalty = beta_start
         for L in lagranges:
-            fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+            fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
             function = None
             for mu in mus:
                 function = CombinedFunction()
@@ -618,7 +618,7 @@ class TestSimulations(TestCase):
         beta_start = start_vector.get_vector(p)
         beta_nonsmooth_penalty = beta_start
         for L in lagranges:
-            fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+            fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
             function = None
             for mu in mus:
                 function = CombinedFunction()
@@ -669,7 +669,7 @@ class TestSimulations(TestCase):
         beta_start = start_vector.get_vector(p)
         beta_nonsmooth_penalty = beta_start
         for L in lagranges:
-            fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+            fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
             function = None
             for mu in mus:
                 function = CombinedFunction()
@@ -721,7 +721,7 @@ class TestSimulations(TestCase):
         beta_start = start_vector.get_vector(p)
         beta_nonsmooth_penalty = beta_start
         for L in lagranges:
-            fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+            fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
             function = None
             for mu in mus:
                 function = CombinedFunction()
@@ -764,7 +764,7 @@ class TestSimulations(TestCase):
 
         max_iter = 5000
         estimator = estimators.LinearRegressionL1L2TV(l, k, g, A=A, mu=mu,
-                                      algorithm=explicit.FISTA(),
+                                      algorithm=proximal.FISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=1,
@@ -1044,7 +1044,7 @@ class TestSimulations(TestCase):
 #
 #        max_iter = 2500
 #        estimator = estimators.LinearRegressionL1L2GL(l, k, g, A=A, mu=mu,
-#                                      algorithm=explicit.FISTA(),
+#                                      algorithm=proximal.FISTA(),
 #                                      algorithm_params=dict(eps=eps,
 #                                                            max_iter=max_iter),
 #                                      penalty_start=1,
@@ -1077,7 +1077,7 @@ class TestSimulations(TestCase):
         import parsimony.datasets.simulate.simulate as simulate
         import parsimony.datasets.simulate.grad as grad
 
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.estimators as estimators
         from parsimony.functions import LinearRegressionL1L2GL
@@ -1145,7 +1145,7 @@ class TestSimulations(TestCase):
         beta_start = start_vector.get_vector(p)
         beta_nonsmooth_penalty = beta_start
         for L in lagranges:
-            fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+            fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
             function = None
             for mu in mus:
                 function = CombinedFunction()
@@ -1196,7 +1196,7 @@ class TestSimulations(TestCase):
         beta_start = start_vector.get_vector(p)
         beta_nonsmooth_penalty = beta_start
         for L in lagranges:
-            fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+            fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
             function = None
             for mu in mus:
                 function = CombinedFunction()
@@ -1247,7 +1247,7 @@ class TestSimulations(TestCase):
         beta_start = start_vector.get_vector(p)
         beta_nonsmooth_penalty = beta_start
         for L in lagranges:
-            fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+            fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
             function = None
             for mu in mus:
                 function = CombinedFunction()
@@ -1299,7 +1299,7 @@ class TestSimulations(TestCase):
         beta_start = start_vector.get_vector(p)
         beta_nonsmooth_penalty = beta_start
         for L in lagranges:
-            fista = explicit.FISTA(eps=eps, max_iter=max_iter / len(mus))
+            fista = proximal.FISTA(eps=eps, max_iter=max_iter / len(mus))
             function = None
             for mu in mus:
                 function = CombinedFunction()
@@ -1342,7 +1342,7 @@ class TestSimulations(TestCase):
 
         max_iter = 2500
         estimator = estimators.LinearRegressionL1L2GL(l, k, g, A=A, mu=mu,
-                                      algorithm=explicit.FISTA(),
+                                      algorithm=proximal.FISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=1,

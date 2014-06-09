@@ -3,7 +3,7 @@
 The :mod:`parsimony.functions.penalties` module contains the penalties used to
 constrain the loss functions. These represent mathematical functions and
 should thus have properties used by the corresponding algorithms. These
-properties are defined in :mod:`parsimony.functions.interfaces`.
+properties are defined in :mod:`parsimony.functions.properties`.
 
 Penalties should be stateless. Penalties may be shared and copied and should
 therefore not hold anything that cannot be recomputed the next time it is
@@ -19,9 +19,9 @@ Created on Mon Apr 22 10:54:29 2013
 import numpy as np
 
 try:
-    from . import interfaces  # Only works when imported as a package.
+    from . import properties  # Only works when imported as a package.
 except ValueError:
-    import parsimony.functions.interfaces as interfaces  # Run as a script.
+    import parsimony.functions.properties as properties  # Run as a script.
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
 
@@ -30,12 +30,12 @@ __all__ = ["ZeroFunction", "L0", "L1", "L2", "L2Squared", "LInf",
            "SufficientDescentCondition"]
 
 
-class ZeroFunction(interfaces.AtomicFunction,
-                   interfaces.Gradient,
-                   interfaces.Penalty,
-                   interfaces.Constraint,
-                   interfaces.ProximalOperator,
-                   interfaces.ProjectionOperator):
+class ZeroFunction(properties.AtomicFunction,
+                   properties.Gradient,
+                   properties.Penalty,
+                   properties.Constraint,
+                   properties.ProximalOperator,
+                   properties.ProjectionOperator):
 
     def __init__(self, l=1.0, c=0.0, penalty_start=0):
         """
@@ -102,11 +102,11 @@ class ZeroFunction(interfaces.AtomicFunction,
         return self.c >= 0.0
 
 
-class L1(interfaces.AtomicFunction,
-         interfaces.Penalty,
-         interfaces.Constraint,
-         interfaces.ProximalOperator,
-         interfaces.ProjectionOperator):
+class L1(properties.AtomicFunction,
+         properties.Penalty,
+         properties.Constraint,
+         properties.ProximalOperator,
+         properties.ProjectionOperator):
     """The proximal operator of the L1 function with a penalty formulation
 
         f(\beta) = l * (||\beta||_1 - c),
@@ -231,7 +231,7 @@ class L1(interfaces.AtomicFunction,
                               parameter_zero=False,
                               eps=1e-8)
 
-        class F(interfaces.Function):
+        class F(properties.Function):
             def __init__(self, beta, c):
                 self.beta = beta
                 self.c = c
@@ -264,11 +264,11 @@ class L1(interfaces.AtomicFunction,
         return maths.norm1(beta_) <= self.c
 
 
-class L0(interfaces.AtomicFunction,
-         interfaces.Penalty,
-         interfaces.Constraint,
-         interfaces.ProximalOperator,
-         interfaces.ProjectionOperator):
+class L0(properties.AtomicFunction,
+         properties.Penalty,
+         properties.Constraint,
+         properties.ProximalOperator,
+         properties.ProjectionOperator):
     """The proximal operator of the "pseudo" L0 function
 
         f(x) = l * (||x||_0 - c),
@@ -455,11 +455,11 @@ class L0(interfaces.AtomicFunction,
         return maths.norm0(beta_) <= self.c
 
 
-class LInf(interfaces.AtomicFunction,
-         interfaces.Penalty,
-         interfaces.Constraint,
-         interfaces.ProximalOperator,
-         interfaces.ProjectionOperator):
+class LInf(properties.AtomicFunction,
+           properties.Penalty,
+           properties.Constraint,
+           properties.ProximalOperator,
+           properties.ProjectionOperator):
     """The proximal operator of the L-infinity function
 
         f(x) = l * (||x||_inf - c),
@@ -648,11 +648,11 @@ class LInf(interfaces.AtomicFunction,
         return maths.normInf(x_) <= self.c
 
 
-class L2(interfaces.AtomicFunction,
-         interfaces.Penalty,
-         interfaces.Constraint,
-         interfaces.ProximalOperator,
-         interfaces.ProjectionOperator):
+class L2(properties.AtomicFunction,
+         properties.Penalty,
+         properties.Constraint,
+         properties.ProximalOperator,
+         properties.ProjectionOperator):
     """The proximal operator of the L2 function with a penalty formulation
 
         f(\beta) = l * (0.5 * ||\beta||_2 - c),
@@ -790,13 +790,13 @@ class L2(interfaces.AtomicFunction,
         return maths.norm(beta_) <= self.c
 
 
-class L2Squared(interfaces.AtomicFunction,
-                interfaces.Gradient,
-                interfaces.LipschitzContinuousGradient,
-                interfaces.Penalty,
-                interfaces.Constraint,
-                interfaces.ProximalOperator,
-                interfaces.ProjectionOperator):
+class L2Squared(properties.AtomicFunction,
+                properties.Gradient,
+                properties.LipschitzContinuousGradient,
+                properties.Penalty,
+                properties.Constraint,
+                properties.ProximalOperator,
+                properties.ProjectionOperator):
     """The proximal operator of the squared L2 function with a penalty
     formulation
 
@@ -977,10 +977,10 @@ class L2Squared(interfaces.AtomicFunction,
         return 0.5 * sqnorm <= self.c
 
 
-class QuadraticConstraint(interfaces.AtomicFunction,
-                          interfaces.Gradient,
-                          interfaces.Penalty,
-                          interfaces.Constraint):
+class QuadraticConstraint(properties.AtomicFunction,
+                          properties.Gradient,
+                          properties.Penalty,
+                          properties.Constraint):
     """The proximal operator of the quadratic function
 
         f(x) = l * (x'Mx - c),
@@ -1088,7 +1088,7 @@ class QuadraticConstraint(interfaces.AtomicFunction,
 
 
 class RGCCAConstraint(QuadraticConstraint,
-                      interfaces.ProjectionOperator):
+                      properties.ProjectionOperator):
     """The proximal operator of the quadratic function
 
         f(x) = l * (x'(tau * I + ((1 - tau) / n) * X'X)x - c),
@@ -1248,8 +1248,8 @@ class RGCCAConstraint(QuadraticConstraint,
                                    eps=consts.TOLERANCE,
                                    max_iter=30)
 
-            class F(interfaces.Function,
-                    interfaces.Gradient):
+            class F(properties.Function,
+                    properties.Gradient):
 
                 def __init__(self, tau, S, c):
                     self.tau = tau
@@ -1328,8 +1328,8 @@ class RGCCAConstraint(QuadraticConstraint,
         return val[0, 0]
 
 
-class SufficientDescentCondition(interfaces.Function,
-                                 interfaces.Constraint):
+class SufficientDescentCondition(properties.Function,
+                                 properties.Constraint):
 
     def __init__(self, function, p, c):
         """The sufficient condition

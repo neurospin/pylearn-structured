@@ -8,15 +8,6 @@ references to objects with state in the algorithm objects. It should be
 possible to copy and share algorithms between e.g. estimators, and thus they
 should not depend on any state.
 
-There are currently two main types of algorithms: implicit and explicit. The
-difference is whether they run directly on the data (implicit) or if they have
-an actual loss function than is minimised (explicit). Implicit algorithms take
-the data as input, and then run on the data. Explicit algorithms take a loss
-function and possibly a starting point as input, and then minimise the function
-value starting from the point of the start vector.
-
-Algorithms that don't fit well in either category should go in utils instead.
-
 Created on Thu Feb 20 17:42:16 2014
 
 @author:  Tommy Löfstedt
@@ -27,7 +18,7 @@ import abc
 import functools
 
 import parsimony.utils.consts as consts
-import parsimony.functions.interfaces as interfaces
+import parsimony.functions.properties as properties
 from parsimony.utils import LimitedDict
 
 __all__ = ["BaseAlgorithm", "check_compatibility",
@@ -40,17 +31,17 @@ class BaseAlgorithm(object):
     __metaclass__ = abc.ABCMeta
 
     @staticmethod
-    def check_compatibility(function, required_interfaces):
-        """Check if the function considered implements the given interfaces.
+    def check_compatibility(function, required_properties):
+        """Check if the function considered implements the given properties.
         """
-        for interface in required_interfaces:
-            if isinstance(interface, interfaces.OR):
-                if not interface.evaluate(function):
-                    raise ValueError("%s does not implement interfaces %s" %
-                                    (str(function), str(interface)))
-            elif not isinstance(function, interface):
+        for prop in required_properties:
+            if isinstance(prop, properties.OR):
+                if not prop.evaluate(function):
+                    raise ValueError("%s does not implement properties %s" %
+                                    (str(function), str(prop)))
+            elif not isinstance(function, prop):
                 raise ValueError("%s does not implement interface %s" %
-                                (str(function), str(interface)))
+                                (str(function), str(prop)))
 
     def set_params(self, **kwargs):
 
@@ -59,7 +50,7 @@ class BaseAlgorithm(object):
 
 
 def check_compatibility(f):
-    """Automatically checks if a function implements a given set of interfaces.
+    """Automatically checks if a function implements a given set of properties.
     """
     @functools.wraps(f)
     def wrapper(self, function, *args, **kwargs):
@@ -95,12 +86,12 @@ class ExplicitAlgorithm(BaseAlgorithm):
     The function is explicitly minimised from properties of said function.
 
     Implementing classes should update the INTERFACES class variable with
-    the interfaces that function must implement. Defauls to a list with one
+    the properties that function must implement. Defauls to a list with one
     element, the Function.
     """
     __metaclass__ = abc.ABCMeta
 
-    INTERFACES = [interfaces.Function]
+    INTERFACES = [properties.Function]
 
     @abc.abstractmethod
     def run(function, x, **kwargs):
@@ -145,7 +136,7 @@ class InformationAlgorithm(object):
     >>> from parsimony.functions.losses import LinearRegression
     >>> import numpy as np
     >>> np.random.seed(42)
-    >>> gd = algorithms.explicit.GradientDescent(info=LimitedDict(Info.f))
+    >>> gd = algorithms.gradient.GradientDescent(info=LimitedDict(Info.f))
     >>> gd.info  # doctest:+ELLIPSIS
     LimitedDict(set([EnumItem('Info', 'f', ...)])).update({})
     >>> lr = LinearRegression(X=np.random.rand(10,15), y=np.random.rand(10,1))

@@ -13,20 +13,20 @@ Created on Mon Feb  3 10:46:47 2014
 import numpy as np
 import scipy.sparse as sparse
 
-from .interfaces import NesterovFunction
-from .. import interfaces
+from .properties import NesterovFunction
+from .. import properties
 import parsimony.utils.consts as consts
 import parsimony.utils.maths as maths
 
 __all__ = ["GroupLassoOverlap", "A_from_groups"]
 
 
-class GroupLassoOverlap(interfaces.AtomicFunction,
+class GroupLassoOverlap(properties.AtomicFunction,
                         NesterovFunction,
-                        interfaces.Penalty,
-                        interfaces.Constraint,
-                        interfaces.Gradient,
-                        interfaces.LipschitzContinuousGradient):
+                        properties.Penalty,
+                        properties.Constraint,
+                        properties.Gradient,
+                        properties.LipschitzContinuousGradient):
     """Group L1-L2 function, with overlapping groups. Represents the
     function
 

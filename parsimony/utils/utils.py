@@ -71,7 +71,7 @@ def deprecated(*replaced_by):
         return outer
 
 
-@deprecated("functions.interfaces.Gradient.approx_grad")
+@deprecated("functions.properties.Gradient.approx_grad")
 def approx_grad(f, x, eps=1e-4):
     p = x.shape[0]
     grad = np.zeros(x.shape)

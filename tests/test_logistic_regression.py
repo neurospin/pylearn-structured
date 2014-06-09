@@ -25,7 +25,8 @@ class TestLogisticRegression(TestCase):
 
         import parsimony.functions.losses as losses
         import parsimony.functions.nesterov.tv as tv
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.gradient as gradient
+        import parsimony.algorithms.proximal as proximal
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.estimators as estimators
@@ -52,7 +53,7 @@ class TestLogisticRegression(TestCase):
         eps = 1e-8
         max_iter = 2500
 
-        gd = explicit.GradientDescent(eps=eps, max_iter=max_iter)
+        gd = gradient.GradientDescent(eps=eps, max_iter=max_iter)
         lr = losses.LogisticRegression(X, y, mean=True)
         beta_start = start_vector.get_vector(p)
 
@@ -107,7 +108,7 @@ class TestLogisticRegression(TestCase):
         logreg_est = estimators.LogisticRegressionL1L2TV(0.0, 0.0, 0.0,
                                       A=A, mu=mu,
                                       class_weight=None,
-                                      algorithm=explicit.ISTA(),
+                                      algorithm=proximal.ISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       mean=True)
@@ -154,7 +155,7 @@ class TestLogisticRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.estimators as estimators
@@ -186,7 +187,7 @@ class TestLogisticRegression(TestCase):
         k = 0.0
         g = 0.0
 
-        algorithm = explicit.ISTA(eps=eps, max_iter=max_iter)
+        algorithm = proximal.ISTA(eps=eps, max_iter=max_iter)
         function = CombinedFunction()
         function.add_function(losses.LogisticRegression(X, y, mean=True))
         function.add_prox(penalties.L1(l))
@@ -238,7 +239,7 @@ class TestLogisticRegression(TestCase):
         mu = None
         logreg_est = estimators.LogisticRegressionL1L2TV(l, k, g,
                                       A=A, mu=mu,
-                                      algorithm=explicit.ISTA(),
+                                      algorithm=proximal.ISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       class_weight=None)
@@ -285,7 +286,7 @@ class TestLogisticRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.estimators as estimators
@@ -319,7 +320,7 @@ class TestLogisticRegression(TestCase):
         k = 0.0
         g = 0.0
 
-        algorithm = explicit.ISTA(eps=eps, max_iter=max_iter)
+        algorithm = proximal.ISTA(eps=eps, max_iter=max_iter)
         function = CombinedFunction()
         function.add_function(losses.LogisticRegression(X_parsimony, y,
                                                         mean=True))
@@ -375,7 +376,7 @@ class TestLogisticRegression(TestCase):
         mu = None
         logreg_est = estimators.LogisticRegressionL1L2TV(l, k, g,
                                       A=A, mu=mu,
-                                      algorithm=explicit.ISTA(),
+                                      algorithm=proximal.ISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=1,
@@ -417,7 +418,8 @@ class TestLogisticRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
+        import parsimony.algorithms.gradient as gradient
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.estimators as estimators
@@ -449,7 +451,7 @@ class TestLogisticRegression(TestCase):
         k = 0.618
         g = 0.0
 
-        gd = explicit.GradientDescent(eps=eps, max_iter=max_iter)
+        gd = gradient.GradientDescent(eps=eps, max_iter=max_iter)
         function = CombinedFunction()
         function.add_function(losses.LogisticRegression(X, y, mean=True))
         function.add_penalty(penalties.L2Squared(k))
@@ -510,7 +512,7 @@ class TestLogisticRegression(TestCase):
         mu = None
         logreg_est = estimators.LogisticRegressionL1L2TV(l, k, g,
                                       A=A, mu=mu,
-                                      algorithm=explicit.ISTA(),
+                                      algorithm=proximal.ISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       class_weight=None)
@@ -557,7 +559,8 @@ class TestLogisticRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.gradient as gradient
+        import parsimony.algorithms.proximal as proximal
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.estimators as estimators
@@ -591,7 +594,7 @@ class TestLogisticRegression(TestCase):
         k = 0.618
         g = 0.0
 
-        gd = explicit.GradientDescent(eps=eps, max_iter=max_iter)
+        gd = gradient.GradientDescent(eps=eps, max_iter=max_iter)
         function = CombinedFunction()
         function.add_function(losses.LogisticRegression(X_parsimony, y,
                                                         mean=True))
@@ -651,7 +654,7 @@ class TestLogisticRegression(TestCase):
         mu = None
         logreg_est = estimators.LogisticRegressionL1L2TV(l, k, g,
                                       A=A, mu=mu,
-                                      algorithm=explicit.ISTA(),
+                                      algorithm=proximal.ISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=1,
@@ -693,7 +696,7 @@ class TestLogisticRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.functions.nesterov.gl as gl
@@ -725,7 +728,7 @@ class TestLogisticRegression(TestCase):
         g = 0.001
         mu = 5e-4
 
-        algorithm = explicit.ISTA(eps=eps, max_iter=max_iter)
+        algorithm = proximal.ISTA(eps=eps, max_iter=max_iter)
         function = CombinedFunction()
         function.add_function(losses.LogisticRegression(X, y, mean=True))
         function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
@@ -790,7 +793,7 @@ class TestLogisticRegression(TestCase):
 #        mu = None
         logreg_est = estimators.LogisticRegressionL1L2GL(l, k, g,
                                       A=A, mu=mu,
-                                      algorithm=explicit.ISTA(),
+                                      algorithm=proximal.ISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=0,
@@ -839,7 +842,7 @@ class TestLogisticRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.estimators as estimators
@@ -871,7 +874,7 @@ class TestLogisticRegression(TestCase):
         k = 1.0 - l
         g = 0.0
 
-        algorithm = explicit.ISTA(eps=eps, max_iter=max_iter)
+        algorithm = proximal.ISTA(eps=eps, max_iter=max_iter)
         function = CombinedFunction()
         function.add_function(losses.LogisticRegression(X, y, mean=True))
         function.add_penalty(penalties.L2Squared(k))
@@ -925,7 +928,7 @@ class TestLogisticRegression(TestCase):
         mu = None
         logreg_est = estimators.LogisticRegressionL1L2TV(l, k, g,
                                       A=A, mu=mu,
-                                      algorithm=explicit.ISTA(),
+                                      algorithm=proximal.ISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       class_weight=None)
@@ -972,7 +975,7 @@ class TestLogisticRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.estimators as estimators
@@ -1006,7 +1009,7 @@ class TestLogisticRegression(TestCase):
         k = 1.0 - l
         g = 0.0
 
-        algorithm = explicit.ISTA(eps=eps, max_iter=max_iter)
+        algorithm = proximal.ISTA(eps=eps, max_iter=max_iter)
         function = CombinedFunction()
         logreg = losses.LogisticRegression(X_parsimony, y, mean=True)
         function.add_function(logreg)
@@ -1065,7 +1068,7 @@ class TestLogisticRegression(TestCase):
         mu = None
         logreg_est = estimators.LogisticRegressionL1L2TV(l, k, g,
                                     A=A, mu=mu,
-                                    algorithm=explicit.ISTA(eps=eps,
+                                    algorithm=proximal.ISTA(eps=eps,
                                                             max_iter=max_iter),
                                     penalty_start=1,
                                     mean=True,
@@ -1107,7 +1110,7 @@ class TestLogisticRegression(TestCase):
         from parsimony.functions import CombinedFunction
         import parsimony.functions.losses as losses
         import parsimony.functions.penalties as penalties
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
         import parsimony.utils.start_vectors as start_vectors
         import parsimony.utils.maths as maths
         import parsimony.functions.nesterov.gl as gl
@@ -1139,7 +1142,7 @@ class TestLogisticRegression(TestCase):
         g = 0.001
         mu = 5e-4
 
-        algorithm = explicit.ISTA(eps=eps, max_iter=max_iter)
+        algorithm = proximal.ISTA(eps=eps, max_iter=max_iter)
         function = CombinedFunction()
         function.add_function(losses.LogisticRegression(X, y, mean=True))
         function.add_penalty(gl.GroupLassoOverlap(l=g, A=A, mu=mu,
@@ -1198,7 +1201,7 @@ class TestLogisticRegression(TestCase):
 #        mu = None
         logreg_est = estimators.LogisticRegressionL1L2GL(l, k, g,
                                       A=A, mu=mu,
-                                      algorithm=explicit.ISTA(),
+                                      algorithm=proximal.ISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       penalty_start=0,
@@ -1374,7 +1377,8 @@ class TestLogisticRegression(TestCase):
 
     def test_large(self):
 
-        import parsimony.algorithms.explicit as explicit
+        import parsimony.algorithms.proximal as proximal
+        import parsimony.algorithms.primaldual as primaldual
         import parsimony.estimators as estimators
         import parsimony.functions.nesterov.tv as tv
 
@@ -1412,7 +1416,7 @@ class TestLogisticRegression(TestCase):
         mu = None
         logreg_static = estimators.LogisticRegressionL1L2TV(l, k, g,
                                       A=A, mu=mu,
-                                      algorithm=explicit.StaticCONESTA(),
+                                      algorithm=primaldual.StaticCONESTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       class_weight=None)
@@ -1425,7 +1429,7 @@ class TestLogisticRegression(TestCase):
         mu = None
         logreg_dynamic = estimators.LogisticRegressionL1L2TV(l, k, g,
                                       A=A, mu=mu,
-                                      algorithm=explicit.DynamicCONESTA(),
+                                      algorithm=primaldual.DynamicCONESTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       class_weight=None)
@@ -1438,7 +1442,7 @@ class TestLogisticRegression(TestCase):
         mu = 5e-4
         logreg_fista = estimators.LogisticRegressionL1L2TV(l, k, g,
                                       A=A, mu=mu,
-                                      algorithm=explicit.FISTA(),
+                                      algorithm=proximal.FISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       class_weight=None)
@@ -1451,7 +1455,7 @@ class TestLogisticRegression(TestCase):
         mu = 5e-4
         logreg_ista = estimators.LogisticRegressionL1L2TV(l, k, g,
                                       A=A, mu=mu,
-                                      algorithm=explicit.ISTA(),
+                                      algorithm=proximal.ISTA(),
                                       algorithm_params=dict(eps=eps,
                                                             max_iter=max_iter),
                                       class_weight=None)

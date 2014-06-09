@@ -23,7 +23,7 @@ from parsimony.utils import Info
 import parsimony.utils as utils
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
-import parsimony.functions.interfaces as interfaces
+import parsimony.functions.properties as properties
 
 __all__ = ["GradientDescent"]
 
@@ -47,7 +47,7 @@ class GradientDescent(bases.ExplicitAlgorithm,
 
     Examples
     --------
-    >>> from parsimony.algorithms.explicit import GradientDescent
+    >>> from parsimony.algorithms.gradient import GradientDescent
     >>> from parsimony.functions.losses import RidgeRegression
     >>> import numpy as np
     >>> np.random.seed(42)
@@ -60,9 +60,9 @@ class GradientDescent(bases.ExplicitAlgorithm,
     >>> np.linalg.norm(beta1 - beta2)
     0.0003121557632556645
     """
-    INTERFACES = [interfaces.Function,
-                  interfaces.Gradient,
-                  interfaces.StepSize]
+    INTERFACES = [properties.Function,
+                  properties.Gradient,
+                  properties.StepSize]
 
     PROVIDED_INFO = [Info.ok,
                      Info.num_iter,
