@@ -21,7 +21,6 @@ import functools
 
 import parsimony.utils.consts as consts
 import parsimony.functions.properties as properties
-from parsimony.utils import LimitedDict
 
 __all__ = ["BaseAlgorithm", "check_compatibility",
            "ImplicitAlgorithm", "ExplicitAlgorithm",
@@ -50,7 +49,12 @@ class BaseAlgorithm(object):
         for k in kwargs:
             self.__setattr__(k, kwargs[k])
 
+    def get_params(self):
+        raise NotImplementedError('Method "get_params" has not been ' \
+                                  'implemented.')
 
+
+# TODO: Replace the one in BaseAlgorithm.
 def check_compatibility(f):
     """Automatically checks if a function implements a given set of properties.
     """
@@ -58,6 +62,26 @@ def check_compatibility(f):
     def wrapper(self, function, *args, **kwargs):
 
         BaseAlgorithm.check_compatibility(function, self.INTERFACES)
+
+        return f(self, function, *args, **kwargs)
+
+    return wrapper
+
+
+def force_reset(f):
+    """Decorate run with this method to force a reset of your algorithm.
+
+    Automatically resets an algorithm by checking the implementing
+    classes and calling the appropriate reset methods.
+    """
+    @functools.wraps(f)
+    def wrapper(self, function, *args, **kwargs):
+
+        # Add more subclasses here if necessary.
+        if isinstance(self, IterativeAlgorithm):
+            self.iter_reset()
+        if isinstance(self, InformationAlgorithm):
+            self.info_reset()
 
         return f(self, function, *args, **kwargs)
 
@@ -112,6 +136,18 @@ class ExplicitAlgorithm(BaseAlgorithm):
 class IterativeAlgorithm(object):
     """Algorithms that require iterative steps to achieve the goal.
 
+    Fields
+    ------
+    max_iter : Non-negative integer. The maximum number of allowed iterations.
+
+    min_iter : Non-negative integer less than or equal to max_iter. The minimum
+            number of iterations that must be performed. Default is 1.
+
+    num_iter : Non-negative integer greater than or equal to min_iter. The
+            number of iterations performed by the iterative algorithm. All
+            algorithms that inherit from IterativeAlgortihm MUST call
+            iter_reset before every run.
+
     Parameters
     ----------
     max_iter : Non-negative integer. The maximum number of allowed iterations.
@@ -123,47 +159,132 @@ class IterativeAlgorithm(object):
 
         self.max_iter = max_iter
         self.min_iter = min_iter
+        self.num_iter = 0
+
+        self.iter_reset()
+
+    def iter_reset(self):
+
+        self.num_iter = 0
 
 
 class InformationAlgorithm(object):
     """Algorithms that produce information about their run.
 
-    Implementing classes should update the PROVIDED_INFO class variable with
+    Implementing classes should update the INFO_PROVIDED class variable with
     the information provided by the algorithm. Defauls to an empty list.
+
+    ALL algorithms that inherit from InformationAlgorithm MUST add force_reset
+    as a decorator to the run method.
+
+    Fields
+    ------
+    info_ret : Dictionary. The algorithm outputs are collected in this
+            dictionary.
+
+    info : List of utils.consts.Info. The identifiers for the requested
+            information outputs. The algorithms will store the requested
+            outputs in self.info.
+
+    INFO_PROVIDED : List of utils.consts.Info. The allowed output
+            identifiers. The implementing class should update this list with
+            the provided/allowed outputs.
 
     Examples
     --------
     >>> import parsimony.algorithms as algorithms
-    >>> from parsimony.utils import LimitedDict, Info
+    >>> from parsimony.utils.consts import Info
     >>> from parsimony.functions.losses import LinearRegression
     >>> import numpy as np
     >>> np.random.seed(42)
-    >>> gd = algorithms.gradient.GradientDescent(info=LimitedDict(Info.f))
-    >>> gd.info  # doctest:+ELLIPSIS
-    LimitedDict(set([EnumItem('Info', 'f', ...)])).update({})
+    >>> gd = algorithms.gradient.GradientDescent(info=[Info.fvalue])
+    >>> gd.info_copy()
+    ['fvalue']
     >>> lr = LinearRegression(X=np.random.rand(10,15), y=np.random.rand(10,1))
     >>> beta = gd.run(lr, np.random.rand(15, 1))
-    >>> gd.info[Info.f]  # doctest:+ELLIPSIS
+    >>> gd.info_get(Info.fvalue)  # doctest:+ELLIPSIS
     [0.068510926021035312, ... 1.8856122733915382e-12]
     """
-    PROVIDED_INFO = []
+    INFO_PROVIDED = []
 
-    def __init__(self, info=None, **kwargs):
+    def __init__(self, info=[], **kwargs):
         """
         Parameters
         ----------
-        info : LimitedDict. The data structure to store the run information in.
+        info : List or tuple of utils.consts.Info. The identifiers for the run
+                information to return.
         """
         super(InformationAlgorithm, self).__init__(**kwargs)
 
-        if info == None:
-            self.info = LimitedDict()
+        if not isinstance(info, (list, tuple)):
+            self.info = [info]
         else:
-            self.info = info
+            self.info = list(info)
+        self.info_ret = dict()
 
-        self.check_info_compatibility(self.PROVIDED_INFO)
+        self.check_info_compatibility(self.info)
 
-    def check_info_compatibility(self, req_info):
-        for i in self.info:
-            if i not in req_info:
-                raise ValueError("Requested information unknown.")
+    def info_get(self, nfo=None):
+        """Returns the computed information about the algorithm run.
+
+        Parameters
+        ----------
+        nfo : utils.consts.Info. The identifier to return information about.
+                If nfo is None, all information is returned in a dictionary.
+        """
+        if nfo is None:
+            return self.info_ret
+        else:
+            return self.info_ret[nfo]
+
+    def info_set(self, nfo, value):
+        """Sets the computed information about the algorithm run identified by
+        nfo.
+
+        Parameters
+        ----------
+        nfo : utils.consts.Info. The identifier to for the computed information
+                about.
+
+        value : object. The value to associate with nfo.
+        """
+        self.info_ret[nfo] = value
+
+    def info_provided(self, nfo):
+        """Returns true if the current algorithm provides the given
+        information, and False otherwise.
+        """
+        return nfo in self.INFO_PROVIDED
+
+    def info_requested(self, nfo):
+        """Returns true if the the given information was requested, and False
+        otherwise.
+        """
+        return nfo in self.info
+
+    def info_reset(self):
+        """Resets the information saved in the previous run. The info_ret
+        field, a dictionary, is cleared.
+        """
+        self.info_ret.clear()
+
+    def info_copy(self):
+        """Returns a shallow copy of the requested information.
+        """
+        return list(self.info)
+
+    def check_info_compatibility(self, info):
+        """Check if the requested information is provided.
+
+        Parameters
+        ----------
+        info : A list of utils.consts.Info. The identifiers for information
+                that should be computed.
+        """
+        for i in info:
+            if not self.info_provided(i):
+                raise ValueError("Requested information not provided.")
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

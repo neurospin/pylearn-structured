@@ -28,6 +28,8 @@ import parsimony.utils.start_vectors as start_vectors
 
 __all__ = ["FastSVD", "FastSparseSVD", "FastSVDProduct"]
 
+# TODO: Add information about the run.
+
 
 class FastSVD(bases.ImplicitAlgorithm):
 
@@ -42,9 +44,10 @@ class FastSVD(bases.ImplicitAlgorithm):
         ----------
         X : Numpy array. The matrix to decompose.
 
-        max_iter : Integer. The maximum allowed number of iterations.
+        max_iter : Non-negative integer. Maximum allowed number of iterations.
+                Default is 100.
 
-        eps : The tolerance used by the stopping criterion.
+        eps : Positive float. The tolerance used by the stopping criterion.
 
         start_vector : BaseStartVector. A start vector generator. Default is
                 to use a random start vector.

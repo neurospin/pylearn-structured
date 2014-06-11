@@ -21,8 +21,8 @@ try:
     from . import bases  # Only works when imported as a package.
 except ValueError:
     import parsimony.algorithms.bases as bases  # When run as a program.
-from parsimony.utils import Info
 import parsimony.utils.consts as consts
+from parsimony.utils.consts import Info
 import parsimony.functions.penalties as penalties
 import parsimony.functions.properties as properties
 
@@ -38,10 +38,28 @@ class Bisection(bases.ExplicitAlgorithm,
 
     Assumes a function f(x) such that |f(x)|_2 < -eps if x is too small,
     |f(x)|_2 > eps if x is too large and |f(x)|_2 <= eps if x is just right.
+
+    Parameters
+    ----------
+    force_negative : Boolean. Default is False. Will try, by running more
+            iterations, to make the result negative. It may fail, but that is
+            unlikely.
+
+    eps : Positive float. A value such that |f(x)|_2 <= eps. Only guaranteed
+            if |f(x)|_2 <= eps in less than max_iter iterations.
+
+    info : List or tuple of utils.consts.Info. What, if any, extra run
+            information should be stored. Default is an empty list, which means
+            that no run information is computed nor returned.
+
+    max_iter : Non-negative integer. Maximum allowed number of iterations.
+
+    min_iter : Non-negative integer less than or equal to max_iter. Minimum
+            number of iterations that must be performed. Default is 1.
     """
     INTERFACES = [properties.Function]
 
-    PROVIDED_INFO = [Info.ok,
+    INFO_PROVIDED = [Info.ok,
                      Info.num_iter,
                      Info.converged]
 
@@ -51,25 +69,8 @@ class Bisection(bases.ExplicitAlgorithm,
                  parameter_zero=True,
 
                  eps=consts.TOLERANCE,
-                 info=None, max_iter=30, min_iter=1):
-        """
-        Parameters
-        ----------
-        force_negative : Boolean. Default is False. Will try, by running more
-                iterations, to make the result negative. It may fail, but that
-                is unlikely.
+                 info=[], max_iter=30, min_iter=1):
 
-        eps : Positive float. A value such that |f(x)|_2 <= eps. Only
-                guaranteed if |f(x)|_2 <= eps in less than max_iter iterations.
-
-        info : Information. If, and if so what, extra run information should be
-                returned. Default is None, which is replaced by Information(),
-                which means that no run information is computed nor returned.
-
-        max_iter : Positive integer. Maximum allowed number of iterations.
-
-        min_iter : Positive integer. Minimum number of iterations.
-        """
         super(Bisection, self).__init__(info=info,
                                         max_iter=max_iter,
                                         min_iter=min_iter)
@@ -81,6 +82,7 @@ class Bisection(bases.ExplicitAlgorithm,
 
         self.eps = eps
 
+    @bases.force_reset
     @bases.check_compatibility
     def run(self, function, x=None):
         """
@@ -95,8 +97,8 @@ class Bisection(bases.ExplicitAlgorithm,
                 automatically. Finding them may be slow, though, if the
                 function is expensive to evaluate.
         """
-        if self.info.allows(Info.ok):
-            self.info[Info.ok] = False
+        if self.info_requested(Info.ok):
+            self.info_set(Info.ok, False)
 
         if x is not None:
             low = x[0]
@@ -226,16 +228,18 @@ class Bisection(bases.ExplicitAlgorithm,
                     break
             i += 1
 
-        if self.info.allows(Info.converged):
+        if self.info_requested(Info.converged):
             if abs(f_high - f_low) <= self.eps:
-                self.info[Info.converged] = True
+                self.info_set(Info.converged, True)
 
                 if self.force_negative and f_mid > 0.0:
-                    self.info[Info.converged] = False
-        if self.info.allows(Info.num_iter):
-            self.info[Info.num_iter] = i + 1
-        if self.info.allows(Info.ok):
-            self.info[Info.ok] = True
+                    self.info_set(Info.converged, False)
+        if self.info_requested(Info.num_iter):
+            self.info_set(Info.num_iter, i + 1)
+        if self.info_requested(Info.ok):
+            self.info_set(Info.ok, True)
+
+        self.num_iter = i + 1
 
         # TODO: We already have f_mid, so we can return a better approximation
         # here!
@@ -264,18 +268,19 @@ class NewtonRaphson(bases.ExplicitAlgorithm,
             stopping criterion will be fulfilled if it converges in less
             than max_iter iterations.
 
-    info : Information. If, and if so what, extra run information should be
-            returned. Default is None, which means that no run information is
-            computed nor returned.
+    info : List or tuple of utils.consts.Info. What, if any, extra run
+            information should be stored. Default is an empty list, which means
+            that no run information is computed nor returned.
 
-    max_iter : Positive integer. Maximum allowed number of iterations.
+    max_iter : Non-negative integer. Maximum allowed number of iterations.
 
-    min_iter : Positive integer. Minimum number of iterations. Default is 1.
+    min_iter : Non-negative integer less than or equal to max_iter. Minimum
+            number of iterations that must be performed. Default is 1.
     """
     INTERFACES = [properties.Function,
                   properties.Gradient]
 
-    PROVIDED_INFO = [Info.ok,
+    INFO_PROVIDED = [Info.ok,
                      Info.num_iter,
                      Info.converged]
 
@@ -285,7 +290,7 @@ class NewtonRaphson(bases.ExplicitAlgorithm,
                  parameter_zero=True,
 
                  eps=consts.TOLERANCE,
-                 info=None, max_iter=30, min_iter=1):
+                 info=[], max_iter=30, min_iter=1):
 
         super(NewtonRaphson, self).__init__(info=info,
                                             max_iter=max_iter,
@@ -298,6 +303,7 @@ class NewtonRaphson(bases.ExplicitAlgorithm,
 
         self.eps = eps
 
+    @bases.force_reset
     @bases.check_compatibility
     def run(self, function, x=None):
         """
@@ -308,8 +314,8 @@ class NewtonRaphson(bases.ExplicitAlgorithm,
         x : Float. The starting point of the Newton-Raphson algorithm. Should
                 be "close" to the root.
         """
-        if self.info.allows(Info.ok):
-            self.info[Info.ok] = False
+        if self.info_requested(Info.ok):
+            self.info_set(Info.ok, False)
 
         if x is None:
             if self.parameter_positive:
@@ -357,18 +363,20 @@ class NewtonRaphson(bases.ExplicitAlgorithm,
 
             i += 1
 
-        if self.info.allows(Info.converged):
+        if self.info_requested(Info.converged):
             if abs(x - x_) <= self.eps:  # TODO: Stopping criterion. See above!
-                self.info[Info.converged] = True
+                self.info_set(Info.converged, True)
 
                 if self.force_negative:
                     f = function.f(x)
                     if f > 0.0:
-                        self.info[Info.converged] = False
-        if self.info.allows(Info.num_iter):
-            self.info[Info.num_iter] = i + 1
-        if self.info.allows(Info.ok):
-            self.info[Info.ok] = True
+                        self.info_set(Info.converged, False)
+        if self.info_requested(Info.num_iter):
+            self.info_set(Info.num_iter, i + 1)
+        if self.info_requested(Info.ok):
+            self.info_set(Info.ok, True)
+
+        self.num_iter = i + 1
 
         return x
 

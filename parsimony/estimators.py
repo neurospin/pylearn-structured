@@ -23,6 +23,7 @@ import parsimony.utils.start_vectors as start_vectors
 import parsimony.algorithms.gradient as gradient
 import parsimony.algorithms.proximal as proximal
 import parsimony.algorithms.primaldual as primaldual
+import parsimony.algorithms.bases as bases
 from parsimony.utils import check_arrays
 from parsimony.utils import class_weight_to_sample_weight, check_labels
 
@@ -79,6 +80,15 @@ class BaseEstimator(object):
     def score(self, X, y):
         raise NotImplementedError('Abstract method "score" must be '
                                   'specialised!')
+
+    def get_info(self):
+        """If an InformationAlgorithm, returns the information dictionary.
+        """
+        if not isinstance(self.algorithm, bases.InformationAlgorithm):
+            raise AttributeError("Algorithm is not an " \
+                                 "InformationAlgorithm.")
+
+        return self.algorithm.info_get()
 
 
 class RegressionEstimator(BaseEstimator):

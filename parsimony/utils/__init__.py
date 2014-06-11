@@ -11,9 +11,8 @@ Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
 import maths
 import consts
 
-from .utils import time_cpu, time_wall, deprecated, approx_grad
-from .utils import optimal_shrinkage, AnonymousClass, Enum
-from .utils import LimitedDict, Info
+from .utils import time_cpu, time_wall, deprecated
+from .utils import optimal_shrinkage, AnonymousClass
 from .check_arrays import check_arrays
 from .plot import plot_map2d
 from .classif_label import class_weight_to_sample_weight, check_labels
@@ -21,10 +20,10 @@ from . import start_vectors
 
 
 __all__ = ["maths", "consts",
-           "time_cpu", "time_wall", "deprecated", "approx_grad",
+           "time_cpu", "time_wall", "deprecated",
            "check_arrays",
-           "optimal_shrinkage", "AnonymousClass", "Enum",
+           "optimal_shrinkage", "AnonymousClass",
            "plot_map2d",
            "class_weight_to_sample_weight", "check_labels",
-           "LimitedDict", "Info", "start_vectors"
+           "start_vectors"
           ]
