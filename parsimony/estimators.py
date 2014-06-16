@@ -27,7 +27,10 @@ import parsimony.algorithms.bases as bases
 from parsimony.utils import check_arrays
 from parsimony.utils import class_weight_to_sample_weight, check_labels
 
-__all__ = ["BaseEstimator", "RegressionEstimator",
+__all__ = ["BaseEstimator",
+           "RegressionEstimator", "LogisticRegressionEstimator",
+
+           "LinearRegression", "RidgeRegression", "Lasso", "ElasticNet",
 
            "LinearRegressionL1L2TV",
            "LinearRegressionL1L2GL",
@@ -291,6 +294,118 @@ class LinearRegression(RegressionEstimator):
         return err
 
 
+class RidgeRegression(RegressionEstimator):
+    """Linear regression with an L2 penalty. Represents the function:
+
+        f(beta, X, y) = (1 / 2 * n) * ||X * beta - y||²_2
+                      + (l / 2) * ||beta||²_2,
+
+    where ||.||²_2 is the squared L2-norm.
+
+    Parameters
+    ----------
+    l : Non-negative float. The regularisation parameter.
+
+    algorithm : ExplicitAlgorithm. The algorithm that should be applied.
+            Should be one of:
+                1. FISTA(...)
+                2. ISTA(...)
+
+            Default is FISTA(...).
+
+    algorithm_params : A dict. The dictionary algorithm_params contains
+            parameters that should be set in the algorithm. Passing
+            algorithm=FISTA(**params) is equivalent to passing
+            algorithm=FISTA() and algorithm_params=params. Default is
+            an empty dictionary.
+
+    start_vector : BaseStartVector. Generates the start vector that will be
+            used.
+
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to be exempt from penalisation. Equivalently, the first
+            index to be penalised. Default is 0, all columns are included.
+
+    mean : Boolean. Whether to compute the squared loss or the mean squared
+            loss. Default is True, the mean squared loss.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import parsimony.estimators as estimators
+    >>> import parsimony.algorithms.proximal as proximal
+    >>> n = 10
+    >>> p = 16
+    >>>
+    >>> np.random.seed(42)
+    >>> X = np.random.rand(n, p)
+    >>> y = np.random.rand(n, 1)
+    >>> l = 0.618  # Regularisation coefficient
+    >>> rr = estimators.RidgeRegression(l,
+    ...                                 algorithm=proximal.FISTA(),
+    ...                                 algorithm_params=dict(max_iter=1000),
+    ...                                 mean=False)
+    >>> error = rr.fit(X, y).score(X, y)
+    >>> print "error = ", error
+    error =  0.377679437659
+    """
+    def __init__(self, l, algorithm=None, algorithm_params=dict(),
+                 start_vector=start_vectors.RandomStartVector(),
+                 penalty_start=0, mean=True):
+
+        if algorithm is None:
+            algorithm = proximal.FISTA(**algorithm_params)
+        else:
+            algorithm.set_params(**algorithm_params)
+
+        super(RidgeRegression, self).__init__(algorithm=algorithm,
+                                              start_vector=start_vector)
+
+        self.l = float(l)
+
+        self.penalty_start = int(penalty_start)
+        self.mean = bool(mean)
+
+    def get_params(self):
+        """Return a dictionary containing the estimator's parameters.
+        """
+        return {"l": self.l,
+                "penalty_start": self.penalty_start, "mean": self.mean}
+
+    def fit(self, X, y, beta=None):
+        """Fit the estimator to the data.
+        """
+        X, y = check_arrays(X, y)
+
+        function = functions.CombinedFunction()
+        function.add_function(losses.LinearRegression(X, y, mean=self.mean))
+        function.add_penalty(penalties.L2Squared(l=self.l,
+                                             penalty_start=self.penalty_start))
+
+        self.algorithm.check_compatibility(function,
+                                           self.algorithm.INTERFACES)
+
+        # TODO: Should we use a seed somewhere so that we get deterministic results?
+        if beta is None:
+            beta = self.start_vector.get_vector(X.shape[1])
+
+        self.beta = self.algorithm.run(function, beta)
+
+        return self
+
+    def score(self, X, y):
+        """Returns the (mean) squared error of the estimator.
+        """
+        X, y = check_arrays(X, y)
+        n, p = X.shape
+        y_hat = np.dot(X, self.beta)
+        err = np.sum((y_hat - y) ** 2.0)
+        if self.mean:
+            err /= float(n)
+
+        return err
+
+
 class Lasso(RegressionEstimator):
     """Linear regression with an L1 penalty:
 
@@ -330,7 +445,6 @@ class Lasso(RegressionEstimator):
     >>> import numpy as np
     >>> import parsimony.estimators as estimators
     >>> import parsimony.algorithms.proximal as proximal
-    >>> import parsimony.functions.nesterov.tv as total_variation
     >>> n = 10
     >>> p = 16
     >>>
@@ -406,17 +520,20 @@ class Lasso(RegressionEstimator):
 
 
 class ElasticNet(RegressionEstimator):
-    """Linear regression with L1 and L2 penalties:
+    """Linear regression with L1 and L2 penalties. Represents the function:
 
-        f(beta, X, y) = (1 / 2 * n) * ||Xbeta - y||²_2
-                      + l * ||beta||_1
-                      + ((1.0 - l) / 2) * ||beta||²_2,
+        f(beta, X, y) = (1 / 2 * n) * ||X * beta - y||²_2
+                      + alpha * l * ||beta||_1
+                      + alpha * ((1.0 - l) / 2) * ||beta||²_2,
 
     where ||.||²_2 is the squared L2-norm and ||.||_1 is the L1-norm.
 
     Parameters
     ----------
-    l : Non-negative float. The regularization parameter.
+    l : Non-negative float. The regularisation parameter.
+
+    alpha : Non-negative float. Scaling parameter of the regularisation.
+            Default is 1.
 
     algorithm : ExplicitAlgorithm. The algorithm that should be applied.
             Should be one of:
@@ -446,7 +563,6 @@ class ElasticNet(RegressionEstimator):
     >>> import numpy as np
     >>> import parsimony.estimators as estimators
     >>> import parsimony.algorithms.proximal as proximal
-    >>> import parsimony.functions.nesterov.tv as total_variation
     >>> n = 10
     >>> p = 16
     >>>
@@ -462,7 +578,7 @@ class ElasticNet(RegressionEstimator):
     >>> print "error = ", error
     error =  0.492096328053
     """
-    def __init__(self, l, algorithm=None, algorithm_params=dict(),
+    def __init__(self, l, alpha=1.0, algorithm=None, algorithm_params=dict(),
                  start_vector=start_vectors.RandomStartVector(),
                  penalty_start=0, mean=True):
 
@@ -475,6 +591,7 @@ class ElasticNet(RegressionEstimator):
                                     start_vector=start_vector)
 
         self.l = float(l)
+        self.alpha = float(alpha)
 
         self.penalty_start = int(penalty_start)
         self.mean = bool(mean)
@@ -482,7 +599,7 @@ class ElasticNet(RegressionEstimator):
     def get_params(self):
         """Return a dictionary containing the estimator's parameters.
         """
-        return {"l": self.l,
+        return {"l": self.l, "alpha": self.alpha,
                 "penalty_start": self.penalty_start, "mean": self.mean}
 
     def fit(self, X, y, beta=None):
@@ -492,9 +609,9 @@ class ElasticNet(RegressionEstimator):
 
         function = functions.CombinedFunction()
         function.add_function(losses.LinearRegression(X, y, mean=self.mean))
-        function.add_penalty(penalties.L2Squared(l=1.0 - self.l,
+        function.add_penalty(penalties.L2Squared(l=self.alpha * (1.0 - self.l),
                                              penalty_start=self.penalty_start))
-        function.add_prox(penalties.L1(l=self.l,
+        function.add_prox(penalties.L1(l=self.alpha * self.l,
                                        penalty_start=self.penalty_start))
 
         self.algorithm.check_compatibility(function,
