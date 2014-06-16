@@ -297,6 +297,25 @@ class TestTotalVariation(TestCase):
 #        print "ferr:", ferr
         assert ferr < 5e-5
 
+    def _f_checkerboard_cube(self, shape):
+        count = np.ones(shape) * 3
+        count[:, :, -1] -= 1
+        count[:, -1, :] -= 1
+        count[-1, :, :] -= 1
+        return np.sum(np.sqrt(count))
+
+    def test_tvhelper_A_from_shape(self):
+        import parsimony.functions.nesterov.tv as tv
+        dx = 5  # p should be odd
+        shape = (dx, dx, dx)
+        # A_from_shape
+        p = np.prod(shape)
+        beta = np.zeros(p)
+        beta[0:p:2] = 1  # checkerboard of 0 and 1
+        A, _ = tv.A_from_shape(shape)
+        tvfunc = tv.TotalVariation(l=1., A=A)
+        assert tvfunc.f(beta) == self._f_checkerboard_cube(shape)
+
     def test_tvhelper_A_from_mask(self):
         import parsimony.functions.nesterov.tv as tv
         ## Simple mask with offset
@@ -331,7 +350,7 @@ class TestTotalVariation(TestCase):
         assert np.all(Ay.todense() == Ay_)
         assert np.sum(Az.todense() == 0)
 
-        ############################################################################
+        #######################################################################
         ## GROUP TV
         shape = (6,4)
         mask = np.zeros(shape,dtype=int)
@@ -380,6 +399,37 @@ class TestTotalVariation(TestCase):
         assert np.all(Ax.todense() == Ax_)
         assert np.all(Ay.todense() == Ay_)
         assert np.sum(Az.todense() == 0)
+        #######################################################################
+        ## test function tv on checkerboard
+        #######################################################################
+        dx = 5  # p should be odd
+        shape = (dx, dx, dx)
+        # A_from_mask
+        mask = np.zeros(shape)
+        mask[1:(dx-1), 1:(dx-1), 1:(dx-1)] = 1
+        p = np.prod((dx-2, dx-2, dx-2))
+        beta = np.zeros(p)
+        beta[0:p:2] = 1  # checkerboard of 0 and 1
+        A, _ = tv.A_from_mask(mask)
+        tvfunc = tv.TotalVariation(l=1., A=A)
+        assert tvfunc.f(beta) == self._f_checkerboard_cube((dx-2, dx-2, dx-2))
+        # A_from_mask with group
+        mask = np.zeros(shape)
+        # 4 groups
+        mask[0:(dx / 2), 0:(dx / 2), :] = 1
+        mask[0:(dx / 2), (dx / 2):dx, :] = 2
+        mask[(dx / 2):dx, 0:(dx / 2), :] = 3
+        mask[(dx / 2):dx, (dx / 2):dx, :] = 4
+        p = np.prod((dx, dx, dx))
+        beta = np.zeros(p)
+        beta[0:p:2] = 1  # checkerboard of 0 and 1
+        A, _ = tv.A_from_mask(mask)
+        tvfunc = tv.TotalVariation(l=1., A=A)
+        assert np.allclose(tvfunc.f(beta),
+                        self._f_checkerboard_cube((dx / 2, dx / 2, dx)) +
+                        self._f_checkerboard_cube((dx / 2, dx / 2 + 1, dx)) +
+                        self._f_checkerboard_cube((dx / 2 + 1, dx / 2, dx)) +
+                        self._f_checkerboard_cube((dx / 2 + 1, dx / 2 + 1, dx)))
 
 if __name__ == "__main__":
     import unittest
