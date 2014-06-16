@@ -10,14 +10,23 @@ Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
 """
 import numpy as np
 
-__all__ = ['TOLERANCE', 'norm2', 'bisection_method',
-           'RandomUniform', 'ConstantValue']
+__all__ = ['TOLERANCE', 'RandomUniform', 'ConstantValue',
+           'norm2', 'bisection_method']
 
 TOLERANCE = 5e-8
 
 
 class RandomUniform(object):
-
+    """
+    Example
+    -------
+    >>> rnd = RandomUniform(-1, 1)
+    >>> rnd(3) #doctest: +ELLIPSIS
+    array([...])
+    >>> rnd(2, 2) #doctest: +ELLIPSIS
+    array([[..., ...],
+           [..., ...]])
+    """
     def __init__(self, a=0, b=1):
 
         self.a = float(a)
@@ -121,3 +130,7 @@ def bisection_method(f, low=0.0, high=1.0, maxiter=30, eps=TOLERANCE):
             break
 
     return (low + high) / 2.0
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

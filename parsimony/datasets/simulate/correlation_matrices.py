@@ -198,3 +198,7 @@ def ToeplitzCorrelation(p=[100], rho=[0.05], eps=0.5):
 #    print "cond(S) = %.5f <= %.5f" % (np.linalg.cond(S), k)
 
     return S
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

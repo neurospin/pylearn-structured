@@ -11,27 +11,27 @@ Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
 import numpy as np
 import utils
 
-__all__ = ['rand']
+__all__ = ['random']
 
 
-def rand(shape, density=1.0, rng=utils.RandomUniform(0, 1).rand,
+def random(shape, density=1.0, rng=utils.RandomUniform(0, 1).rand,
          sort=False, normalise=False):
-    """ Generates a random p-by-1 vector.
+    """Generates a random p-by-1 vector.
 
-    shape: A tuple. The shape of the underlying data. E.g., beta may represent
+    shape : A tuple. The shape of the underlying data. E.g., beta may represent
             an underlying 2-by-3-by-4 image, and will in that case be 24-by-1.
 
     density : A scalar in (0, 1]. The density of the returned regression vector
             (fraction of non-zero elements). Zero-elements will be randomly
             distributed in the vector. Default is 1.0.
 
-    rng: The random number generator. Must be a function that takes *shape as
+    rng : The random number generator. Must be a function that takes *shape as
             input. Default is utils.RandomUniform in the interval [0, 1).
 
-    sort: A boolean. Whether or not to sort the vector. The vector is sorted
+    sort : A boolean. Whether or not to sort the vector. The vector is sorted
             along the dimensions in order from the first. Default is False.
 
-    normalise: A boolean. Whether or not to normalise the vector. Default is
+    normalise : A boolean. Whether or not to normalise the vector. Default is
             False.
     """
     if not isinstance(shape, (list, tuple)):
@@ -57,3 +57,7 @@ def rand(shape, density=1.0, rng=utils.RandomUniform(0, 1).rand,
         beta /= utils.norm2(beta)
 
     return beta
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

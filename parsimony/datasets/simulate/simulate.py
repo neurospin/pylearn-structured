@@ -21,6 +21,11 @@ class SimulatedData(object):
 
     __metaclass__ = abc.ABCMeta
 
+    @abc.abstractmethod
+    def load(self, beta):
+        raise NotImplementedError('Abstract method "load" must be '
+                                  'specialised!')
+
 
 class LinearRegressionData(SimulatedData):
     """Returns data for linear regression that is generated such that we know
@@ -125,3 +130,7 @@ class LinearRegressionData(SimulatedData):
         y = np.dot(X, beta) - self.e
 
         return X, y, beta
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

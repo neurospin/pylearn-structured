@@ -8,7 +8,6 @@ Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
 @email:   tommy.loefstedt@cea.fr
 @license: BSD 3-clause.
 """
-
 import beta
 import correlation_matrices
 import grad

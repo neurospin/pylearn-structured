@@ -507,5 +507,6 @@ def _Nesterov_TV_project(alpha):
     return [ax, ay, az]
 
 
-if __name__ == '__main__':
-    pass
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
