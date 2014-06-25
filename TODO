@@ -3,21 +3,37 @@
 
 ./parsimony/estimators.py:
 -------------------------
-77: # TODO: Is this a good name?
+87: # TODO: Is this a good name?
 
-263: # TODO: Should we use a seed here so that we get deterministic results?
+282: # TODO: Should we use a seed here so that we get deterministic results?
 
-377: # TODO: Should we use a seed here so that we get deterministic results?
+394: # TODO: Should we use a seed somewhere so that we get deterministic results?
 
-493: # TODO: Should we use a seed here so that we get deterministic results?
+508: # TODO: Should we use a seed here so that we get deterministic results?
 
-653: # TODO: Should we use a seed here so that we get deterministic results?
+628: # TODO: Should we use a seed here so that we get deterministic results?
 
-818: # TODO: Should we use a seed here so that we get deterministic results?
+788: # TODO: Should we use a seed here so that we get deterministic results?
 
-1126: # TODO: Should we use a seed here so that we get deterministic results?
+953: # TODO: Should we use a seed here so that we get deterministic results?
 
-1299: # TODO: Should we use a seed here so that we get deterministic results?
+1205: # TODO: Should we use a seed here so that we get deterministic results?
+
+1370: # TODO: Should we use a seed here so that we get deterministic results?
+
+1543: # TODO: Should we use a seed here so that we get deterministic results?
+
+1810: # TODO: Should we use a seed here so that we get deterministic
+1811: # results?
+1812: #                if w is None or k > 0:
+
+2029: # TODO: Should we use a seed here so that we get deterministic
+2030: # results?
+2031: #                if w is None or k > 0:
+
+./parsimony/utils/plot.py:
+-------------------------
+68: # TODO: Add the other cases.
 
 ./parsimony/utils/utils.py:
 --------------------------
@@ -27,6 +43,8 @@
 ---------------------------
 18: # TODO: MAX_ITER is heavily algorithm-dependent, so we have to think about if
 19: # we should include a package-wide maximum at all.
+
+28: # TODO: This class should be replaced with Enum.
 
 ./parsimony/functions/losses.py:
 -------------------------------
@@ -55,14 +73,14 @@
 
 ./parsimony/functions/penalties.py:
 ----------------------------------
-197: # TODO: This should not be able to happen! Do we know it doesn't?
+198: # TODO: This should not be able to happen! Do we know it doesn't?
 
-202: # TODO: This should not be able to happen! Do we know it doesn't?
+203: # TODO: This should not be able to happen! Do we know it doesn't?
 
-570: # TODO: Check if this is correct!
+571: # TODO: Check if this is correct!
 
-1261: # TODO: We can share variables between f and df and speed up
-1262: # some shared computations.
+1340: # TODO: We can share variables between f and df and speed up
+1341: # some shared computations.
 
 ./parsimony/functions/properties.py:
 -----------------------------------
@@ -93,7 +111,7 @@
 
 ./parsimony/functions/multiblock/losses.py:
 ------------------------------------------
-897: # TODO: Check instead if it is a numpy array.
+899: # TODO: Check instead if it is a numpy array.
 
 ./parsimony/functions/nesterov/tv.py:
 ------------------------------------
@@ -125,30 +143,42 @@
 ----------------------------------------
 35: # TODO: This is wrong. Shape should be Z, Y, X.
 
+./parsimony/algorithms/nipals.py:
+--------------------------------
+32: # TODO: Add information about the run.
+
 ./parsimony/algorithms/primaldual.py:
 ------------------------------------
-202: # TODO: Warn if G_new < 0.
+204: # TODO: Warn if G_new < 0.
 
 ./parsimony/algorithms/utils.py:
 -------------------------------
-240: # TODO: We already have f_mid, so we can return a better approximation
-241: # here!
+244: # TODO: We already have f_mid, so we can return a better approximation
+245: # here!
 
-329: # TODO: Handle the other cases!
+335: # TODO: Handle the other cases!
 
-341: # TODO: We seek a root, i.e. where f(x) = 0. The stopping criterion
-342: #       should (could?) thus be abs(f(x)) <= eps!
+347: # TODO: We seek a root, i.e. where f(x) = 0. The stopping criterion
+348: #       should (could?) thus be abs(f(x)) <= eps!
 
-361: if abs(x - x_) <= self.eps:  # TODO: Stopping criterion. See above!
+367: if abs(x - x_) <= self.eps:  # TODO: Stopping criterion. See above!
+
+./parsimony/algorithms/bases.py:
+-------------------------------
+57: # TODO: Replace the one in BaseAlgorithm.
 
 ./parsimony/algorithms/proximal.py:
 ----------------------------------
-382: # TODO: Investigate what is a good default value here!
+324: else:  # TODO: Fix this!
 
-435: # TODO: Investigate what is a good default value here!
+400: # TODO: Investigate what is a good default value here!
 
-474: # TODO: Does the weights really matter when the function is the
-475: # indicator function?
+454: # TODO: Investigate what is a good default value here!
 
-509: # TODO: Investigate what is a good default value here!
+507: # TODO: Investigate what is a good default value here!
+
+546: # TODO: Does the weights really matter when the function is the
+547: # indicator function?
+
+581: # TODO: Investigate what is a good default value here!
 

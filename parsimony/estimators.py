@@ -16,14 +16,19 @@ import warnings
 import numpy as np
 
 import parsimony.utils.consts as consts
+import parsimony.utils.maths as maths
 import parsimony.functions as functions
 import parsimony.functions.losses as losses
+import parsimony.functions.multiblock.losses as mb_losses
 import parsimony.functions.penalties as penalties
 import parsimony.utils.start_vectors as start_vectors
+import parsimony.algorithms.bases as bases
 import parsimony.algorithms.gradient as gradient
 import parsimony.algorithms.proximal as proximal
 import parsimony.algorithms.primaldual as primaldual
-import parsimony.algorithms.bases as bases
+import parsimony.algorithms.multiblock as multiblock
+import parsimony.algorithms.nipals as nipals
+import parsimony.algorithms.deflation as deflation
 from parsimony.utils import check_arrays
 from parsimony.utils import class_weight_to_sample_weight, check_labels
 
@@ -35,6 +40,7 @@ __all__ = ["BaseEstimator",
            "LinearRegressionL1L2TV",
            "LinearRegressionL1L2GL",
 
+           "LogisticRegression",
            "LogisticRegressionL1L2TV",
            "LogisticRegressionL1L2GL",
 
@@ -201,7 +207,7 @@ class LogisticRegressionEstimator(BaseEstimator):
 class LinearRegression(RegressionEstimator):
     """Linear regression:
 
-        f(beta, X, y) = (1 / 2 * n) * ||Xbeta - y||²_2,
+        f(beta, X, y) = (1 / (2 * n)) * ||Xbeta - y||²_2,
 
     where ||.||²_2 is the squared L2-norm.
 
@@ -297,7 +303,7 @@ class LinearRegression(RegressionEstimator):
 class RidgeRegression(RegressionEstimator):
     """Linear regression with an L2 penalty. Represents the function:
 
-        f(beta, X, y) = (1 / 2 * n) * ||X * beta - y||²_2
+        f(beta, X, y) = (1 / (2 * n)) * ||X * beta - y||²_2
                       + (l / 2) * ||beta||²_2,
 
     where ||.||²_2 is the squared L2-norm.
@@ -409,13 +415,14 @@ class RidgeRegression(RegressionEstimator):
 class Lasso(RegressionEstimator):
     """Linear regression with an L1 penalty:
 
-        f(beta, X, y) = (1 / 2 * n) * ||Xbeta - y||²_2 + l1 * ||beta||_1,
+        f(beta, X, y) = (1 / (2 * n)) * ||Xbeta - y||²_2 + l1 * ||beta||_1,
 
     where ||.||²_2 is the squared L2-norm and ||.||_1 is the L1-norm.
 
     Parameters
     ----------
-    l1 : Non-negative float. The L1 regularization parameter.
+    l1 : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the function.
 
     algorithm : ExplicitAlgorithm. The algorithm that should be applied.
             Should be one of:
@@ -522,7 +529,7 @@ class Lasso(RegressionEstimator):
 class ElasticNet(RegressionEstimator):
     """Linear regression with L1 and L2 penalties. Represents the function:
 
-        f(beta, X, y) = (1 / 2 * n) * ||X * beta - y||²_2
+        f(beta, X, y) = (1 / (2 * n)) * ||X * beta - y||²_2
                       + alpha * l * ||beta||_1
                       + alpha * ((1.0 - l) / 2) * ||beta||²_2,
 
@@ -530,7 +537,8 @@ class ElasticNet(RegressionEstimator):
 
     Parameters
     ----------
-    l : Non-negative float. The regularisation parameter.
+    l : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the function.
 
     alpha : Non-negative float. Scaling parameter of the regularisation.
             Default is 1.
@@ -641,7 +649,7 @@ class ElasticNet(RegressionEstimator):
 class LinearRegressionL1L2TV(RegressionEstimator):
     """Linear regression with L1, L2 and TV penalties:
 
-        f(beta, X, y) = (1 / 2 * n) * ||Xbeta - y||²_2
+        f(beta, X, y) = (1 / (2 * n)) * ||Xbeta - y||²_2
                         + l1 * ||beta||_1
                         + (l2 / 2) * ||beta||²_2
                         + tv * TV(beta)
@@ -700,15 +708,15 @@ class LinearRegressionL1L2TV(RegressionEstimator):
     >>> tv = 1.0  # TV coefficient
     >>> A, n_compacts = total_variation.A_from_shape(shape)
     >>> lr = estimators.LinearRegressionL1L2TV(l1, l2, tv, A,
-    ...                        algorithm=primaldual.StaticCONESTA(max_iter=1000),
-    ...                        mean=False)
+    ...                      algorithm=primaldual.StaticCONESTA(max_iter=1000),
+    ...                      mean=False)
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
     error =  0.0683839364837
     >>> lr = estimators.LinearRegressionL1L2TV(l1, l2, tv, A,
-    ...                       algorithm=primaldual.DynamicCONESTA(max_iter=1000),
-    ...                       mean=False)
+    ...                     algorithm=primaldual.DynamicCONESTA(max_iter=1000),
+    ...                     mean=False)
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
@@ -801,7 +809,7 @@ class LinearRegressionL1L2TV(RegressionEstimator):
 class LinearRegressionL1L2GL(RegressionEstimator):
     """Linear regression with L1, L2 and Group lasso penalties:
 
-        f(beta, X, y) = (1 / 2 * n) * ||Xbeta - y||²_2
+        f(beta, X, y) = (1 / (2 * n)) * ||Xbeta - y||²_2
                         + l1 * ||beta||_1
                         + (l2 / 2) * ||beta||²_2
                         + gl * GL(beta)
@@ -1094,13 +1102,122 @@ class LinearRegressionL1L2GL(RegressionEstimator):
 #        return np.sum((y_hat - y) ** 2.0) / float(n)
 
 
+class LogisticRegression(LogisticRegressionEstimator):
+    """Logistic regression (re-weighted log-likelihood aka. cross-entropy):
+
+        f(beta) = - loglik/n_samples
+
+    where
+
+        loglik = Sum wi * (yi * log(pi) + (1 − yi) * log(1 − pi)),
+
+        pi = p(y=1|xi, beta) = 1 / (1 + exp(-xi'*beta)),
+
+        wi = weight of sample i.
+
+    Parameters
+    ----------
+    algorithm : ExplicitAlgorithm. The algorithm that should be applied.
+            Should be one of:
+                1. GradientDescent(...)
+
+            Default is GradientDescent(...).
+
+    algorithm_params : A dict. The dictionary algorithm_params contains
+            parameters that should be set in the algorithm. Passing
+            algorithm=MyAlgorithm(**params) is equivalent to passing
+            algorithm=MyAlgorithm() and algorithm_params=params. Default is
+            an empty dictionary.
+
+    class_weight : Dict, 'auto' or None. If 'auto', class weights will be
+            given inverse proportional to the frequency of the class in
+            the data. If a dictionary is given, keys are classes and values
+            are corresponding class weights. If None is given, the class
+            weights will be uniform.
+
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to be exempt from penalisation. Equivalently, the first
+            index to be penalised. Default is 0, all columns are included.
+
+    mean : Boolean. Whether to compute the squared loss or the mean squared
+            loss. Default is True, the mean squared loss.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import parsimony.estimators as estimators
+    >>> import parsimony.algorithms.primaldual as primaldual
+    >>> import parsimony.algorithms.gradient as gradient
+    >>> import parsimony.functions.nesterov.tv as total_variation
+    >>> shape = (1, 4, 4)
+    >>> n = 10
+    >>> p = shape[0] * shape[1] * shape[2]
+    >>>
+    >>> np.random.seed(42)
+    >>> X = np.random.rand(n, p)
+    >>> y = np.random.randint(0, 2, (n, 1))
+    >>> lr = estimators.LogisticRegression(
+    ...                      algorithm=gradient.GradientDescent(max_iter=1000),
+    ...                      mean=False)
+    >>> res = lr.fit(X, y)
+    >>> error = lr.score(X, y)
+    >>> print "error = ", error
+    error =  1.0
+    """
+    def __init__(self, algorithm=None, algorithm_params=dict(),
+                 class_weight=None,
+                 penalty_start=0,
+                 mean=True):
+
+        if algorithm is None:
+            algorithm = primaldual.GradientDescent(**algorithm_params)
+        else:
+            algorithm.set_params(**algorithm_params)
+
+        super(LogisticRegression, self).__init__(algorithm=algorithm,
+                                                 class_weight=class_weight)
+
+        self.penalty_start = int(penalty_start)
+        self.mean = bool(mean)
+
+    def get_params(self):
+        """Return a dictionary containing all the estimator's parameters.
+        """
+        return {"class_weight": self.class_weight,
+                "penalty_start": self.penalty_start, "mean": self.mean}
+
+    def fit(self, X, y, beta=None, sample_weight=None):
+        """Fit the estimator to the data.
+        """
+        X, y = check_arrays(X, check_labels(y))
+        if sample_weight is None:
+            sample_weight = class_weight_to_sample_weight(self.class_weight, y)
+        y, sample_weight = check_arrays(y, sample_weight)
+            #sample_weight = sample_weight.ravel()
+
+        function = losses.LogisticRegression(X, y,
+                                             weights=sample_weight,
+                                             mean=self.mean)
+
+        self.algorithm.check_compatibility(function,
+                                           self.algorithm.INTERFACES)
+
+        # TODO: Should we use a seed here so that we get deterministic results?
+        if beta is None:
+            beta = self.start_vector.get_vector(X.shape[1])
+
+        self.beta = self.algorithm.run(function, beta)
+
+        return self
+
+
 class LogisticRegressionL1L2TV(LogisticRegressionEstimator):
     """Logistic regression (re-weighted log-likelihood aka. cross-entropy)
     with L1, L2 and TV penalties:
 
         f(beta) = - loglik/n_samples
                   + l1 * ||beta||_1
-                  + (l2 / 2 * n) * ||beta||²_2
+                  + (l2 / (2 * n)) * ||beta||²_2
                   + tv * TV(beta)
     where
         loglik = Sum wi * (yi * log(pi) + (1 − yi) * log(1 − pi)),
@@ -1168,8 +1285,8 @@ class LogisticRegressionL1L2TV(LogisticRegressionEstimator):
     >>> tv = 1.0  # TV coefficient
     >>> A, n_compacts = total_variation.A_from_shape(shape)
     >>> lr = estimators.LogisticRegressionL1L2TV(l1, l2, tv, A,
-    ...                        algorithm=primaldual.StaticCONESTA(max_iter=1000),
-    ...                        mean=False)
+    ...                      algorithm=primaldual.StaticCONESTA(max_iter=1000),
+    ...                      mean=False)
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
@@ -1271,7 +1388,7 @@ class LogisticRegressionL1L2GL(LogisticRegressionEstimator):
 
         f(beta) = - loglik/n_samples
                   + l1 * ||beta||_1
-                  + (l2 / 2 * n) * ||beta||²_2
+                  + (l2 / (2 * n)) * ||beta||²_2
                   + gl * GL(beta)
     where
         loglik = Sum wi * (yi * log(pi) + (1 − yi) * log(1 − pi)),
@@ -1342,8 +1459,8 @@ class LogisticRegressionL1L2GL(LogisticRegressionEstimator):
     >>> l2 = 0.9  # Ridge coefficient
     >>> tv = 1.0  # TV coefficient
     >>> lr = estimators.LogisticRegressionL1L2GL(l1, l2, tv, A=A,
-    ...                        algorithm=primaldual.StaticCONESTA(max_iter=1000),
-    ...                        mean=False)
+    ...                      algorithm=primaldual.StaticCONESTA(max_iter=1000),
+    ...                      mean=False)
     >>> res = lr.fit(X, y)
     >>> error = lr.score(X, y)
     >>> print "error = ", error
@@ -1442,7 +1559,7 @@ class LinearRegressionL2SmoothedL1TV(RegressionEstimator):
     """Linear regression with L2 and simultaneously smoothed L1 and TV
     penalties:
 
-        f(beta, X, y) = (1 / 2 * n) * ||Xbeta - y||²_2
+        f(beta, X, y) = (1 / (2 * n)) * ||Xbeta - y||²_2
                         + (l2 / 2) * ||beta||²_2
                         + L1TV(beta),
 
@@ -1571,6 +1688,404 @@ class LinearRegressionL2SmoothedL1TV(RegressionEstimator):
         n, p = X.shape
         y_hat = np.dot(X, self.beta)
         return np.sum((y_hat - y) ** 2.0) / float(n)
+
+
+class PLSRegression(RegressionEstimator):
+    """Estimator for PLS regression
+
+        f(beta, X, Y) = -Cov(X.beta, Y),
+
+    where Cov(., .) is the covariance.
+
+    Parameters
+    ----------
+    K : Positive integer. The number of components to compute.
+
+    algorithm : OR(ImplicitAlgorithm, ExplicitAlgorithm). The algorithm that
+            should be used. Should be one of:
+                1. PLSR()
+                2. MultiblockFISTA(...)
+
+            Default is PLSR(...).
+
+    algorithm_params : A dict. The dictionary algorithm_params contains
+            parameters that should be set in the algorithm. Passing
+            algorithm=MyAlgorithm(**params) is equivalent to passing
+            algorithm=MyAlgorithm() and algorithm_params=params. Default
+            is an empty dictionary.
+
+    start_vector : BaseStartVector. Generates the start vector that will be
+            used.
+
+    mean : Boolean. Whether or not to compute the means squared error or the
+            squared error. Default is True, compute the means squared error.
+
+    Examples
+    --------
+    >>> import parsimony.estimators as estimators
+    >>> import parsimony.algorithms.nipals as nipals
+    >>> import parsimony.algorithms.multiblock as multiblock
+    >>> import numpy as np
+    >>> np.random.seed(42)
+    >>>
+    >>> n, p = 16, 10
+    >>> X = np.random.rand(n, p)
+    >>> y = np.random.rand(n, 1)
+    >>> plsr = estimators.PLSRegression(K=4, algorithm=nipals.PLSR(),
+    ...                                 algorithm_params=dict(max_iter=100))
+    >>> error = plsr.fit(X, y).score(X, y)
+    >>> print "error = ", error
+    error =  0.0222345224457
+    """
+#    >>>
+#    >>> np.random.seed(42)
+#    >>>
+#    >>> X = np.random.rand(n, p)
+#    >>> y = np.random.rand(n, 1)
+#    >>> plsr = estimators.PLSRegression(K=4,
+#    ...                                 algorithm=multiblock.MultiblockFISTA(),
+#    ...                                 algorithm_params=dict(max_iter=100))
+#    >>> plsr.fit(X, y)
+#    >>> error = plsr.score(X, y)
+#    >>> print "error = ", error
+#    error =  0.0222345202333
+    def __init__(self, K=2, algorithm=None, algorithm_params=dict(),
+                 start_vector=start_vectors.RandomStartVector(),
+                 unbiased=True, mean=True):
+
+        self.K = max(1, int(K))
+
+        if algorithm is None:
+            algorithm = nipals.PLSR(**algorithm_params)
+        else:
+            algorithm.set_params(**algorithm_params)
+
+        super(PLSRegression, self).__init__(algorithm=algorithm,
+                                            start_vector=start_vector)
+
+        self.unbiased = bool(unbiased)
+        self.mean = bool(mean)
+
+    def get_params(self):
+        """Return a dictionary containing the estimator's parameters
+        """
+        return {"unbiased": self.unbiased}
+
+    def fit(self, X, Y, w=None):
+        """Fit the estimator to the data.
+        """
+        X, Y = check_arrays(X, Y)
+
+        n, p = X.shape
+        _, q = Y.shape
+
+        rankone = deflation.RankOneDeflation()
+
+        self.W = np.zeros((p, self.K))
+        self.T = np.zeros((n, self.K))
+        self.C = np.zeros((q, self.K))
+        self.U = np.zeros((n, self.K))
+        self.P = np.zeros((p, self.K))
+        for k in range(self.K):
+
+            if isinstance(self.algorithm, bases.ExplicitAlgorithm):
+                cov1 = mb_losses.LatentVariableCovariance([X, Y],
+                                                        unbiased=self.unbiased)
+                cov2 = mb_losses.LatentVariableCovariance([Y, X],
+                                                        unbiased=self.unbiased)
+
+                l21 = penalties.L2(c=1.0)
+                l22 = penalties.L2(c=1.0)
+
+                function = mb_losses.CombinedMultiblockFunction([X, Y])
+                function.add_function(cov1, 0, 1)
+                function.add_function(cov2, 1, 0)
+
+                function.add_constraint(l21, 0)
+                function.add_constraint(l22, 1)
+
+                self.algorithm.check_compatibility(function,
+                                                   self.algorithm.INTERFACES)
+
+                # TODO: Should we use a seed here so that we get deterministic
+                # results?
+#                if w is None or k > 0:
+                w = [self.start_vector.get_vector(X.shape[1]),
+                     self.start_vector.get_vector(Y.shape[1])]
+
+                print "max iter:", self.algorithm.max_iter
+                w = self.algorithm.run(function, w)
+                c = w[1]
+                w = w[0]
+            else:
+                w, c = self.algorithm.run([X, Y], w if k == 0 else None)
+
+            t = np.dot(X, w)
+
+            tt = np.dot(t.T, t)[0, 0]
+            c = np.dot(Y.T, t)
+            if tt > consts.TOLERANCE:
+                c /= tt
+
+            cc = np.dot(c.T, c)[0, 0]
+            u = np.dot(Y, c)
+            if cc > consts.TOLERANCE:
+                u /= cc
+
+            p = np.dot(X.T, t)
+            if tt > consts.TOLERANCE:
+                p /= tt
+
+            self.W[:, [k]] = w
+            self.T[:, [k]] = t
+            self.C[:, [k]] = c
+            self.U[:, [k]] = u
+            self.P[:, [k]] = p
+
+            if k < self.K - 1:
+                X = rankone.deflate(X, t, p)
+#                Y = rankone.deflate(Y, t, c)
+
+        self.Ws = np.dot(self.W, np.linalg.inv(np.dot(self.P.T, self.W)))
+
+        self.beta = np.dot(self.Ws, self.C.T)
+
+        return self
+
+    def score(self, X, Y):
+        """Returns the (mean) squared error of the estimator.
+        """
+        X, Y = check_arrays(X, Y)
+
+        Yhat = np.dot(X, self.beta)
+
+        err = maths.normFro(Yhat - Y) ** 2.0
+
+        if self.mean:
+            n, p = X.shape
+            err /= float(n)
+
+        return err
+
+
+class SparsePLSRegression(RegressionEstimator):
+    """Estimator for sparse PLS regression
+
+        f(w, c, X, Y) = -Cov(X.w, Y.c) + l.|w|_1 + k.|c|_1,
+
+    where Cov(., .) is the covariance and |.|_1 is the L1 norm.
+
+    Parameters
+    ----------
+    l : List or tuple of two non-negative floats. The Lagrange multipliers, or
+            regularisation constants, for the X and Y blocks, respectively.
+
+    K : Positive integer. The number of components to compute.
+
+    algorithm : OR(ImplicitAlgorithm, ExplicitAlgorithm). The algorithm that
+            should be used. Should be one of:
+                1. SparsePLSR()
+                2. MultiblockFISTA(...)
+
+            Default is SparsePLSR(...).
+
+    algorithm_params : A dict. The dictionary algorithm_params contains
+            parameters that should be set in the algorithm. Passing
+            algorithm=MyAlgorithm(**params) is equivalent to passing
+            algorithm=MyAlgorithm() and algorithm_params=params. Default
+            is an empty dictionary.
+
+    start_vector : BaseStartVector. Generates the start vector that will be
+            used.
+
+    mean : Boolean. Whether or not to compute the means squared error or the
+            squared error. Default is True, compute the means squared error.
+
+    Examples
+    --------
+    >>> import parsimony.estimators as estimators
+    >>> import parsimony.algorithms.nipals as nipals
+    >>> import parsimony.algorithms.multiblock as multiblock
+    >>> import numpy as np
+    >>> np.random.seed(42)
+    >>>
+    >>> n, p = 16, 10
+    >>> X = np.random.rand(n, p)
+    >>> y = np.random.rand(n, 1)
+    >>> plsr = estimators.SparsePLSRegression(l=[3.0, 0.0], K=1,
+    ...                                    algorithm=nipals.SparsePLSR(),
+    ...                                    algorithm_params=dict(max_iter=100))
+    >>> error = plsr.fit(X, y).score(X, y)
+    >>> print plsr.W
+    [[ 0.37053417]
+     [ 0.54969643]
+     [ 0.29593809]
+     [ 0.2937247 ]
+     [ 0.49989677]
+     [ 0.0895912 ]
+     [ 0.        ]
+     [ 0.35883331]
+     [ 0.        ]
+     [ 0.        ]]
+    >>> print plsr.C
+    [[ 0.32949094]]
+    >>> print "error = ", error
+    error =  0.0547513077301
+    """
+#    >>>
+#    >>> np.random.seed(42)
+#    >>>
+#    >>> X = np.random.rand(n, p)
+#    >>> y = np.random.rand(n, 1)
+#    >>> plsr = estimators.SparsePLSRegression(l=[0.1, 0.0], K=1,
+#    ...                                 algorithm=multiblock.MultiblockFISTA(),
+#    ...                                 algorithm_params=dict(max_iter=100))
+#    >>> error = plsr.fit(X, y).score(X, y)
+#    >>> print plsr.W
+#    [[ 0.37053423]
+#     [ 0.54969634]
+#     [ 0.29593824]
+#     [ 0.29372464]
+#     [ 0.49989668]
+#     [ 0.0895912 ]
+#     [ 0.        ]
+#     [ 0.35883343]
+#     [ 0.        ]
+#     [ 0.        ]]
+#    >>> print plsr.C
+#    [[ 0.32949093]]
+#    >>> print "error = ", error
+#    error =  0.0547513070388
+    def __init__(self, l, K=2, algorithm=None, algorithm_params=dict(),
+                 start_vector=start_vectors.RandomStartVector(),
+                 unbiased=True, mean=True):
+
+        self.l = [max(0.0, float(l[0])),
+                  max(0.0, float(l[1]))]
+        self.K = max(1, int(K))
+
+        if algorithm is None:
+            algorithm = nipals.SparsePLSR(**algorithm_params)
+        else:
+            algorithm.set_params(**algorithm_params)
+
+        super(SparsePLSRegression, self).__init__(algorithm=algorithm,
+                                                  start_vector=start_vector)
+
+        self.unbiased = bool(unbiased)
+        self.mean = bool(mean)
+
+    def get_params(self):
+        """Return a dictionary containing the estimator's parameters
+        """
+        return {"l": self.l, "K": self.K, "unbiased": self.unbiased,
+                "mean": self.mean}
+
+    def fit(self, X, Y, w=None):
+        """Fit the estimator to the data.
+        """
+        X, Y = check_arrays(X, Y)
+
+        n, p = X.shape
+        _, q = Y.shape
+
+        rankone = deflation.RankOneDeflation()
+
+        self.W = np.zeros((p, self.K))
+        self.T = np.zeros((n, self.K))
+        self.C = np.zeros((q, self.K))
+        self.U = np.zeros((n, self.K))
+        self.P = np.zeros((p, self.K))
+        for k in range(self.K):
+
+            if isinstance(self.algorithm, bases.ExplicitAlgorithm):
+                cov1 = mb_losses.LatentVariableCovariance([X, Y],
+                                                        unbiased=self.unbiased)
+                cov2 = mb_losses.LatentVariableCovariance([Y, X],
+                                                        unbiased=self.unbiased)
+
+                l1l2_1 = penalties.L1L2Squared(self.l[0], 1.0)
+                l1l2_2 = penalties.L1L2Squared(self.l[1], 1.0)
+#                l21 = penalties.L2(c=1.0)
+#                l22 = penalties.L2(c=1.0)
+#                l11 = penalties.L1(l=self.l[0])
+#                l12 = penalties.L1(l=self.l[1])
+
+                function = mb_losses.CombinedMultiblockFunction([X, Y])
+                function.add_function(cov1, 0, 1)
+                function.add_function(cov2, 1, 0)
+
+                function.add_penalty(l1l2_1, 0)
+                function.add_penalty(l1l2_2, 1)
+
+#                function.add_penalty(l11, 0)
+#                function.add_penalty(l12, 1)
+#                function.add_constraint(l21, 0)
+#                function.add_constraint(l22, 1)
+
+                self.algorithm.check_compatibility(function,
+                                                   self.algorithm.INTERFACES)
+
+                # TODO: Should we use a seed here so that we get deterministic
+                # results?
+#                if w is None or k > 0:
+                w = [self.start_vector.get_vector(X.shape[1]),
+                     self.start_vector.get_vector(Y.shape[1])]
+
+                print "max iter:", self.algorithm.max_iter
+                w = self.algorithm.run(function, w)
+                c = w[1]
+                w = w[0]
+            else:
+                self.algorithm.set_params(l=self.l)
+                w, c = self.algorithm.run([X, Y], w if k == 0 else None)
+
+            t = np.dot(X, w)
+
+            tt = np.dot(t.T, t)[0, 0]
+            c = np.dot(Y.T, t)
+            if tt > consts.TOLERANCE:
+                c /= tt
+
+            cc = np.dot(c.T, c)[0, 0]
+            u = np.dot(Y, c)
+            if cc > consts.TOLERANCE:
+                u /= cc
+
+            p = np.dot(X.T, t)
+            if tt > consts.TOLERANCE:
+                p /= tt
+
+            self.W[:, [k]] = w
+            self.T[:, [k]] = t
+            self.C[:, [k]] = c
+            self.U[:, [k]] = u
+            self.P[:, [k]] = p
+
+            if k < self.K - 1:
+                X = rankone.deflate(X, t, p)
+#                Y = rankone.deflate(Y, t, c)
+
+        self.Ws = np.dot(self.W, np.linalg.pinv(np.dot(self.P.T, self.W)))
+
+        self.beta = np.dot(self.Ws, self.C.T)
+
+        return self
+
+    def score(self, X, Y):
+        """Returns the (mean) squared error of the estimator.
+        """
+        X, Y = check_arrays(X, Y)
+
+        Yhat = np.dot(X, self.beta)
+
+        err = maths.normFro(Yhat - Y) ** 2.0
+
+        if self.mean:
+            n, p = X.shape
+            err /= float(n)
+
+        return err
 
 
 if __name__ == "__main__":

@@ -8,26 +8,261 @@ Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
 @email:   lofstedt.tommy@gmail.com
 @license: BSD 3-clause.
 """
-import time
-
 import numpy as np
+#import parsimony.estimators as estimators
+#import parsimony.algorithms.proximal as proximal
+#from parsimony.utils.resampling import k_fold
+#
+#import parsimony.utils.maths as maths
+#
+#import parsimony.estimators as estimators
+#import parsimony.algorithms.nipals as nipals
+#import parsimony.algorithms.gradient as gradient
 
-from parsimony.functions.penalties import RGCCAConstraint
+#X = np.random.rand(10, 15)
+#Y = np.random.rand(10, 5)
+#w = np.random.rand(15, 1)
+#c = np.random.rand(5, 1)
+#
+#f = -np.dot(w.T, np.dot(X.T, np.dot(Y, c)))
+#df = -np.dot(X.T, np.dot(Y, c))
+#
+#f2 = -np.dot((w - df).T, np.dot(X.T, np.dot(Y, c)))
 
-np.random.seed(0)
 
-n = 100
-p = 1000
-tau = 0.5
-c = 1.5
+import parsimony.estimators as estimators
+import parsimony.algorithms.nipals as nipals
+import parsimony.algorithms.multiblock as multiblock
+import numpy as np
+np.random.seed(42)
 
-X = np.random.randn(n, p)
-x = np.random.rand(p, 1)
-c = RGCCAConstraint(c=c, tau=tau, X=X)
+n, p = 16, 10
+X = np.random.rand(n, p)
+y = np.random.rand(n, 1)
+plsr = estimators.SparsePLSRegression(l=[3.0, 0.0], K=1,
+                                      algorithm=nipals.SparsePLSR(),
+                                      algorithm_params=dict(max_iter=100))
+error = plsr.fit(X, y).score(X, y)
+print plsr.W
+print plsr.C
+print "error = ", error
 
-t = time.time()
-y = c.proj(x)
-print "time:", time.time() - t
+np.random.seed(42)
+
+X = np.random.rand(n, p)
+y = np.random.rand(n, 1)
+plsr = estimators.SparsePLSRegression(l=[0.1, 0.0], K=1,
+                                 algorithm=multiblock.MultiblockFISTA(),
+                                 algorithm_params=dict(max_iter=100))
+error = plsr.fit(X, y).score(X, y)
+print plsr.W
+#print np.linalg.norm(plsr.W) ** 2.0
+print plsr.C
+print "error = ", error
+
+
+#import parsimony.estimators as estimators
+#import parsimony.algorithms.nipals as nipals
+#import parsimony.algorithms.multiblock as multiblock
+#import numpy as np
+#np.random.seed(42)
+#
+#n, p = 16, 10
+#X = np.random.rand(n, p)
+#y = np.random.rand(n, 1)
+#plsr = estimators.PLSRegression(K=4, algorithm=nipals.PLSR(),
+#                                algorithm_params=dict(max_iter=100))
+#error = plsr.fit(X, y).score(X, y)
+#print "error = ", error
+## error =  0.0222345224457
+#
+#np.random.seed(42)
+#
+#X = np.random.rand(n, p)
+#y = np.random.rand(n, 1)
+#plsr = estimators.PLSRegression(K=4,
+#                                algorithm=multiblock.MultiblockFISTA(),
+#                                algorithm_params=dict(outer_iter=10,
+#                                                      max_iter=100))
+#error = plsr.fit(X, y).score(X, y)
+#print "error = ", error
+## error =  0.0222345224457
+
+#K = 10
+#M, N, Q = 10, 10, 1
+#
+#np.random.seed(42)
+#
+#X = np.random.rand(M, N)
+#Y = np.random.rand(M, Q)
+#X_orig = np.copy(X)
+#Y_orig = np.copy(Y)
+#
+##plsr = estimators.PLSRegression(K=K, algorithm=nipals.PLSR(),
+##                                algorithm_params=dict(max_iter=100))
+##plsr.fit(X, Y)
+##print plsr.beta
+##err = np.sum((np.dot(X, plsr.beta) - Y_orig) ** 2.0) / float(n)
+##print "error = ", err
+##
+##np.random.seed(42)
+##
+##lr = estimators.LinearRegression(algorithm=gradient.GradientDescent(),
+##                                 algorithm_params=dict(max_iter=1000),
+##                                 mean=True)
+##lr.fit(X, Y)
+##print lr.beta
+##err = np.sum((np.dot(X, lr.beta) - Y_orig) ** 2.0) / float(n)
+##print "error = ", err
+##
+##print plsr.beta / maths.norm(plsr.beta)
+##print lr.beta / maths.norm(lr.beta)
+#
+#W = np.zeros((N, K))
+#T = np.zeros((M, K))
+#C = np.zeros((Q, K))
+#U = np.zeros((M, K))
+#P = np.zeros((N, K))
+#
+#for k in range(K):
+#    maxi = np.argmax(np.sum(Y ** 2.0, axis=0))
+#    u = Y[:, [maxi]]
+#    w = np.dot(X.T, u)
+##    w = np.random.rand(N, 1)
+#    w /= maths.norm(w)
+#    for i in range(1000):
+#        c = np.dot(Y.T, np.dot(X, w))
+#        w = np.dot(X.T, np.dot(Y, c))
+#        w /= maths.norm(w)
+#
+#    t = np.dot(X, w)
+#    c = np.dot(Y.T, t) / np.dot(t.T, t)
+#    u = np.dot(Y, c) / np.dot(c.T, c)
+#
+#    p = np.dot(X.T, t) / np.dot(t.T, t)
+#
+#    X = X - np.dot(t, p.T)
+##    d = np.dot(t.T, u) / np.dot(t.T, t)
+##    Y = Y - np.dot(t * d, c.T)
+#
+#    W[:, [k]] = w
+#    T[:, [k]] = t
+#    C[:, [k]] = c
+#    U[:, [k]] = u
+#    P[:, [k]] = p
+#
+#Ws = np.dot(W, np.linalg.inv(np.dot(P.T, W)))
+#B = np.dot(Ws, C.T)
+#
+#Yhat = np.dot(X_orig, B)
+##Yhat = np.dot(T, C.T)
+#
+#err = np.sum((Yhat - Y_orig) ** 2.0)  # / float(n)
+#print err
+
+
+#for k in range(K):
+#    w = np.random.rand(N, 1)
+#    w /= maths.norm(w)
+#    for i in range(1000):
+#        c = np.dot(Y.T, np.dot(X, w))
+#        w = np.dot(X.T, np.dot(Y, c))
+#        w /= maths.norm(w)
+#
+#    t = np.dot(X, w)
+#    c = np.dot(Y.T, t)  # / np.dot(t.T, t)
+#    c /= maths.norm(c)
+#    u = np.dot(Y, c)  # / np.dot(c.T, c)
+#
+#    p = np.dot(X.T, t) / np.dot(t.T, t)
+#
+#    W[:, [k]] = w
+#    T[:, [k]] = t
+#    C[:, [k]] = c
+#    U[:, [k]] = u
+#    P[:, [k]] = p
+#
+#    X = X - np.dot(t, p.T)
+#    d = np.dot(t.T, u) / np.dot(t.T, t)
+#    Y = Y - np.dot(t * d, c.T)
+#
+#    print np.linalg.norm(np.dot(X.T, t))
+#    print np.linalg.norm(np.dot(X, w))
+#
+##    print "corr:", maths.corr(t, u)
+#    print "cov:", np.dot(t.T, u)
+#
+#Ws = np.dot(W, np.linalg.inv(np.dot(P.T, W)))
+#
+#beta = np.dot(Ws, C.T)
+#print beta
+
+#for k in range(K):
+#    #Yhat = np.dot(X_orig, beta)
+#    Yhat = np.dot(T[:, :k], C[:, :k].T)
+#
+#    n, p = X.shape
+#    err = np.sum((Yhat - Y_orig) ** 2.0) / float(n)
+#    print "error = ", err
+
+
+#n = 32
+#p = 48
+#
+#np.random.seed(42)
+#X = np.random.randn(n, p)
+#y = np.random.randn(n, 1)
+#l = 0.3
+#en = estimators.ElasticNet(l,
+#                           algorithm=proximal.FISTA(),
+#                           algorithm_params=dict(max_iter=1000),
+#                           mean=False)
+#
+#ssy = np.sum(y ** 2.0)
+#for l in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
+#
+#    np.random.seed(42)
+#    en = estimators.ElasticNet(l, alpha=2.0,
+#                               algorithm=proximal.FISTA(),
+#                               algorithm_params=dict(max_iter=1000),
+#                               mean=False)
+#    err = 0.0
+#    for train, test in k_fold(n, K=7):
+#
+#        Xtr = X[train, :]
+#        ytr = y[train, :]
+#        Xte = X[test, :]
+#        yte = y[test, :]
+#
+#        yhat = en.fit(Xtr, ytr).predict(Xte)
+#
+##        yhat = np.dot(Xte, en.beta)
+#
+#        err += np.sum(yhat ** 2.0) / ssy
+#
+#    Q2 = 1.0 - err
+#    print "l = %.2f, R2 = %.2f" % (l, Q2)
+
+#import time
+#
+#import numpy as np
+#
+#from parsimony.functions.penalties import RGCCAConstraint
+#
+#np.random.seed(0)
+#
+#n = 100
+#p = 1000
+#tau = 0.5
+#c = 1.5
+#
+#X = np.random.randn(n, p)
+#x = np.random.rand(p, 1)
+#c = RGCCAConstraint(c=c, tau=tau, X=X)
+#
+#t = time.time()
+#y = c.proj(x)
+#print "time:", time.time() - t
 
 #n = 25
 #p = 500

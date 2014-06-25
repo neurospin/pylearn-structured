@@ -14,6 +14,6 @@ Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
 from . import algorithms
 from . import estimators
 
-__version__ = "0.1.8"
+__version__ = "0.1.9"
 
 __all__ = ["algorithms", "estimators"]

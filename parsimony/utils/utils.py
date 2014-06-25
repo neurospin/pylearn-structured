@@ -230,28 +230,28 @@ def optimal_shrinkage(X, T=None):
     for i in xrange(len(X)):
         Xi = X[i]
         Ti = T[i]
-        print "Here1"
-        sys.stdout.flush()
+#        print "Here1"
+#        sys.stdout.flush()
         M, N = Xi.shape
         Si = np.cov(Xi.T)
-        print "Here2"
-        sys.stdout.flush()
+#        print "Here2"
+#        sys.stdout.flush()
         if Ti is None:
             Ti = np.diag(np.diag(Si))
-        print "Here3"
-        sys.stdout.flush()
+#        print "Here3"
+#        sys.stdout.flush()
 
         # R = _np.corrcoef(X.T)
         Wm = Si * ((M - 1.0) / M)  # 1 / N instead of 1 / N - 1
-        print "Here4"
-        sys.stdout.flush()
+#        print "Here4"
+#        sys.stdout.flush()
         sum_d = np.sum((Ti - Si) ** 2.0)
-        print "Here5"
-        sys.stdout.flush()
+#        print "Here5"
+#        sys.stdout.flush()
         del Si
         del Ti
-        print "Here6"
-        sys.stdout.flush()
+#        print "Here6"
+#        sys.stdout.flush()
 
         Var_sij = 0
         for i in xrange(N):
@@ -271,7 +271,7 @@ def optimal_shrinkage(X, T=None):
         l = max(0, min(1, l))
 
         tau.append(l)
-        print "tau %f" % (l,)
+#        print "tau %f" % (l,)
 
     return tau
 

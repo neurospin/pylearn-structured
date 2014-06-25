@@ -127,6 +127,8 @@ def test_all():
     print "Running: " + exec_string
     os.system(exec_string)
 
+#    print "testdir:", testdir
+#    print "__file__:", __file__
     exec_string = "nosetests --with-doctest --doctest-tests " + \
                   "--with-coverage -vv -w %s" \
                   % (testdir,)

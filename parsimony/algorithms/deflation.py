@@ -15,7 +15,9 @@ import abc
 
 import numpy as np
 
-__all__ = ["ProjectionDeflation"]
+__all__ = ["ProjectionDeflation",
+           "RowProjectionDeflation", "ColumnProjectionDeflation",
+           "RankOneDeflation"]
 
 
 class Deflation(object):
@@ -27,7 +29,22 @@ class Deflation(object):
                                   'specialised!')
 
 
-class ProjectionDeflation(Deflation):
+class RowProjectionDeflation(Deflation):
 
     def deflate(self, X, w):
         return X - np.dot(np.dot(X, w), w.T) / np.dot(w.T, w)
+
+
+ProjectionDeflation = RowProjectionDeflation
+
+
+class ColumnProjectionDeflation(Deflation):
+
+    def deflate(self, X, t):
+        return X - np.dot(t / np.dot(t.T, t), np.dot(t.T, X))
+
+
+class RankOneDeflation(Deflation):
+
+    def deflate(self, X, t, p):
+        return X - np.dot(t, p.T)

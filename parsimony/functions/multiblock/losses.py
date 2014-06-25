@@ -162,19 +162,17 @@ class CombinedMultiblockFunction(mb_properties.MultiblockFunction,
 
         if not isinstance(penalty, properties.Penalty):
             raise ValueError("Not a penalty.")
-        if not isinstance(penalty, properties.Gradient):
-            raise ValueError("Penalties must have gradients.")
 
         if isinstance(penalty, n_properties.NesterovFunction):
             self._N[i].append(penalty)
         else:
-            if not isinstance(penalty, properties.Gradient):
+            if isinstance(penalty, properties.Gradient):
+                self._p[i].append(penalty)
+            else:
                 if isinstance(penalty, properties.ProximalOperator):
                     self._prox[i].append(penalty)
                 else:
                     raise ValueError("Non-smooth and no proximal operator.")
-            else:
-                self._p[i].append(penalty)
 
 #    @utils.deprecated("add_penalty")
     def add_prox(self, penalty, i):
@@ -242,7 +240,7 @@ class CombinedMultiblockFunction(mb_properties.MultiblockFunction,
 
         index : Non-negative integer. Which variable the step is for.
         """
-        grad = 0.0
+        grad = np.zeros(w[index].shape)
 
         # Add gradients from the loss functions.
         fi = self._f[index]
@@ -295,14 +293,17 @@ class CombinedMultiblockFunction(mb_properties.MultiblockFunction,
         prox = self._prox[index]
         proj = self._c[index]
 
-        if len(prox) == 1 and len(proj) == 0:
+        if len(prox) == 0 and len(proj) == 0:
+            prox_w = w[index]
+
+        elif len(prox) == 1 and len(proj) == 0:
             prox_w = prox[0].prox(w[index])
 
         elif len(prox) == 0 and (len(proj) == 1 or len(proj) == 2):
             prox_w = self.proj(w, index)
 
         else:
-            from parsimony.algorithms.explicit \
+            from parsimony.algorithms.proximal \
                     import ParallelDykstrasProximalAlgorithm
             combo = ParallelDykstrasProximalAlgorithm(output=False,
                                                       eps=consts.TOLERANCE,
@@ -448,7 +449,7 @@ class CombinedMultiblockFunction(mb_properties.MultiblockFunction,
             func = F(self, w, index)
             p = -self.grad(w, index)
 
-            from parsimony.algorithms.explicit import BacktrackingLineSearch
+            from parsimony.algorithms.utils import BacktrackingLineSearch
             import parsimony.functions.penalties as penalties
             line_search = BacktrackingLineSearch(
                 condition=penalties.SufficientDescentCondition, max_iter=30)
@@ -821,6 +822,7 @@ class LatentVariableCovariance(mb_properties.MultiblockFunction,
 #        approx_grad = utils.approx_grad(fun, w[index], eps=1e-6)
 #        print "LatentVariableCovariance:", maths.norm(grad - approx_grad)
 
+#        print "grad:", grad
         return grad
 
     def L(self, w, index):
@@ -833,7 +835,7 @@ class LatentVariableCovariance(mb_properties.MultiblockFunction,
 #        if self._lambda_max is None:
 #            self._lambda_max = self.lambda_max()
 
-        return 0  # self._lambda_max
+        return 1.0  # self._lambda_max
 
     def lambda_max(self):
         """ Largest eigenvalue of the corresponding covariance matrix.

@@ -25,8 +25,9 @@ except ValueError:
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
 import parsimony.utils.start_vectors as start_vectors
+import parsimony.functions.penalties as penalties
 
-__all__ = ["FastSVD", "FastSparseSVD", "FastSVDProduct"]
+__all__ = ["FastSVD", "FastSparseSVD", "FastSVDProduct", "PLSR"]
 
 # TODO: Add information about the run.
 
@@ -268,6 +269,234 @@ class FastSVDProduct(bases.ImplicitAlgorithm):
                 break
 
         return v
+
+
+class PLSR(bases.ImplicitAlgorithm,
+           bases.IterativeAlgorithm):
+    """A NIPALS implementation for PLS regresison.
+
+    Parameters
+    ----------
+    max_iter : Non-negative integer. Maximum allowed number of iterations.
+            Default is 200.
+
+    eps : Positive float. The tolerance used in the stopping criterion.
+
+    Examples
+    --------
+    >>> from parsimony.algorithms.nipals import PLSR
+    >>> import numpy as np
+    >>> np.random.seed(42)
+    >>>
+    >>> X = np.random.rand(10, 10)
+    >>> Y = np.random.rand(10, 5)
+    >>> w = np.random.rand(10, 1)
+    >>> c = np.random.rand(5, 1)
+    >>> plsr = PLSR()
+    >>> w, c = plsr.run([X, Y], [w, c])
+    >>> w
+    array([[ 0.34682103],
+           [ 0.32576718],
+           [ 0.28909788],
+           [ 0.40036279],
+           [ 0.32321038],
+           [ 0.39060766],
+           [ 0.22351433],
+           [ 0.28643062],
+           [ 0.29060872],
+           [ 0.23712672]])
+    >>> c
+    array([[ 0.29443832],
+           [ 0.35886751],
+           [ 0.33847141],
+           [ 0.23526002],
+           [ 0.35910191]])
+    >>> C, S, W = np.linalg.svd(np.dot(Y.T, X))
+    >>> w_ = W[0, :].reshape(10, 1)
+    >>> w_ = -w_ if w_[0, 0] < 0.0 else w_
+    >>> w = -w if w[0, 0] < 0.0 else w
+    >>> np.linalg.norm(w - w_)
+    1.5288386388031829e-10
+    >>> np.dot(np.dot(X, w).T, np.dot(Y, c / np.linalg.norm(c)))[0, 0] - S[0]
+    0.0
+    """
+    def __init__(self, max_iter=200, eps=consts.TOLERANCE, **kwargs):
+
+        super(PLSR, self).__init__(max_iter=max_iter, **kwargs)
+
+        self.eps = max(consts.TOLERANCE, float(eps))
+
+    def run(self, XY, wc=None):
+        """A NIPALS implementation for PLS regresison.
+
+        Parameters
+        ----------
+        XY : List of two numpy arrays. XY[0] is n-by-p and XY[1] is n-by-q. The
+                independent and dependent variables.
+
+        wc : List of numpy array. The start vectors.
+
+        Returns
+        -------
+        w : Numpy array, p-by-1. The weight vector of X.
+
+        c : Numpy array, q-by-1. The weight vector of Y.
+        """
+        X = XY[0]
+        Y = XY[1]
+
+        n, p = X.shape
+
+        if wc is not None:
+            w_new = wc[0]
+        else:
+            maxi = np.argmax(np.sum(Y ** 2.0, axis=0))
+            u = Y[:, [maxi]]
+            w_new = np.dot(X.T, u)
+            w_new /= maths.norm(w_new)
+
+        for i in range(self.max_iter):
+            w = w_new
+
+            c = np.dot(Y.T, np.dot(X, w))
+            w_new = np.dot(X.T, np.dot(Y, c))
+            normw = maths.norm(w_new)
+            if normw > consts.TOLERANCE:
+                w_new /= normw
+
+            if maths.norm(w_new - w) / maths.norm(w) < self.eps:
+                break
+
+        self.num_iter = i
+
+        t = np.dot(X, w)
+        tt = np.dot(t.T, t)[0, 0]
+        c = np.dot(Y.T, t)
+        if tt > consts.TOLERANCE:
+            c /= tt
+
+        return w_new, c
+
+
+class SparsePLSR(bases.ImplicitAlgorithm,
+                 bases.IterativeAlgorithm):
+    """A NIPALS implementation for Sparse PLS regresison.
+
+    Parameters
+    ----------
+    l : List or tuple of two non-negative floats. The Lagrange multipliers, or
+            regularisation constants, for the X and Y blocks, respectively.
+
+    penalise_y : Bool. Whether or not to penalise the Y block as well.
+
+    max_iter : Non-negative integer. Maximum allowed number of iterations.
+            Default is 200.
+
+    eps : Positive float. The tolerance used in the stopping criterion.
+
+    Examples
+    --------
+    >>> from parsimony.algorithms.nipals import SparsePLSR
+    >>> import numpy as np
+    >>> np.random.seed(42)
+    >>>
+    >>> X = np.random.rand(10, 10)
+    >>> Y = np.random.rand(10, 5)
+    >>> w = np.random.rand(10, 1)
+    >>> c = np.random.rand(5, 1)
+    >>> plsr = SparsePLSR(l=[4.0, 5.0])
+    >>> w, c = plsr.run([X, Y], [w, c])
+    >>> w
+    array([[ 0.32012726],
+           [ 0.31873833],
+           [ 0.15539258],
+           [ 0.64271827],
+           [ 0.23337738],
+           [ 0.54819589],
+           [ 0.        ],
+           [ 0.06088551],
+           [ 0.        ],
+           [ 0.        ]])
+    >>> c
+    array([[ 0.1463623 ],
+           [ 0.66483154],
+           [ 0.4666803 ],
+           [ 0.        ],
+           [ 0.5646119 ]])
+    """
+    def __init__(self, l=[0.0, 0.0], penalise_y=True, max_iter=200,
+                 eps=consts.TOLERANCE, **kwargs):
+
+        super(SparsePLSR, self).__init__(max_iter=max_iter, **kwargs)
+
+        self.eps = max(consts.TOLERANCE, float(eps))
+
+        self.l = [max(0.0, float(l[0])),
+                  max(0.0, float(l[1]))]
+
+        self.penalise_y = bool(penalise_y)
+
+    def run(self, XY, wc=None):
+        """A NIPALS implementation for sparse PLS regresison.
+
+        Parameters
+        ----------
+        XY : List of two numpy arrays. XY[0] is n-by-p and XY[1] is n-by-q. The
+                independent and dependent variables.
+
+        wc : List of numpy array. The start vectors.
+
+        Returns
+        -------
+        w : Numpy array, p-by-1. The weight vector of X.
+
+        c : Numpy array, q-by-1. The weight vector of Y.
+        """
+        X = XY[0]
+        Y = XY[1]
+
+        n, p = X.shape
+
+        l1_1 = penalties.L1(l=self.l[0])
+        l1_2 = penalties.L1(l=self.l[1])
+
+        if wc is not None:
+            w_new = wc[0]
+        else:
+            maxi = np.argmax(np.sum(Y ** 2.0, axis=0))
+            u = Y[:, [maxi]]
+            w_new = np.dot(X.T, u)
+            w_new /= maths.norm(w_new)
+
+        for i in range(self.max_iter):
+            w = w_new
+
+            c = np.dot(Y.T, np.dot(X, w))
+            if self.penalise_y:
+                c = l1_2.prox(c)
+                normc = maths.norm(c)
+                if normc > consts.TOLERANCE:
+                    c /= normc
+
+            w_new = np.dot(X.T, np.dot(Y, c))
+            w_new = l1_1.prox(w_new)
+            normw = maths.norm(w_new)
+            if normw > consts.TOLERANCE:
+                w_new /= normw
+
+            if maths.norm(w_new - w) / maths.norm(w) < self.eps:
+                break
+
+        self.num_iter = i
+
+#        t = np.dot(X, w)
+#        tt = np.dot(t.T, t)[0, 0]
+#        c = np.dot(Y.T, t)
+#        if tt > consts.TOLERANCE:
+#            c /= tt
+
+        return w_new, c
+
 
 if __name__ == "__main__":
     import doctest

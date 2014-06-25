@@ -14,7 +14,7 @@ def read(fname):
 
 setup(
     name="parsimony",
-    version='0.1.1-git',
+    version='0.1.9-git',
     author="Check contributors on https://github.com/neurospin/pylearn-parsimony",
     author_emai="tommy.loefstedt@cea.fr",
     description=("ParsimonY: structured and sparse machine learning in Python"),

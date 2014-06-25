@@ -27,7 +27,8 @@ except ValueError:
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
 
-__all__ = ["ZeroFunction", "L0", "L1", "L2", "L2Squared", "LInf",
+__all__ = ["ZeroFunction", "L1", "L0", "LInf", "L2", "L2Squared",
+           "L1L2Squared",
            "QuadraticConstraint", "RGCCAConstraint",
            "SufficientDescentCondition"]
 
@@ -979,6 +980,67 @@ class L2Squared(properties.AtomicFunction,
         return 0.5 * sqnorm <= self.c
 
 
+class L1L2Squared(properties.AtomicFunction,
+                  properties.Penalty,
+                  properties.ProximalOperator):
+    """The proximal operator of the L1 function with an L2 constraint.
+    The function is
+
+        f(x) = l1 * ||x||_1 + Indicator(||x||²_2 <= l2),
+
+    where ||.||_1 is the L1 norm and ||.||²_2 is the squared L2 norm.
+
+    Parameters
+    ----------
+    l1 : Non-negative float. The Lagrange multiplier, or regularisation
+            constant, of the L1 norm penalty.
+
+    l2 : Non-negative float. The limit of the constraint of of the squared L2
+            norm penalty.
+
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to be exempt from penalisation. Equivalently, the first index
+            to be penalised. Default is 0, all columns are included.
+    """
+    def __init__(self, l1=1.0, l2=1.0, penalty_start=0):
+
+        self.l1 = max(0.0, float(l1))
+        self.l2 = max(0.0, float(l2))
+        self.penalty_start = max(0, int(penalty_start))
+
+    def f(self, beta):
+        """Function value.
+        """
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        if maths.norm(beta_) ** 2.0 > self.l2:
+            return consts.FLOAT_INF
+
+        return self.l1 * maths.norm1(beta_)
+
+    def prox(self, beta, factor=1.0):
+        """The corresponding proximal operator.
+
+        From the interface "ProximalOperator".
+        """
+        if self.penalty_start > 0:
+            beta_ = beta[self.penalty_start:, :]
+        else:
+            beta_ = beta
+
+        l1 = self.l1 * factor
+        prox = (np.abs(beta_) > l1) * (beta_ - l1 * np.sign(beta_ - l1))
+        prox *= np.sqrt(self.l2 / np.dot(prox.T, prox)[0, 0])
+
+        if self.penalty_start > 0:
+            prox = np.vstack((beta[:self.penalty_start, :], prox))
+
+        return prox
+
+
 class QuadraticConstraint(properties.AtomicFunction,
                           properties.Gradient,
                           properties.Penalty,
@@ -1121,7 +1183,7 @@ class RGCCAConstraint(QuadraticConstraint,
     def __init__(self, l=1.0, c=0.0, tau=1.0, X=None, unbiased=True,
                  penalty_start=0):
 
-        self.l = float(l)
+        self.l = max(0.0, float(l))
         self.c = float(c)
         self.tau = max(0.0, min(float(tau), 1.0))
         if penalty_start > 0:
@@ -1200,6 +1262,23 @@ class RGCCAConstraint(QuadraticConstraint,
         """The projection operator corresponding to the function.
 
         From the interface "ProjectionOperator".
+
+        Examples
+        --------
+        >>> import parsimony.functions.penalties as penalties
+        >>> import numpy as np
+        >>> np.random.seed(42)
+        >>>
+        >>> X = np.random.randn(10, 10)
+        >>> x = np.random.randn(10, 1)
+        >>> L2 = penalties.RGCCAConstraint(c=1.0, tau=1.0, X=X, unbiased=True)
+        >>> L2.f(x)
+        5.7906381220390024
+        >>> y = L2.proj(x)
+        >>> L2.f(y)
+        -2.2204460492503131e-16
+        >>> np.linalg.norm(y)
+        0.99999999999999989
         """
         if self.penalty_start > 0:
             beta_ = beta[self.penalty_start:, :]
@@ -1242,7 +1321,7 @@ class RGCCAConstraint(QuadraticConstraint,
             atilde2lambdas2 = atilde2lambdas * self._S
             tau2 = self.tau ** 2.0
 
-            from parsimony.algorithms.explicit import NewtonRaphson
+            from parsimony.algorithms.utils import NewtonRaphson
             newton = NewtonRaphson(force_negative=True,
                                    parameter_positive=True,
                                    parameter_negative=False,
@@ -1274,17 +1353,17 @@ class RGCCAConstraint(QuadraticConstraint,
                                 / ((1.0 + (2.0 * mu) * self.S) ** 3.0))
                     return term1 + term2
 
-            if max(n, p) >= 1000:
-                # A rough heuristic for finding a start value. Works well in
-                # many cases, and when it does not work we have only lost one
-                # iteration and restart at 0.0.
-                start_mu = np.sqrt(min(n, p)) \
-                        / max(1.0, self.c) \
-                        / max(0.1, self.tau)
-            elif max(n, p) >= 100:
-                start_mu = 1.0
-            else:
-                start_mu = 0.0
+#            if max(n, p) >= 1000:
+#                # A rough heuristic for finding a start value. Works well in
+#                # many cases, and when it does not work we have only lost one
+#                # iteration and restart at 0.0.
+#                start_mu = np.sqrt(min(n, p)) \
+#                        / max(1.0, self.c) \
+#                        / max(0.1, self.tau)
+#            elif max(n, p) >= 100:
+#                start_mu = 1.0
+#            else:
+            start_mu = 0.0
             mu = newton.run(F(self.tau, self._S, self.c), start_mu)
 
             if p > n:
@@ -1352,12 +1431,11 @@ class SufficientDescentCondition(properties.Function,
 
         return self.function.f(x + a * self.p)
 
-    """Feasibility of the constraint at point x with step a.
-
-    From the interface "Constraint".
-    """
     def feasible(self, xa):
+        """Feasibility of the constraint at point x with step a.
 
+        From the interface "Constraint".
+        """
         x = xa[0]
         a = xa[1]
 

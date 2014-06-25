@@ -10,7 +10,7 @@ Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
 """
 import numpy as np
 
-__all__ = ["TOLERANCE", "MAX_ITER", "FLOAT_EPSILON",
+__all__ = ["TOLERANCE", "MAX_ITER", "FLOAT_EPSILON", "FLOAT_INF",
            "Info"]
 
 # Settings
@@ -21,6 +21,8 @@ MAX_ITER = 10000
 #mu_zero = 5e-8
 
 FLOAT_EPSILON = np.finfo(float).eps
+
+FLOAT_INF = np.inf
 
 
 # TODO: This class should be replaced with Enum.

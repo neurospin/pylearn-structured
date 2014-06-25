@@ -28,6 +28,7 @@ import parsimony.utils.maths as maths
 #import parsimony.functions.properties as properties
 import parsimony.functions.multiblock.properties as multiblock_properties
 import parsimony.functions.multiblock.losses as mb_losses
+from parsimony.algorithms.proximal import FISTA
 
 __all__ = ["MultiblockFISTA"]
 
@@ -118,24 +119,23 @@ class MultiblockFISTA(bases.ExplicitAlgorithm,
                                               min_iter=min_iter)
 
         self.outer_iter = outer_iter
-        self.eps = eps
+        self.eps = float(eps)
 
-        from parsimony.algorithms.proximal import FISTA
 #        from parsimony.algorithms.primaldual import NaiveCONESTA
         # Copy the allowed info keys for FISTA.
-        fista_info = list()
+        self.fista_info = list()
         for nfo in self.info_copy():
             if nfo in FISTA.INFO_PROVIDED:
-                fista_info.append(nfo)
-#        if not fista_info.allows(Info.num_iter):
-#            fista_info.add_key(Info.num_iter)
-        if Info.converged not in fista_info:
-            fista_info.append(Info.converged)
+                self.fista_info.append(nfo)
+#        if not self.fista_info.allows(Info.num_iter):
+#            self.fista_info.add_key(Info.num_iter)
+        if Info.converged not in self.fista_info:
+            self.fista_info.append(Info.converged)
 
-        self.algorithm = FISTA(info=fista_info,
-                               eps=self.eps,
-                               max_iter=self.max_iter,
-                               min_iter=self.min_iter)
+#        self.algorithm = FISTA(info=self.fista_info,
+#                               eps=self.eps,
+#                               max_iter=self.max_iter,
+#                               min_iter=self.min_iter)
 #        self.algorithm = algorithms.StaticCONESTA(mu_start=1.0,
 #                                                  info=self.info,
 #                                                  eps=self.eps,
@@ -155,8 +155,13 @@ class MultiblockFISTA(bases.ExplicitAlgorithm,
         if self.info_requested(Info.converged):
             self.info_set(Info.converged, False)
 
+        self.algorithm = FISTA(info=self.fista_info,
+                               eps=self.eps,
+                               max_iter=self.max_iter,
+                               min_iter=self.min_iter)
+
         print "len(w):", len(w)
-        print "max_iter:", self.max_iter
+        print "max_iter:", self.algorithm.max_iter
 
         num_iter = [0] * len(w)
 #        w_old = [0] * len(w)
@@ -172,6 +177,13 @@ class MultiblockFISTA(bases.ExplicitAlgorithm,
 
 #                for j in xrange(len(w)):
 #                    w_old[j] = w[j]
+
+                if i == 0:
+                    pass
+                if i == 1:
+                    pass
+                if i == 2:
+                    pass
 
                 func = mb_losses.MultiblockFunctionWrapper(function, w, i)
 #                self.fista_info.clear()
@@ -204,7 +216,8 @@ class MultiblockFISTA(bases.ExplicitAlgorithm,
                     ", l1 :", maths.norm1(w[i]), \
                     ", l2²:", maths.norm(w[i]) ** 2.0
 
-            print "f:", fval[-1]
+            if self.algorithm.info_requested(Info.fvalue):
+                print "f:", fval[-1]
 
             for i in xrange(len(w)):
 
@@ -220,8 +233,8 @@ class MultiblockFISTA(bases.ExplicitAlgorithm,
 #
 #                print "diff:", maths.norm(w_tilde - w_tilde2)
 
-                print "err:", maths.norm(w[i] - w_tilde) * (1.0 / step)
-                if (1.0 / step) * maths.norm(w[i] - w_tilde) > self.eps:
+#                print "err:", maths.norm(w[i] - w_tilde) * (1.0 / step)
+                if maths.norm(w[i] - w_tilde) > step * self.eps:
                     all_converged = False
                     break
 
@@ -365,11 +378,11 @@ class MultiblockCONESTA(bases.ExplicitAlgorithm,
                 w[i] = algorithm.run(func, w[i])
 
                 if algorithm.info_requested(Info.num_iter):
-                    num_iter[i] += self.algorithm.info_get(Info.num_iter)
+                    num_iter[i] += algorithm.info_get(Info.num_iter)
                 if algorithm.info_requested(Info.time):
-                    tval = self.algorithm.info_get(Info.time)
+                    tval = algorithm.info_get(Info.time)
                 if algorithm.info_requested(Info.fvalue):
-                    fval = self.algorithm.info_get(Info.fvalue)
+                    fval = algorithm.info_get(Info.fvalue)
 
                 if self.info_requested(Info.time):
                     t = t + tval

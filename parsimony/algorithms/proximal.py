@@ -312,13 +312,23 @@ class FISTA(bases.ExplicitAlgorithm,
                     break
 
             else:
-                if (1.0 / step) * maths.norm(betanew - z) < self.eps \
-                        and i >= self.min_iter:
+                if step > 0.0:
+                    if (1.0 / step) * maths.norm(betanew - z) < self.eps \
+                            and i >= self.min_iter:
 
-                    if self.info_requested(Info.converged):
-                        self.info_set(Info.converged, True)
+                        if self.info_requested(Info.converged):
+                            self.info_set(Info.converged, True)
 
-                    break
+                        break
+
+                else:  # TODO: Fix this!
+                    if maths.norm(betanew - z) < self.eps \
+                            and i >= self.min_iter:
+
+                        if self.info_requested(Info.converged):
+                            self.info_set(Info.converged, True)
+
+                        break
 
         self.num_iter = i
 
@@ -374,6 +384,58 @@ class FISTA(bases.ExplicitAlgorithm,
 #                break
 #
 #        return z
+
+class DykstrasProximalAlgorithm(bases.ExplicitAlgorithm):
+    """Dykstra's proximal algorithm. Computes the minimum of the sum of two
+    proximal operators.
+
+    The functions have proximal operators (ProjectionOperator.prox).
+    """
+    INTERFACES = [properties.Function,
+                  properties.ProximalOperator]
+
+    def __init__(self, output=False,
+                 eps=consts.TOLERANCE,
+                 max_iter=10000, min_iter=1):
+                 # TODO: Investigate what is a good default value here!
+
+        self.output = output
+        self.eps = eps
+        self.max_iter = max_iter
+        self.min_iter = min_iter
+
+    def run(self, function, x):
+        """Finds the proximal operator of the sum of two proximal operators.
+
+        Parameters
+        ----------
+        function : List or tuple with two Functions. The two functions.
+
+        x : Numpy array. The point that we wish to compute the proximal
+                operator of.
+        """
+        self.check_compatibility(function[0], self.INTERFACES)
+        self.check_compatibility(function[1], self.INTERFACES)
+
+        x_new = x
+        p_new = np.zeros(x.shape)
+        q_new = np.zeros(x.shape)
+        for i in xrange(1, self.max_iter + 1):
+
+            x_old = x_new
+            p_old = p_new
+            q_old = q_new
+
+            y_old = function[0].prox(x_old + p_old)
+            p_new = x_old + p_old - y_old
+            x_new = function[1].prox(y_old + q_old)
+            q_new = y_old + q_old - x_new
+
+            if maths.norm(x_new - x_old) / maths.norm(x_old) < self.eps \
+                    and i >= self.min_iter:
+                break
+
+        return x_new
 
 
 class DykstrasProjectionAlgorithm(bases.ExplicitAlgorithm):
@@ -566,20 +628,31 @@ class ParallelDykstrasProximalAlgorithm(bases.ExplicitAlgorithm):
 
             for i in xrange(num_prox):
                 p[i] = prox[i].prox(z[i], factor)
-            for i in xrange(num_prox, num_prox + num_proj):
-                p[i] = proj[i].proj(z[i])
+            for i in xrange(num_proj):
+                p[num_prox + i] = proj[i].proj(z[num_prox + i])
+#                if proj[i].f(p[i]) > 0.2:
+#                if abs(proj[i].c - 1.0) < 0.001:
+#                    print "före :", proj[i].f(z[num_prox + i]), np.linalg.norm(z[num_prox + i])
+#                    print "efter:", proj[i].f(p[i]), np.linalg.norm(p[i])
 
             x_old = x_new
             x_new = np.zeros(x_old.shape)
             for i in xrange(num_prox + num_proj):
                 x_new += weights[i] * p[i]
 
-            for i in xrange(num_prox + num_proj):
-                z[i] = x + z[i] - p[i]
-
             if maths.norm(x_new - x_old) / maths.norm(x_old) < self.eps \
                     and i >= self.min_iter:
-                break
+
+                all_feasible = True
+                for i in xrange(num_proj):
+                    if proj[i].f(p[num_prox + i]) > 0.0:
+                        all_feasible = False
+
+                if all_feasible:
+                    break
+
+            for i in xrange(num_prox + num_proj):
+                z[i] = x_new + z[i] - p[i]
 
         return x_new
 

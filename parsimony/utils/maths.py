@@ -12,11 +12,11 @@ import numpy as np
 
 from parsimony.utils.consts import TOLERANCE
 
-__all__ = ['norm', 'norm1', 'norm0', 'normInf', 'corr']
+__all__ = ["norm", "normFro", "norm1", "norm0", "normInf", "corr", "cov"]
 
 
 def norm(x):
-    '''Returns the L2-norm for a matrix (the Frobenius norm) or vectors.
+    """Returns the L2-norm for matrices (i.e. the Frobenius norm) or vectors.
 
     Examples
     --------
@@ -28,7 +28,7 @@ def norm(x):
     >>> vector = np.array([[0.2], [1.0], [0.4]])
     >>> norm(vector)
     1.0954451150103321
-    '''
+    """
     n, p = x.shape
     if p == 1:
         return np.sqrt(np.dot(x.T, x))[0, 0]
@@ -38,8 +38,27 @@ def norm(x):
         return np.linalg.norm(x)
 
 
+def normFro(X):
+    """Returns the Frobenius norm for matrices or the L2-norm for vectors.
+
+    This is an alias for norm(.).
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from parsimony.utils.maths import norm
+    >>> matrix = np.array([[0.2, 1.0, 0.4], [2.0, 1.5, 0.1]])
+    >>> norm(matrix)
+    2.7313000567495327
+    >>> vector = np.array([[0.2], [1.0], [0.4]])
+    >>> norm(vector)
+    1.0954451150103321
+    """
+    return norm(X)
+
+
 def norm1(x):
-    '''Returns the L1-norm or a matrix or vector.
+    """Returns the L1-norm or a matrix or vector.
 
     For vectors: sum(abs(x)**2)**(1./2)
     For matrices: max(sum(abs(x), axis=0))
@@ -53,7 +72,7 @@ def norm1(x):
     >>> vector = np.array([[0.2], [1.0], [0.4]])
     >>> norm1(vector)
     1.6000000000000001
-    '''
+    """
     n, p = x.shape
     if p == 1 or n == 1:
         return np.sum(np.abs(x))
@@ -63,7 +82,7 @@ def norm1(x):
 
 
 def norm0(x):
-    '''Returns the L0-norm of a vector.
+    """Returns the L0-norm of a vector.
 
     Examples
     --------
@@ -76,7 +95,7 @@ def norm0(x):
     >>> vector = np.array([[0.2], [1.0], [0.4]])
     >>> norm0(vector)
     3
-    '''
+    """
     n, p = x.shape
     if n > 1 and p > 1:
         raise ValueError("The L0 norm is not defined for matrices.")
@@ -87,7 +106,7 @@ def norm0(x):
 
 
 def normInf(x):
-    '''Return the infinity norm of a matrix or vector.
+    """Return the infinity norm of a matrix or vector.
 
     For vectors : max(abs(x))
     For matrices : max(sum(abs(x), axis=1))
@@ -101,7 +120,7 @@ def normInf(x):
     >>> vector = np.array([[0.2], [1.0], [0.4]])
     >>> normInf(vector)
     1.0
-    '''
+    """
     n, p = x.shape
     if p == 1 or n == 1:
         return np.max(np.abs(x))
