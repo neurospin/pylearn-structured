@@ -314,28 +314,39 @@ def A_from_mask(mask, offset=0):
             Az_i += [i_pt, i_pt]
             Az_j += [i_pt, im2flat[x, y, z + 1]]
             Az_v += [-1, 1]
+
         if found:
             n_compacts += 1
+
     Ax = sparse.csr_matrix((Ax_v, (Ax_i, Ax_j)), shape=(p, p))
     Ay = sparse.csr_matrix((Ay_v, (Ay_i, Ay_j)), shape=(p, p))
     Az = sparse.csr_matrix((Az_v, (Az_i, Az_j)), shape=(p, p))
+
     return [Ax, Ay, Az], n_compacts
 
 
-def A_from_subset_mask(mask):
+def A_from_subset_mask(mask, weights=None):
     """Generates the linear operator for the total variation Nesterov function
     from a mask for a 3D image.
 
-    The binary mask marks the variables that are supposed to be smoothed. The
-    mask has the same size as the input and output image.
+    The binary mask marks a subset of the variables that are supposed to be
+    smoothed. The mask has the same size as the input and output image.
 
     Parameters
     ----------
     mask : Numpy array. The mask. The mask does not involve any intercept
             variables.
+
+    weights : Numpy array. Weights put on the groups. Default is weight 1 for
+            each group, i.e. no weight. The weights is a numpy array of the
+            same shape as mask.
     """
     while len(mask.shape) < 3:
         mask = mask[np.newaxis, :]
+
+    if weights is not None:
+        while len(weights.shape) < 3:
+            weights = weights[np.newaxis, :]
 
     nz, ny, nx = mask.shape
     mask = mask.astype(bool)
@@ -368,21 +379,26 @@ def A_from_subset_mask(mask):
         z, y, x = zyx_mask[0][pt], zyx_mask[1][pt], zyx_mask[2][pt]
         i_pt = im2flat((z, y, x), mask.shape)
 
+        if weights is not None:
+            w = weights[z, y, x]
+        else:
+            w = 1.0
+
         if z + 1 < nz and mask[z + 1, y, x]:
             found = True
             Az_i += [i_pt, i_pt]
             Az_j += [i_pt, im2flat((z + 1, y, x), mask.shape)]
-            Az_v += [-1., 1.]
+            Az_v += [-w, w]
         if y + 1 < ny and mask[z, y + 1, x]:
             found = True
             Ay_i += [i_pt, i_pt]
             Ay_j += [i_pt, im2flat((z, y + 1, x), mask.shape)]
-            Ay_v += [-1., 1.]
+            Ay_v += [-w, w]
         if x + 1 < nx and mask[z, y, x + 1]:
             found = True
             Ax_i += [i_pt, i_pt]
             Ax_j += [i_pt, im2flat((z, y, x + 1), mask.shape)]
-            Ax_v += [-1., 1.]
+            Ax_v += [-w, w]
 
         if found:
             num_compacts += 1
@@ -395,27 +411,45 @@ def A_from_subset_mask(mask):
     return [Ax, Ay, Az], num_compacts
 
 
-def A_from_shape(shape):
+def A_from_shape(shape, weights=None):
     """Generates the linear operator for the total variation Nesterov function
-    from the shape of a 3D image.
+    from the shape of a 1D, 2D or 3D image.
 
     Parameters
     ----------
     shape : List or tuple with 1, 2 or 3 integers. The shape of the 1D, 2D or
-            3D image. shape has the form (X,), (Y, X) or (Z, Y, X), where Z is
-            the number of "layers", Y is the number of rows and X is the number
-            of columns. The shape does not involve any intercept variables.
+            3D image. shape has the form X, (X,), (Y, X) or (Z, Y, X), where Z
+            is the number of "layers", Y is the number of rows and X is the
+            number of columns. The shape does not involve any intercept
+            variables.
+
+    weights : Sequence, e.g. list or numpy (p-by-1) array. Weights put on the
+            groups. Default is weight 1 for each group, i.e. no weight.
     """
+    if not isinstance(shape, (list, tuple)):
+        shape = [shape]
     while len(shape) < 3:
-        shape = tuple(list(shape) + [1])
+        shape = tuple([1] + list(shape))
+
     nz = shape[0]
     ny = shape[1]
     nx = shape[2]
     p = nx * ny * nz
     ind = np.arange(p).reshape((nz, ny, nx))
+
+    if weights is not None:
+        weights = np.array(weights)
+        weights = weights.ravel()
+#        w = sparse.spdiags(weights.ravel(), 0, p, p)
+
     if nx > 1:
-        Ax = sparse.eye(p, p, 1, format='csr') - \
-             sparse.eye(p, p)
+        if weights is not None:
+            Ax = sparse.spdiags(weights, -1, p, p).T - \
+                 sparse.spdiags(weights, 0, p, p)
+            Ax = Ax.tocsr()
+        else:
+            Ax = sparse.eye(p, p, 1, format='csr') - \
+                 sparse.eye(p, p)
         zind = ind[:, :, -1].ravel()
         for i in zind:
             Ax.data[Ax.indptr[i]: \
@@ -423,9 +457,16 @@ def A_from_shape(shape):
         Ax.eliminate_zeros()
     else:
         Ax = sparse.csc_matrix((p, p), dtype=float)
+
     if ny > 1:
-        Ay = sparse.eye(p, p, nx, format='csr') - \
-             sparse.eye(p, p)
+        if weights is not None:
+            Ay = sparse.spdiags(weights, -nx, p, p).T - \
+                 sparse.spdiags(weights, 0, p, p)
+            Ay = Ay.tocsr()
+        else:
+            Ay = sparse.eye(p, p, nx, format='csr') - \
+                 sparse.eye(p, p)
+
         yind = ind[:, -1, :].ravel()
         for i in yind:
             Ay.data[Ay.indptr[i]: \
@@ -433,9 +474,16 @@ def A_from_shape(shape):
         Ay.eliminate_zeros()
     else:
         Ay = sparse.csc_matrix((p, p), dtype=float)
+
     if nz > 1:
-        Az = (sparse.eye(p, p, ny * nx, format='csr') - \
-              sparse.eye(p, p))
+        if weights is not None:
+            Az = sparse.spdiags(weights, -(ny * nx), p, p).T - \
+                 sparse.spdiags(weights, 0, p, p)
+            Az = Az.tocsr()
+        else:
+            Az = (sparse.eye(p, p, ny * nx, format='csr') - \
+                  sparse.eye(p, p))
+
         xind = ind[-1, :, :].ravel()
         for i in xind:
             Az.data[Az.indptr[i]: \
