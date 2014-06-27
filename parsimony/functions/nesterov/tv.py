@@ -253,14 +253,14 @@ class TotalVariation(properties.AtomicFunction,
         return np.max(np.sqrt(SS))
 
 
-def A_from_mask(mask, offset=0):
+def A_from_mask(mask, offset=0, weights=None):
     """Generates the linear operator for the total variation Nesterov function
     from a mask for a 3D image.
 
     Parameters
     ----------
-    mask : Numpy array of integer. The mask has the shape as the original
-            data, non-null values correspond to columns of X. Groups may be
+    mask : Numpy array of integers. The mask has the same shape as the original
+            data. Non-null values correspond to columns of X. Groups may be
             defined using different values in the mask. TV will be applied
             within groups of the same value in the mask.
 
@@ -273,9 +273,18 @@ def A_from_mask(mask, offset=0):
                 not penalized, TV does not apply on Age and Weight but only on
                 Image. Thus: penalty_start = 1, offset = 2 (skip Age and
                 Weight).
+
+    weights : Numpy array. The weight put on the gradient of every point.
+            Default is weight 1 for each point, or equivalently, no weight. The
+            weights is a numpy array of the same shape as mask.
     """
     while len(mask.shape) < 3:
         mask = mask[..., np.newaxis]
+
+    if weights is not None:
+        while len(weights.shape) < 3:
+            weights = weights[..., np.newaxis]
+
     nx, ny, nz = mask.shape
     mask_bool = mask != 0
     xyz_mask = np.where(mask_bool)
@@ -290,30 +299,39 @@ def A_from_mask(mask, offset=0):
     Az_v = list()
     n_compacts = 0
     p = np.sum(mask_bool) + offset
+
     # Mapping from image coordinate to flat masked array.
     im2flat = np.zeros(mask.shape, dtype=int)
     im2flat[:] = -1
     im2flat[mask_bool] = np.arange(np.sum(mask_bool)) + offset
+
     for pt in xrange(len(xyz_mask[0])):
+
         found = False
         x, y, z = xyz_mask[0][pt], xyz_mask[1][pt], xyz_mask[2][pt]
         i_pt = im2flat[x, y, z]
         val = mask[x, y, z]
+
+        if weights is not None:
+            w = weights[x, y, z]
+        else:
+            w = 1.0
+
         if x + 1 < nx and (mask[x + 1, y, z] == val):
             found = True
             Ax_i += [i_pt, i_pt]
             Ax_j += [i_pt, im2flat[x + 1, y, z]]
-            Ax_v += [-1, 1]
+            Ax_v += [-w, w]
         if y + 1 < ny and (mask[x, y + 1, z] == val):
             found = True
             Ay_i += [i_pt, i_pt]
             Ay_j += [i_pt, im2flat[x, y + 1, z]]
-            Ay_v += [-1, 1]
+            Ay_v += [-w, w]
         if z + 1 < nz and (mask[x, y, z + 1] == val):
             found = True
             Az_i += [i_pt, i_pt]
             Az_j += [i_pt, im2flat[x, y, z + 1]]
-            Az_v += [-1, 1]
+            Az_v += [-w, w]
 
         if found:
             n_compacts += 1
@@ -337,9 +355,9 @@ def A_from_subset_mask(mask, weights=None):
     mask : Numpy array. The mask. The mask does not involve any intercept
             variables.
 
-    weights : Numpy array. Weights put on the groups. Default is weight 1 for
-            each group, i.e. no weight. The weights is a numpy array of the
-            same shape as mask.
+    weights : Numpy array. The weight put on the gradient of every point.
+            Default is weight 1 for each point, or equivalently, no weight. The
+            weights is a numpy array of the same shape as mask.
     """
     while len(mask.shape) < 3:
         mask = mask[np.newaxis, :]
