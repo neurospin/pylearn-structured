@@ -182,18 +182,18 @@ class InformationAlgorithm(object):
     info_ret : Dictionary. The algorithm outputs are collected in this
             dictionary.
 
-    info : List of utils.consts.Info. The identifiers for the requested
-            information outputs. The algorithms will store the requested
-            outputs in self.info.
+    info : List of utils.Info. The identifiers for the requested information
+            outputs. The algorithms will store the requested outputs in
+            self.info.
 
-    INFO_PROVIDED : List of utils.consts.Info. The allowed output
-            identifiers. The implementing class should update this list with
-            the provided/allowed outputs.
+    INFO_PROVIDED : List of utils.Info. The allowed output identifiers. The
+            implementing class should update this list with the
+            provided/allowed outputs.
 
     Examples
     --------
     >>> import parsimony.algorithms as algorithms
-    >>> from parsimony.utils.consts import Info
+    >>> from parsimony.algorithms.utils import Info
     >>> from parsimony.functions.losses import LinearRegression
     >>> import numpy as np
     >>> np.random.seed(42)
@@ -211,7 +211,7 @@ class InformationAlgorithm(object):
         """
         Parameters
         ----------
-        info : List or tuple of utils.consts.Info. The identifiers for the run
+        info : List or tuple of utils.Info. The identifiers for the run
                 information to return.
         """
         super(InformationAlgorithm, self).__init__(**kwargs)
@@ -229,8 +229,8 @@ class InformationAlgorithm(object):
 
         Parameters
         ----------
-        nfo : utils.consts.Info. The identifier to return information about.
-                If nfo is None, all information is returned in a dictionary.
+        nfo : utils.Info. The identifier to return information about. If nfo is
+                None, all information is returned in a dictionary.
         """
         if nfo is None:
             return self.info_ret
@@ -243,8 +243,7 @@ class InformationAlgorithm(object):
 
         Parameters
         ----------
-        nfo : utils.consts.Info. The identifier to for the computed information
-                about.
+        nfo : utils.Info. The identifier to for the computed information about.
 
         value : object. The value to associate with nfo.
         """
@@ -278,8 +277,8 @@ class InformationAlgorithm(object):
 
         Parameters
         ----------
-        info : A list of utils.consts.Info. The identifiers for information
-                that should be computed.
+        info : A list of utils.Info. The identifiers for information that
+                should be computed.
         """
         for i in info:
             if not self.info_provided(i):

@@ -26,7 +26,7 @@ except ValueError:
 import parsimony.utils as utils
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
-from parsimony.utils.consts import Info
+from parsimony.algorithms.utils import Info
 import parsimony.functions.properties as properties
 import parsimony.functions.nesterov.properties as nesterov_properties
 from proximal import FISTA
@@ -111,6 +111,10 @@ class CONESTA(bases.ExplicitAlgorithm,
 
         self.eps = eps
 
+    @bases.force_reset
+    @bases.check_compatibility
+    def run(self, function, beta):
+
         # Copy the allowed info keys for FISTA.
         fista_info = list()
         for nfo in self.info_copy():
@@ -118,15 +122,10 @@ class CONESTA(bases.ExplicitAlgorithm,
                 fista_info.append(nfo)
 #        if not self.fista_info.allows(Info.num_iter):
 #            self.fista_info.add_key(Info.num_iter)
-        self.algorithm = FISTA(eps=eps, max_iter=max_iter, min_iter=min_iter,
-                               info=fista_info)
-        self.num_iter = 0
-
-    @bases.force_reset
-    @bases.check_compatibility
-    def run(self, function, beta):
-
-#        self.info.clear()
+        # Create the inner algorithm.
+        algorithm = FISTA(eps=self.eps,
+                          max_iter=self.max_iter, min_iter=self.min_iter,
+                          info=fista_info)
 
         if self.info_requested(Info.ok):
             self.info_set(Info.ok, False)
@@ -161,20 +160,20 @@ class CONESTA(bases.ExplicitAlgorithm,
             eps_plus = min(max_eps, function.eps_opt(mu[-1]))
 #            print "current iterations: ", self.num_iter, \
 #                    ", iterations left: ", self.max_iter - self.num_iter
-            self.algorithm.set_params(step=tnew, eps=eps_plus,
-                                      max_iter=self.max_iter - self.num_iter,
-                                      conesta_stop=None)
+            algorithm.set_params(step=tnew, eps=eps_plus,
+                                 max_iter=self.max_iter - self.num_iter,
+                                 conesta_stop=None)
 #                                      conesta_stop=[self.mu_min])
 #            self.fista_info.clear()
-            beta = self.algorithm.run(function, beta)
+            beta = algorithm.run(function, beta)
             #print "CONESTA loop", i, "FISTA=",self.fista_info[Info.num_iter], "TOT iter:", self.num_iter
 
-            self.num_iter += self.algorithm.num_iter
+            self.num_iter += algorithm.num_iter
 
-            if Info.time in self.algorithm.info:
-                tval = self.algorithm.info_get(Info.time)
-            if Info.fvalue in self.algorithm.info:
-                fval = self.algorithm.info_get(Info.fvalue)
+            if Info.time in algorithm.info:
+                tval = algorithm.info_get(Info.time)
+            if Info.fvalue in algorithm.info:
+                fval = algorithm.info_get(Info.fvalue)
 
             self.mu_min = min(self.mu_min, mu[-1])
             tmin = min(tmin, tnew)

@@ -22,12 +22,33 @@ try:
 except ValueError:
     import parsimony.algorithms.bases as bases  # When run as a program.
 import parsimony.utils.consts as consts
-from parsimony.utils.consts import Info
 import parsimony.functions.penalties as penalties
 import parsimony.functions.properties as properties
 
-__all__ = ["Bisection", "NewtonRaphson",
+__all__ = ["Info",
+
+           "Bisection", "NewtonRaphson",
            "BacktrackingLineSearch"]
+
+
+# TODO: This class should be replaced with Enum.
+class Info(object):
+    """Enum-like class for information constants.
+
+    Fields may _NOT_ be None.
+
+    This class will be replaced with Enum, so do not rely on the actual values
+    of the fields. Never use "ok", always use Info.ok.
+    """
+    ok = "ok"  # Did everything go well?
+    converged = "converged"  # Did the algorithm converge?
+    num_iter = "num_iter"  # Number of iterations.
+    time = "time"  # Time of e.g. every iteration.
+    fvalue = "fvalue"  # Function value at e.g. every iteration.
+    gap = "gap"  # The gap at e.g. every iteration.
+    mu = "mu"  # Smoothing constant at e.g. every iteration.
+    bound = "bound"  # Upper bound at e.g. every iteration.
+    beta = "beta"  # E.g. the start vector used.
 
 
 class Bisection(bases.ExplicitAlgorithm,
@@ -48,7 +69,7 @@ class Bisection(bases.ExplicitAlgorithm,
     eps : Positive float. A value such that |f(x)|_2 <= eps. Only guaranteed
             if |f(x)|_2 <= eps in less than max_iter iterations.
 
-    info : List or tuple of utils.consts.Info. What, if any, extra run
+    info : List or tuple of utils.Info. What, if any, extra run
             information should be stored. Default is an empty list, which means
             that no run information is computed nor returned.
 
@@ -268,7 +289,7 @@ class NewtonRaphson(bases.ExplicitAlgorithm,
             stopping criterion will be fulfilled if it converges in less
             than max_iter iterations.
 
-    info : List or tuple of utils.consts.Info. What, if any, extra run
+    info : List or tuple of utils.Info. What, if any, extra run
             information should be stored. Default is an empty list, which means
             that no run information is computed nor returned.
 

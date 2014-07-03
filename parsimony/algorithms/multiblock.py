@@ -23,7 +23,7 @@ try:
 except ValueError:
     import parsimony.algorithms.bases as bases  # When run as a program.import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
-from parsimony.utils.consts import Info
+from parsimony.algorithms.utils import Info
 import parsimony.utils.maths as maths
 #import parsimony.functions.properties as properties
 import parsimony.functions.multiblock.properties as multiblock_properties

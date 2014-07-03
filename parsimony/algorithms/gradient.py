@@ -24,7 +24,7 @@ except ValueError:
 import parsimony.utils as utils
 import parsimony.utils.maths as maths
 import parsimony.utils.consts as consts
-from parsimony.utils.consts import Info
+from parsimony.algorithms.utils import Info
 import parsimony.functions.properties as properties
 
 __all__ = ["GradientDescent"]

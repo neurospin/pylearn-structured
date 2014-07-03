@@ -10,8 +10,7 @@ Copyright (c) 2013-2014, CEA/DSV/I2BM/Neurospin. All rights reserved.
 """
 import numpy as np
 
-__all__ = ["TOLERANCE", "MAX_ITER", "FLOAT_EPSILON", "FLOAT_INF",
-           "Info"]
+__all__ = ["TOLERANCE", "MAX_ITER", "FLOAT_EPSILON", "FLOAT_INF"]
 
 # Settings
 TOLERANCE = 5e-8
@@ -25,24 +24,24 @@ FLOAT_EPSILON = np.finfo(float).eps
 FLOAT_INF = np.inf
 
 
-# TODO: This class should be replaced with Enum.
-class Info(object):
-    """Enum-like class for information constants.
-
-    Fields may _NOT_ be None.
-
-    This class will be replaced with Enum, so do not rely on the actual values
-    of the fields. Never use "ok", always use Info.ok.
-    """
-    ok = "ok"  # Did everything go well?
-    converged = "converged"  # Did the algorithm converge?
-    num_iter = "num_iter"  # Number of iterations.
-    time = "time"  # Time of e.g. every iteration.
-    fvalue = "fvalue"  # Function value at e.g. every iteration.
-    gap = "gap"  # The gap at e.g. every iteration.
-    mu = "mu"  # Smoothing constant at e.g. every iteration.
-    bound = "bound"  # Upper bound at e.g. every iteration.
-    beta = "beta"  # E.g. the start vector used.
+## TODO: This class should be replaced with Enum.
+#class Info(object):
+#    """Enum-like class for information constants.
+#
+#    Fields may _NOT_ be None.
+#
+#    This class will be replaced with Enum, so do not rely on the actual values
+#    of the fields. Never use "ok", always use Info.ok.
+#    """
+#    ok = "ok"  # Did everything go well?
+#    converged = "converged"  # Did the algorithm converge?
+#    num_iter = "num_iter"  # Number of iterations.
+#    time = "time"  # Time of e.g. every iteration.
+#    fvalue = "fvalue"  # Function value at e.g. every iteration.
+#    gap = "gap"  # The gap at e.g. every iteration.
+#    mu = "mu"  # Smoothing constant at e.g. every iteration.
+#    bound = "bound"  # Upper bound at e.g. every iteration.
+#    beta = "beta"  # E.g. the start vector used.
 
 
 #class UndefinedType(object):

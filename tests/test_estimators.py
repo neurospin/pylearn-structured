@@ -20,7 +20,7 @@ class TestEstimators(TestCase):
         import numpy as np
         import parsimony.estimators as estimators
         import parsimony.algorithms.gradient as gradient
-        from parsimony.utils.consts import Info
+        from parsimony.algorithms.utils import Info
 
         np.random.seed(1337)
 
