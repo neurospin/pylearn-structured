@@ -492,9 +492,10 @@ class RidgeLogisticRegression(properties.CompositeFunction,
                               properties.Gradient,
                               properties.LipschitzContinuousGradient,
                               properties.StepSize):
-    """The Logistic Regression loss function.
+    """The Logistic Regression loss function with a squared L2 penalty.
 
     Ridge (re-weighted) log-likelihood (cross-entropy):
+
     * f(beta) = -loglik + k/2 * ||beta||^2_2
               = -Sum wi (yi log(pi) + (1 − yi) log(1 − pi)) + k/2*||beta||^2_2
               = -Sum wi (yi xi' beta − log(1 + e(xi' beta))) + k/2*||beta||^2_2
@@ -528,11 +529,11 @@ class RidgeLogisticRegression(properties.CompositeFunction,
         """
         self.X = X
         self.y = y
-        self.k = float(k)
+        self.k = max(0.0, float(k))
         if weights is None:
             weights = np.ones(y.shape)  # .reshape(y.shape)
         self.weights = weights
-        self.penalty_start = int(penalty_start)
+        self.penalty_start = max(0, int(penalty_start))
         self.mean = bool(mean)
 
         self.reset()

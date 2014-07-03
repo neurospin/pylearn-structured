@@ -310,7 +310,7 @@ class RidgeRegression(RegressionEstimator):
 
     Parameters
     ----------
-    l : Non-negative float. The regularisation parameter.
+    l : Non-negative float. The L2 regularisation parameter.
 
     algorithm : ExplicitAlgorithm. The algorithm that should be applied.
             Should be one of:
@@ -415,13 +415,13 @@ class RidgeRegression(RegressionEstimator):
 class Lasso(RegressionEstimator):
     """Linear regression with an L1 penalty:
 
-        f(beta, X, y) = (1 / (2 * n)) * ||Xbeta - y||²_2 + l1 * ||beta||_1,
+        f(beta, X, y) = (1 / (2 * n)) * ||Xbeta - y||²_2 + l * ||beta||_1,
 
-    where ||.||²_2 is the squared L2-norm and ||.||_1 is the L1-norm.
+    where ||.||_1 is the L1-norm.
 
     Parameters
     ----------
-    l1 : Non-negative float. The Lagrange multiplier, or regularisation
+    l : Non-negative float. The Lagrange multiplier, or regularisation
             constant, of the function.
 
     algorithm : ExplicitAlgorithm. The algorithm that should be applied.
@@ -467,7 +467,7 @@ class Lasso(RegressionEstimator):
     >>> print "error = ", error
     error =  0.395494642796
     """
-    def __init__(self, l1,
+    def __init__(self, l,
                  algorithm=None, algorithm_params=dict(),
                  start_vector=start_vectors.RandomStartVector(),
                  penalty_start=0,
@@ -481,7 +481,7 @@ class Lasso(RegressionEstimator):
         super(Lasso, self).__init__(algorithm=algorithm,
                                     start_vector=start_vector)
 
-        self.l1 = float(l1)
+        self.l = float(l)
 
         self.penalty_start = int(penalty_start)
         self.mean = bool(mean)
@@ -489,8 +489,9 @@ class Lasso(RegressionEstimator):
     def get_params(self):
         """Return a dictionary containing the estimator's parameters
         """
-        return {"l1": self.l1,
-                "penalty_start": self.penalty_start, "mean": self.mean}
+        return {"l": self.l,
+                "penalty_start": self.penalty_start,
+                "mean": self.mean}
 
     def fit(self, X, y, beta=None):
         """Fit the estimator to the data.
@@ -499,7 +500,7 @@ class Lasso(RegressionEstimator):
 
         function = functions.CombinedFunction()
         function.add_function(losses.LinearRegression(X, y, mean=self.mean))
-        function.add_prox(penalties.L1(l=self.l1,
+        function.add_prox(penalties.L1(l=self.l,
                                        penalty_start=self.penalty_start))
 
         self.algorithm.check_compatibility(function,
@@ -1211,6 +1212,127 @@ class LogisticRegression(LogisticRegressionEstimator):
         return self
 
 
+class RidgeLogisticRegression(LogisticRegressionEstimator):
+    """Logistic regression (re-weighted log-likelihood aka. cross-entropy) with
+    an L2 penalty:
+
+        f(beta) = -loglik/n_samples + (l / 2) * ||beta||²_2,
+
+    where
+
+        loglik = Sum wi * (yi * log(pi) + (1 − yi) * log(1 − pi)),
+
+        pi = p(y=1|xi, beta) = 1 / (1 + exp(-xi'*beta)),
+
+        wi = weight of sample i,
+
+        and ||.||²_2 is the squared L2-norm.
+
+    Parameters
+    ----------
+    l : Non-negative float. The L2 regularisation parameter.
+
+    algorithm : ExplicitAlgorithm. The algorithm that should be applied.
+            Should be one of:
+                1. GradientDescent(...)
+
+            Default is GradientDescent(...).
+
+    algorithm_params : A dict. The dictionary algorithm_params contains
+            parameters that should be set in the algorithm. Passing
+            algorithm=MyAlgorithm(**params) is equivalent to passing
+            algorithm=MyAlgorithm() and algorithm_params=params. Default is
+            an empty dictionary.
+
+    class_weight : Dict, 'auto' or None. If 'auto', class weights will be
+            given inverse proportional to the frequency of the class in
+            the data. If a dictionary is given, keys are classes and values
+            are corresponding class weights. If None is given, the class
+            weights will be uniform.
+
+    penalty_start : Non-negative integer. The number of columns, variables
+            etc., to be exempt from penalisation. Equivalently, the first
+            index to be penalised. Default is 0, all columns are included.
+
+    mean : Boolean. Whether to compute the mean loss or not. Default is True,
+            the mean loss.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import parsimony.estimators as estimators
+    >>> import parsimony.algorithms.gradient as gradient
+    >>> n, p = 10, 16
+    >>>
+    >>> np.random.seed(1337)
+    >>> X = np.random.rand(n, p)
+    >>> y = np.random.randint(0, 2, (n, 1))
+    >>> l = 1.0
+    >>> lr = estimators.RidgeLogisticRegression(l,
+    ...                      algorithm=gradient.GradientDescent(max_iter=1000),
+    ...                      mean=False)
+    >>> res = lr.fit(X, y)
+    >>> pred = lr.score(X, y)
+    >>> print "prediction rate = %.1f" % pred
+    prediction rate = 0.9
+    """
+    def __init__(self, l,
+                 algorithm=None, algorithm_params=dict(),
+                 class_weight=None,
+                 penalty_start=0,
+                 mean=True):
+
+        self.l = max(0.0, float(l))
+
+        if algorithm is None:
+            algorithm = primaldual.GradientDescent(**algorithm_params)
+        else:
+            algorithm.set_params(**algorithm_params)
+
+        super(RidgeLogisticRegression, self).__init__(algorithm=algorithm,
+                                                     class_weight=class_weight)
+
+        self.penalty_start = max(0, int(penalty_start))
+        self.mean = bool(mean)
+
+    def get_params(self):
+        """Return a dictionary containing all the estimator's parameters.
+        """
+        return {"class_weight": self.class_weight,
+                "penalty_start": self.penalty_start,
+                "mean": self.mean}
+
+    def fit(self, X, y, beta=None, sample_weight=None):
+        """Fit the estimator to the data.
+        """
+        X, y = check_arrays(X, check_labels(y))
+        if sample_weight is None:
+            sample_weight = class_weight_to_sample_weight(self.class_weight, y)
+        y, sample_weight = check_arrays(y, sample_weight)
+            #sample_weight = sample_weight.ravel()
+
+        function = losses.RidgeLogisticRegression(X, y, self.l,
+                                              weights=sample_weight,
+                                              penalty_start=self.penalty_start,
+                                              mean=self.mean)
+
+#        function = functions.CombinedFunction()
+#        function.add_function(losses.LogisticRegression(X, y, mean=self.mean))
+#        function.add_penalty(penalties.L2Squared(self.l,
+#                                             penalty_start=self.penalty_start))
+
+        self.algorithm.check_compatibility(function,
+                                           self.algorithm.INTERFACES)
+
+        # TODO: Should we use a seed here so that we get deterministic results?
+        if beta is None:
+            beta = self.start_vector.get_vector(X.shape[1])
+
+        self.beta = self.algorithm.run(function, beta)
+
+        return self
+
+
 class LogisticRegressionL1L2TV(LogisticRegressionEstimator):
     """Logistic regression (re-weighted log-likelihood aka. cross-entropy)
     with L1, L2 and TV penalties:
@@ -1846,7 +1968,7 @@ class PLSRegression(RegressionEstimator):
                 X = rankone.deflate(X, t, p)
 #                Y = rankone.deflate(Y, t, c)
 
-        self.Ws = np.dot(self.W, np.linalg.inv(np.dot(self.P.T, self.W)))
+        self.Ws = np.dot(self.W, np.linalg.pinv(np.dot(self.P.T, self.W)))
 
         self.beta = np.dot(self.Ws, self.C.T)
 

@@ -361,10 +361,10 @@ class PLSR(bases.ImplicitAlgorithm,
             c = np.dot(Y.T, np.dot(X, w))
             w_new = np.dot(X.T, np.dot(Y, c))
             normw = maths.norm(w_new)
-            if normw > consts.TOLERANCE:
+            if normw > 10.0 * consts.FLOAT_EPSILON:
                 w_new /= normw
 
-            if maths.norm(w_new - w) / maths.norm(w) < self.eps:
+            if maths.norm(w_new - w) < maths.norm(w) * self.eps:
                 break
 
         self.num_iter = i

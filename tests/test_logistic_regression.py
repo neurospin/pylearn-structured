@@ -555,6 +555,28 @@ class TestLogisticRegression(TestCase):
                                 "the correct function value.",
                             places=5)
 
+        # Compare functions
+        import parsimony.functions as functions
+        from parsimony.utils import class_weight_to_sample_weight
+
+        sample_weight = class_weight_to_sample_weight(None, y)
+
+        l = 10000.0
+        function_1 = losses.RidgeLogisticRegression(X, y, l,
+                                              weights=sample_weight,
+                                              penalty_start=0,
+                                              mean=True)
+
+        function_2 = functions.CombinedFunction()
+        function_2.add_function(losses.LogisticRegression(X, y, mean=True))
+        function_2.add_penalty(penalties.L2Squared(l, penalty_start=0))
+
+        beta = start_vector.get_vector(p)
+
+        assert abs(function_1.f(beta) - function_2.f(beta)) < consts.TOLERANCE
+        assert maths.norm(function_1.grad(beta) - function_2.grad(beta)) \
+                < consts.TOLERANCE
+
     def test_l2_intercept(self):
         # Spams: http://spams-devel.gforge.inria.fr/doc-python/html/doc_spams006.html#toc23
 
