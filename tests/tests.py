@@ -108,7 +108,10 @@ class TestCase(unittest.TestCase):
 @nottest
 def test_all():
 
-    testdir = os.path.dirname(__file__)
+#    testdir = os.path.dirname(__file__)
+    testdir = os.path.dirname(os.path.abspath(__file__))
+#    print "testdir:", testdir
+#    print "__file__:", __file__
 
     # Find parsimony directory.
     # TODO: Is there a better way to do this?
